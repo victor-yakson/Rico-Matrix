@@ -5,6 +5,9 @@ import { useQuantuMatrix } from '../hooks/useQuantuMatrix';
 import { ConnectWallet } from '../components/Common/ConnectWallet';
 import { Stats } from '../components/Dashboard/Stats';
 import { Header } from '../components/Navigation/Header';
+import { ProfileInfo } from '../components/Profile/ProfileInfo';
+import { ReferralSection } from '../components/Dashboard/ReferralSection';
+import { ProfileStats } from '../components/Dashboard/ProfileStats';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -66,7 +69,7 @@ export default function Dashboard() {
               and track your matrix & royalty earnings.
             </p>
             <div className="flex justify-center">
-              <ConnectWallet />
+              <ConnectWallet/>
             </div>
           </div>
         </div>
@@ -77,7 +80,7 @@ export default function Dashboard() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)]">
+      <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-slate-950 to-black">
         <div className="container mx-auto px-4 py-8 md:py-10">
           {/* Header */}
           <div className="text-center mb-10 md:mb-12">
@@ -93,75 +96,101 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Stats */}
-          <Stats userData={userData} globalStats={globalStats} />
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+            {/* Left Column - Profile & Referral */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Profile Info with Enhanced Border */}
+              <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+                <ProfileInfo userData={userData} />
+              </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 mt-10">
-            <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-              <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                Join Library
-              </h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Start your journey with Chapter 1 and secure your first matrix position.
-              </p>
-              <Link
-                href="/chapters"
-                className="inline-block rounded-xl bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(250,204,21,0.6)] hover:brightness-110 active:scale-[0.98] transition-all"
-              >
-                Get Started
-              </Link>
+              {/* Referral Section with Enhanced Border */}
+              <div className="rounded-2xl border border-purple-400/40 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(88,28,135,0.6)] backdrop-blur-sm">
+                <ReferralSection />
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-              <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                View Chapters
-              </h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Explore all available book chapters and upgrade levels as you grow.
-              </p>
-              <Link
-                href="/chapters"
-                className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
-              >
-                Browse Chapters
-              </Link>
-            </div>
+            {/* Right Column - Stats & Content */}
+            <div className="lg:col-span-3 space-y-8">
+              {/* Stats Overview with Enhanced Border */}
+              <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                <Stats userData={userData} globalStats={globalStats} />
+              </div>
 
-            <div className="rounded-2xl border border-emerald-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-              <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                Check Royalty
-              </h3>
-              <p className="text-sm text-slate-400 mb-4">
-                View your royalty pool share and claim earnings from library activity.
-              </p>
-              <Link
-                href="/royalty"
-                className="inline-block rounded-xl bg-emerald-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
-              >
-                View Royalty
-              </Link>
+              {/* Profile Stats with Enhanced Border */}
+              <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                <ProfileStats userData={userData} />
+              </div>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    Join Library
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Start your journey with Chapter 1 and secure your first matrix position.
+                  </p>
+                  <Link
+                    href="/chapters"
+                    className="inline-block rounded-xl bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(250,204,21,0.6)] hover:brightness-110 active:scale-[0.98] transition-all"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+
+                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    View Chapters
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Explore all available book chapters and upgrade levels as you grow.
+                  </p>
+                  <Link
+                    href="/chapters"
+                    className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+                  >
+                    Browse Chapters
+                  </Link>
+                </div>
+
+                <div className="rounded-2xl border border-emerald-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    Check Royalty
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    View your royalty pool share and claim earnings from library activity.
+                  </p>
+                  <Link
+                    href="/royalty"
+                    className="inline-block rounded-xl bg-emerald-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                  >
+                    View Royalty
+                  </Link>
+                </div>
+              </div>
+
+              {/* User Status */}
+              {!userData?.exists && (
+                <div className="rounded-2xl border border-amber-400/40 bg-amber-500/5 p-6 md:p-7 text-center shadow-[0_0_24px_rgba(0,0,0,0.7)]">
+                  <h3 className="text-lg md:text-xl font-semibold text-amber-200 mb-2">
+                    Welcome! You haven't joined the library yet.
+                  </h3>
+                  <p className="text-sm md:text-base text-amber-100/90 mb-4 max-w-xl mx-auto">
+                    Join the RicoMatrix library to start unlocking chapters, activating matrix
+                    positions, and earning from the global ecosystem.
+                  </p>
+                  <Link
+                    href="/chapters"
+                    className="inline-block rounded-xl bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 px-7 py-2.5 text-sm font-semibold text-black shadow-[0_0_20px_rgba(250,204,21,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                  >
+                    Join RicoMatrix Library
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* User Status */}
-          {!userData?.exists && (
-            <div className="rounded-2xl border border-amber-400/40 bg-amber-500/5 p-6 md:p-7 text-center shadow-[0_0_24px_rgba(0,0,0,0.7)]">
-              <h3 className="text-lg md:text-xl font-semibold text-amber-200 mb-2">
-                Welcome! You haven’t joined the library yet.
-              </h3>
-              <p className="text-sm md:text-base text-amber-100/90 mb-4 max-w-xl mx-auto">
-                Join the RicoMatrix library to start unlocking chapters, activating matrix
-                positions, and earning from the global ecosystem.
-              </p>
-              <Link
-                href="/chapters"
-                className="inline-block rounded-xl bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 px-7 py-2.5 text-sm font-semibold text-black shadow-[0_0_20px_rgba(250,204,21,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
-              >
-                Join RicoMatrix Library
-              </Link>
-            </div>
-          )}
         </div>
       </div>
     </>
