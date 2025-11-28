@@ -1,5 +1,7 @@
 export const CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
+export const USDT_CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_USDT_CONTRACT_ADDRESS as `0x${string}`;
 
 export const CONTRACT_ABI = [
   {
@@ -823,6 +825,36 @@ export const CONTRACT_ABI = [
   },
 ];
 
+export const USDT_ABI = [
+  {
+    constant: false,
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ name: "", type: "bool" }],
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [{ name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    name: "allowance",
+    outputs: [{ name: "", type: "uint256" }],
+    type: "function",
+  },
+] as const;
+
 export const CHAPTER_NAMES = {
   1: "Chapter 1: The Beginning",
   2: "Chapter 2: Rising Action",
@@ -840,5 +872,5 @@ export const CHAPTER_NAMES = {
 
 export const TRACK_NAMES = {
   1: "X3 Matrix Track",
-  2: "X6 Matrix Track"
+  2: "X6 Matrix Track",
 } as const;

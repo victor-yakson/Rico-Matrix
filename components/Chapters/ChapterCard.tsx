@@ -9,7 +9,10 @@ interface ChapterCardProps {
   price: string;
   isUnlocked: boolean;
   onPurchase: (track: number, chapter: number) => Promise<void>;
+  onApprove: (amount: string) => Promise<void>;
   disabled: boolean;
+  needsApproval: boolean;
+  isApproving: boolean;
 }
 
 export const ChapterCard = ({
@@ -19,7 +22,10 @@ export const ChapterCard = ({
   price,
   isUnlocked,
   onPurchase,
+  onApprove,
   disabled,
+  needsApproval,
+  isApproving,
 }: ChapterCardProps) => {
   const getTrackBadgeClass = (track: number) => {
     if (track === 1) {
@@ -46,6 +52,35 @@ export const ChapterCard = ({
     price && price !== '0' ? formatUnits(BigInt(price), 18) : '0';
 
   const isButtonDisabled = isUnlocked || disabled || chapter > 1;
+  const isApproveButtonDisabled = isUnlocked || isApproving || chapter > 1;
+
+  const handleAction = () => {
+    if (needsApproval) {
+      onApprove(price);
+    } else {
+      onPurchase(track, chapter);
+    }
+  };
+
+  const getButtonText = () => {
+    if (isUnlocked) return 'Chapter Unlocked';
+    if (isApproving) return 'Approving...';
+    if (disabled) return 'Processing...';
+    if (needsApproval) return 'Approve USDT';
+    return 'Unlock Chapter';
+  };
+
+  const getButtonClass = () => {
+    if (isButtonDisabled || isApproveButtonDisabled) {
+      return 'cursor-not-allowed bg-slate-800 text-slate-500 ring-1 ring-slate-700';
+    }
+    
+    if (needsApproval) {
+      return 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(59,130,246,0.5)] hover:shadow-[0_0_32px_rgba(59,130,246,0.8)] hover:brightness-110 active:scale-[0.98]';
+    }
+    
+    return 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 text-black shadow-[0_0_24px_rgba(250,204,21,0.5)] hover:shadow-[0_0_32px_rgba(250,204,21,0.8)] hover:brightness-110 active:scale-[0.98]';
+  };
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-black via-slate-950 to-slate-900 p-5 shadow-[0_0_40px_rgba(0,0,0,0.7)] transition-all duration-300 hover:-translate-y-1 hover:border-yellow-400 hover:shadow-[0_0_60px_rgba(250,204,21,0.4)]">
@@ -90,25 +125,33 @@ export const ChapterCard = ({
             {getStatusText()}
           </span>
         </div>
+
+        {/* Approval Status */}
+        {!isUnlocked && chapter === 1 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-400">Approval</span>
+            <span className={`font-medium ${needsApproval ? 'text-amber-400' : 'text-emerald-400'}`}>
+              {needsApproval ? 'Required' : 'Approved'}
+            </span>
+          </div>
+        )}
       </div>
 
+      {/* Action Button */}
       <button
-        onClick={() => onPurchase(track, chapter)}
-        disabled={isButtonDisabled}
-        className={`relative mt-4 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200
-          ${
-            isButtonDisabled
-              ? 'cursor-not-allowed bg-slate-800 text-slate-500 ring-1 ring-slate-700'
-              : 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 text-black shadow-[0_0_24px_rgba(250,204,21,0.5)] hover:shadow-[0_0_32px_rgba(250,204,21,0.8)] hover:brightness-110 active:scale-[0.98]'
-          }
-        `}
+        onClick={handleAction}
+        disabled={isButtonDisabled || isApproveButtonDisabled}
+        className={`relative mt-4 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200 ${getButtonClass()}`}
       >
-        {isUnlocked
-          ? 'Chapter Unlocked'
-          : disabled
-          ? 'Processing...'
-          : 'Unlock Chapter'}
+        {getButtonText()}
       </button>
+
+      {/* Info Tooltip for Approval */}
+      {needsApproval && !isUnlocked && chapter === 1 && (
+        <div className="mt-2 text-xs text-blue-400 text-center">
+          Approve USDT first to unlock this chapter
+        </div>
+      )}
 
       {/* Subtle bottom border highlight */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent opacity-60" />

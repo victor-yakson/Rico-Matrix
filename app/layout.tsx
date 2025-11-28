@@ -7,7 +7,7 @@ import { PageTransition } from '@/components/Layout/PageTransition';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'QuantuMatrix - Read • Earn • Own',
+  title: 'RicoMatrix - Read • Earn • Own',
   description: 'Real Book Chapters on BSC Blockchain',
 };
 
