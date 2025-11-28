@@ -105,7 +105,7 @@ export default function Dashboard() {
     return (
       <>
         <Header />
-        <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_#facc15_0,_transparent_55%),radial-gradient(circle_at_bottom,_#22c55e22_0,_#020617_60%)] flex items-center justify-center px-4">
+        <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_#facc15_0,_transparent_55%),radial-gradient(circle_at_bottom,_#22c55e22_0,_#020617_60%)] flex items-center justify-center p-4">
           <div className="w-full max-w-2xl">
             <div className="rounded-3xl border border-yellow-500/30 bg-slate-950/80 px-6 md:px-10 py-10 md:py-12 shadow-[0_0_60px_rgba(15,23,42,0.9)] backdrop-blur-xl relative overflow-hidden">
               <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-yellow-500/10 blur-3xl" />
