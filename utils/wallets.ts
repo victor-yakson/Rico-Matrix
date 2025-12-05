@@ -7,9 +7,9 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     name: 'Rainbow',
     icon: '/wallets/rainbow.svg',
     deeplink: {
-      ios: 'rainbow://wc?uri=',
-      android: 'rainbow://wc?uri=',
-      universal: 'https://rnbwapp.com/wc?uri=',
+      ios: 'rainbow://',
+      android: 'rainbow://',
+      universal: 'https://rainbow.me',
     },
     downloadUrls: {
       ios: 'https://apps.apple.com/app/rainbow-ethereum-wallet/id1457119021',
@@ -20,11 +20,12 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
   metamask: {
     id: 'metamask',
     name: 'MetaMask',
-    icon: '/wallets/metamask.svg',
+    icon: '/wallets/metamask-icon.svg',
     deeplink: {
-      ios: 'metamask://wc?uri=',
-      android: 'metamask://wc?uri=',
-      universal: 'https://metamask.app.link/wc?uri=',
+      // MetaMask latest docs: https://link.metamask.io/dapp/{dappUrl}
+      ios: 'https://link.metamask.io/dapp/',
+      android: 'https://link.metamask.io/dapp/',
+      universal: 'https://link.metamask.io/dapp/',
     },
     downloadUrls: {
       ios: 'https://apps.apple.com/app/metamask/id1438144202',
@@ -35,11 +36,12 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
   trust: {
     id: 'trust',
     name: 'Trust Wallet',
-    icon: '/wallets/trust-wallet.svg',
+    icon: '/wallets/trust-wallet-icon.svg',
     deeplink: {
-      ios: 'trust://wc?uri=',
-      android: 'trust://wc?uri=',
-      universal: 'https://link.trustwallet.com/wc?uri=',
+      // opens dapp in Trust’s in-app browser for Ethereum (coin_id=60)
+      ios: 'trust://open_url?coin_id=60&url=',
+      android: 'trust://open_url?coin_id=60&url=',
+      universal: 'https://link.trustwallet.com/open_url?coin_id=60&url=',
     },
     downloadUrls: {
       ios: 'https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409',
@@ -50,11 +52,12 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
   coinbase: {
     id: 'coinbase',
     name: 'Coinbase Wallet',
-    icon: '/wallets/coinbase-wallet.svg',
+    icon: '/wallets/coinbase-logo-icon.svg',
     deeplink: {
-      ios: 'cbwallet://wc?uri=',
-      android: 'com.coinbase.wallet://wc?uri=',
-      universal: 'https://go.cb-w.com/wc?uri=',
+      ios: 'cbwallet://',
+      android: 'com.coinbase.wallet://',
+      // Coinbase dapp deeplink style: https://go.cb-w.com/dapp?cb_url={dappUrl}
+      universal: 'https://go.cb-w.com/dapp?cb_url=',
     },
     downloadUrls: {
       ios: 'https://apps.apple.com/app/coinbase-wallet-nfts-crypto/id1278383455',
@@ -67,8 +70,9 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     name: 'Phantom',
     icon: '/wallets/phantom.svg',
     deeplink: {
-      ios: 'phantom://wc?uri=',
-      android: 'phantom://wc?uri=',
+      ios: 'phantom://',
+      android: 'phantom://',
+      // Phantom docs: https://phantom.app/ul/browse/{encodedUrl}
       universal: 'https://phantom.app/ul/browse/',
     },
     downloadUrls: {
@@ -82,8 +86,8 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     name: 'Rabby Wallet',
     icon: '/wallets/rabby.svg',
     deeplink: {
-      ios: 'rabby://wc?uri=',
-      android: 'rabby://wc?uri=',
+      ios: 'rabby://',
+      android: 'rabby://',
       universal: 'https://rabby.io/',
     },
     downloadUrls: {
@@ -96,10 +100,10 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     name: 'Zerion',
     icon: '/wallets/zerion.svg',
     deeplink: {
-      ios: 'zerion://wc?uri=',
-      android: 'zerion://wc?uri=',
-      universal: 'https://wallet.zerion.io/wc?uri=',
-    },
+      ios: 'zerion://',
+      android: 'zerion://',
+      universal: 'https://wallet.zerion.io',
+    },  
     downloadUrls: {
       ios: 'https://apps.apple.com/app/zerion-defi-portfolio/id1456732568',
       android: 'https://play.google.com/store/apps/details?id=io.zerion.android',
@@ -111,9 +115,9 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     name: 'SafePal',
     icon: '/wallets/safepal.svg',
     deeplink: {
-      ios: 'safepal://wc?uri=',
-      android: 'safepal://wc?uri=',
-      universal: 'https://link.safepal.io/wc?uri=',
+      ios: 'safepal://',
+      android: 'safepal://',
+      universal: 'https://link.safepal.io',
     },
     downloadUrls: {
       ios: 'https://apps.apple.com/app/safepal-crypto-wallet/id1548297139',
@@ -126,9 +130,9 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     name: 'Brave Wallet',
     icon: 'https://brave.com/static-assets/images/brave-logo.svg',
     deeplink: {
-      ios: 'brave://wc?uri=',
-      android: 'brave://wc?uri=',
-      universal: 'https://brave.app.link/wc?uri=',
+      ios: 'brave://',
+      android: 'brave://',
+      universal: 'https://brave.app.link/',
     },
     downloadUrls: {
       ios: 'https://apps.apple.com/app/brave-private-web-browser/id1052879175',
