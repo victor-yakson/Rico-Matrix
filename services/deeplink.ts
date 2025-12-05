@@ -16,10 +16,10 @@ export class DeeplinkService {
     
     switch (platform) {
       case 'ios':
-        deepLink = `${wallet.deeplink.ios}${encodedUrl}`;
+        deepLink = `${wallet.deeplink.universal}${encodedUrl}`;
         break;
       case 'android':
-        deepLink = `${wallet.deeplink.android}${encodedUrl}`;
+        deepLink = `${wallet.deeplink.universal}${encodedUrl}`;
         break;
       default:
         deepLink = `${wallet.deeplink.universal}${encodedUrl}`;
