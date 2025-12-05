@@ -15,4 +15,13 @@ export interface WalletConfig {
   };
 }
 
-export type WalletId = 'rainbow' | 'metamask' | 'trust' | 'coinbase' | 'phantom' | 'rabby' | 'zerion';
+export type WalletId =
+  | "rainbow"
+  | "metamask"
+  | "trust"
+  | "coinbase"
+  | "phantom"
+  | "rabby"
+  | "zerion"
+  | "safepal"
+  | "brave";

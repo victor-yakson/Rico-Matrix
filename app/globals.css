@@ -1,11 +1,37 @@
 @import "tailwindcss";
 
-
-
 body {
   background: #000;
   font-family: Arial, Helvetica, sans-serif;
 }
-html{
+html {
   scroll-behavior: smooth;
+}
+/* MobileWalletConnector.module.css */
+/* ---------- THEME TOKENS ---------- */
+:root {
+  --bg: #050509;
+  --bg-soft: #0b0f1a;
+  --bg-card: rgba(15, 19, 30, 0.95);
+  --bg-card-soft: rgba(15, 19, 30, 0.8);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --gold: #f4c542;
+  --gold-soft: #f8d46c;
+  --gold-dark: #b68b1d;
+
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+  --text-soft: #6b7280;
+
+  --danger: #f97373;
+
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 0 18px rgba(244, 197, 66, 0.4);
+
+  --transition-fast: 0.16s ease-out;
+  --transition-med: 0.22s ease-out;
 }

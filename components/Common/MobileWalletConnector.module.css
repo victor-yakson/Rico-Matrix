@@ -1,317 +1,638 @@
-/* components/MobileWalletConnector.module.css */
-.container {
+
+
+
+/* ---------- SHARED UTILS ---------- */
+
+.container,
+.desktopContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
 }
 
+/* Primary connect button (MOBILE) */
 .connectButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 16px 32px;
-  border-radius: 16px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  gap: 10px;
+  padding: 0.85rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 197, 66, 0.4);
+  background: radial-gradient(circle at 0 0, rgba(244, 197, 66, 0.2), transparent 55%),
+              linear-gradient(135deg, #f4c542, #f1b51a);
+  color: #1a1204;
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: var(--shadow-gold);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast), background var(--transition-med);
 }
 
 .connectButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  box-shadow: 0 18px 40px rgba(244, 197, 66, 0.5);
 }
 
 .connectButton:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.6);
 }
 
 .connectButton:disabled {
   opacity: 0.7;
-  cursor: not-allowed;
+  cursor: default;
+  box-shadow: none;
 }
 
 .buttonText {
-  position: relative;
-  z-index: 1;
+  white-space: nowrap;
 }
 
 .buttonBadge {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Desktop main connect button */
+.desktopButton {
   position: relative;
-  z-index: 1;
-}
-
-/* Modal Styles */
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
+  gap: 10px;
+  padding: 0.9rem 1.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 197, 66, 0.45);
+  background: radial-gradient(circle at 0 0, rgba(244, 197, 66, 0.13), transparent 55%),
+              linear-gradient(125deg, #f4c542, #f1b51a);
+  color: #150f03;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: var(--shadow-gold);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.desktopButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 18px 40px rgba(244, 197, 66, 0.5);
 }
 
-.modal {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border-radius: 24px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s ease;
+.desktopButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.7);
 }
 
-@keyframes slideUp {
+.desktopButton:disabled {
+  opacity: 0.75;
+  cursor: default;
+  box-shadow: none;
+}
+
+.desktopButtonIcon {
+  font-size: 1.1rem;
+}
+
+.desktopButtonText {
+  font-size: 0.95rem;
+}
+
+.desktopButtonBadge {
+  padding: 0.12rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* Desktop helper UI */
+.desktopHint {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.qrToggleButton {
+  margin-top: 6px;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15, 16, 22, 0.9);
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.qrToggleButton:hover {
+  background: rgba(23, 26, 38, 0.95);
+  border-color: rgba(244, 197, 66, 0.7);
+  color: var(--gold-soft);
+  transform: translateY(-0.5px);
+}
+
+/* Desktop QR block (inline mode) */
+.desktopQRCode {
+  margin-top: 14px;
+  padding: 12px 14px 14px;
+  border-radius: 16px;
+  background: radial-gradient(circle at top, rgba(244, 197, 66, 0.06), transparent 60%),
+              rgba(11, 15, 26, 0.96);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.qrCodeWrapper {
+  padding: 8px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.qrCodeHint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.copyLinkButton {
+  margin-top: 4px;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(13, 16, 26, 0.95);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.copyLinkButton:hover {
+  background: rgba(25, 28, 41, 0.96);
+  border-color: rgba(244, 197, 66, 0.7);
+  transform: translateY(-0.5px);
+}
+
+/* ---------- DESKTOP MODAL ---------- */
+
+.desktopModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, rgba(244, 197, 66, 0.08), transparent 60%),
+              rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+}
+
+.desktopModal {
+  width: min(720px, 94vw);
+  max-height: 92vh;
+  background: radial-gradient(circle at 0 0, rgba(244, 197, 66, 0.12), transparent 55%),
+              var(--bg-card);
+  border-radius: 26px;
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalIn 0.25s ease-out;
+}
+
+@keyframes modalIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px) scale(0.97);
   }
   to {
     opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.desktopModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.desktopModalHeader h2 {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.closeButton {
+  border: none;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.closeButton:hover {
+  background: rgba(249, 250, 251, 0.1);
+  color: #ffffff;
+  transform: translateY(-0.5px);
+}
+
+.desktopModalContent {
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+}
+
+.desktopOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.optionCard {
+  position: relative;
+  padding: 12px 12px 14px;
+  border-radius: 18px;
+  background: radial-gradient(circle at top, rgba(244, 197, 66, 0.08), transparent 60%),
+              rgba(7, 9, 16, 0.96);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.optionIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 0 0, rgba(244, 197, 66, 0.35), transparent 60%);
+  font-size: 1.2rem;
+}
+
+.optionCard h3 {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.optionCard p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.optionButton {
+  margin-top: 6px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 197, 66, 0.4);
+  background: linear-gradient(135deg, #f4c542, #f1b51a);
+  color: #14100a;
+  font-weight: 500;
+  font-size: 0.82rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+
+.optionButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  box-shadow: 0 12px 30px rgba(244, 197, 66, 0.55);
+}
+
+/* QR area inside desktop modal */
+.qrCodeSection {
+  margin-top: 12px;
+  padding: 12px 14px 14px;
+  border-radius: 18px;
+  background: rgba(5, 7, 12, 0.96);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.qrCodeContainer {
+  padding: 8px;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.qrCodeInstruction {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.qrCodeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.qrActionButton {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(14, 16, 26, 0.96);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.qrActionButton:hover {
+  background: rgba(25, 29, 43, 0.98);
+  border-color: rgba(244, 197, 66, 0.7);
+  transform: translateY(-0.5px);
+}
+
+.desktopHelp {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(7, 9, 13, 0.96);
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+}
+
+.desktopHelp h4 {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.desktopHelp ul {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.desktopHelp li {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-bottom: 2px;
+}
+
+/* ---------- MOBILE MODAL ---------- */
+
+.mobileModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.mobileModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.mobileWalletOptions {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  background: radial-gradient(circle at top, rgba(244, 197, 66, 0.08), transparent 55%),
+              var(--bg-card);
+  border-radius: 26px 26px 0 0;
+  border-top: 1px solid var(--border-strong);
+  border-left: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.9);
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  animation: sheetIn 0.24s ease-out;
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+  to {
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
 .modalHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 24px 24px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: space-between;
+  padding: 14px 18px 8px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .modalHeader h2 {
-  color: white;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.closeButton {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.closeButton:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
 }
 
 .modalContent {
-  padding: 24px;
+  padding: 10px 16px 14px;
+  max-height: calc(88vh - 56px);
+  overflow-y: auto;
 }
 
 .modalDescription {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 24px;
-  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
 }
 
+/* Wallet grid (recommended) */
 .walletGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .walletButton {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  padding: 10px 8px 9px;
   border-radius: 16px;
-  padding: 20px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-subtle);
+  background: rgba(6, 9, 16, 0.96);
+  color: var(--text-main);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
 .walletButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-.walletButton:active:not(:disabled) {
-  transform: translateY(-2px);
+  border-color: rgba(244, 197, 66, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.8);
+  background: radial-gradient(circle at top, rgba(244, 197, 66, 0.12), transparent 60%),
+              rgba(6, 9, 16, 0.98);
 }
 
 .walletButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.7;
+  cursor: default;
 }
 
 .walletIcon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 0 0, rgba(244, 197, 66, 0.18), transparent 55%),
+              rgba(15, 23, 42, 0.96);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  overflow: hidden;
 }
 
 .walletIcon img {
-  width: 100%;
-  height: 100%;
+  width: 70%;
+  height: 70%;
   object-fit: contain;
 }
 
 .walletName {
-  font-weight: 600;
-  font-size: 14px;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
-/* All Wallets Section */
+/* Other wallets */
 .allWalletsSection {
-  margin-bottom: 24px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-subtle);
 }
 
 .sectionTitle {
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin-bottom: 6px;
 }
 
 .allWalletsList {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .altWalletButton {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  padding: 6px 9px;
   border-radius: 12px;
-  padding: 12px 20px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: 1px solid var(--border-subtle);
+  background: rgba(6, 8, 14, 0.96);
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .altWalletButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.altWalletButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(244, 197, 66, 0.7);
+  transform: translateY(-0.5px);
 }
 
 .altWalletIcon {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #020617;
+  object-fit: contain;
 }
 
-/* Help Section */
+/* Help section */
 .helpSection {
-  background: rgba(0, 0, 0, 0.3);
+  margin-top: 12px;
+  padding: 10px 11px;
   border-radius: 16px;
-  padding: 20px;
-  margin-top: 24px;
+  background: rgba(7, 10, 18, 0.98);
+  border: 1px dashed rgba(148, 163, 184, 0.5);
 }
 
 .helpText {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 0 0 12px 0;
-}
-
-.helpText:last-child {
-  margin-bottom: 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 .helpLink {
-  color: #667eea;
+  color: var(--gold-soft);
   text-decoration: none;
-  transition: color 0.2s;
+  border-bottom: 1px solid rgba(244, 197, 66, 0.4);
+  padding-bottom: 1px;
 }
 
 .helpLink:hover {
-  color: #764ba2;
-  text-decoration: underline;
+  border-bottom-color: rgba(244, 197, 66, 0.9);
 }
 
-/* Desktop Styles */
-.desktopContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
+/* ---------- RESPONSIVE ---------- */
+
+@media (min-width: 640px) {
+  .mobileWalletOptions {
+    border-radius: 24px;
+    margin-bottom: 20px;
+  }
+
+  .modalHeader {
+    padding-inline: 20px;
+  }
+
+  .modalContent {
+    padding-inline: 20px;
+  }
 }
 
-.desktopButton {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+@media (max-width: 480px) {
+  .connectButton,
+  .desktopButton {
+    width: 100%;
+    justify-content: center;
+  }
 
-.desktopButton:hover {
-  background: #764ba2;
-  transform: translateY(-2px);
-}
-
-.desktopHint {
-  color: #666;
-  font-size: 14px;
-  text-align: center;
-  max-width: 300px;
+  .walletGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

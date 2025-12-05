@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import { ConnectWallet } from "../Common/ConnectWallet";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import MobileWalletConnector from "../Common/MobileWalletConnector";
+import { ConnectWallet } from '../Common/ConnectWallet';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export const Header = () => {
   const pathname = usePathname();
@@ -17,31 +16,11 @@ export const Header = () => {
   }, []);
 
   const navigation = [
-    { name: "Dashboard", href: "/", current: pathname === "/", icon: "🏠" },
-    {
-      name: "Chapters",
-      href: "/chapters",
-      current: pathname === "/chapters",
-      icon: "📚",
-    },
-    {
-      name: "Matrix",
-      href: "/matrix",
-      current: pathname === "/matrix",
-      icon: "🔗",
-    },
-    {
-      name: "Royalty",
-      href: "/royalty",
-      current: pathname === "/royalty",
-      icon: "💰",
-    },
-    {
-      name: "Profile",
-      href: "/profile",
-      current: pathname === "/profile",
-      icon: "👤",
-    },
+    { name: 'Dashboard', href: '/', current: pathname === '/', icon: '🏠' },
+    { name: 'Chapters', href: '/chapters', current: pathname === '/chapters', icon: '📚' },
+    { name: 'Matrix', href: '/matrix', current: pathname === '/matrix', icon: '🔗' },
+    { name: 'Royalty', href: '/royalty', current: pathname === '/royalty', icon: '💰' },
+    { name: 'Profile', href: '/profile', current: pathname === '/profile', icon: '👤' },
   ];
 
   // Close mobile menu when route changes
@@ -105,8 +84,8 @@ export const Header = () => {
                   href={item.href}
                   className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border border-transparent ${
                     item.current
-                      ? "bg-yellow-500/10 text-yellow-300 border-yellow-400/50 shadow-[0_0_18px_rgba(250,204,21,0.4)]"
-                      : "text-slate-400 hover:text-yellow-300 hover:bg-yellow-500/5 hover:border-yellow-500/40"
+                      ? 'bg-yellow-500/10 text-yellow-300 border-yellow-400/50 shadow-[0_0_18px_rgba(250,204,21,0.4)]'
+                      : 'text-slate-400 hover:text-yellow-300 hover:bg-yellow-500/5 hover:border-yellow-500/40'
                   }`}
                 >
                   {item.name}
@@ -118,12 +97,12 @@ export const Header = () => {
             <div className="flex items-center space-x-3">
               {/* Desktop wallet */}
               <div className="hidden sm:flex items-center">
-                <MobileWalletConnector />
+                <ConnectWallet />
               </div>
 
               {/* Mobile wallet (inline with logo + hamburger) */}
               <div className="flex sm:hidden items-center">
-                <MobileWalletConnector />
+                <ConnectWallet />
               </div>
 
               {/* Mobile menu button */}
@@ -135,17 +114,17 @@ export const Header = () => {
                 <div className="w-6 h-6 flex flex-col justify-center space-y-1">
                   <span
                     className={`block h-0.5 w-6 bg-current transform transition duration-300 ease-in-out ${
-                      isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
+                      isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''
                     }`}
                   />
                   <span
                     className={`block h-0.5 w-6 bg-current transition duration-300 ease-in-out ${
-                      isMobileMenuOpen ? "opacity-0" : "opacity-100"
+                      isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
                     }`}
                   />
                   <span
                     className={`block h-0.5 w-6 bg-current transform transition duration-300 ease-in-out ${
-                      isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+                      isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
                     }`}
                   />
                 </div>
@@ -165,8 +144,8 @@ export const Header = () => {
                     href={item.href}
                     className={`flex items-center space-x-3 px-3 py-4 rounded-xl text-base font-medium transition-all border border-transparent ${
                       item.current
-                        ? "bg-yellow-500/10 text-yellow-300 border-yellow-400/60"
-                        : "text-slate-300 hover:text-yellow-300 hover:bg-yellow-500/5 hover:border-yellow-500/40"
+                        ? 'bg-yellow-500/10 text-yellow-300 border-yellow-400/60'
+                        : 'text-slate-300 hover:text-yellow-300 hover:bg-yellow-500/5 hover:border-yellow-500/40'
                     }`}
                   >
                     <span className="text-lg">{item.icon}</span>
@@ -190,9 +169,7 @@ export const Header = () => {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center py-3 px-2 flex-1 min-w-0 relative transition-colors ${
-                item.current
-                  ? "text-yellow-300"
-                  : "text-slate-400 hover:text-yellow-300"
+                item.current ? 'text-yellow-300' : 'text-slate-400 hover:text-yellow-300'
               }`}
             >
               <span className="text-xl mb-1">{item.icon}</span>
@@ -209,9 +186,7 @@ export const Header = () => {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`flex flex-col items-center py-3 px-2 flex-1 min-w-0 relative transition-colors ${
-              isMobileMenuOpen
-                ? "text-yellow-300"
-                : "text-slate-400 hover:text-yellow-300"
+              isMobileMenuOpen ? 'text-yellow-300' : 'text-slate-400 hover:text-yellow-300'
             }`}
           >
             <span className="text-xl mb-1">⋯</span>

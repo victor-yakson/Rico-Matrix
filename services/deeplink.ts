@@ -40,6 +40,8 @@ export class DeeplinkService {
     localStorage.setItem('preferredWallet', walletId);
     localStorage.setItem('lastConnectionAttempt', Date.now().toString());
     
+
+    console.log('Deep link to open:', deepLink);
     // Try to open the deep link
     this.openDeepLink(deepLink);
     
@@ -57,6 +59,8 @@ export class DeeplinkService {
   private static openDeepLink(link: string): void {
     // Method 1: Direct location change (works for iOS)
     window.location.href = link;
+
+
     
     // Method 2: Create hidden iframe (works for Android)
     setTimeout(() => {

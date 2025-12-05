@@ -1,33 +1,31 @@
-'use client';
+"use client";
 
-import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
-import { useQuantuMatrix } from '../hooks/useQuantuMatrix';
-import { ConnectWallet } from '../components/Common/ConnectWallet';
-import { Stats } from '../components/Dashboard/Stats';
-import { Header } from '../components/Navigation/Header';
-import { ProfileInfo } from '../components/Dashboard/ProfileInfo';
-import { ReferralSection } from '../components/Profile/ReferralSection';
-import { ProfileStats } from '../components/Dashboard/ProfileStats';
-import { RegistrationSection } from '../components/Dashboard/RegistrationSection';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useQuantuMatrix } from "../hooks/useQuantuMatrix";
+import { ConnectWallet } from "../components/Common/ConnectWallet";
+import { Stats } from "../components/Dashboard/Stats";
+import { Header } from "../components/Navigation/Header";
+import { ProfileInfo } from "../components/Dashboard/ProfileInfo";
+import { ReferralSection } from "../components/Profile/ReferralSection";
+import { ProfileStats } from "../components/Dashboard/ProfileStats";
+import { RegistrationSection } from "../components/Dashboard/RegistrationSection";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import MobileWalletConnector from "@/components/Common/MobileWalletConnector";
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
-  const {
-    userData,
-    globalStats,
-    refetchUserData,
-    claimRoyalty,
-    loading,
-  } = useQuantuMatrix();
+  const { userData, globalStats, refetchUserData, claimRoyalty, loading } =
+    useQuantuMatrix();
 
   const [mounted, setMounted] = useState(false);
-  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(null);
+  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
+    null
+  );
 
   const searchParams = useSearchParams();
-  const referralAddress = searchParams.get('ref');
+  const referralAddress = searchParams.get("ref");
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -61,7 +59,7 @@ export default function Dashboard() {
       const hash = await claimRoyalty();
       setCurrentTxHash(hash);
     } catch (error) {
-      console.error('Claim failed:', error);
+      console.error("Claim failed:", error);
       setCurrentTxHash(null);
     }
   };
@@ -72,7 +70,7 @@ export default function Dashboard() {
 
   const royaltyAvailable = userData?.exists
     ? Number(userData.royaltyAvailable).toFixed(2)
-    : '0.00';
+    : "0.00";
 
   if (!mounted) {
     return (
@@ -87,7 +85,8 @@ export default function Dashboard() {
               🔥📚✨ RICOMATRIX
             </h1>
             <p className="text-sm md:text-base text-slate-400">
-              READ • EARN • OWN — Real book chapters on-chain with matrix & royalty rewards.
+              READ • EARN • OWN — Real book chapters on-chain with matrix &
+              royalty rewards.
             </p>
           </div>
           <div className="flex justify-center items-center">
@@ -122,33 +121,41 @@ export default function Dashboard() {
               </h1>
 
               <p className="text-sm md:text-base text-slate-400 mb-8 text-center max-w-xl mx-auto">
-                Plug in your Web3 wallet to unlock Chapters 1–12, activate your matrix slots,
-                and start earning from on-chain book royalties.
+                Plug in your Web3 wallet to unlock Chapters 1–12, activate your
+                matrix slots, and start earning from on-chain book royalties.
               </p>
 
               <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs md:text-[0.8rem]">
                 <div className="rounded-2xl border border-emerald-500/30 bg-slate-900/70 px-4 py-3 text-left">
-                  <p className="font-medium text-slate-50 mb-1">Non-custodial</p>
+                  <p className="font-medium text-slate-50 mb-1">
+                    Non-custodial
+                  </p>
                   <p className="text-slate-400">
-                    You stay in full control of your USDT & rewards at all times.
+                    You stay in full control of your USDT & rewards at all
+                    times.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-yellow-500/30 bg-slate-900/70 px-4 py-3 text-left">
-                  <p className="font-medium text-slate-50 mb-1">On-chain royalties</p>
+                  <p className="font-medium text-slate-50 mb-1">
+                    On-chain royalties
+                  </p>
                   <p className="text-slate-400">
                     Earn matrix and royalty payouts directly on BSC.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-purple-500/30 bg-slate-900/70 px-4 py-3 text-left">
-                  <p className="font-medium text-slate-50 mb-1">Instant access</p>
+                  <p className="font-medium text-slate-50 mb-1">
+                    Instant access
+                  </p>
                   <p className="text-slate-400">
-                    Once connected, your dashboard, chapters & stats appear instantly.
+                    Once connected, your dashboard, chapters & stats appear
+                    instantly.
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-col items-center gap-3">
-                <ConnectWallet />
+                <MobileWalletConnector />
                 <a
                   href="https://t.me/ricomatrix" // TODO: replace with your actual Telegram link
                   target="_blank"
@@ -184,12 +191,11 @@ export default function Dashboard() {
                 🔥📚✨ RICOMATRIX
               </h1>
               <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
-                READ • EARN • OWN — Manage your matrix positions, unlock chapters,
-                and monitor royalty earnings in one place.
+                READ • EARN • OWN — Manage your matrix positions, unlock
+                chapters, and monitor royalty earnings in one place.
               </p>
               {/* Telegram button in header */}
               <div className="mt-4 flex justify-center">
-                
                 <a
                   href="https://t.me/ricomatrix" // TODO: replace with your actual Telegram link
                   target="_blank"
@@ -247,17 +253,18 @@ export default function Dashboard() {
                         className={`mt-1 flex w-full items-center justify-center rounded-xl px-6 py-3 text-base md:text-lg font-semibold transition-all
                           ${
                             canClaimRoyalty && !isProcessingRoyalty
-                              ? 'bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-300 text-black shadow-[0_0_22px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98]'
-                              : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                              ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-300 text-black shadow-[0_0_22px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98]"
+                              : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
                           }
                         `}
                       >
                         {isProcessingRoyalty
-                          ? 'Processing royalty claim...'
+                          ? "Processing royalty claim..."
                           : `Claim $${royaltyAvailable} USDT`}
                       </button>
                       <p className="mt-2 text-[0.7rem] text-slate-500 text-center">
-                        Your royalty balance updates automatically after a successful claim.
+                        Your royalty balance updates automatically after a
+                        successful claim.
                       </p>
                     </div>
                   )}
@@ -276,7 +283,8 @@ export default function Dashboard() {
                         View Chapters
                       </h3>
                       <p className="text-sm text-slate-400 mb-4">
-                        Explore all available book chapters and upgrade levels as you grow.
+                        Explore all available book chapters and upgrade levels
+                        as you grow.
                       </p>
                       <Link
                         href="/chapters"
@@ -306,7 +314,8 @@ export default function Dashboard() {
                         Check Royalty
                       </h3>
                       <p className="text-sm text-slate-400 mb-4">
-                        View your royalty pool share and claim earnings from library activity.
+                        View your royalty pool share and claim earnings from
+                        library activity.
                       </p>
                       <Link
                         href="/royalty"

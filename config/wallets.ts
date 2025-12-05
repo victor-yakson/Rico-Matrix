@@ -16,6 +16,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
       android: 'https://play.google.com/store/apps/details?id=me.rainbow'
     }
   },
+
   metamask: {
     id: 'metamask',
     name: 'MetaMask',
@@ -30,6 +31,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
       android: 'https://play.google.com/store/apps/details?id=io.metamask'
     }
   },
+
   trust: {
     id: 'trust',
     name: 'Trust Wallet',
@@ -44,6 +46,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
       android: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp'
     }
   },
+
   coinbase: {
     id: 'coinbase',
     name: 'Coinbase Wallet',
@@ -58,6 +61,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
       android: 'https://play.google.com/store/apps/details?id=org.toshi'
     }
   },
+
   phantom: {
     id: 'phantom',
     name: 'Phantom',
@@ -72,6 +76,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
       android: 'https://play.google.com/store/apps/details?id=app.phantom'
     }
   },
+
   rabby: {
     id: 'rabby',
     name: 'Rabby Wallet',
@@ -85,6 +90,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
       web: 'https://rabby.io'
     }
   },
+
   zerion: {
     id: 'zerion',
     name: 'Zerion',
@@ -97,6 +103,37 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
     downloadUrls: {
       ios: 'https://apps.apple.com/app/zerion-defi-portfolio/id1456732568',
       android: 'https://play.google.com/store/apps/details?id=io.zerion.android'
+    }
+  },
+
+
+  safepal: {
+    id: 'safepal',
+    name: 'SafePal',
+    icon: 'https://safepal.com/img/logo.png',
+    deeplink: {
+      ios: 'safepal://wc?uri=',
+      android: 'safepal://wc?uri=',
+      universal: 'https://link.safepal.io/wc?uri='
+    },
+    downloadUrls: {
+      ios: 'https://apps.apple.com/app/safepal-crypto-wallet/id1548297139',
+      android: 'https://play.google.com/store/apps/details?id=io.safepal.wallet'
+    }
+  },
+
+  brave: {
+    id: 'brave',
+    name: 'Brave Wallet',
+    icon: 'https://brave.com/static-assets/images/brave-logo.svg',
+    deeplink: {
+      ios: 'brave://wc?uri=',
+      android: 'brave://wc?uri=',
+      universal: 'https://brave.app.link/wc?uri='
+    },
+    downloadUrls: {
+      ios: 'https://apps.apple.com/app/brave-private-web-browser/id1052879175',
+      android: 'https://play.google.com/store/apps/details?id=com.brave.browser'
     }
   }
 };

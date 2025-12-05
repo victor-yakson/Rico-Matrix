@@ -7,7 +7,6 @@ import { WALLETS } from '@/config/wallets';
 import { DeeplinkService } from '@/services/deeplink';
 import { isMobile, detectPlatform } from '@/utils/platform';
 import styles from './MobileWalletConnector.module.css';
-
 interface DesktopConnectionOptions {
   showQRCode: boolean;
   qrCodeValue: string;
