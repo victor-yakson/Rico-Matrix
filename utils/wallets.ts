@@ -5,7 +5,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
   rainbow: {
     id: 'rainbow',
     name: 'Rainbow',
-    icon: '/wallets/rainbow.svg',
+    icon: '/wallets/rainbow.png',
     deeplink: {
       ios: 'rainbow://',
       android: 'rainbow://',
@@ -98,7 +98,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
   zerion: {
     id: 'zerion',
     name: 'Zerion',
-    icon: '/wallets/zerion.svg',
+    icon: '/wallets/zerion.png',
     deeplink: {
       ios: 'zerion://',
       android: 'zerion://',
@@ -113,7 +113,7 @@ export const WALLETS: Record<WalletId, WalletConfig> = {
   safepal: {
     id: 'safepal',
     name: 'SafePal',
-    icon: '/wallets/safepal.svg',
+    icon: '/wallets/safepal.png',
     deeplink: {
       ios: 'safepal://',
       android: 'safepal://',

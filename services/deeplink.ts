@@ -124,5 +124,5 @@ export class DeeplinkService {
     }
     
     return commonWallets;
-  }
+  } 
 }
