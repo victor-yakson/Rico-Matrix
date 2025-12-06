@@ -8,14 +8,16 @@ import {
   trustWallet,
   safepalWallet,
   injectedWallet,
+  braveWallet,
+  rabbyWallet,
+  phantomWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { http } from "viem";
 
 export const config = getDefaultConfig({
   appName: "Rico Matrix",
   projectId: <string>process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID, // WalletConnect projectId
-  chains:
-    process.env.NODE_ENV ==="development" ? [bsc] : [bsc],
+  chains: process.env.NODE_ENV === "development" ? [bsc] : [bsc],
   wallets: [
     {
       groupName: "Recommended",
@@ -25,6 +27,9 @@ export const config = getDefaultConfig({
         safepalWallet,
         trustWallet,
         injectedWallet,
+        braveWallet,
+        rabbyWallet,
+        phantomWallet,
       ],
     },
   ],
