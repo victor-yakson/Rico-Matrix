@@ -5,8 +5,9 @@ import QRCode from "react-qr-code";
 import { WalletId } from "@/types/wallet";
 import { WALLETS } from "@/utils/wallets";
 import { DeeplinkService } from "@/services/deeplink";
-import { isMobile, detectPlatform } from "@/utils/platform";
+import { isMobile } from "@/utils/platform";
 import styles from "./MobileWalletConnector.module.css";
+
 interface DesktopConnectionOptions {
   showQRCode: boolean;
   qrCodeValue: string;
@@ -25,6 +26,11 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   const { openConnectModal } = useConnectModal();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
+
+  // NEW: keep track of whether we're already inside a wallet in-app browser
+  const [isInAppWalletBrowser, setIsInAppWalletBrowser] =
+    useState<boolean>(false);
+
   const [selectedWallet, setSelectedWallet] = useState<WalletId | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<
     "idle" | "connecting" | "redirecting"
@@ -41,6 +47,33 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   useEffect(() => {
     const mobileCheck = isMobile();
     setIsMobileDevice(mobileCheck);
+
+    // NEW: detect if we are inside a wallet's in-app browser
+    const detectInAppWalletBrowser = () => {
+      if (typeof window === "undefined") return false;
+
+      const ua = navigator.userAgent || "";
+      const eth: any = (window as any).ethereum;
+
+      const walletUA =
+        /MetaMaskMobile/i.test(ua) ||
+        /TrustWallet/i.test(ua) ||
+        /SafePal/i.test(ua) ||
+        /TokenPocket/i.test(ua) ||
+        /OKX/i.test(ua);
+
+      const injectedWallet =
+        !!eth &&
+        (eth.isMetaMask ||
+          eth.isTrust ||
+          eth.isSafePal ||
+          eth.isTokenPocket ||
+          eth.isOKXWallet);
+
+      return walletUA || injectedWallet;
+    };
+
+    setIsInAppWalletBrowser(detectInAppWalletBrowser());
 
     // Generate QR code value
     const generateQRCodeValue = () => {
@@ -85,10 +118,32 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   const handleWalletSelect = async (walletId: WalletId) => {
     if (!isMobileDevice) return;
 
+    // NEW: if we're already inside MetaMask/Trust/etc browser,
+    // DO NOT deeplink again. Just show the RainbowKit connect modal.
+    if (isInAppWalletBrowser) {
+      try {
+        if (openConnectModal) {
+          openConnectModal();
+        } else {
+          // fallback basic connect
+          (window as any).ethereum?.request?.({
+            method: "eth_requestAccounts",
+          });
+        }
+        setShowModal(false);
+      } catch (error) {
+        console.error("Failed to connect in in-app browser:", error);
+        onConnectionError?.(error as Error);
+      }
+      return;
+    }
+
+    // Old behaviour kept for normal mobile browsers (Chrome/Safari/etc)
     setSelectedWallet(walletId);
     setConnectionStatus("connecting");
 
     localStorage.setItem("connectionTime", Date.now().toString());
+    localStorage.setItem("preferredWallet", walletId);
 
     try {
       await DeeplinkService.openWallet(walletId);
@@ -323,7 +378,9 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
 
       <div className={styles.modalContent}>
         <p className={styles.modalDescription}>
-          Choose a wallet app to connect. The app will open automatically.
+          {isInAppWalletBrowser
+            ? "You are in a wallet browser. Tap any option below to connect."
+            : "Choose a wallet app to connect. The app will open automatically."}
         </p>
 
         <div className={styles.walletGrid}>
@@ -334,7 +391,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
                 key={wallet.id}
                 onClick={() => handleWalletSelect(wallet.id as WalletId)}
                 className={styles.walletButton}
-                disabled={connectionStatus !== "idle"}
+                disabled={connectionStatus !== "idle" && !isInAppWalletBrowser}
               >
                 <div className={styles.walletIcon}>
                   <img
@@ -345,7 +402,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
                     onError={(e) => {
                       e.currentTarget.onerror = null; // avoid infinite loop
                       e.currentTarget.src =
-                        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Crect width="24" height="24" fill="%23ccc"/%3E%3C/svg%3E';
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23ccc'/%3E%3C/svg%3E";
                     }}
                   />
                 </div>
@@ -370,7 +427,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
                   key={wallet.id}
                   onClick={() => handleWalletSelect(wallet.id as WalletId)}
                   className={styles.altWalletButton}
-                  disabled={connectionStatus !== "idle"}
+                  disabled={connectionStatus !== "idle" && !isInAppWalletBrowser}
                 >
                   <img
                     src={wallet.icon}
@@ -387,16 +444,28 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
           <p className={styles.helpText}>
             <strong>How it works:</strong>
             <br />
-            1. Select your wallet app
-            <br />
-            2. The app will open automatically
-            <br />
-            3. Approve the connection in your wallet
-            <br />
-            4. Return to this page
+            {isInAppWalletBrowser ? (
+              <>
+                1. Tap a wallet option below
+                <br />
+                2. Approve the connection in your wallet
+                <br />
+                3. You&apos;re ready to use the dApp
+              </>
+            ) : (
+              <>
+                1. Select your wallet app
+                <br />
+                2. The app will open automatically
+                <br />
+                3. Approve the connection in your wallet
+                <br />
+                4. Return to this page
+              </>
+            )}
           </p>
           <p className={styles.helpText}>
-            Don't have a wallet?{" "}
+            Don&apos;t have a wallet?{" "}
             <a
               href="https://ethereum.org/en/wallets/"
               target="_blank"
@@ -471,9 +540,16 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   return (
     <div className={styles.container}>
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => {
+          // NEW: if already in MetaMask/Trust/etc browser, skip deeplink modal
+          if (isInAppWalletBrowser && openConnectModal) {
+            openConnectModal();
+          } else {
+            setShowModal(true);
+          }
+        }}
         className={styles.connectButton}
-        disabled={connectionStatus !== "idle"}
+        disabled={connectionStatus !== "idle" && !isInAppWalletBrowser}
       >
         {connectionStatus === "idle" ? (
           <>
