@@ -1,7 +1,7 @@
 // services/deeplink.ts
-import { WalletId, WalletConfig } from '@/types/wallet';
-import { WALLETS } from '@/utils/wallets';
-import { detectPlatform } from '@/utils/platform';
+import { WalletId, WalletConfig } from "@/types/wallet";
+import { WALLETS } from "@/utils/wallets";
+import { detectPlatform } from "@/utils/platform";
 
 export class DeeplinkService {
   /**
@@ -9,54 +9,59 @@ export class DeeplinkService {
    * - Adds ?autoconnect=1 to the DApp URL so the page knows to auto-trigger wallet connect
    * - Uses wallet-specific deeplink formats where documented
    */
+  // services/deeplink.ts  (updated)
   static createWalletDeepLink(walletId: WalletId, dappUrl: string): string {
     const wallet = WALLETS[walletId];
     const platform = detectPlatform();
 
-    // Decide which deeplink base to consider (for wallets that actually use it)
-    const mode: 'ios' | 'android' | 'universal' =
-      platform === 'ios' ? 'ios' : platform === 'android' ? 'android' : 'universal';
+    const mode: "ios" | "android" | "universal" =
+      platform === "ios"
+        ? "ios"
+        : platform === "android"
+        ? "android"
+        : "universal";
 
     const base = wallet.deeplink[mode];
 
-    // 1) Ensure our DApp URL has ?autoconnect=1 so the DApp can auto-open the wallet modal
+    // Add ?autoconnect=1
     let autoConnectUrl: string;
-
     try {
       const url = new URL(dappUrl);
-      url.searchParams.set('autoconnect', '1');
+      url.searchParams.set("autoconnect", "1");
       autoConnectUrl = url.toString();
     } catch {
-      const sep = dappUrl.includes('?') ? '&' : '?';
+      const sep = dappUrl.includes("?") ? "&" : "?";
       autoConnectUrl = `${dappUrl}${sep}autoconnect=1`;
     }
 
-    // 2) Build per-wallet deeplink
+    // Wallet-specific handling WITHOUT encoding
     switch (walletId) {
-      case 'metamask': {
-        // MetaMask: https://link.metamask.io/dapp/<dapp-domain-or-url>
-        const urlWithoutProtocol = autoConnectUrl.replace(/^https?:\/\//, '');
-        return `${base}${encodeURIComponent(urlWithoutProtocol)}`;
+      case "metamask": {
+        // MetaMask deeplink format: https://link.metamask.io/dapp/<dapp-domain-or-url>
+        const cleanUrl = autoConnectUrl.replace(/^https?:\/\//, "");
+        return `${base}${cleanUrl}`;
       }
 
-      case 'trust': {
-        // Trust config (universal): 'https://link.trustwallet.com/open_url?coin_id=60&url='
-        return `${base}${encodeURIComponent(autoConnectUrl)}`;
+      case "trust": {
+        // Example: https://link.trustwallet.com/open_url?coin_id=60&url=<dapp>
+        return `${base}${autoConnectUrl}`;
       }
 
-      case 'coinbase': {
-        // Coinbase config (universal): 'https://go.cb-w.com/dapp?cb_url='
-        return `${base}${encodeURIComponent(autoConnectUrl)}`;
+      case "coinbase": {
+        // Example: https://go.cb-w.com/dapp?cb_url=<dapp>
+        return `${base}${autoConnectUrl}`;
       }
 
-      case 'phantom': {
-        // Phantom config (universal): 'https://phantom.app/ul/browse/'
-        return `${base}${encodeURIComponent(autoConnectUrl)}`;
+      case "phantom": {
+        // Example: https://phantom.app/ul/browse/<dapp>
+        return `${base}${autoConnectUrl}`;
       }
 
-      // IMPORTANT: for SafePal (and others without a proper DApp deeplink),
-      // do NOT smash the base + encoded URL together.
-      // Just return the DApp URL itself and let the user open it in SafePal's DApp browser.
+      /**
+       * IMPORTANT:
+       * SafePal + Zerion + Rabby + Brave DO NOT support raw concatenation,
+       * so we return our DApp URL directly instead of producing invalid URLs.
+       */
       default: {
         return autoConnectUrl;
       }
@@ -71,11 +76,11 @@ export class DeeplinkService {
     const dappUrl = window.location.href;
 
     const deepLink = this.createWalletDeepLink(walletId, dappUrl);
-    console.log('Deep link to open:', deepLink);
+    console.log("Deep link to open:", deepLink);
 
     // Store the wallet preference
-    localStorage.setItem('preferredWallet', walletId);
-    localStorage.setItem('lastConnectionAttempt', Date.now().toString());
+    localStorage.setItem("preferredWallet", walletId);
+    localStorage.setItem("lastConnectionAttempt", Date.now().toString());
 
     try {
       // Try to open the deep link
@@ -88,7 +93,7 @@ export class DeeplinkService {
         }
       }, 2000);
     } catch (err) {
-      console.error('Failed to open wallet:', err);
+      console.error("Failed to open wallet:", err);
       throw err;
     }
   }
@@ -103,7 +108,7 @@ export class DeeplinkService {
       // eslint-disable-next-line no-new
       new URL(link);
     } catch {
-      console.error('Invalid deeplink URL:', link);
+      console.error("Invalid deeplink URL:", link);
       return;
     }
 
@@ -112,8 +117,8 @@ export class DeeplinkService {
 
     // Method 2: Hidden iframe (sometimes helps Android)
     setTimeout(() => {
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
       iframe.src = link;
       document.body.appendChild(iframe);
 
@@ -129,7 +134,7 @@ export class DeeplinkService {
    * Check if app was successfully opened
    */
   private static wasAppOpened(): boolean {
-    const lastAttempt = localStorage.getItem('lastConnectionAttempt');
+    const lastAttempt = localStorage.getItem("lastConnectionAttempt");
     if (!lastAttempt) return false;
 
     const timeSinceAttempt = Date.now() - parseInt(lastAttempt, 10);
@@ -144,14 +149,14 @@ export class DeeplinkService {
     const platform = detectPlatform();
     let downloadUrl = wallet.downloadUrls?.web;
 
-    if (platform === 'ios' && wallet.downloadUrls?.ios) {
+    if (platform === "ios" && wallet.downloadUrls?.ios) {
       downloadUrl = wallet.downloadUrls.ios;
-    } else if (platform === 'android' && wallet.downloadUrls?.android) {
+    } else if (platform === "android" && wallet.downloadUrls?.android) {
       downloadUrl = wallet.downloadUrls.android;
     }
 
     if (downloadUrl) {
-      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
     }
   }
 
@@ -161,14 +166,14 @@ export class DeeplinkService {
   static getRecommendedWallets(): WalletId[] {
     const platform = detectPlatform();
 
-    const commonWallets: WalletId[] = ['metamask', 'rainbow', 'coinbase'];
+    const commonWallets: WalletId[] = ["metamask", "rainbow", "coinbase"];
 
-    if (platform === 'ios') {
-      return [...commonWallets, 'phantom', 'zerion'];
+    if (platform === "ios") {
+      return [...commonWallets, "phantom", "zerion"];
     }
 
-    if (platform === 'android') {
-      return [...commonWallets, 'trust', 'rabby'];
+    if (platform === "android") {
+      return [...commonWallets, "trust", "rabby"];
     }
 
     return commonWallets;
