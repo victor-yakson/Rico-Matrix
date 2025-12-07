@@ -20,6 +20,18 @@ const safeBigInt = (value: any): any => {
   return value;
 };
 
+// Helper function to convert values to numbers
+const toNumber = (value: any, fallback = 0): number => {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'bigint') return Number(value);
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? fallback : parsed;
+  }
+  return fallback;
+};
+
 export const useQuantuMatrix = () => {
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -229,6 +241,91 @@ export const useQuantuMatrix = () => {
     ? (parseFloat(formatUnits(BigInt(chapterPrices[1] || '0'), 18)) * 2).toString()
     : '0';
 
+  // Read contract data directly - MOVE THIS BEFORE THE MATRIX FUNCTIONS
+  const readContract = useCallback(async (functionName: string, args: any[] = []) => {
+    if (!publicClient) throw new Error('No public client available');
+    
+    try {
+      const result = await publicClient.readContract({
+        ...quantuMatrixContract,
+        functionName: functionName as any,
+        args: args,
+      });
+      return safeBigInt(result);
+    } catch (error) {
+      console.error(`Error reading contract function ${functionName}:`, error);
+      throw error;
+    }
+  }, [publicClient]);
+
+  // Track 1 Matrix data fetch - NOW IT CAN USE readContract
+  const fetchTrack1Matrix = useCallback(async (userAddress: string, chapter: number) => {
+    try {
+      const data = await readContract('getTrack1', [userAddress, chapter]) as any;
+      
+      if (data && Array.isArray(data) && data.length >= 4) {
+        return {
+          currentReferrer: data[0] || '',
+          referrals: Array.isArray(data[1]) ? data[1] : [],
+          blocked: Boolean(data[2]),
+          reinvestCount: toNumber(data[3], 0),
+        };
+      }
+      
+      return {
+        currentReferrer: '',
+        referrals: [],
+        blocked: false,
+        reinvestCount: 0,
+      };
+    } catch (error) {
+      console.error('Error fetching Track1 matrix:', error);
+      return {
+        currentReferrer: '',
+        referrals: [],
+        blocked: false,
+        reinvestCount: 0,
+      };
+    }
+  }, [readContract]);
+
+  // Track 2 Matrix data fetch - NOW IT CAN USE readContract
+  const fetchTrack2Matrix = useCallback(async (userAddress: string, chapter: number) => {
+    try {
+      const data = await readContract('getTrack2', [userAddress, chapter]) as any;
+      
+      if (data && Array.isArray(data) && data.length >= 6) {
+        return {
+          currentReferrer: data[0] || '',
+          firstLineReferrals: Array.isArray(data[1]) ? data[1] : [],
+          secondLineReferrals: Array.isArray(data[2]) ? data[2] : [],
+          blocked: Boolean(data[3]),
+          reinvestCount: toNumber(data[4], 0),
+          closedPart: data[5] || '',
+        };
+      }
+      
+      return {
+        currentReferrer: '',
+        firstLineReferrals: [],
+        secondLineReferrals: [],
+        blocked: false,
+        reinvestCount: 0,
+        closedPart: '',
+      };
+    } catch (error) {
+      console.error('Error fetching Track2 matrix:', error);
+      return {
+        currentReferrer: '',
+        firstLineReferrals: [],
+        secondLineReferrals: [],
+        blocked: false,
+        reinvestCount: 0,
+        closedPart: '',
+      };
+    }
+  }, [readContract]);
+
   // Approve USDT function with toast notifications
   const approveUsdt = useCallback(async (amount: string) => {
     try {
@@ -409,41 +506,9 @@ export const useQuantuMatrix = () => {
     }
   }, [writeContractAsync]);
 
-  // Read contract data directly
-  const readContract = useCallback(async (functionName: string, args: any[] = []) => {
-    if (!publicClient) throw new Error('No public client available');
-    
-    try {
-      toast.info('Loading contract data...', {
-        description: `Fetching ${functionName}...`,
-        duration: 2000,
-      });
-
-      const result = await publicClient.readContract({
-        ...quantuMatrixContract,
-        functionName: functionName as any,
-        args: args,
-      });
-      
-      return safeBigInt(result);
-    } catch (error) {
-      console.error(`Error reading contract function ${functionName}:`, error);
-      
-      toast.error('Data Load Failed', {
-        description: `Failed to load ${functionName} data`,
-        duration: 3000,
-      });
-      
-      throw error;
-    }
-  }, [publicClient]);
-
   // Refetch all user data with toast
   const refetchUserData = useCallback(() => {
-    toast.info('Refreshing user data...', {
-      duration: 2000,
-    });
-    
+  
     refetchUserExists();
     refetchUsdtAllowance();
     refetchUsdtBalance();
@@ -552,6 +617,10 @@ export const useQuantuMatrix = () => {
     usdtBalance: formattedUsdtBalance,
     usdtAllowance: formattedUsdtAllowance,
     joinCost,
+    
+    // Matrix data fetching
+    fetchTrack1Matrix,
+    fetchTrack2Matrix,
     
     // State
     loading,
