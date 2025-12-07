@@ -5,7 +5,7 @@ import { useQuantuMatrix } from "../hooks/useQuantuMatrix";
 import { ConnectWallet } from "../components/Common/ConnectWallet";
 import { Stats } from "../components/Dashboard/Stats";
 import { Header } from "../components/Navigation/Header";
-import { ProfileInfo } from "../components/Dashboard/ProfileInfo";
+import ProfileInfo from "../components/Dashboard/ProfileInfo";
 import { ReferralSection } from "../components/Profile/ReferralSection";
 import { ProfileStats } from "../components/Dashboard/ProfileStats";
 import { RegistrationSection } from "../components/Dashboard/RegistrationSection";
@@ -13,11 +13,49 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import MobileWalletConnector from "@/components/Common/MobileWalletConnector";
+import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
+import { formatUnits } from "viem";
+import Leaderboards from "@/components/Dashboard/Leaderboards";
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
-  const { userData, globalStats, refetchUserData, claimRoyalty, loading } =
-    useQuantuMatrix();
+  // Use the hook with all new data
+  const {
+    // User data
+    userData,
+
+    // Global data
+    globalStats,
+    globalSummary,
+    globalRicoFarming,
+
+    // Leaderboards
+    topEarners,
+    topReferrers,
+
+    // Token addresses
+    usdtAddress,
+    rewardTokenAddress,
+
+    // USDT data
+    usdtBalance,
+    usdtAllowance,
+    joinCost,
+
+    // Loading state
+    loading,
+
+    // Actions
+    approveUsdt,
+    joinLibrary,
+    buyChapter,
+    claimRoyalty,
+    refetchUserData,
+    refetchAllData,
+    refetchGlobalStats,
+    refetchGlobalSummary,
+    refetchGlobalRicoFarming,
+  } = useQuantuMatrix();
 
   const [mounted, setMounted] = useState(false);
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
@@ -103,75 +141,7 @@ export default function Dashboard() {
   if (!isConnected) {
     return (
       <>
-        <Header />
-        <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_#facc15_0,_transparent_55%),radial-gradient(circle_at_bottom,_#22c55e22_0,_#020617_60%)] flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl">
-            <div className="rounded-3xl border border-yellow-500/30 bg-slate-950/80 px-6 md:px-10 py-10 md:py-12 shadow-[0_0_60px_rgba(15,23,42,0.9)] backdrop-blur-xl relative overflow-hidden">
-              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-yellow-500/10 blur-3xl" />
-              <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl" />
-
-              <div className="mb-6 text-xs uppercase tracking-[0.25em] text-yellow-300/80 flex items-center justify-center gap-2">
-                <span className="h-[1px] w-6 bg-yellow-400/40" />
-                <span>Welcome to RicoMatrix</span>
-                <span className="h-[1px] w-6 bg-yellow-400/40" />
-              </div>
-
-              <h1 className="text-3xl md:text-4xl font-semibold text-slate-50 mb-4 text-center">
-                Connect your wallet to enter the library
-              </h1>
-
-              <p className="text-sm md:text-base text-slate-400 mb-8 text-center max-w-xl mx-auto">
-                Plug in your Web3 wallet to unlock Chapters 1–12, activate your
-                matrix slots, and start earning from on-chain book royalties.
-              </p>
-
-              <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs md:text-[0.8rem]">
-                <div className="rounded-2xl border border-emerald-500/30 bg-slate-900/70 px-4 py-3 text-left">
-                  <p className="font-medium text-slate-50 mb-1">
-                    Non-custodial
-                  </p>
-                  <p className="text-slate-400">
-                    You stay in full control of your USDT & rewards at all
-                    times.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-yellow-500/30 bg-slate-900/70 px-4 py-3 text-left">
-                  <p className="font-medium text-slate-50 mb-1">
-                    On-chain royalties
-                  </p>
-                  <p className="text-slate-400">
-                    Earn matrix and royalty payouts directly on BSC.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-purple-500/30 bg-slate-900/70 px-4 py-3 text-left">
-                  <p className="font-medium text-slate-50 mb-1">
-                    Instant access
-                  </p>
-                  <p className="text-slate-400">
-                    Once connected, your dashboard, chapters & stats appear
-                    instantly.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center gap-3">
-                <MobileWalletConnector />
-                <a
-                  href="https://t.me/ricomatrix" // TODO: replace with your actual Telegram link
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-xs md:text-sm font-medium text-sky-200 hover:bg-sky-500/20 transition-all"
-                >
-                  <span className="text-base">📲</span>
-                  <span>Join our Telegram for updates</span>
-                </a>
-                <p className="text-[0.75rem] text-slate-500">
-                  Powered by BSC • Best with MetaMask, Trust Wallet, or Rabby
-                </p>
-              </div>
-            </div>
-          </div>
-        </main>
+        <RicoMatrixLandingPage />
       </>
     );
   }
@@ -194,10 +164,23 @@ export default function Dashboard() {
                 READ • EARN • OWN — Manage your matrix positions, unlock
                 chapters, and monitor royalty earnings in one place.
               </p>
+
+              {/* RICO Token Announcement */}
+              {globalRicoFarming?.[0] &&
+                parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) >
+                  0 && (
+                  <div className="mt-4">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-xs md:text-sm font-medium text-cyan-200 hover:bg-cyan-500/20 transition-all">
+                      <span className="text-base">🪙</span>
+                      <span>Earn RICO tokens 1:1 with all USDT activity!</span>
+                    </div>
+                  </div>
+                )}
+
               {/* Telegram button in header */}
               <div className="mt-4 flex justify-center">
                 <a
-                  href="https://t.me/ricomatrix" // TODO: replace with your actual Telegram link
+                  href="https://t.me/ricomatrix"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-full border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-xs md:text-sm font-medium text-sky-200 hover:bg-sky-500/20 transition-all"
@@ -231,7 +214,10 @@ export default function Dashboard() {
               {/* Left Column - Profile & Referral */}
               <div className="space-y-6">
                 <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-                  <ProfileInfo userData={userData} />
+                  <ProfileInfo
+                    userData={userData}
+                    rewardTokenAddress={rewardTokenAddress}
+                  />
                 </div>
 
                 <div className="rounded-2xl border border-purple-400/40 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(88,28,135,0.6)] backdrop-blur-sm">
@@ -243,7 +229,11 @@ export default function Dashboard() {
               <div className="space-y-6 lg:space-y-8">
                 {/* Stats Overview + Royalty Button */}
                 <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
-                  <Stats userData={userData} globalStats={globalStats} />
+                  <Stats
+                    userData={userData}
+                    globalStats={globalStats}
+                    globalRicoFarming={globalRicoFarming}
+                  />
 
                   {userData?.exists && (
                     <div className="mt-6">
@@ -270,62 +260,371 @@ export default function Dashboard() {
                   )}
                 </div>
 
+                {/* NEW: RICO Farming Section */}
+                {userData?.exists && (
+                  <div className="rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-bold text-cyan-300 flex items-center gap-3">
+                        <span className="text-2xl">🪙</span>
+                        RICO Token Farming
+                      </h3>
+                      {rewardTokenAddress && (
+                        <a
+                          href={`https://bscscan.com/token/${rewardTokenAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                        >
+                          <span>View Token</span>
+                          <span>↗</span>
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Personal RICO Stats */}
+                    <div className="mb-8">
+                      <h4 className="text-lg font-semibold text-slate-200 mb-4">
+                        Your RICO Balance
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="rounded-xl bg-slate-900/60 p-4 border border-cyan-700/40">
+                          <p className="text-sm text-slate-400 mb-1">
+                            Total Earned
+                          </p>
+                          <p className="text-2xl font-bold text-cyan-400">
+                            {userData.ricoShouldHave
+                              ? parseFloat(userData.ricoShouldHave).toFixed(2)
+                              : "0.00"}{" "}
+                            RICO
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            From all chapter purchases
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-slate-900/60 p-4 border border-emerald-700/40">
+                          <p className="text-sm text-slate-400 mb-1">
+                            Already Received
+                          </p>
+                          <p className="text-2xl font-bold text-emerald-400">
+                            {userData.ricoSent
+                              ? parseFloat(userData.ricoSent).toFixed(2)
+                              : "0.00"}{" "}
+                            RICO
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Automatically sent to wallet
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-slate-900/60 p-4 border border-yellow-700/40">
+                          <p className="text-sm text-slate-400 mb-1">Pending</p>
+                          <p className="text-2xl font-bold text-yellow-400">
+                            {userData.ricoPending
+                              ? parseFloat(userData.ricoPending).toFixed(2)
+                              : "0.00"}{" "}
+                            RICO
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Will be sent automatically
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      {userData.ricoShouldHave &&
+                        parseFloat(userData.ricoShouldHave) > 0 && (
+                          <div className="mt-4">
+                            <div className="flex justify-between text-sm text-slate-400 mb-1">
+                              <span>Distribution Progress</span>
+                              <span>
+                                {userData.ricoSent &&
+                                parseFloat(userData.ricoSent) > 0
+                                  ? `${Math.round(
+                                      (parseFloat(userData.ricoSent) /
+                                        parseFloat(userData.ricoShouldHave)) *
+                                        100
+                                    )}%`
+                                  : "0%"}
+                              </span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-cyan-500 to-emerald-500 h-2 rounded-full"
+                                style={{
+                                  width:
+                                    userData.ricoShouldHave &&
+                                    userData.ricoSent &&
+                                    parseFloat(userData.ricoShouldHave) > 0
+                                      ? `${Math.min(
+                                          (parseFloat(userData.ricoSent) /
+                                            parseFloat(
+                                              userData.ricoShouldHave
+                                            )) *
+                                            100,
+                                          100
+                                        )}%`
+                                      : "0%",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Note about automatic farming */}
+                      <p className="mt-4 text-sm text-slate-500 p-3 bg-slate-900/40 rounded-lg">
+                        📈 <span className="text-cyan-300">RICO Farming:</span>{" "}
+                        You earn 1 RICO for every 1 USDT spent on chapters, plus
+                        1 RICO for every 1 USDT earned in upline rewards. RICO
+                        is sent automatically when available in the contract.
+                      </p>
+                    </div>
+
+                    {/* Global RICO Stats */}
+                    {globalRicoFarming && (
+                      <div className="mt-6 pt-6 border-t border-slate-800">
+                        <h4 className="text-lg font-semibold text-slate-200 mb-4">
+                          Global RICO Distribution
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
+                            <p className="text-sm text-slate-400 mb-1">
+                              Total Should Farm
+                            </p>
+                            <p className="text-xl font-bold text-cyan-400">
+                              {globalRicoFarming?.[0]
+                                ? parseFloat(
+                                    formatUnits(
+                                      BigInt(globalRicoFarming[0]),
+                                      18
+                                    )
+                                  ).toFixed(2)
+                                : "0.00"}{" "}
+                              RICO
+                            </p>
+                          </div>
+                          <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
+                            <p className="text-sm text-slate-400 mb-1">
+                              Total Distributed
+                            </p>
+                            <p className="text-xl font-bold text-emerald-400">
+                              {globalRicoFarming?.[1]
+                                ? parseFloat(
+                                    formatUnits(
+                                      BigInt(globalRicoFarming[1]),
+                                      18
+                                    )
+                                  ).toFixed(2)
+                                : "0.00"}{" "}
+                              RICO
+                            </p>
+                          </div>
+                          <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
+                            <p className="text-sm text-slate-400 mb-1">
+                              Remaining to Farm
+                            </p>
+                            <p className="text-xl font-bold text-yellow-400">
+                              {globalRicoFarming?.[2]
+                                ? parseFloat(
+                                    formatUnits(
+                                      BigInt(globalRicoFarming[2]),
+                                      18
+                                    )
+                                  ).toFixed(2)
+                                : "0.00"}{" "}
+                              RICO
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {userData?.exists && (
                   <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
                     <ProfileStats userData={userData} />
                   </div>
                 )}
-
-                {userData?.exists && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-                    <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                      <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                        View Chapters
-                      </h3>
-                      <p className="text-sm text-slate-400 mb-4">
-                        Explore all available book chapters and upgrade levels
-                        as you grow.
-                      </p>
-                      <Link
-                        href="/chapters"
-                        className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
-                      >
-                        Browse Chapters
-                      </Link>
-                    </div>
-
-                    <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                      <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                        Check Matrix
-                      </h3>
-                      <p className="text-sm text-slate-400 mb-4">
-                        View your matrix network and track your downline growth.
-                      </p>
-                      <Link
-                        href="/matrix"
-                        className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
-                      >
-                        View Matrix
-                      </Link>
-                    </div>
-
-                    <div className="rounded-2xl border border-emerald-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                      <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                        Check Royalty
-                      </h3>
-                      <p className="text-sm text-slate-400 mb-4">
-                        View your royalty pool share and claim earnings from
-                        library activity.
-                      </p>
-                      <Link
-                        href="/royalty"
-                        className="inline-block rounded-xl bg-emerald-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
-                      >
-                        View Royalty
-                      </Link>
-                    </div>
+              </div>
+            </div>
+            {/* Add this wrapper */}
+            {userData?.exists && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 lg:gap-6  mb-8">
+                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                    📚
                   </div>
-                )}
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    View Chapters
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Explore all available book chapters and upgrade levels as
+                    you grow.
+                  </p>
+                  <Link
+                    href="/chapters"
+                    className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+                  >
+                    Browse Chapters
+                  </Link>
+                </div>
+
+                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                    🕸️
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    Check Matrix
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    View your matrix network and track your downline growth.
+                  </p>
+                  <Link
+                    href="/matrix"
+                    className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+                  >
+                    View Matrix
+                  </Link>
+                </div>
+
+                <div className="rounded-2xl border border-emerald-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                    👑
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    Check Royalty
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    View your royalty pool share and claim earnings from library
+                    activity.
+                  </p>
+                  <Link
+                    href="/royalty"
+                    className="inline-block rounded-xl bg-emerald-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                  >
+                    View Royalty
+                  </Link>
+                </div>
+
+                <div className="rounded-2xl border border-cyan-500/30 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                    🪙
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                    View RICO Farming
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Track your RICO token earnings from chapter purchases and
+                    upline rewards.
+                  </p>
+                  <Link
+                    href="/rico"
+                    className="inline-block rounded-xl bg-cyan-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(34,211,238,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                  >
+                    View RICO Stats
+                  </Link>
+                </div>
+              </div>
+            )}
+            {/* Leaderboards Section */}
+            {userData?.exists && (
+              <Leaderboards
+                topEarners={topEarners}
+                topReferrers={topReferrers}
+              />
+            )}
+
+            {/* Global Summary for All Users */}
+            <div className="mb-8 md:mb-10 lg:mb-12">
+              <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                <h3 className="text-xl font-bold text-slate-200 mb-6 flex items-center gap-3">
+                  <span className="text-2xl">🌍</span>
+                  Global Network Summary
+                </h3>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">Total Readers</p>
+                    <p className="text-lg font-bold text-slate-100">
+                      {globalSummary?.totalReaders?.toString() || "0"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      Chapters Purchased
+                    </p>
+                    <p className="text-lg font-bold text-cyan-300">
+                      {globalSummary?.globalTotalChaptersPurchased?.toString() ||
+                        "0"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      USDT Distributed
+                    </p>
+                    <p className="text-lg font-bold text-yellow-300">
+                      {globalSummary?.globalTotalUnilevelPaid
+                        ? parseFloat(
+                            formatUnits(
+                              BigInt(globalSummary.globalTotalUnilevelPaid),
+                              18
+                            )
+                          ).toFixed(2)
+                        : "0.00"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">Royalty Pool</p>
+                    <p className="text-lg font-bold text-purple-300">
+                      {globalSummary?.royaltyPot
+                        ? parseFloat(
+                            formatUnits(BigInt(globalSummary.royaltyPot), 18)
+                          ).toFixed(2)
+                        : "0.00"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">RICO Farmed</p>
+                    <p className="text-lg font-bold text-cyan-400">
+                      {globalSummary?.ricoExpectedTotal
+                        ? parseFloat(
+                            formatUnits(
+                              BigInt(globalSummary.ricoExpectedTotal),
+                              18
+                            )
+                          ).toFixed(2)
+                        : "0.00"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      Active Referrers
+                    </p>
+                    <p className="text-lg font-bold text-emerald-300">
+                      {globalSummary?.globalActiveReferrers?.toString() || "0"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Refresh Button */}
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={refetchAllData}
+                    disabled={loading}
+                    className="flex items-center gap-2 rounded-xl bg-slate-800/50 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700/50 transition-all border border-slate-700/50"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></div>
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-lg">🔄</span>
+                        Refresh All Data
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

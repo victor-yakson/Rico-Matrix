@@ -17,11 +17,20 @@ interface DesktopConnectionOptions {
 interface MobileWalletConnectorProps {
   onConnectionSuccess?: (address: string) => void;
   onConnectionError?: (error: Error) => void;
+  /** Extra class to style component differently per placement (header, page, etc.) */
+  className?: string;
+  /** Text for the desktop button when idle (default: "Connect Wallet") */
+  desktopButtonLabel?: string;
+  /** Text for the mobile button when idle (default: "Connect Wallet") */
+  mobileButtonLabel?: string;
 }
 
 const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   onConnectionSuccess,
   onConnectionError,
+  className,
+  desktopButtonLabel = "Connect Wallet",
+  mobileButtonLabel = "Launch App",
 }) => {
   const { openConnectModal } = useConnectModal();
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -480,9 +489,10 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
     </div>
   );
 
+  // DESKTOP
   if (!isMobileDevice) {
     return (
-      <div className={styles.desktopContainer}>
+      <div className={`${styles.desktopContainer} ${className ?? ""}`}>
         <button
           onClick={handleDesktopConnect}
           className={styles.desktopButton}
@@ -490,7 +500,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
         >
           <span className={styles.desktopButtonIcon}>🦊</span>
           <span className={styles.desktopButtonText}>
-            {connectionStatus === "idle" ? "Connect Wallet" : "Connecting..."}
+            {connectionStatus === "idle" ? desktopButtonLabel : "Connecting..."}
           </span>
           <span className={styles.desktopButtonBadge}>Desktop</span>
         </button>
@@ -536,9 +546,9 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
     );
   }
 
-  // Mobile version
+  // MOBILE
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${className ?? ""}`}>
       <button
         onClick={() => {
           // NEW: if already in MetaMask/Trust/etc browser, skip deeplink modal
@@ -553,7 +563,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
       >
         {connectionStatus === "idle" ? (
           <>
-            <span className={styles.buttonText}>Connect Wallet</span>
+            <span className={styles.buttonText}>{mobileButtonLabel}</span>
             <span className={styles.buttonBadge}>Mobile</span>
           </>
         ) : connectionStatus === "connecting" ? (

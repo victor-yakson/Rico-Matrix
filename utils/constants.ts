@@ -10,6 +10,7 @@ export const CONTRACT_ABI = [
       { internalType: "address", name: "rewardTokenAddress", type: "address" },
       { internalType: "address", name: "feeWalletA", type: "address" },
       { internalType: "address", name: "feeWalletB", type: "address" },
+      { internalType: "address", name: "feeWalletC", type: "address" },
     ],
     stateMutability: "nonpayable",
     type: "constructor",
@@ -33,6 +34,31 @@ export const CONTRACT_ABI = [
   { inputs: [], name: "TokenNotContract", type: "error" },
   { inputs: [], name: "TransferFailed", type: "error" },
   { inputs: [], name: "ZeroAddress", type: "error" },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "buyer",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "usdtSpent",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "ricoAmount",
+        type: "uint256",
+      },
+    ],
+    name: "BuyerRewarded",
+    type: "event",
+  },
   {
     anonymous: false,
     inputs: [
@@ -132,27 +158,6 @@ export const CONTRACT_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "from", type: "address" },
-      { indexed: true, internalType: "address", name: "to", type: "address" },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint16",
-        name: "permille",
-        type: "uint16",
-      },
-    ],
-    name: "PlatformFeePaid",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
       {
         indexed: true,
         internalType: "address",
@@ -206,6 +211,33 @@ export const CONTRACT_ABI = [
       { indexed: false, internalType: "uint8", name: "chapter", type: "uint8" },
     ],
     name: "Reinvest",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "startReferrer",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "lastReferrer",
+        type: "address",
+      },
+      { indexed: false, internalType: "uint8", name: "track", type: "uint8" },
+      { indexed: false, internalType: "uint8", name: "chapter", type: "uint8" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "hops",
+        type: "uint256",
+      },
+    ],
+    name: "ReinvestDepthCapped",
     type: "event",
   },
   {
@@ -355,6 +387,13 @@ export const CONTRACT_ABI = [
   },
   {
     inputs: [],
+    name: "LEADERBOARD_SIZE",
+    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "PLATFORM_FEE_PERCENT",
     outputs: [{ internalType: "uint16", name: "", type: "uint16" }],
     stateMutability: "view",
@@ -492,6 +531,115 @@ export const CONTRACT_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "getGlobalSummary",
+    outputs: [
+      {
+        components: [
+          { internalType: "uint256", name: "totalReaders", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "globalTotalChaptersPurchased",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "globalTotalUnilevelPaid",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "globalTotalRoyaltyContrib",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "globalTotalRoyaltyClaimed",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "globalTotalPlatformFees",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "ricoExpectedTotal",
+            type: "uint256",
+          },
+          { internalType: "uint256", name: "ricoPaidTotal", type: "uint256" },
+          { internalType: "uint256", name: "royaltyPot", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "totalRoyaltyPoints",
+            type: "uint256",
+          },
+          { internalType: "uint256", name: "totalRoyalties", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "globalActiveReferrers",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct RICOMATRIX.GlobalSummary",
+        name: "s",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "readerAddr", type: "address" }],
+    name: "getReaderSummary",
+    outputs: [
+      {
+        components: [
+          { internalType: "uint256", name: "id", type: "uint256" },
+          { internalType: "address", name: "referrer", type: "address" },
+          { internalType: "uint256", name: "partnersCount", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "track1TotalEarned",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "track2TotalEarned",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "track1TotalCycles",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "track2TotalCycles",
+            type: "uint256",
+          },
+          { internalType: "uint256", name: "track1Unlocked", type: "uint256" },
+          { internalType: "uint256", name: "track2Unlocked", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "royaltyAvailable",
+            type: "uint256",
+          },
+          { internalType: "uint256", name: "royaltyClaimed", type: "uint256" },
+          { internalType: "uint256", name: "royaltyPercent", type: "uint256" },
+          { internalType: "uint256", name: "ricoShouldHave", type: "uint256" },
+          { internalType: "uint256", name: "ricoSent", type: "uint256" },
+          { internalType: "uint256", name: "ricoPending", type: "uint256" },
+        ],
+        internalType: "struct RICOMATRIX.ReaderSummary",
+        name: "s",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "readerAddr", type: "address" }],
     name: "getReaderTotals",
     outputs: [
@@ -515,6 +663,48 @@ export const CONTRACT_ABI = [
       { internalType: "uint256[]", name: "t2Earn", type: "uint256[]" },
       { internalType: "uint256[]", name: "t1Cycles", type: "uint256[]" },
       { internalType: "uint256[]", name: "t2Cycles", type: "uint256[]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getRicoFarming",
+    outputs: [
+      { internalType: "uint256", name: "shouldHave", type: "uint256" },
+      { internalType: "uint256", name: "sent", type: "uint256" },
+      { internalType: "uint256", name: "pending", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getRicoFarmingGlobal",
+    outputs: [
+      { internalType: "uint256", name: "shouldHave", type: "uint256" },
+      { internalType: "uint256", name: "sent", type: "uint256" },
+      { internalType: "uint256", name: "pending", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getTopEarners",
+    outputs: [
+      { internalType: "address[10]", name: "addrs", type: "address[10]" },
+      { internalType: "uint256[10]", name: "amounts", type: "uint256[10]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getTopReferrers",
+    outputs: [
+      { internalType: "address[10]", name: "addrs", type: "address[10]" },
+      { internalType: "uint256[10]", name: "counts", type: "uint256[10]" },
     ],
     stateMutability: "view",
     type: "function",
@@ -559,6 +749,13 @@ export const CONTRACT_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "globalActiveReferrers",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "uint8", name: "", type: "uint8" }],
     name: "globalPlatformFeeCollected",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
@@ -574,7 +771,21 @@ export const CONTRACT_ABI = [
   },
   {
     inputs: [],
+    name: "globalTotalChaptersPurchased",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "globalTotalPlatformFees",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "globalTotalRoyaltyClaimed",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
@@ -743,6 +954,13 @@ export const CONTRACT_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "platformFeeWalletC",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "", type: "address" }],
     name: "readers",
     outputs: [
@@ -775,6 +993,34 @@ export const CONTRACT_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "ricoExpected",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ricoExpectedTotal",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "ricoPaid",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ricoPaidTotal",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "royaltyPot",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
@@ -789,6 +1035,34 @@ export const CONTRACT_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "topEarners",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "topEarnings",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "topReferralCounts",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "topReferrers",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "totalRoyalties",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
@@ -798,6 +1072,13 @@ export const CONTRACT_ABI = [
   {
     inputs: [],
     name: "totalRoyaltyPoints",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "totalUnilevelEarned",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
@@ -824,7 +1105,6 @@ export const CONTRACT_ABI = [
     type: "function",
   },
 ];
-
 export const USDT_ABI = [
   {
     constant: false,

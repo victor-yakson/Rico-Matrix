@@ -126,7 +126,6 @@ export const RoyaltyPool = () => {
           How Royalties Work
         </h4>
         <ul className="space-y-1.5 text-xs md:text-sm text-amber-100/90">
-          <li>• 15% of every chapter purchase flows into the global royalty pool.</li>
           <li>• Your share is based on your total contribution and activity tier.</li>
           <li>• Payouts are fully on-chain and distributed proportionally.</li>
           <li>• You can claim anytime — no lock period or cooldown.</li>

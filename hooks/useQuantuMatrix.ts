@@ -2,6 +2,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { quantuMatrixContract, usdtContract } from '../utils/contracts';
 import { useState, useEffect, useCallback } from 'react';
 import { formatUnits, parseUnits } from 'viem';
+import { toast } from 'sonner';
 
 // Helper function to safely convert BigInt to string for serialization
 const safeBigInt = (value: any): any => {
@@ -38,7 +39,7 @@ export const useQuantuMatrix = () => {
     },
   });
 
-  // Read reader totals - convert BigInt immediately
+  // Read reader totals
   const { 
     data: readerTotals, 
     refetch: refetchReaderTotals 
@@ -48,10 +49,35 @@ export const useQuantuMatrix = () => {
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && !!userExists,
-      select: (data) => {
-        if (!data) return data;
-        return safeBigInt(data);
-      },
+      select: safeBigInt,
+    },
+  });
+
+  // Read reader summary (comprehensive data)
+  const { 
+    data: readerSummary, 
+    refetch: refetchReaderSummary 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'getReaderSummary',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!userExists,
+      select: safeBigInt,
+    },
+  });
+
+  // Read RICO farming for user
+  const { 
+    data: ricoFarming, 
+    refetch: refetchRicoFarming 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'getRicoFarming',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!userExists,
+      select: safeBigInt,
     },
   });
 
@@ -81,7 +107,7 @@ export const useQuantuMatrix = () => {
     },
   });
 
-  // Read global stats - convert BigInt immediately
+  // Read global stats
   const { 
     data: globalStats, 
     refetch: refetchGlobalStats 
@@ -89,14 +115,59 @@ export const useQuantuMatrix = () => {
     ...quantuMatrixContract,
     functionName: 'getGlobalChapterStats',
     query: {
-      select: (data) => {
-        if (!data) return data;
-        return safeBigInt(data);
-      },
+      select: safeBigInt,
     },
   });
 
-  // Read chapter prices - convert BigInt immediately
+  // Read global summary
+  const { 
+    data: globalSummary, 
+    refetch: refetchGlobalSummary 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'getGlobalSummary',
+    query: {
+      select: safeBigInt,
+    },
+  });
+
+  // Read global RICO farming
+  const { 
+    data: globalRicoFarming, 
+    refetch: refetchGlobalRicoFarming 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'getRicoFarmingGlobal',
+    query: {
+      select: safeBigInt,
+    },
+  });
+
+  // Read top earners leaderboard
+  const { 
+    data: topEarners, 
+    refetch: refetchTopEarners 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'getTopEarners',
+    query: {
+      select: safeBigInt,
+    },
+  });
+
+  // Read top referrers leaderboard
+  const { 
+    data: topReferrers, 
+    refetch: refetchTopReferrers 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'getTopReferrers',
+    query: {
+      select: safeBigInt,
+    },
+  });
+
+  // Read chapter prices
   const { 
     data: chapterPrices, 
     refetch: refetchChapterPrices 
@@ -106,7 +177,6 @@ export const useQuantuMatrix = () => {
     query: {
       select: (data) => {
         if (!data) return data;
-        // Explicitly type the data as an array
         const pricesArray = data as readonly bigint[];
         return pricesArray.map(price => price.toString());
       },
@@ -139,132 +209,319 @@ export const useQuantuMatrix = () => {
     },
   });
 
-  // Calculate join cost (Chapter 1 for both tracks)
+  // Read token addresses
+  const { 
+    data: usdtAddress 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'usdt',
+  });
+
+  const { 
+    data: rewardTokenAddress 
+  } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: 'rewardToken',
+  });
+
+  // Calculate join cost
   const joinCost = chapterPrices && Array.isArray(chapterPrices) && chapterPrices.length > 1 
     ? (parseFloat(formatUnits(BigInt(chapterPrices[1] || '0'), 18)) * 2).toString()
     : '0';
 
-  // Approve USDT function
+  // Approve USDT function with toast notifications
   const approveUsdt = useCallback(async (amount: string) => {
     try {
       setLoading(true);
       const amountInWei = parseUnits(amount, 18);
+      
+      toast.info('Approving USDT...', {
+        description: 'Please confirm the transaction in your wallet.',
+        duration: 3000,
+      });
+
       const hash = await writeContractAsync({
         ...usdtContract,
         functionName: 'approve',
         args: [quantuMatrixContract.address, amountInWei],
       });
+
+      toast.success('Transaction Submitted!', {
+        description: `Transaction hash: ${hash.slice(0, 8)}...`,
+        duration: 5000,
+      });
+
       return hash;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error approving USDT:', error);
+      
+      let errorMessage = 'Failed to approve USDT';
+      if (error?.message?.includes('rejected')) {
+        errorMessage = 'Transaction was rejected in your wallet';
+      } else if (error?.message?.includes('insufficient')) {
+        errorMessage = 'Insufficient USDT balance';
+      }
+
+      toast.error('Approval Failed', {
+        description: errorMessage,
+        duration: 5000,
+      });
+
       throw error;
     } finally {
       setLoading(false);
     }
   }, [writeContractAsync]);
 
-  // Join library function
+  // Join library function with toast notifications
   const joinLibrary = useCallback(async (referrer: string) => {
     try {
       setLoading(true);
+      
+      toast.info('Joining RICOMATRIX...', {
+        description: 'Please confirm the transaction in your wallet.',
+        duration: 3000,
+      });
+
       const hash = await writeContractAsync({
         ...quantuMatrixContract,
         functionName: 'joinLibrary',
         args: [referrer as `0x${string}`],
       });
+
+      toast.success('Registration Submitted!', {
+        description: `Welcome to RICOMATRIX! Transaction: ${hash.slice(0, 8)}...`,
+        duration: 5000,
+      });
+
       return hash;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error joining library:', error);
+      
+      let errorMessage = 'Failed to join library';
+      if (error?.message?.includes('rejected')) {
+        errorMessage = 'Transaction was rejected in your wallet';
+      } else if (error?.message?.includes('insufficient')) {
+        errorMessage = 'Insufficient USDT balance or allowance';
+      } else if (error?.message?.includes('ReaderExists')) {
+        errorMessage = 'You are already registered';
+      }
+
+      toast.error('Registration Failed', {
+        description: errorMessage,
+        duration: 5000,
+      });
+
       throw error;
     } finally {
       setLoading(false);
     }
   }, [writeContractAsync]);
 
-  // Buy chapter function
+  // Buy chapter function with toast notifications
   const buyChapter = useCallback(async (track: number, chapter: number) => {
     try {
       setLoading(true);
+      
+      const trackName = track === 1 ? 'Track 1 (X3)' : 'Track 2 (X6)';
+      
+      toast.info('Purchasing Chapter...', {
+        description: `Buying Chapter ${chapter} of ${trackName}. Please confirm in wallet.`,
+        duration: 3000,
+      });
+
       const hash = await writeContractAsync({
         ...quantuMatrixContract,
         functionName: 'buyNewChapter',
         args: [track, chapter],
       });
+
+      toast.success('Chapter Purchase Submitted!', {
+        description: `Chapter ${chapter} purchase in progress. Transaction: ${hash.slice(0, 8)}...`,
+        duration: 5000,
+      });
+
       return hash;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error buying chapter:', error);
+      
+      let errorMessage = 'Failed to purchase chapter';
+      if (error?.message?.includes('rejected')) {
+        errorMessage = 'Transaction was rejected in your wallet';
+      } else if (error?.message?.includes('insufficient')) {
+        errorMessage = 'Insufficient USDT balance or allowance';
+      } else if (error?.message?.includes('PreviousChapterRequired')) {
+        errorMessage = 'You need to unlock the previous chapter first';
+      } else if (error?.message?.includes('ChapterAlreadyUnlocked')) {
+        errorMessage = 'This chapter is already unlocked';
+      }
+
+      toast.error('Purchase Failed', {
+        description: errorMessage,
+        duration: 5000,
+      });
+
       throw error;
     } finally {
       setLoading(false);
     }
   }, [writeContractAsync]);
 
-  // Claim royalty function
+  // Claim royalty function with toast notifications
   const claimRoyalty = useCallback(async () => {
     try {
       setLoading(true);
+      
+      toast.info('Claiming Royalty...', {
+        description: 'Please confirm the transaction in your wallet.',
+        duration: 3000,
+      });
+
       const hash = await writeContractAsync({
         ...quantuMatrixContract,
         functionName: 'claimRoyalty',
       });
+
+      toast.success('Royalty Claim Submitted!', {
+        description: `Royalty claim in progress. Transaction: ${hash.slice(0, 8)}...`,
+        duration: 5000,
+      });
+
       return hash;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error claiming royalty:', error);
+      
+      let errorMessage = 'Failed to claim royalty';
+      if (error?.message?.includes('rejected')) {
+        errorMessage = 'Transaction was rejected in your wallet';
+      } else if (error?.message?.includes('NoRoyalty')) {
+        errorMessage = 'No royalty available to claim';
+      }
+
+      toast.error('Claim Failed', {
+        description: errorMessage,
+        duration: 5000,
+      });
+
       throw error;
     } finally {
       setLoading(false);
     }
   }, [writeContractAsync]);
 
-  // Read contract data directly with BigInt handling
+  // Read contract data directly
   const readContract = useCallback(async (functionName: string, args: any[] = []) => {
     if (!publicClient) throw new Error('No public client available');
     
     try {
+      toast.info('Loading contract data...', {
+        description: `Fetching ${functionName}...`,
+        duration: 2000,
+      });
+
       const result = await publicClient.readContract({
         ...quantuMatrixContract,
         functionName: functionName as any,
         args: args,
       });
+      
       return safeBigInt(result);
     } catch (error) {
       console.error(`Error reading contract function ${functionName}:`, error);
+      
+      toast.error('Data Load Failed', {
+        description: `Failed to load ${functionName} data`,
+        duration: 3000,
+      });
+      
       throw error;
     }
   }, [publicClient]);
 
-  // Refetch all user data
+  // Refetch all user data with toast
   const refetchUserData = useCallback(() => {
+    toast.info('Refreshing user data...', {
+      duration: 2000,
+    });
+    
     refetchUserExists();
     refetchUsdtAllowance();
     refetchUsdtBalance();
     if (userExists) {
       refetchReaderTotals();
+      refetchReaderSummary();
+      refetchRicoFarming();
       refetchRoyalty();
       refetchRoyaltyPercent();
     }
   }, [
-    refetchUserExists, 
-    refetchReaderTotals, 
-    refetchRoyalty, 
-    refetchRoyaltyPercent, 
+    refetchUserExists,
+    refetchReaderTotals,
+    refetchReaderSummary,
+    refetchRicoFarming,
+    refetchRoyalty,
+    refetchRoyaltyPercent,
     refetchUsdtAllowance,
     refetchUsdtBalance,
     userExists
   ]);
 
-  // Format user data with proper typing and BigInt conversion
+  // Refetch all global data with toast
+  const refetchAllData = useCallback(() => {
+    toast.info('Refreshing all data...', {
+      duration: 2000,
+    });
+    
+    refetchUserData();
+    refetchGlobalStats();
+    refetchGlobalSummary();
+    refetchGlobalRicoFarming();
+    refetchTopEarners();
+    refetchTopReferrers();
+    refetchChapterPrices();
+    
+    toast.success('Data refreshed!', {
+      duration: 2000,
+    });
+  }, [
+    refetchUserData,
+    refetchGlobalStats,
+    refetchGlobalSummary,
+    refetchGlobalRicoFarming,
+    refetchTopEarners,
+    refetchTopReferrers,
+    refetchChapterPrices,
+  ]);
+
+  // Format user data
   const userData = userExists ? {
     exists: true as const,
+    // Basic totals
     track1TotalEarned: readerTotals ? formatUnits(BigInt((readerTotals as any)[0] || '0'), 18) : '0',
     track2TotalEarned: readerTotals ? formatUnits(BigInt((readerTotals as any)[1] || '0'), 18) : '0',
     track1TotalCycles: readerTotals ? Number((readerTotals as any)[2] || '0') : 0,
     track2TotalCycles: readerTotals ? Number((readerTotals as any)[3] || '0') : 0,
     track1Unlocked: readerTotals ? Number((readerTotals as any)[4] || '0') : 0,
     track2Unlocked: readerTotals ? Number((readerTotals as any)[5] || '0') : 0,
+    
+    // Royalty
     royaltyAvailable: royaltyAvailable ? formatUnits(royaltyAvailable as bigint, 18) : '0',
     royaltiesClaimed: readerTotals ? formatUnits(BigInt((readerTotals as any)[7] || '0'), 18) : '0',
     royaltyPercent: royaltyPercent ? Number(royaltyPercent) : 0,
+    
+    // RICO Farming
+    ricoShouldHave: ricoFarming ? formatUnits(BigInt((ricoFarming as any)[0] || '0'), 18) : '0',
+    ricoSent: ricoFarming ? formatUnits(BigInt((ricoFarming as any)[1] || '0'), 18) : '0',
+    ricoPending: ricoFarming ? formatUnits(BigInt((ricoFarming as any)[2] || '0'), 18) : '0',
+    
+    // Reader Summary data (if available)
+    ...(readerSummary ? {
+      readerId: (readerSummary as any).id?.toString(),
+      referrer: (readerSummary as any).referrer,
+      partnersCount: (readerSummary as any).partnersCount?.toString(),
+      track1TotalEarnedFromSummary: formatUnits(BigInt((readerSummary as any).track1TotalEarned || '0'), 18),
+      track2TotalEarnedFromSummary: formatUnits(BigInt((readerSummary as any).track2TotalEarned || '0'), 18),
+    } : {}),
   } : { 
     exists: false as const 
   };
@@ -278,10 +535,18 @@ export const useQuantuMatrix = () => {
     writeContract: writeContractAsync,
     contractConfig: quantuMatrixContract,
     
-    // Data (all BigInt values are converted to strings)
+    // Data
     userData,
     globalStats: globalStats as any,
+    globalSummary: globalSummary as any,
+    globalRicoFarming: globalRicoFarming as any,
+    topEarners: topEarners as any,
+    topReferrers: topReferrers as any,
     chapterPrices: chapterPrices as string[] | undefined,
+    
+    // Token addresses
+    usdtAddress: usdtAddress as `0x${string}` | undefined,
+    rewardTokenAddress: rewardTokenAddress as `0x${string}` | undefined,
     
     // USDT data
     usdtBalance: formattedUsdtBalance,
@@ -297,6 +562,12 @@ export const useQuantuMatrix = () => {
     buyChapter,
     claimRoyalty,
     refetchUserData,
+    refetchAllData,
     refetchGlobalStats,
+    refetchGlobalSummary,
+    refetchGlobalRicoFarming,
+    
+    // Toast utility (optional - for external use)
+    toast,
   };
 };
