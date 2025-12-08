@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
 import QRCode from "react-qr-code";
 import { WalletId } from "@/types/wallet";
@@ -25,6 +26,12 @@ interface MobileWalletConnectorProps {
   mobileButtonLabel?: string;
 }
 
+/** Portal so the mobile modal isn't constrained by parent layout (important in iframes) */
+const ModalPortal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  if (typeof document === "undefined") return null;
+  return ReactDOM.createPortal(children, document.body);
+};
+
 const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   onConnectionSuccess,
   onConnectionError,
@@ -36,7 +43,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   const [showModal, setShowModal] = useState<boolean>(false);
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
 
-  // NEW: keep track of whether we're already inside a wallet in-app browser
+  // Track if we are already inside a wallet in-app browser
   const [isInAppWalletBrowser, setIsInAppWalletBrowser] =
     useState<boolean>(false);
 
@@ -57,7 +64,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
     const mobileCheck = isMobile();
     setIsMobileDevice(mobileCheck);
 
-    // NEW: detect if we are inside a wallet's in-app browser
+    // Detect if we are inside a wallet's in-app browser
     const detectInAppWalletBrowser = () => {
       if (typeof window === "undefined") return false;
 
@@ -108,10 +115,9 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
 
         if (timeSinceConnection < 120000) {
           console.log(`User returned after connecting with ${preferredWallet}`);
-          // Optional: You can trigger a reconnection or show welcome message
+          // Optional: you can trigger a reconnection or show welcome message
           if (onConnectionSuccess) {
             // In real implementation, you would get the actual address
-            // This is just a placeholder
             onConnectionSuccess("0x...");
           }
         }
@@ -124,10 +130,31 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
     checkReturningConnection();
   }, [onConnectionSuccess]);
 
+  // 🔒 Lock scroll inside the iframe/page when the mobile modal is open
+  useEffect(() => {
+    if (!isMobileDevice || typeof document === "undefined") return;
+
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+
+    if (showModal) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = originalHtmlOverflow || "";
+      document.body.style.overflow = originalBodyOverflow || "";
+    }
+
+    return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow || "";
+      document.body.style.overflow = originalBodyOverflow || "";
+    };
+  }, [showModal, isMobileDevice]);
+
   const handleWalletSelect = async (walletId: WalletId) => {
     if (!isMobileDevice) return;
 
-    // NEW: if we're already inside MetaMask/Trust/etc browser,
+    // If we're already inside MetaMask/Trust/etc browser,
     // DO NOT deeplink again. Just show the RainbowKit connect modal.
     if (isInAppWalletBrowser) {
       try {
@@ -551,7 +578,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
     <div className={`${styles.container} ${className ?? ""}`}>
       <button
         onClick={() => {
-          // NEW: if already in MetaMask/Trust/etc browser, skip deeplink modal
+          // If already in MetaMask/Trust/etc browser, skip deeplink modal
           if (isInAppWalletBrowser && openConnectModal) {
             openConnectModal();
           } else {
@@ -577,13 +604,15 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
       </button>
 
       {showModal && (
-        <div className={styles.mobileModalOverlay}>
-          <div
-            className={styles.mobileModalBackdrop}
-            onClick={() => setShowModal(false)}
-          />
-          <MobileWalletOptions />
-        </div>
+        <ModalPortal>
+          <div className={styles.mobileModalOverlay}>
+            <div
+              className={styles.mobileModalBackdrop}
+              onClick={() => setShowModal(false)}
+            />
+            <MobileWalletOptions />
+          </div>
+        </ModalPortal>
       )}
 
       {/* Hidden RainbowKit button for mobile fallback */}
