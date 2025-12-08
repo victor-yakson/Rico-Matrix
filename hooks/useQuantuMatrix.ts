@@ -32,11 +32,25 @@ const toNumber = (value: any, fallback = 0): number => {
   return fallback;
 };
 
+// Track2 Data interface
+interface Track2Data {
+  currentReferrer: string;
+  firstLineReferrals: string[];
+  secondLineReferrals: string[];
+  blocked: boolean;
+  reinvestCount: number;
+  closedPart: string;
+}
+
 export const useQuantuMatrix = () => {
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const [loading, setLoading] = useState(false);
+  const [matrixCache, setMatrixCache] = useState<{
+    track1: Record<string, Record<number, any>>;
+    track2: Record<string, Record<number, Track2Data>>;
+  }>({ track1: {}, track2: {} });
 
   // Read user existence
   const { 
@@ -241,27 +255,163 @@ export const useQuantuMatrix = () => {
     ? (parseFloat(formatUnits(BigInt(chapterPrices[1] || '0'), 18)) * 2).toString()
     : '0';
 
-  // Read contract data directly - MOVE THIS BEFORE THE MATRIX FUNCTIONS
-  const readContract = useCallback(async (functionName: string, args: any[] = []) => {
-    if (!publicClient) throw new Error('No public client available');
+  // Process Track2 data
+  const processTrack2Data = (data: any): Track2Data => {
+    if (data && Array.isArray(data) && data.length >= 6) {
+      return {
+        currentReferrer: data[0] || '',
+        firstLineReferrals: Array.isArray(data[1]) ? data[1] : [],
+        secondLineReferrals: Array.isArray(data[2]) ? data[2] : [],
+        blocked: Boolean(data[3]),
+        reinvestCount: toNumber(data[4], 0),
+        closedPart: data[5] || '',
+      };
+    }
     
+    return {
+      currentReferrer: '',
+      firstLineReferrals: [],
+      secondLineReferrals: [],
+      blocked: false,
+      reinvestCount: 0,
+      closedPart: '',
+    };
+  };
+
+  // Bulk fetch all Track2 chapters - MOST EFFICIENT METHOD
+  const fetchAllTrack2Chapters = useCallback(async (
+    userAddress: string, 
+    maxChapters: number
+  ): Promise<Record<number, Track2Data>> => {
+    if (!publicClient || !userAddress || maxChapters <= 0) {
+      return {};
+    }
+
     try {
-      const result = await publicClient.readContract({
-        ...quantuMatrixContract,
-        functionName: functionName as any,
-        args: args,
-      });
-      return safeBigInt(result);
+      // Create cache key
+      const cacheKey = `${userAddress}-${maxChapters}`;
+      
+      // Check cache first
+      if (matrixCache.track2[cacheKey]) {
+        return matrixCache.track2[cacheKey];
+      }
+
+      // Create array of chapter numbers to fetch
+      const chapters = Array.from({ length: maxChapters }, (_, i) => i + 1);
+      
+      // Batch size - adjust based on your RPC limits
+      const BATCH_SIZE = 5;
+      const results: Record<number, Track2Data> = {};
+      
+      // Process in batches
+      for (let i = 0; i < chapters.length; i += BATCH_SIZE) {
+        const batch = chapters.slice(i, i + BATCH_SIZE);
+        
+        // Create promises for this batch
+        const batchPromises = batch.map(chapter => 
+          publicClient.readContract({
+            ...quantuMatrixContract,
+            functionName: 'getTrack2',
+            args: [userAddress, chapter],
+          }).catch(error => {
+            console.error(`Error fetching chapter ${chapter}:`, error);
+            return null;
+          })
+        );
+
+        // Wait for batch to complete
+        const batchResults = await Promise.all(batchPromises);
+        
+        // Process batch results
+        batchResults.forEach((result, batchIndex) => {
+          const chapter = batch[i + batchIndex];
+          if (result) {
+            results[chapter] = processTrack2Data(result);
+          } else {
+            results[chapter] = {
+              currentReferrer: '',
+              firstLineReferrals: [],
+              secondLineReferrals: [],
+              blocked: false,
+              reinvestCount: 0,
+              closedPart: '',
+            };
+          }
+        });
+
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < chapters.length) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+      }
+
+      // Update cache
+      setMatrixCache(prev => ({
+        ...prev,
+        track2: {
+          ...prev.track2,
+          [cacheKey]: results
+        }
+      }));
+
+      return results;
     } catch (error) {
-      console.error(`Error reading contract function ${functionName}:`, error);
+      console.error('Error fetching all Track2 chapters:', error);
       throw error;
+    }
+  }, [publicClient, matrixCache.track2]);
+
+  // Single chapter fetch (for retries or specific needs)
+  const fetchTrack2Matrix = useCallback(async (userAddress: string, chapter: number): Promise<Track2Data> => {
+    if (!publicClient || !userAddress) {
+      return {
+        currentReferrer: '',
+        firstLineReferrals: [],
+        secondLineReferrals: [],
+        blocked: false,
+        reinvestCount: 0,
+        closedPart: '',
+      };
+    }
+
+    try {
+      const data = await publicClient.readContract({
+        ...quantuMatrixContract,
+        functionName: 'getTrack2',
+        args: [userAddress, chapter],
+      });
+
+      return processTrack2Data(data);
+    } catch (error) {
+      console.error(`Error fetching Track2 chapter ${chapter}:`, error);
+      return {
+        currentReferrer: '',
+        firstLineReferrals: [],
+        secondLineReferrals: [],
+        blocked: false,
+        reinvestCount: 0,
+        closedPart: '',
+      };
     }
   }, [publicClient]);
 
-  // Track 1 Matrix data fetch - NOW IT CAN USE readContract
+  // Track1 matrix functions (if needed)
   const fetchTrack1Matrix = useCallback(async (userAddress: string, chapter: number) => {
+    if (!publicClient || !userAddress) {
+      return {
+        currentReferrer: '',
+        referrals: [],
+        blocked: false,
+        reinvestCount: 0,
+      };
+    }
+
     try {
-      const data = await readContract('getTrack1', [userAddress, chapter]) as any;
+      const data = await publicClient.readContract({
+        ...quantuMatrixContract,
+        functionName: 'getTrack1',
+        args: [userAddress, chapter],
+      }) as any;
       
       if (data && Array.isArray(data) && data.length >= 4) {
         return {
@@ -287,44 +437,105 @@ export const useQuantuMatrix = () => {
         reinvestCount: 0,
       };
     }
-  }, [readContract]);
+  }, [publicClient]);
 
-  // Track 2 Matrix data fetch - NOW IT CAN USE readContract
-  const fetchTrack2Matrix = useCallback(async (userAddress: string, chapter: number) => {
-    try {
-      const data = await readContract('getTrack2', [userAddress, chapter]) as any;
-      
-      if (data && Array.isArray(data) && data.length >= 6) {
-        return {
-          currentReferrer: data[0] || '',
-          firstLineReferrals: Array.isArray(data[1]) ? data[1] : [],
-          secondLineReferrals: Array.isArray(data[2]) ? data[2] : [],
-          blocked: Boolean(data[3]),
-          reinvestCount: toNumber(data[4], 0),
-          closedPart: data[5] || '',
-        };
-      }
-      
-      return {
-        currentReferrer: '',
-        firstLineReferrals: [],
-        secondLineReferrals: [],
-        blocked: false,
-        reinvestCount: 0,
-        closedPart: '',
-      };
-    } catch (error) {
-      console.error('Error fetching Track2 matrix:', error);
-      return {
-        currentReferrer: '',
-        firstLineReferrals: [],
-        secondLineReferrals: [],
-        blocked: false,
-        reinvestCount: 0,
-        closedPart: '',
-      };
+  // Bulk fetch Track1 chapters
+  const fetchAllTrack1Chapters = useCallback(async (
+    userAddress: string, 
+    maxChapters: number
+  ): Promise<Record<number, any>> => {
+    if (!publicClient || !userAddress || maxChapters <= 0) {
+      return {};
     }
-  }, [readContract]);
+
+    try {
+      const cacheKey = `${userAddress}-${maxChapters}`;
+      
+      if (matrixCache.track1[cacheKey]) {
+        return matrixCache.track1[cacheKey];
+      }
+
+      const chapters = Array.from({ length: maxChapters }, (_, i) => i + 1);
+      const BATCH_SIZE = 5;
+      const results: Record<number, any> = {};
+      
+      for (let i = 0; i < chapters.length; i += BATCH_SIZE) {
+        const batch = chapters.slice(i, i + BATCH_SIZE);
+        
+        const batchPromises = batch.map(chapter => 
+          publicClient.readContract({
+            ...quantuMatrixContract,
+            functionName: 'getTrack1',
+            args: [userAddress, chapter],
+          }).catch(error => {
+            console.error(`Error fetching Track1 chapter ${chapter}:`, error);
+            return null;
+          })
+        );
+
+        const batchResults = await Promise.all(batchPromises);
+        
+        batchResults.forEach((result, batchIndex) => {
+          const chapter = batch[i + batchIndex];
+          if (result && Array.isArray(result) && result.length >= 4) {
+            results[chapter] = {
+              currentReferrer: result[0] || '',
+              referrals: Array.isArray(result[1]) ? result[1] : [],
+              blocked: Boolean(result[2]),
+              reinvestCount: toNumber(result[3], 0),
+            };
+          } else {
+            results[chapter] = {
+              currentReferrer: '',
+              referrals: [],
+              blocked: false,
+              reinvestCount: 0,
+            };
+          }
+        });
+
+        if (i + BATCH_SIZE < chapters.length) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+      }
+
+      setMatrixCache(prev => ({
+        ...prev,
+        track1: {
+          ...prev.track1,
+          [cacheKey]: results
+        }
+      }));
+
+      return results;
+    } catch (error) {
+      console.error('Error fetching all Track1 chapters:', error);
+      throw error;
+    }
+  }, [publicClient, matrixCache.track1]);
+
+  // Clear matrix cache for a user
+  const clearMatrixCache = useCallback((userAddress: string) => {
+    setMatrixCache(prev => {
+      const newCache = { ...prev };
+      Object.keys(newCache.track1).forEach(key => {
+        if (key.startsWith(userAddress)) {
+          delete newCache.track1[key];
+        }
+      });
+      Object.keys(newCache.track2).forEach(key => {
+        if (key.startsWith(userAddress)) {
+          delete newCache.track2[key];
+        }
+      });
+      return newCache;
+    });
+  }, []);
+
+  // Clear all cache
+  const clearAllCache = useCallback(() => {
+    setMatrixCache({ track1: {}, track2: {} });
+  }, []);
 
   // Approve USDT function with toast notifications
   const approveUsdt = useCallback(async (amount: string) => {
@@ -438,6 +649,11 @@ export const useQuantuMatrix = () => {
         duration: 5000,
       });
 
+      // Clear cache after purchase
+      if (address) {
+        clearMatrixCache(address);
+      }
+
       return hash;
     } catch (error: any) {
       console.error('Error buying chapter:', error);
@@ -462,7 +678,7 @@ export const useQuantuMatrix = () => {
     } finally {
       setLoading(false);
     }
-  }, [writeContractAsync]);
+  }, [writeContractAsync, address, clearMatrixCache]);
 
   // Claim royalty function with toast notifications
   const claimRoyalty = useCallback(async () => {
@@ -506,9 +722,8 @@ export const useQuantuMatrix = () => {
     }
   }, [writeContractAsync]);
 
-  // Refetch all user data with toast
+  // Refetch all user data
   const refetchUserData = useCallback(() => {
-  
     refetchUserExists();
     refetchUsdtAllowance();
     refetchUsdtBalance();
@@ -519,6 +734,11 @@ export const useQuantuMatrix = () => {
       refetchRoyalty();
       refetchRoyaltyPercent();
     }
+    
+    // Clear cache on refetch
+    if (address) {
+      clearMatrixCache(address);
+    }
   }, [
     refetchUserExists,
     refetchReaderTotals,
@@ -528,10 +748,12 @@ export const useQuantuMatrix = () => {
     refetchRoyaltyPercent,
     refetchUsdtAllowance,
     refetchUsdtBalance,
-    userExists
+    userExists,
+    address,
+    clearMatrixCache
   ]);
 
-  // Refetch all global data with toast
+  // Refetch all global data
   const refetchAllData = useCallback(() => {
     toast.info('Refreshing all data...', {
       duration: 2000,
@@ -596,7 +818,6 @@ export const useQuantuMatrix = () => {
 
   return {
     // Contract interaction methods
-    readContract,
     writeContract: writeContractAsync,
     contractConfig: quantuMatrixContract,
     
@@ -618,9 +839,16 @@ export const useQuantuMatrix = () => {
     usdtAllowance: formattedUsdtAllowance,
     joinCost,
     
-    // Matrix data fetching
+    // Matrix data fetching - BULK OPTIMIZED
     fetchTrack1Matrix,
     fetchTrack2Matrix,
+    fetchAllTrack1Chapters,
+    fetchAllTrack2Chapters,
+    
+    // Cache management
+    clearMatrixCache,
+    clearAllCache,
+    matrixCache,
     
     // State
     loading,
@@ -635,8 +863,5 @@ export const useQuantuMatrix = () => {
     refetchGlobalStats,
     refetchGlobalSummary,
     refetchGlobalRicoFarming,
-    
-    // Toast utility (optional - for external use)
-    toast,
   };
 };

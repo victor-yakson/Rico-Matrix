@@ -13,9 +13,10 @@ interface Track1Data {
 }
 
 export const Track1Matrix = () => {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { 
-    fetchTrack1Matrix, 
+    fetchAllTrack1Chapters,
+    fetchTrack1Matrix,
     userData, 
     loading: hookLoading 
   } = useQuantuMatrix();
@@ -24,32 +25,22 @@ export const Track1Matrix = () => {
   const [loading, setLoading] = useState(true);
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Type guard to check if userData has the full properties
-  const hasFullUserData = (data: any): data is { 
-    exists: true; 
-    track1Unlocked: number | string;
-    track1TotalEarned: number | string;
-    track1TotalCycles: number | string;
-  } => {
-    return data?.exists && 
-           'track1Unlocked' in data && 
-           'track1TotalEarned' in data && 
-           'track1TotalCycles' in data;
-  };
-
-  // Normalize unlocked chapters to a safe JS number
+  // Get unlocked chapters safely
   const unlockedChapters = useMemo(() => {
-    if (userData?.exists && 'track1Unlocked' in userData) {
-      const value = userData.track1Unlocked;
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') return parseInt(value) || 0;
-      return 0;
+    if (!userData?.exists) return 0;
+    
+    const value = (userData as any).track1Unlocked;
+    if (typeof value === 'number') return Math.max(0, value);
+    if (typeof value === 'string') {
+      const parsed = parseInt(value);
+      return isNaN(parsed) ? 0 : Math.max(0, parsed);
     }
     return 0;
   }, [userData]);
 
-  // Clamp selected chapter when unlocked chapters change
+  // Clamp selected chapter
   useEffect(() => {
     if (unlockedChapters === 0) {
       setSelectedChapter(1);
@@ -58,8 +49,9 @@ export const Track1Matrix = () => {
     }
   }, [unlockedChapters, selectedChapter]);
 
+  // Main fetch function - SIMPLIFIED without aggressive caching
   const fetchAllTrack1Data = useCallback(async () => {
-    if (!hasFullUserData(userData) || !address || !fetchTrack1Matrix) {
+    if (!address || unlockedChapters <= 0) {
       setLoading(false);
       return;
     }
@@ -68,66 +60,150 @@ export const Track1Matrix = () => {
       setLoading(true);
       setError(null);
 
-      const data: Record<number, Track1Data> = {};
-
-      if (unlockedChapters === 0) {
+      // Always fetch fresh data
+      const data = await fetchAllTrack1Chapters(address, unlockedChapters);
+      
+      // Always update state even if data appears empty
+      if (data && typeof data === 'object') {
+        setTrack1Data(data);
+        setRetryCount(0); // Reset retry count on success
+      } else {
+        // If no data returned, set empty object
         setTrack1Data({});
-        return;
       }
-
-      // Fetch chapters sequentially
-      for (let chapter = 1; chapter <= unlockedChapters; chapter++) {
-        try {
-          if (chapter > 1) {
-            await new Promise((resolve) => setTimeout(resolve, 50));
-          }
-
-          const chapterData = await fetchTrack1Matrix(address, chapter);
-          data[chapter] = chapterData;
-        } catch (err) {
-          console.error(`Error fetching chapter ${chapter} data:`, err);
-          data[chapter] = {
-            currentReferrer: '',
-            referrals: [],
-            blocked: false,
-            reinvestCount: 0,
-          };
-        }
-      }
-
-      setTrack1Data(data);
+      
     } catch (err) {
       console.error('Error fetching track 1 matrix data:', err);
-      setError('Failed to load matrix data. Please try again later.');
+      
+      if (retryCount < 3) {
+        // Retry with exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        setRetryCount(prev => prev + 1);
+        await fetchAllTrack1Data(); // Retry
+      } else {
+        setError('Failed to load matrix data. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
-  }, [address, fetchTrack1Matrix, userData, unlockedChapters]);
+  }, [address, unlockedChapters, fetchAllTrack1Chapters, retryCount]);
 
+  // Single chapter retry
+  const retrySingleChapter = useCallback(async (chapter: number) => {
+    if (!address) return;
+    
+    try {
+      setError(null);
+      const chapterData = await fetchTrack1Matrix(address, chapter);
+      setTrack1Data(prev => ({
+        ...prev,
+        [chapter]: chapterData
+      }));
+    } catch (err) {
+      console.error(`Error retrying chapter ${chapter}:`, err);
+      setError(`Failed to load chapter ${chapter}`);
+    }
+  }, [address, fetchTrack1Matrix]);
+
+  // Initial fetch and refetch when dependencies change
   useEffect(() => {
+    let mounted = true;
+    
+    const fetchData = async () => {
+      if (!address || unlockedChapters <= 0) {
+        if (mounted) setLoading(false);
+        return;
+      }
+      
+      await fetchAllTrack1Data();
+    };
+    
+    fetchData();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [address, unlockedChapters, fetchAllTrack1Data]);
+
+  // Auto-refresh every 30 seconds if unlockedChapters > 0
+  useEffect(() => {
+    if (unlockedChapters === 0 || !address || loading) return;
+    
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchAllTrack1Data(); // Refresh
+      }
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [unlockedChapters, address, loading, fetchAllTrack1Data]);
+
+  // Manual refresh function
+  const handleManualRefresh = useCallback(() => {
     fetchAllTrack1Data();
   }, [fetchAllTrack1Data]);
 
-  // Get earnings data safely
-  const totalEarned = hasFullUserData(userData)
-    ? (() => {
-        const value = userData.track1TotalEarned;
-        if (typeof value === 'number') return value;
-        if (typeof value === 'string') return parseFloat(value) || 0;
-        return 0;
-      })()
-    : 0;
+  // Get stats safely
+  const totalEarned = useMemo(() => {
+    if (!userData?.exists) return 0;
+    const value = (userData as any).track1TotalEarned;
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }, [userData]);
 
-  const totalCycles = hasFullUserData(userData)
-    ? (() => {
-        const value = userData.track1TotalCycles;
-        if (typeof value === 'number') return value;
-        if (typeof value === 'string') return parseInt(value) || 0;
-        return 0;
-      })()
-    : 0;
+  const totalCycles = useMemo(() => {
+    if (!userData?.exists) return 0;
+    const value = (userData as any).track1TotalCycles;
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = parseInt(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }, [userData]);
 
-  // Show simplified view if contract functions aren't available
+  // Calculate totals for selected chapter
+  const currentData = track1Data[selectedChapter];
+  const totalReferrals = currentData ? currentData.referrals.length : 0;
+
+  // Show connection required
+  if (!isConnected) {
+    return (
+      <div className="py-10">
+        <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
+          <div className="text-5xl mb-4">🔗</div>
+          <h3 className="mb-3 text-xl font-semibold text-slate-50">
+            Connect Wallet
+          </h3>
+          <p className="text-sm text-slate-400 mb-6">
+            Please connect your wallet to view your X3 matrix.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (loading || hookLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
+        <p className="text-slate-400">
+          {retryCount > 0 ? `Loading X3 Matrix data (retry ${retryCount}/3)...` : 'Loading X3 Matrix data...'}
+        </p>
+        {retryCount > 0 && (
+          <p className="text-xs text-slate-500">Taking longer than usual...</p>
+        )}
+      </div>
+    );
+  }
+
+  // Show error view
   if (error && Object.keys(track1Data).length === 0) {
     return (
       <div className="py-10">
@@ -139,14 +215,14 @@ export const Track1Matrix = () => {
             The matrix visualization features are currently unavailable.
             You can still purchase chapters and earn rewards.
           </p>
-          <div className="rounded-xl border border-yellow-500/40 bg-slate-950/80 p-4 text-left">
-            <h4 className="mb-2 text-sm font-semibold text-yellow-300">
+          <div className="rounded-xl border border-blue-500/40 bg-slate-950/80 p-4 text-left">
+            <h4 className="mb-2 text-sm font-semibold text-blue-300">
               Your X3 Matrix Stats
             </h4>
             <div className="space-y-2 text-sm text-slate-200">
               <div className="flex justify-between">
                 <span>Total Earnings:</span>
-                <span className="font-semibold text-yellow-300">
+                <span className="font-semibold text-blue-300">
                   ${totalEarned.toFixed(2)}
                 </span>
               </div>
@@ -165,9 +241,15 @@ export const Track1Matrix = () => {
             </div>
           </div>
           <div className="mt-6 text-center">
+            <button
+              onClick={handleManualRefresh}
+              className="mr-3 inline-block rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
+            >
+              Retry Loading
+            </button>
             <Link
               href="/dashboard"
-              className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+              className="inline-block rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
             >
               Return to Dashboard
             </Link>
@@ -177,30 +259,21 @@ export const Track1Matrix = () => {
     );
   }
 
-  if (loading || hookLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
-        <p className="text-slate-400">Loading X3 Matrix data...</p>
-      </div>
-    );
-  }
-
   if (!userData?.exists) {
     return (
       <div className="py-10">
-        <div className="mx-auto max-w-md rounded-2xl border border-yellow-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
-          <div className="text-5xl mb-4">📚</div>
+        <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
+          <div className="text-5xl mb-4">🌐</div>
           <h3 className="mb-3 text-xl font-semibold text-slate-50">
             Not a Reader Yet
           </h3>
           <p className="text-sm text-slate-400 mb-6">
             Join the library to start building your X3 matrix network and earn
-            from spillovers and cycles.
+            from 1×3 matrix structure.
           </p>
           <Link
             href="/dashboard"
-            className="inline-block rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-6 py-3 text-sm font-semibold text-black shadow-[0_0_16px_rgba(250,204,21,0.7)] hover:brightness-110 transition-all"
+            className="inline-block rounded-xl bg-gradient-to-r from-blue-400 to-cyan-500 px-6 py-3 text-sm font-semibold text-black shadow-[0_0_16px_rgba(59,130,246,0.7)] hover:brightness-110 transition-all"
           >
             Go to Dashboard to Register
           </Link>
@@ -209,38 +282,57 @@ export const Track1Matrix = () => {
     );
   }
 
-  const currentData = track1Data[selectedChapter];
-
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-          🕸️ X3 Matrix Network
+          🌐 X3 Matrix Network
         </h1>
         <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
-          Track your 3× matrix positions, referrals, and reinvestment cycles across all chapters.
+          Track your 1×3 matrix positions with direct referrals and auto-reinvestment.
         </p>
+        <div className="mt-4 flex justify-center items-center gap-4">
+          <button
+            onClick={handleManualRefresh}
+            disabled={loading}
+            className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Data
+          </button>
+          <span className="text-xs text-slate-500">
+            Auto-refreshes every 30s
+          </span>
+        </div>
       </div>
 
       {/* Chapter Selector */}
-      <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+      <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
         <h2 className="text-lg font-semibold text-slate-50 mb-4">Select Chapter</h2>
         <div className="flex flex-wrap gap-2">
           {unlockedChapters > 0 ? (
             Array.from({ length: unlockedChapters }, (_, i) => i + 1).map(
               (chapter) => (
-                <button
-                  key={chapter}
-                  onClick={() => setSelectedChapter(chapter)}
-                  className={`rounded-xl px-5 py-3 text-base font-medium transition-all ${
-                    selectedChapter === chapter
-                      ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 text-black shadow-[0_0_16px_rgba(250,204,21,0.7)]'
-                      : 'border border-yellow-500/20 bg-slate-950/70 text-slate-300 hover:border-yellow-400/60 hover:text-yellow-300'
-                  }`}
-                >
-                  Chapter {chapter}
-                </button>
+                <div key={chapter} className="relative">
+                  <button
+                    onClick={() => setSelectedChapter(chapter)}
+                    className={`rounded-xl px-5 py-3 text-base font-medium transition-all ${
+                      selectedChapter === chapter
+                        ? 'bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-300 text-black shadow-[0_0_16px_rgba(59,130,246,0.7)]'
+                        : 'border border-blue-500/20 bg-slate-950/70 text-slate-300 hover:border-blue-400/60 hover:text-blue-300'
+                    }`}
+                  >
+                    Chapter {chapter}
+                  </button>
+                  {track1Data[chapter] && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500/90 flex items-center justify-center">
+                      <span className="text-xs">✓</span>
+                    </div>
+                  )}
+                </div>
               )
             )
           ) : (
@@ -248,22 +340,38 @@ export const Track1Matrix = () => {
               <p className="text-slate-500">No chapters unlocked yet.</p>
               <Link
                 href="/chapters"
-                className="inline-block mt-2 rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+                className="inline-block mt-2 rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
               >
                 Buy Your First Chapter
               </Link>
             </div>
           )}
         </div>
+        {unlockedChapters > 0 && (
+          <div className="mt-4 text-xs text-slate-500">
+            Showing {Object.keys(track1Data).length} of {unlockedChapters} chapters loaded
+          </div>
+        )}
       </div>
 
       {currentData ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Matrix Visualization */}
-          <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-            <h3 className="mb-6 text-xl font-bold text-slate-50">
-              X3 Matrix — Chapter {selectedChapter}
-            </h3>
+          <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-50">
+                X3 Matrix — Chapter {selectedChapter}
+              </h3>
+              <button
+                onClick={() => retrySingleChapter(selectedChapter)}
+                className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
 
             {/* Current Referrer */}
             <div className="mb-8">
@@ -282,13 +390,13 @@ export const Track1Matrix = () => {
               </div>
             </div>
 
-            {/* Your Referrals */}
+            {/* Direct Referrals */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Your Referrals
+                  Direct Referrals
                 </h4>
-                <span className="text-sm font-semibold text-yellow-300">
+                <span className="text-sm font-semibold text-blue-300">
                   {currentData.referrals.length}/3
                 </span>
               </div>
@@ -297,39 +405,29 @@ export const Track1Matrix = () => {
                   currentData.referrals.map((referral, index) => (
                     <div
                       key={index}
-                      className="rounded-xl border border-slate-700/80 bg-slate-900/80 p-4"
+                      className="rounded-xl border border-blue-700/50 bg-slate-900/80 p-4"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="truncate font-mono text-sm text-slate-200">
+                          <p className="truncate font-mono text-sm text-blue-200">
                             {referral}
                           </p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-blue-500">
                             Position {index + 1}
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            index === 0 
-                              ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
-                              : index === 1
-                                ? 'bg-blue-500/10 text-blue-300 border border-blue-500/40'
-                                : 'bg-purple-500/10 text-purple-300 border border-purple-500/40'
-                          }`}>
-                            Slot {index + 1}
+                          <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/40">
+                            Direct
                           </span>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-xl bg-slate-900/60 p-6 text-center">
-                    <div className="text-3xl mb-2">👤</div>
+                  <div className="rounded-xl bg-slate-900/60 p-4 text-center">
                     <p className="text-sm text-slate-400">
-                      No referrals yet — your matrix slots are open.
-                    </p>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Refer others to fill these positions and earn rewards
+                      No direct referrals yet.
                     </p>
                   </div>
                 )}
@@ -341,7 +439,7 @@ export const Track1Matrix = () => {
               <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Chapter Status
               </h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Status</p>
                   <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
@@ -351,20 +449,29 @@ export const Track1Matrix = () => {
                   }`}>
                     {currentData.blocked ? '⛔ Blocked' : '✅ Active'}
                   </div>
-                  {currentData.blocked && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      Unlock Chapter {selectedChapter + 1} to unblock
-                    </p>
-                  )}
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Reinvest Cycles</p>
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-yellow-300">
+                    <span className="text-2xl font-bold text-blue-300">
                       {currentData.reinvestCount}
                     </span>
                     <span className="ml-2 text-sm text-slate-400">cycles</span>
                   </div>
+                </div>
+              </div>
+              
+              {/* Matrix Progress */}
+              <div className="pt-4 border-t border-slate-700/50">
+                <div className="flex justify-between text-xs text-slate-500 mb-2">
+                  <span>Matrix Progress</span>
+                  <span>{Math.round((totalReferrals / 3) * 100)}%</span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                    style={{ width: `${(totalReferrals / 3) * 100}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -372,36 +479,64 @@ export const Track1Matrix = () => {
 
           {/* Matrix Info */}
           <div className="space-y-8">
-            <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-              <h3 className="mb-4 text-xl font-bold text-yellow-300">
+            <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+              <h3 className="mb-4 text-xl font-bold text-blue-300">
                 X3 Matrix Rules
               </h3>
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span><strong>3 positions</strong> per level (3× matrix structure)</span>
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span><strong>3 positions</strong> total (1×3 matrix structure)</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Earn from <strong>direct placements</strong> and <strong>spillovers</strong></span>
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span><strong>Direct referrals:</strong> 3 positions you need to fill</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span><strong>Auto-reinvest</strong> when the level is fully cycled</span>
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span><strong>Simple structure:</strong> No spillover or second line</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Earnings are routed based on matrix positions</span>
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span><strong>Auto-reinvest</strong> when all 3 positions are filled</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Reinvest cycles increase your earning potential</span>
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span><strong>Direct earnings</strong> from your referrals</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Slot can be blocked when next chapter is not unlocked</span>
+                  <span className="text-blue-400 mr-2">•</span>
+                  <span>Earnings from referrals and reinvestments</span>
                 </li>
               </ul>
+              
+              <div className="mt-6 rounded-xl bg-blue-900/20 p-5 border border-blue-700/30">
+                <h4 className="mb-3 text-sm font-semibold text-blue-300">Current Chapter Stats</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Total Referrals:</span>
+                    <span className="font-semibold text-blue-300">{totalReferrals}/3</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Matrix Completion:</span>
+                    <span className="font-semibold text-blue-300">
+                      {Math.round((totalReferrals / 3) * 100)}%
+                    </span>
+                  </div>
+                  <div className="pt-2">
+                    <div className="flex justify-between text-xs text-slate-500 mb-1">
+                      <span>Progress</span>
+                      <span>{totalReferrals}/3 positions</span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                        style={{ width: `${(totalReferrals / 3) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="rounded-2xl border border-emerald-500/30 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
@@ -424,7 +559,7 @@ export const Track1Matrix = () => {
                 <div className="bg-slate-900/60 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-slate-300">Current Chapter Cycles:</span>
-                    <span className="text-xl font-bold text-yellow-300">
+                    <span className="text-xl font-bold text-blue-300">
                       {currentData.reinvestCount}
                     </span>
                   </div>
@@ -436,7 +571,7 @@ export const Track1Matrix = () => {
                 <div className="bg-slate-900/60 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-slate-300">Total X3 Cycles:</span>
-                    <span className="text-xl font-bold text-amber-300">
+                    <span className="text-xl font-bold text-cyan-300">
                       {totalCycles}
                     </span>
                   </div>
@@ -447,34 +582,41 @@ export const Track1Matrix = () => {
               </div>
               
               <div className="mt-6 pt-6 border-t border-slate-800/50">
-                <h4 className="text-sm font-semibold text-slate-400 mb-3">Chapter Progress</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-slate-500">
-                    <span>Referrals Filled</span>
-                    <span>{currentData.referrals.length}/3</span>
-                  </div>
-                  <div className="w-full bg-slate-800 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full"
-                      style={{ width: `${(currentData.referrals.length / 3) * 100}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-600 mt-2">
-                    Fill all 3 positions to trigger auto-reinvestment
-                  </p>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-400">Matrix Status</h4>
+                  <span className={`text-sm font-semibold ${
+                    currentData.blocked 
+                      ? 'text-red-300' 
+                      : totalReferrals >= 3 
+                        ? 'text-amber-300' 
+                        : 'text-emerald-300'
+                  }`}>
+                    {currentData.blocked 
+                      ? 'Blocked' 
+                      : totalReferrals >= 3 
+                        ? 'Ready to Cycle' 
+                        : 'Building'}
+                  </span>
                 </div>
+                <p className="text-xs text-slate-600">
+                  {currentData.blocked 
+                    ? 'Unlock the next chapter to unblock this matrix'
+                    : totalReferrals >= 3
+                      ? 'All 3 positions filled! Next placement will trigger reinvestment'
+                      : 'Place more referrals to complete the matrix'}
+                </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-              <h3 className="mb-4 text-xl font-bold text-blue-300">Quick Actions</h3>
+            <div className="rounded-2xl border border-purple-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+              <h3 className="mb-4 text-xl font-bold text-purple-300">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-4">
                 <Link
                   href="/chapters"
-                  className="rounded-xl bg-blue-500/10 p-4 text-center border border-blue-500/40 hover:bg-blue-500/20 transition-all"
+                  className="rounded-xl bg-purple-500/10 p-4 text-center border border-purple-500/40 hover:bg-purple-500/20 transition-all"
                 >
                   <div className="text-2xl mb-2">📚</div>
-                  <p className="text-sm font-semibold text-blue-300">Buy Chapters</p>
+                  <p className="text-sm font-semibold text-purple-300">Buy Chapters</p>
                 </Link>
                 <Link
                   href="/dashboard"
@@ -491,17 +633,25 @@ export const Track1Matrix = () => {
         <div className="rounded-2xl border border-amber-400/40 bg-amber-500/5 p-8 text-center">
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="mb-2 text-lg font-semibold text-amber-200">
-            Data Not Available
+            Data Not Available for Chapter {selectedChapter}
           </h3>
           <p className="text-sm text-amber-100/90">
-            No matrix data found for Chapter {selectedChapter}.
+            No matrix data found for this chapter.
           </p>
-          <button
-            onClick={fetchAllTrack1Data}
-            className="mt-4 rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
-          >
-            Try Loading Again
-          </button>
+          <div className="mt-6 flex justify-center gap-4">
+            <button
+              onClick={() => retrySingleChapter(selectedChapter)}
+              className="rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
+            >
+              Retry This Chapter
+            </button>
+            <button
+              onClick={handleManualRefresh}
+              className="rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
+            >
+              Reload All Chapters
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

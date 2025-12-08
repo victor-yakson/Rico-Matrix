@@ -188,7 +188,7 @@ const RicoMatrixLandingPage: React.FC = () => {
             <div className="logo-mark" aria-hidden="true">
               {/* make sure this image exists in /public */}
               <img
-                src="/logoricomatrix.png"
+                src="/logo.png"
                 alt="RICO MATRIX"
                 className="logo-img"
               />

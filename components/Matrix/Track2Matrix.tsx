@@ -2,7 +2,7 @@
 
 import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
 import { useAccount } from "wagmi";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 
 interface Track2Data {
@@ -15,8 +15,9 @@ interface Track2Data {
 }
 
 export const Track2Matrix = () => {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const {
+    fetchAllTrack2Chapters,
     fetchTrack2Matrix,
     userData,
     loading: hookLoading,
@@ -26,36 +27,29 @@ export const Track2Matrix = () => {
   const [loading, setLoading] = useState(true);
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Type guard to check if userData has the full properties
-  const hasFullUserData = (
-    data: any
-  ): data is {
-    exists: true;
-    track2Unlocked: number | string;
-    track2TotalEarned: number | string;
-    track2TotalCycles: number | string;
-  } => {
-    return (
-      data?.exists &&
-      "track2Unlocked" in data &&
-      "track2TotalEarned" in data &&
-      "track2TotalCycles" in data
-    );
-  };
+  // Use refs to track previous values and avoid unnecessary re-renders
+  // Use refs to track previous values and avoid unnecessary re-renders
+  const prevAddressRef = useRef<string | undefined>(undefined);
+  const prevUnlockedChaptersRef = useRef<number>(0);
 
-  // Normalize unlocked chapters to a safe JS number
+  // ... later in the code ...
+  const isSameAddress = prevAddressRef.current === address;
+  // Get unlocked chapters safely
   const unlockedChapters = useMemo(() => {
-    if (userData?.exists && "track2Unlocked" in userData) {
-      const value = userData.track2Unlocked;
-      if (typeof value === "number") return value;
-      if (typeof value === "string") return parseInt(value) || 0;
-      return 0;
+    if (!userData?.exists) return 0;
+
+    const value = (userData as any).track2Unlocked;
+    if (typeof value === "number") return Math.max(0, value);
+    if (typeof value === "string") {
+      const parsed = parseInt(value);
+      return isNaN(parsed) ? 0 : Math.max(0, parsed);
     }
     return 0;
   }, [userData]);
 
-  // Clamp selected chapter when unlocked chapters change
+  // Clamp selected chapter
   useEffect(() => {
     if (unlockedChapters === 0) {
       setSelectedChapter(1);
@@ -64,76 +58,201 @@ export const Track2Matrix = () => {
     }
   }, [unlockedChapters, selectedChapter]);
 
-  const fetchAllTrack2Data = useCallback(async () => {
-    if (!hasFullUserData(userData) || !address || !fetchTrack2Matrix) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data: Record<number, Track2Data> = {};
-
-      if (unlockedChapters === 0) {
-        setTrack2Data({});
+  // Stable fetch function using useCallback with minimal dependencies
+  const fetchAllTrack2Data = useCallback(
+    async (forceRefresh = false) => {
+      if (!address || unlockedChapters <= 0) {
+        setLoading(false);
         return;
       }
 
-      // Fetch chapters sequentially
-      for (let chapter = 1; chapter <= unlockedChapters; chapter++) {
-        try {
-          if (chapter > 1) {
-            await new Promise((resolve) => setTimeout(resolve, 50));
-          }
+      // Check if we already have data and don't need to refresh
+      const hasExistingData = Object.keys(track2Data).length > 0;
+      if (hasExistingData && !forceRefresh) {
+        // Check if the data is still relevant (same address and chapters)
+        const isSameAddress = prevAddressRef.current === address;
+        const isSameChapters =
+          prevUnlockedChaptersRef.current === unlockedChapters;
 
-          const chapterData = await fetchTrack2Matrix(address, chapter);
-          data[chapter] = chapterData;
-        } catch (err) {
-          console.error(`Error fetching chapter ${chapter} data:`, err);
-          data[chapter] = {
-            currentReferrer: "",
-            firstLineReferrals: [],
-            secondLineReferrals: [],
-            blocked: false,
-            reinvestCount: 0,
-            closedPart: "",
-          };
+        if (isSameAddress && isSameChapters) {
+          setLoading(false);
+          return;
         }
       }
 
-      setTrack2Data(data);
-    } catch (err) {
-      console.error("Error fetching track 2 matrix data:", err);
-      setError("Failed to load matrix data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  }, [address, fetchTrack2Matrix, userData, unlockedChapters]);
+      try {
+        setLoading(true);
+        setError(null);
 
+        // Update refs
+        prevAddressRef.current = address;
+        prevUnlockedChaptersRef.current = unlockedChapters;
+
+        // Use bulk fetch for all chapters
+        const data = await fetchAllTrack2Chapters(address, unlockedChapters);
+
+        // Check if we got any valid data
+        const hasValidData = Object.values(data).some(
+          (chapterData) =>
+            chapterData.currentReferrer ||
+            chapterData.firstLineReferrals.length > 0 ||
+            chapterData.secondLineReferrals.length > 0
+        );
+
+        if (hasValidData) {
+          setTrack2Data(data);
+          setRetryCount(0); // Reset retry count on success
+        } else if (retryCount < 3) {
+          // Retry with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+          setTimeout(() => {
+            fetchAllTrack2Data(true);
+          }, delay);
+          setRetryCount((prev) => prev + 1);
+        } else {
+          setError("Unable to load matrix data after multiple attempts");
+        }
+      } catch (err) {
+        console.error("Error fetching track 2 matrix data:", err);
+
+        if (retryCount < 3) {
+          // Retry with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+          setTimeout(() => {
+            fetchAllTrack2Data(true);
+          }, delay);
+          setRetryCount((prev) => prev + 1);
+        } else {
+          setError("Failed to load matrix data. Please try again later.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [address, unlockedChapters, fetchAllTrack2Chapters, retryCount, track2Data]
+  );
+
+  // Single chapter retry - stable function
+  const retrySingleChapter = useCallback(
+    async (chapter: number) => {
+      if (!address) return;
+
+      try {
+        setError(null);
+        const chapterData = await fetchTrack2Matrix(address, chapter);
+        setTrack2Data((prev) => ({
+          ...prev,
+          [chapter]: chapterData,
+        }));
+      } catch (err) {
+        console.error(`Error retrying chapter ${chapter}:`, err);
+        setError(`Failed to load chapter ${chapter}`);
+      }
+    },
+    [address, fetchTrack2Matrix]
+  );
+
+  // Initial fetch and refetch when dependencies change
   useEffect(() => {
-    fetchAllTrack2Data();
+    let mounted = true;
+
+    const fetchData = async () => {
+      if (!address || unlockedChapters <= 0) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      await fetchAllTrack2Data();
+    };
+
+    fetchData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [address, unlockedChapters, fetchAllTrack2Data]);
+
+  // Auto-refresh every 30 seconds if unlockedChapters > 0
+  useEffect(() => {
+    if (unlockedChapters === 0 || !address || loading) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchAllTrack2Data(true); // Force refresh
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [unlockedChapters, address, loading, fetchAllTrack2Data]);
+
+  // Manual refresh function
+  const handleManualRefresh = useCallback(() => {
+    fetchAllTrack2Data(true);
   }, [fetchAllTrack2Data]);
 
-  // Get earnings data safely
-  const totalEarned = hasFullUserData(userData)
-    ? (() => {
-        const value = userData.track2TotalEarned;
-        if (typeof value === "number") return value;
-        if (typeof value === "string") return parseFloat(value) || 0;
-        return 0;
-      })()
+  // Get stats safely
+  const totalEarned = useMemo(() => {
+    if (!userData?.exists) return 0;
+    const value = (userData as any).track2TotalEarned;
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }, [userData]);
+
+  const totalCycles = useMemo(() => {
+    if (!userData?.exists) return 0;
+    const value = (userData as any).track2TotalCycles;
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const parsed = parseInt(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }, [userData]);
+
+  // Calculate totals for selected chapter
+  const currentData = track2Data[selectedChapter];
+  const totalReferrals = currentData
+    ? currentData.firstLineReferrals.length +
+      currentData.secondLineReferrals.length
     : 0;
 
-  const totalCycles = hasFullUserData(userData)
-    ? (() => {
-        const value = userData.track2TotalCycles;
-        if (typeof value === "number") return value;
-        if (typeof value === "string") return parseInt(value) || 0;
-        return 0;
-      })()
-    : 0;
+  // Show connection required
+  if (!isConnected) {
+    return (
+      <div className="py-10">
+        <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
+          <div className="text-5xl mb-4">🔗</div>
+          <h3 className="mb-3 text-xl font-semibold text-slate-50">
+            Connect Wallet
+          </h3>
+          <p className="text-sm text-slate-400 mb-6">
+            Please connect your wallet to view your X6 matrix.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (loading || hookLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
+        <p className="text-slate-400">
+          {retryCount > 0
+            ? `Loading X6 Matrix data (retry ${retryCount}/3)...`
+            : "Loading X6 Matrix data..."}
+        </p>
+        {retryCount > 0 && (
+          <p className="text-xs text-slate-500">Taking longer than usual...</p>
+        )}
+      </div>
+    );
+  }
 
   // Show simplified view if contract functions aren't available
   if (error && Object.keys(track2Data).length === 0) {
@@ -169,6 +288,12 @@ export const Track2Matrix = () => {
             </div>
           </div>
           <div className="mt-6 text-center">
+            <button
+              onClick={handleManualRefresh}
+              className="mr-3 inline-block rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
+            >
+              Retry Loading
+            </button>
             <Link
               href="/dashboard"
               className="inline-block rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
@@ -177,15 +302,6 @@ export const Track2Matrix = () => {
             </Link>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  if (loading || hookLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
-        <p className="text-slate-400">Loading X6 Matrix data...</p>
       </div>
     );
   }
@@ -213,14 +329,6 @@ export const Track2Matrix = () => {
     );
   }
 
-  const currentData = track2Data[selectedChapter];
-
-  // Calculate total referrals
-  const totalReferrals = currentData
-    ? currentData.firstLineReferrals.length +
-      currentData.secondLineReferrals.length
-    : 0;
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -232,6 +340,31 @@ export const Track2Matrix = () => {
           Track your 2×3 matrix positions with first line and second line
           referrals.
         </p>
+        <div className="mt-4 flex justify-center items-center gap-4">
+          <button
+            onClick={handleManualRefresh}
+            disabled={loading}
+            className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 disabled:opacity-50"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Refresh Data
+          </button>
+          <span className="text-xs text-slate-500">
+            Auto-refreshes every 30s
+          </span>
+        </div>
       </div>
 
       {/* Chapter Selector */}
@@ -243,17 +376,23 @@ export const Track2Matrix = () => {
           {unlockedChapters > 0 ? (
             Array.from({ length: unlockedChapters }, (_, i) => i + 1).map(
               (chapter) => (
-                <button
-                  key={chapter}
-                  onClick={() => setSelectedChapter(chapter)}
-                  className={`rounded-xl px-5 py-3 text-base font-medium transition-all ${
-                    selectedChapter === chapter
-                      ? "bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-300 text-black shadow-[0_0_16px_rgba(59,130,246,0.7)]"
-                      : "border border-blue-500/20 bg-slate-950/70 text-slate-300 hover:border-blue-400/60 hover:text-blue-300"
-                  }`}
-                >
-                  Chapter {chapter}
-                </button>
+                <div key={chapter} className="relative">
+                  <button
+                    onClick={() => setSelectedChapter(chapter)}
+                    className={`rounded-xl px-5 py-3 text-base font-medium transition-all ${
+                      selectedChapter === chapter
+                        ? "bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-300 text-black shadow-[0_0_16px_rgba(59,130,246,0.7)]"
+                        : "border border-blue-500/20 bg-slate-950/70 text-slate-300 hover:border-blue-400/60 hover:text-blue-300"
+                    }`}
+                  >
+                    Chapter {chapter}
+                  </button>
+                  {track2Data[chapter] && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500/90 flex items-center justify-center">
+                      <span className="text-xs">✓</span>
+                    </div>
+                  )}
+                </div>
               )
             )
           ) : (
@@ -268,15 +407,42 @@ export const Track2Matrix = () => {
             </div>
           )}
         </div>
+        {unlockedChapters > 0 && (
+          <div className="mt-4 text-xs text-slate-500">
+            Showing {Object.keys(track2Data).length} of {unlockedChapters}{" "}
+            chapters loaded
+          </div>
+        )}
       </div>
 
       {currentData ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Matrix Visualization */}
           <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-            <h3 className="mb-6 text-xl font-bold text-slate-50">
-              X6 Matrix — Chapter {selectedChapter}
-            </h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-50">
+                X6 Matrix — Chapter {selectedChapter}
+              </h3>
+              <button
+                onClick={() => retrySingleChapter(selectedChapter)}
+                className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Refresh
+              </button>
+            </div>
 
             {/* Current Referrer */}
             <div className="mb-8">
@@ -620,17 +786,25 @@ export const Track2Matrix = () => {
         <div className="rounded-2xl border border-amber-400/40 bg-amber-500/5 p-8 text-center">
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="mb-2 text-lg font-semibold text-amber-200">
-            Data Not Available
+            Data Not Available for Chapter {selectedChapter}
           </h3>
           <p className="text-sm text-amber-100/90">
-            No matrix data found for Chapter {selectedChapter}.
+            No matrix data found for this chapter.
           </p>
-          <button
-            onClick={fetchAllTrack2Data}
-            className="mt-4 rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
-          >
-            Try Loading Again
-          </button>
+          <div className="mt-6 flex justify-center gap-4">
+            <button
+              onClick={() => retrySingleChapter(selectedChapter)}
+              className="rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
+            >
+              Retry This Chapter
+            </button>
+            <button
+              onClick={handleManualRefresh}
+              className="rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
+            >
+              Reload All Chapters
+            </button>
+          </div>
         </div>
       ) : null}
     </div>
