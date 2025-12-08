@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, MouseEvent } from "react";
+import React, { useEffect, useState, MouseEvent, useMemo, memo } from "react";
 import MobileWalletConnector from "../Common/MobileWalletConnector";
 
 type Countdown = {
@@ -18,6 +18,9 @@ const initialCountdown: Countdown = {
   mins: "--",
   secs: "--",
 };
+
+// Memoized MobileWalletConnector to prevent unnecessary re-renders
+const MemoizedMobileWalletConnector = memo(MobileWalletConnector);
 
 const faqItems = [
   {
@@ -106,11 +109,10 @@ const RicoMatrixFaqItem: React.FC<{
   );
 };
 
-const RicoMatrixLandingPage: React.FC = () => {
+// Separate Countdown Component to isolate re-renders
+const CountdownDisplay: React.FC = () => {
   const [countdown, setCountdown] = useState<Countdown>(initialCountdown);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // Countdown
   useEffect(() => {
     const updateCountdown = () => {
       const now = Date.now();
@@ -136,6 +138,46 @@ const RicoMatrixLandingPage: React.FC = () => {
     const intervalId = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(intervalId);
   }, []);
+
+  return (
+    <div className="hero-countdown">
+      <div className="countdown-label">Launch countdown</div>
+      <div className="countdown-grid" id="countdown">
+        <div className="countdown-item">
+          <div className="countdown-value" id="cd-days">
+            {countdown.days}
+          </div>
+          <div className="countdown-label-small">Days</div>
+        </div>
+        <div className="countdown-item">
+          <div className="countdown-value" id="cd-hours">
+            {countdown.hours}
+          </div>
+          <div className="countdown-label-small">Hours</div>
+        </div>
+        <div className="countdown-item">
+          <div className="countdown-value" id="cd-mins">
+            {countdown.mins}
+          </div>
+          <div className="countdown-label-small">Mins</div>
+        </div>
+        <div className="countdown-item">
+          <div className="countdown-value" id="cd-secs">
+            {countdown.secs}
+          </div>
+          <div className="countdown-label-small">Secs</div>
+        </div>
+      </div>
+      <div className="launch-note">
+        Get your wallet ready with USDT BEP-20 before launch to avoid network
+        congestion.
+      </div>
+    </div>
+  );
+};
+
+const RicoMatrixLandingPage: React.FC = () => {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Scroll reveal animation
   useEffect(() => {
@@ -260,7 +302,7 @@ const RicoMatrixLandingPage: React.FC = () => {
               <div className="hero-banner reveal">
                 <div className="hero-banner-inner">
                   <h1 className="hero-title">
-                    The World’s First
+                    The World's First
                     <span className="hero-highlight">
                       Decentralized Library Matrix
                     </span>
@@ -275,7 +317,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   </p>
 
                   <div className="hero-ctas mt-6 flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-6 lg:gap-8">
-                    <MobileWalletConnector />
+                    <MemoizedMobileWalletConnector />
 
                     <a
                       href="https://t.me/ricomatrix"
@@ -450,39 +492,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <div className="hero-countdown">
-                    <div className="countdown-label">Launch countdown</div>
-                    <div className="countdown-grid" id="countdown">
-                      <div className="countdown-item">
-                        <div className="countdown-value" id="cd-days">
-                          {countdown.days}
-                        </div>
-                        <div className="countdown-label-small">Days</div>
-                      </div>
-                      <div className="countdown-item">
-                        <div className="countdown-value" id="cd-hours">
-                          {countdown.hours}
-                        </div>
-                        <div className="countdown-label-small">Hours</div>
-                      </div>
-                      <div className="countdown-item">
-                        <div className="countdown-value" id="cd-mins">
-                          {countdown.mins}
-                        </div>
-                        <div className="countdown-label-small">Mins</div>
-                      </div>
-                      <div className="countdown-item">
-                        <div className="countdown-value" id="cd-secs">
-                          {countdown.secs}
-                        </div>
-                        <div className="countdown-label-small">Secs</div>
-                      </div>
-                    </div>
-                    <div className="launch-note">
-                      Get your wallet ready with USDT BEP-20 before launch to
-                      avoid network congestion.
-                    </div>
-                  </div>
+                  <CountdownDisplay />
                 </div>
               </div>
             </div>
@@ -507,7 +517,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                 />
               </div>
               <div className="image-note">
-                The X3 matrix is your direct sales engine. It’s a 3-referral
+                The X3 matrix is your direct sales engine. It's a 3-referral
                 position matrix where you earn directly from each referral.
               </div>
             </div>
@@ -588,8 +598,8 @@ const RicoMatrixLandingPage: React.FC = () => {
                 />
               </div>
               <div className="image-note">
-                The X6 matrix operates on a spillover system. It’s a 6-position
-                matrix that fills through your direct efforts, your upline’s
+                The X6 matrix operates on a spillover system. It's a 6-position
+                matrix that fills through your direct efforts, your upline's
                 efforts, and the efforts of your downline. This creates
                 potential for passive earning and team-based growth.
               </div>
@@ -928,7 +938,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   >
                     <strong>Good to know:</strong> Chapters never expire.
                     Auto-recycle re-opens them when filled so you can keep
-                    earning. If you don’t upgrade, you may lose potential
+                    earning. If you don't upgrade, you may lose potential
                     earnings to an upline who already owns the next chapter.
                   </p>
                 </div>
@@ -1001,8 +1011,8 @@ const RicoMatrixLandingPage: React.FC = () => {
                       <div className="why-tag">Chapters as IP</div>
                       <h3 className="why-title">Education with real utility</h3>
                       <p className="why-body">
-                        Each level unlocks educational content so you’re not
-                        just earning — you’re also building long-term knowledge.
+                        Each level unlocks educational content so you're not
+                        just earning — you're also building long-term knowledge.
                       </p>
                     </article>
                   </div>
@@ -1119,7 +1129,7 @@ const RicoMatrixLandingPage: React.FC = () => {
               </p>
 
               <div className="hero-ctas mt-6 flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-6 lg:gap-8">
-                <MobileWalletConnector />
+                <MemoizedMobileWalletConnector />
 
                 <a
                   href="https://t.me/ricomatrix"
