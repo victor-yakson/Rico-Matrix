@@ -5,7 +5,7 @@ import { ChapterCard } from './ChapterCard';
 import { CHAPTER_NAMES } from '../../utils/constants';
 import { useWaitForTransactionReceipt } from 'wagmi';
 import { useState, useEffect } from 'react';
-import { formatUnits } from 'viem';
+import { formatEther, formatUnits } from 'viem';
 
 export const ChapterGrid = () => {
   const { 
@@ -115,7 +115,7 @@ export const ChapterGrid = () => {
           </div>
           <div>
             <h4 className="text-sm font-medium text-slate-400">Approved</h4>
-            <p className="text-lg font-bold text-emerald-400">{usdtAllowance || '0'} USDT</p>
+            <p className="text-lg font-bold text-emerald-400">{parseInt(usdtAllowance,18) || '0'} USDT</p>
           </div>
         </div>
         {parseFloat(usdtBalance || '0') === 0 && (
