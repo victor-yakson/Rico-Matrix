@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface ProfileStatsProps {
   userData: any;
 }
@@ -17,6 +19,8 @@ const formatCurrency = (amount: string | number): string => {
 };
 
 export const ProfileStats = ({ userData }: ProfileStatsProps) => {
+  const t = useTranslations('Dashboard.stats');
+  
   const totalEarnings = userData?.exists 
     ? Number(userData.track1TotalEarned || 0) + Number(userData.track2TotalEarned || 0)
     : 0;
@@ -33,7 +37,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
 
   const trackStats = [
     {
-      track: 'X3 Matrix',
+      track: t('trackPerformance.x3'),
       earnings: userData?.track1TotalEarned || '0',
       cycles: userData?.track1TotalCycles || 0,
       chapters: userData?.track1Unlocked || 0,
@@ -43,7 +47,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
       gradient: 'from-blue-500 to-cyan-500'
     },
     {
-      track: 'X6 Matrix',
+      track: t('trackPerformance.x6'),
       earnings: userData?.track2TotalEarned || '0',
       cycles: userData?.track2TotalCycles || 0,
       chapters: userData?.track2Unlocked || 0,
@@ -56,12 +60,14 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-50 mb-2">Performance Overview</h2>
+      <h2 className="text-2xl font-bold text-slate-50 mb-2">
+        {t('title')}
+      </h2>
       
       {/* Progress Overview */}
       <div className="space-y-4">
         <div className="flex justify-between text-sm text-slate-400">
-          <span>Chapter Progress</span>
+          <span>{t('progress.title')}</span>
           <span>{totalChapters}/24 ({Math.round(progressPercentage)}%)</span>
         </div>
         <div className="w-full bg-slate-700 rounded-full h-3 shadow-inner">
@@ -75,22 +81,30 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
         <div className="grid grid-cols-3 gap-4 pt-2">
           <div className="text-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
             <div className="text-xl font-bold text-slate-50">{totalChapters}</div>
-            <div className="text-xs text-slate-400">Chapters</div>
+            <div className="text-xs text-slate-400">
+              {t('progress.chapters')}
+            </div>
           </div>
           <div className="text-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
             <div className="text-xl font-bold text-slate-50">{totalCycles}</div>
-            <div className="text-xs text-slate-400">Cycles</div>
+            <div className="text-xs text-slate-400">
+              {t('progress.cycles')}
+            </div>
           </div>
           <div className="text-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
             <div className="text-xl font-bold text-slate-50">${formatCurrency(totalEarnings)}</div>
-            <div className="text-xs text-slate-400">Earned</div>
+            <div className="text-xs text-slate-400">
+              {t('progress.earned')}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Track Performance */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-50 mb-4">Track Performance</h3>
+        <h3 className="text-lg font-semibold text-slate-50 mb-4">
+          {t('trackPerformance.title')}
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {trackStats.map((track, index) => (
             <div 
@@ -103,15 +117,15 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Earnings:</span>
+                  <span className="text-slate-400">{t('trackPerformance.earnings')}</span>
                   <span className="font-medium text-slate-200">${formatCurrency(track.earnings)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Cycles:</span>
+                  <span className="text-slate-400">{t('trackPerformance.cycles')}</span>
                   <span className="font-medium text-slate-200">{track.cycles}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Chapters:</span>
+                  <span className="text-slate-400">{t('trackPerformance.chapters')}</span>
                   <span className="font-medium text-slate-200">{track.chapters}/12</span>
                 </div>
               </div>

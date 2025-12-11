@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState, MouseEvent, useMemo, memo } from "react";
 import MobileWalletConnector from "../Common/MobileWalletConnector";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
+import { LanguageSwitcher } from "../Common/LanguageSwitcher";
 
 type Countdown = {
   days: string;
@@ -22,71 +25,14 @@ const initialCountdown: Countdown = {
 // Memoized MobileWalletConnector to prevent unnecessary re-renders
 const MemoizedMobileWalletConnector = memo(MobileWalletConnector);
 
-const faqItems = [
-  {
-    question: "Is RICO MATRIX really decentralized?",
-    answer: (
-      <>
-        Yes. RICO MATRIX runs as a self-executing smart contract on the BNB
-        Smart Chain. All key rules — registrations, matrix placements, unilevel
-        payouts, royalties and RICO coin farming — are encoded on-chain. Once
-        deployed, no admin can change the logic or pause your earnings.
-      </>
-    ),
-  },
-  {
-    question: "How do I actually earn here?",
-    answer: (
-      <>
-        You earn from multiple streams: X3 matrix (direct referrals), X6 matrix
-        (spillovers from team and global activity), the 12-level unilevel
-        referral program, royalty pools funded by every chapter, and free RICO
-        coin farming on buys, upgrades and referrals.
-      </>
-    ),
-  },
-  {
-    question: "Do I need referrals to earn?",
-    answer: (
-      <>
-        Referrals speed everything up, but are not the only way to earn. The X6
-        spillover system can fill slots from upline and global activity.
-        However, if you want serious results, we strongly suggest you bring at
-        least three active partners and help them reach higher chapters with
-        you.
-      </>
-    ),
-  },
-  {
-    question: "Why is Level 9 recommended at launch?",
-    answer: (
-      <>
-        At launch, most leaders target mid–high chapters to position for global
-        spillovers and unilevel volume. Starting at Level 9 (or higher)
-        positions you in the core flow of matrix and royalty activity, instead
-        of staying at the very bottom while higher chapters explode above you.
-      </>
-    ),
-  },
-  {
-    question: "Is this financial or investment advice?",
-    answer: (
-      <>
-        No. RICO MATRIX is a decentralized smart contract library system with
-        coded rewards. Participation is entirely at your own risk. Always do
-        your own research and never spend funds you cannot afford to lose.
-      </>
-    ),
-  },
+// FAQ items with translation keys
+const faqKeys = [
+  "questions.0",
+  "questions.1",
+  "questions.2",
+  "questions.3",
+  "questions.4",
 ];
-
-const scrollToId = (id: string) => {
-  if (typeof document === "undefined") return;
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-};
 
 const RicoMatrixFaqItem: React.FC<{
   question: string;
@@ -111,6 +57,7 @@ const RicoMatrixFaqItem: React.FC<{
 
 // Separate Countdown Component to isolate re-renders
 const CountdownDisplay: React.FC = () => {
+  const t = useTranslations("LandingPage.launchInfo.countdown");
   const [countdown, setCountdown] = useState<Countdown>(initialCountdown);
 
   useEffect(() => {
@@ -141,43 +88,47 @@ const CountdownDisplay: React.FC = () => {
 
   return (
     <div className="hero-countdown">
-      <div className="countdown-label">Launch countdown</div>
+      <div className="countdown-label">{t("label")}</div>
       <div className="countdown-grid" id="countdown">
         <div className="countdown-item">
           <div className="countdown-value" id="cd-days">
             {countdown.days}
           </div>
-          <div className="countdown-label-small">Days</div>
+          <div className="countdown-label-small">{t("days")}</div>
         </div>
         <div className="countdown-item">
           <div className="countdown-value" id="cd-hours">
             {countdown.hours}
           </div>
-          <div className="countdown-label-small">Hours</div>
+          <div className="countdown-label-small">{t("hours")}</div>
         </div>
         <div className="countdown-item">
           <div className="countdown-value" id="cd-mins">
             {countdown.mins}
           </div>
-          <div className="countdown-label-small">Mins</div>
+          <div className="countdown-label-small">{t("mins")}</div>
         </div>
         <div className="countdown-item">
           <div className="countdown-value" id="cd-secs">
             {countdown.secs}
           </div>
-          <div className="countdown-label-small">Secs</div>
+          <div className="countdown-label-small">{t("secs")}</div>
         </div>
       </div>
-      <div className="launch-note">
-        Get your wallet ready with USDT BEP-20 before launch to avoid network
-        congestion.
-      </div>
+      <div className="launch-note">{t("note")}</div>
     </div>
   );
 };
 
 const RicoMatrixLandingPage: React.FC = () => {
+  const t = useTranslations("LandingPage");
+  const locale = useLocale();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Helper function to render HTML from translation
+  const renderHTML = (html: string) => {
+    return { __html: html };
+  };
 
   // Scroll reveal animation
   useEffect(() => {
@@ -214,11 +165,27 @@ const RicoMatrixLandingPage: React.FC = () => {
     setMobileNavOpen(false);
   };
 
+  const scrollToId = (id: string) => {
+    if (typeof document === "undefined") return;
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const year = new Date().getFullYear();
+  const heroTitle = t.rich("title", {
+    highlight: (chunks) => <span className="hero-highlight">{chunks}</span>,
+  });
+
+  const heroSubtitle = t.rich("subtitle", {
+    strong: (chunks) => <strong>{chunks}</strong>,
+  });
 
   return (
     <div className="page" id="top">
       {/* Header */}
+
       <header className="site-header">
         <div className="site-header-inner">
           <button
@@ -228,68 +195,79 @@ const RicoMatrixLandingPage: React.FC = () => {
             aria-label="Scroll to top"
           >
             <div className="logo-mark" aria-hidden="true">
-              {/* make sure this image exists in /public */}
-              <img
-                src="/logo.png"
-                alt="RICO MATRIX"
-                className="logo-img"
-              />
+              <img src="/logo.png" alt="RICO MATRIX" className="logo-img" />
             </div>
           </button>
 
           <nav className="nav">
             <div className="nav-links" id="nav-links-desktop">
               <a href="#how" onClick={handleNavClick("how")}>
-                How it works
+                {t("nav.howItWorks")}
               </a>
               <a href="#videos" onClick={handleNavClick("videos")}>
-                Videos
+                {t("nav.videos")}
               </a>
               <a href="#levels" onClick={handleNavClick("levels")}>
-                Levels
+                {t("nav.levels")}
               </a>
               <a href="#faq" onClick={handleNavClick("faq")}>
-                FAQ
+                {t("nav.faq")}
               </a>
             </div>
-            <button
-              className="nav-cta"
-              type="button"
-              onClick={() => scrollToId("cta")}
-            >
-              <span>Activate Level1</span>
-            </button>
-            <button
-              className={`burger ${mobileNavOpen ? "burger--open" : ""}`}
-              id="burger"
-              aria-label="Toggle navigation"
-              type="button"
-              onClick={() => setMobileNavOpen((prev) => !prev)}
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
+
+            {/* ✅ Right-side group: language + CTA + burger */}
+            <div className="nav-actions">
+              <div className="language-switcher">
+                <LanguageSwitcher />
+              </div>
+
+              <button
+                className="nav-cta"
+                type="button"
+                onClick={() => scrollToId("cta")}
+              >
+                <span>{t("activateLevel")}</span>
+              </button>
+
+              <button
+                className={`burger ${mobileNavOpen ? "burger--open" : ""}`}
+                id="burger"
+                aria-label="Toggle navigation"
+                type="button"
+                onClick={() => setMobileNavOpen((prev) => !prev)}
+              >
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
+            </div>
           </nav>
         </div>
 
         {mobileNavOpen && (
           <div className="nav-links nav-links--mobile">
             <a href="#how" onClick={handleNavClick("how")}>
-              How it works
+              {t("nav.howItWorks")}
             </a>
             <a href="#videos" onClick={handleNavClick("videos")}>
-              Videos
+              {t("nav.videos")}
             </a>
             <a href="#levels" onClick={handleNavClick("levels")}>
-              Levels
+              {t("nav.levels")}
             </a>
             <a href="#faq" onClick={handleNavClick("faq")}>
-              FAQ
+              {t("nav.faq")}
             </a>
             <a href="#cta" onClick={handleNavClick("cta")}>
-              Activate Level 1
+              {t("activateLevel")}
             </a>
+
+            {/* 🌐 Mobile-only language switcher at bottom of menu */}
+            <div className="nav-mobile-language">
+              <div className="language-switcher language-switcher--mobile">
+                <LanguageSwitcher />
+              </div>
+            </div>
           </div>
         )}
       </header>
@@ -301,20 +279,15 @@ const RicoMatrixLandingPage: React.FC = () => {
             <div className="hero-full">
               <div className="hero-banner reveal">
                 <div className="hero-banner-inner">
-                  <h1 className="hero-title">
-                    The World's First
-                    <span className="hero-highlight">
-                      Decentralized Library Matrix
-                    </span>
-                    That Pays Royalty Passive Income.
-                  </h1>
+                  <h1
+                    className="hero-title"
+                    dangerouslySetInnerHTML={renderHTML(t("title"))}
+                  />
 
-                  <p className="hero-subtitle">
-                    Buy chapters, unlock knowledge, and earn from a dual-track{" "}
-                    <strong>X3 + X6 matrix</strong>, 12 unilevel rewards,
-                    royalty pools and free RICO coin farming — all running on a
-                    self-executing smart contract on BNB Chain.
-                  </p>
+                  <p
+                    className="hero-subtitle"
+                    dangerouslySetInnerHTML={renderHTML(t("subtitle"))}
+                  />
 
                   <div className="hero-ctas mt-6 flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-6 lg:gap-8">
                     <MemoizedMobileWalletConnector />
@@ -325,7 +298,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                       rel="noreferrer"
                       className="btn btn-secondary flex items-center justify-center h-14 px-8 text-lg rounded-xl"
                     >
-                      Join Telegram
+                      {t("joinTelegram")}
                     </a>
                   </div>
                 </div>
@@ -344,7 +317,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                 <div className="hero-card-header">
                   <div>
                     <div className="hero-card-title">
-                      X3 + X6 Matrix Overview
+                      {t("matrixOverview.title")}
                     </div>
                     <div
                       style={{
@@ -352,10 +325,12 @@ const RicoMatrixLandingPage: React.FC = () => {
                         color: "var(--text-muted)",
                       }}
                     >
-                      Chapters = levels • Levels = book chapters you own forever
+                      {t("matrixOverview.subtitle")}
                     </div>
                   </div>
-                  <div className="hero-card-chip">BNB Smart Chain</div>
+                  <div className="hero-card-chip">
+                    {t("matrixOverview.blockchain")}
+                  </div>
                 </div>
 
                 <div className="hero-card-main">
@@ -367,39 +342,40 @@ const RicoMatrixLandingPage: React.FC = () => {
                         marginBottom: 6,
                       }}
                     >
-                      12 chapters per track · each next chapter costs 2× more
-                      and pays 2× more.
+                      {t("matrixOverview.note")}
                     </div>
                     <div className="hero-card-matrix">
                       <div className="hero-card-level">
-                        <div>Chapter 1</div>
+                        <div>{t("matrixOverview.chapters.chapter1")}</div>
                         <span>$5</span>
-                        <small>Entry</small>
+                        <small>{t("matrixOverview.prices.entry")}</small>
                       </div>
                       <div className="hero-card-level">
-                        <div>Chapter 4</div>
+                        <div>{t("matrixOverview.chapters.chapter4")}</div>
                         <span>$40</span>
-                        <small>Team builder</small>
+                        <small>{t("matrixOverview.prices.teamBuilder")}</small>
                       </div>
                       <div className="hero-card-level hero-card-level--highlight">
-                        <div>Chapter 9</div>
+                        <div>{t("matrixOverview.chapters.chapter9")}</div>
                         <span>$1280</span>
-                        <small>Global spillover zone</small>
+                        <small>
+                          {t("matrixOverview.prices.globalSpillover")}
+                        </small>
                       </div>
                       <div className="hero-card-level">
-                        <div>Chapter 10</div>
+                        <div>{t("matrixOverview.chapters.chapter10")}</div>
                         <span>$2560</span>
-                        <small>Scaling</small>
+                        <small>{t("matrixOverview.prices.scaling")}</small>
                       </div>
                       <div className="hero-card-level">
-                        <div>Chapter 11</div>
+                        <div>{t("matrixOverview.chapters.chapter11")}</div>
                         <span>$5120</span>
-                        <small>Leaders</small>
+                        <small>{t("matrixOverview.prices.leaders")}</small>
                       </div>
                       <div className="hero-card-level">
-                        <div>Chapter 12</div>
+                        <div>{t("matrixOverview.chapters.chapter12")}</div>
                         <span>$10240</span>
-                        <small>Whales</small>
+                        <small>{t("matrixOverview.prices.whales")}</small>
                       </div>
                     </div>
                     <div
@@ -437,14 +413,16 @@ const RicoMatrixLandingPage: React.FC = () => {
                 </div>
 
                 <div className="hero-card-footer">
-                  <div>
-                    <strong>Royalty pool:</strong> 30% for long-term community
-                    payouts plus platform fee.
-                  </div>
-                  <div>
-                    <strong>RICO coin farming:</strong> 1:1 free coins on buys,
-                    upgrades &amp; unilevel.
-                  </div>
+                  <div
+                    dangerouslySetInnerHTML={renderHTML(
+                      t("matrixOverview.footer.royalty")
+                    )}
+                  />
+                  <div
+                    dangerouslySetInnerHTML={renderHTML(
+                      t("matrixOverview.footer.farming")
+                    )}
+                  />
                 </div>
               </div>
             </div>
@@ -459,35 +437,38 @@ const RicoMatrixLandingPage: React.FC = () => {
                 <div>
                   <div className="hero-kicker">
                     <span className="hero-kicker-pill">
-                      Launching 15 Dec 2025
+                      {t("launchInfo.launching")}
                     </span>
-                    <span>4:00 PM WAT — BNB Smart Chain</span>
+                    <span>{t("launchInfo.time")}</span>
                   </div>
 
                   <div className="hero-badges">
                     <div className="hero-badge">
                       <span className="hero-badge-dot"></span>
-                      100% decentralized — smart contract fully renounced
+                      {t("launchInfo.badges.decentralized")}
                     </div>
                     <div className="hero-badge">
                       <span className="hero-badge-dot"></span>
-                      X3 direct + X6 spillover earnings
+                      {t("launchInfo.badges.earnings")}
                     </div>
                     <div className="hero-badge">
                       <span className="hero-badge-dot"></span>
-                      Royalty community pool &amp; unilevel
+                      {t("launchInfo.badges.royalty")}
                     </div>
                   </div>
 
                   <div className="hero-meta">
-                    <div className="hero-meta-pill">
-                      Recommended entry: <strong>at least Level 9</strong> for
-                      global spillovers
-                    </div>
-                    <div>
-                      Bring <strong>3 ready partners</strong> to activate your
-                      engine from day one.
-                    </div>
+                    <div
+                      className="hero-meta-pill"
+                      dangerouslySetInnerHTML={renderHTML(
+                        t("launchInfo.recommendation")
+                      )}
+                    />
+                    <div
+                      dangerouslySetInnerHTML={renderHTML(
+                        t("launchInfo.partners")
+                      )}
+                    />
                   </div>
                 </div>
 
@@ -504,11 +485,9 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel image-block reveal">
               <div className="section-head">
-                <div className="section-kicker">RICO X3 VISUAL</div>
-                <h2 className="section-title">ONE LINE - 3 PLACES</h2>
-                <p className="section-subtitle">
-                  UNLIMITED AUTOMATIC REINVESTS
-                </p>
+                <div className="section-kicker">{t("visuals.x3.kicker")}</div>
+                <h2 className="section-title">{t("visuals.x3.title")}</h2>
+                <p className="section-subtitle">{t("visuals.x3.subtitle")}</p>
               </div>
               <div className="image-frame">
                 <img
@@ -516,10 +495,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   alt="RICO MATRIX X3 matrix visual"
                 />
               </div>
-              <div className="image-note">
-                The X3 matrix is your direct sales engine. It's a 3-referral
-                position matrix where you earn directly from each referral.
-              </div>
+              <div className="image-note">{t("visuals.x3.note")}</div>
             </div>
           </div>
         </section>
@@ -529,53 +505,45 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel">
               <div className="section-head reveal">
-                <div className="section-kicker">Why people are joining</div>
-                <h2 className="section-title">
-                  Multiple on-chain income streams from one library matrix.
-                </h2>
-                <p className="section-subtitle">
-                  RICO MATRIX combines matrix rewards, unilevel commissions,
-                  royalty dividends, intellectual property ownership and RICO
-                  coin farming — all encoded inside an unstoppable smart
-                  contract.
-                </p>
+                <div className="section-kicker">{t("whyJoin.kicker")}</div>
+                <h2 className="section-title">{t("whyJoin.title")}</h2>
+                <p className="section-subtitle">{t("whyJoin.subtitle")}</p>
               </div>
 
               <div className="grid grid--3">
                 <article className="card reveal">
-                  <div className="card-kicker">Spillovers</div>
-                  <h3 className="card-title">Earn from global X6 activity</h3>
+                  <div className="card-kicker">
+                    {t("whyJoin.features.spillovers.kicker")}
+                  </div>
+                  <h3 className="card-title">
+                    {t("whyJoin.features.spillovers.title")}
+                  </h3>
                   <p className="card-body">
-                    The X6 matrix is built for team and community spillovers.
-                    Upline, downline and crossline activity can fill your matrix
-                    slots, giving you the chance to earn even if you are not a
-                    strong recruiter.
+                    {t("whyJoin.features.spillovers.description")}
                   </p>
                 </article>
 
                 <article className="card reveal">
-                  <div className="card-kicker">Intellectual property</div>
+                  <div className="card-kicker">
+                    {t("whyJoin.features.ip.kicker")}
+                  </div>
                   <h3 className="card-title">
-                    Every level unlocks a real chapter
+                    {t("whyJoin.features.ip.title")}
                   </h3>
                   <p className="card-body">
-                    Each level is a book chapter in the RICO Library. When you
-                    buy a chapter, you unlock knowledge and own that content
-                    forever — your participation is backed by long-term IP
-                    value.
+                    {t("whyJoin.features.ip.description")}
                   </p>
                 </article>
 
                 <article className="card reveal">
-                  <div className="card-kicker">Royalties &amp; unilevel</div>
+                  <div className="card-kicker">
+                    {t("whyJoin.features.royalty.kicker")}
+                  </div>
                   <h3 className="card-title">
-                    Royalty pool + 12-level unilevel
+                    {t("whyJoin.features.royalty.title")}
                   </h3>
                   <p className="card-body">
-                    Every buy and upgrade feeds royalty and referral pools. 70%
-                    of each chapter price flows instantly to 12 uplines on your
-                    unilevel, while global 30% royalty pools reward both active
-                    and inactive users over time plus platform fee.
+                    {t("whyJoin.features.royalty.description")}
                   </p>
                 </article>
               </div>
@@ -588,8 +556,8 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel image-block reveal">
               <div className="section-head">
-                <div className="section-kicker">RICO X6 VISUAL</div>
-                <h2 className="section-title">TWO LINES - 2 + 4 PLACES</h2>
+                <div className="section-kicker">{t("visuals.x6.kicker")}</div>
+                <h2 className="section-title">{t("visuals.x6.title")}</h2>
               </div>
               <div className="image-frame">
                 <img
@@ -597,12 +565,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   alt="RICO MATRIX X6 matrix visual"
                 />
               </div>
-              <div className="image-note">
-                The X6 matrix operates on a spillover system. It's a 6-position
-                matrix that fills through your direct efforts, your upline's
-                efforts, and the efforts of your downline. This creates
-                potential for passive earning and team-based growth.
-              </div>
+              <div className="image-note">{t("visuals.x6.note")}</div>
             </div>
           </div>
         </section>
@@ -612,60 +575,60 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel">
               <div className="section-head reveal">
-                <div className="section-kicker">How it works</div>
-                <h2 className="section-title">
-                  Three simple steps to switch on your RICO engine.
-                </h2>
-                <p className="section-subtitle">
-                  RICO MATRIX is a self-executing algorithm on the Binance Smart
-                  Chain. Once the contract is live, it automatically handles
-                  registrations, matrix placements, reinvestments, unilevel
-                  payouts and royalty distributions.
-                </p>
+                <div className="section-kicker">{t("howItWorks.kicker")}</div>
+                <h2 className="section-title">{t("howItWorks.title")}</h2>
+                <p className="section-subtitle">{t("howItWorks.subtitle")}</p>
               </div>
 
               <div className="steps">
                 <article className="step reveal">
-                  <div className="step-index">1</div>
+                  <div className="step-index">
+                    {t("howItWorks.steps.step1.index")}
+                  </div>
                   <div>
-                    <h3 className="step-title">Connect your BEP-20 wallet</h3>
-                    <p className="step-body">
-                      Use Trust Wallet, SafePal, MetaMask, TokenPocket, OKX, or
-                      any compatible BNB Smart Chain wallet. Fund it with a
-                      small amount of BNB for gas and at least{" "}
-                      <strong>$5 USDT BEP-20</strong> for your first chapter.
-                    </p>
+                    <h3 className="step-title">
+                      {t("howItWorks.steps.step1.title")}
+                    </h3>
+                    <p
+                      className="step-body"
+                      dangerouslySetInnerHTML={renderHTML(
+                        t("howItWorks.steps.step1.description")
+                      )}
+                    />
                   </div>
                 </article>
 
                 <article className="step reveal">
-                  <div className="step-index">2</div>
+                  <div className="step-index">
+                    {t("howItWorks.steps.step2.index")}
+                  </div>
                   <div>
                     <h3 className="step-title">
-                      Activate Chapter 1 in X3 &amp; X6
+                      {t("howItWorks.steps.step2.title")}
                     </h3>
-                    <p className="step-body">
-                      With <strong>$5 USDT</strong> you enter RICO X3 and RICO
-                      X6 simultaneously. X3 is your direct sales engine (3
-                      slots), while X6 is your spillover engine (2+4 slots). All
-                      payments move wallet-to-wallet via the smart contract.
-                    </p>
+                    <p
+                      className="step-body"
+                      dangerouslySetInnerHTML={renderHTML(
+                        t("howItWorks.steps.step2.description")
+                      )}
+                    />
                   </div>
                 </article>
 
                 <article className="step reveal">
-                  <div className="step-index">3</div>
+                  <div className="step-index">
+                    {t("howItWorks.steps.step3.index")}
+                  </div>
                   <div>
                     <h3 className="step-title">
-                      Upgrade, recycle &amp; scale your chapters
+                      {t("howItWorks.steps.step3.title")}
                     </h3>
-                    <p className="step-body">
-                      Chapters 2–12 are each 2× the previous price and 2× the
-                      earning potential. Auto-recycle keeps chapters reopening.
-                      Unilevel and royalty pools reward network-wide activity,
-                      while RICO coin farming drops free tokens based on your
-                      buys, upgrades and referrals.
-                    </p>
+                    <p
+                      className="step-body"
+                      dangerouslySetInnerHTML={renderHTML(
+                        t("howItWorks.steps.step3.description")
+                      )}
+                    />
                   </div>
                 </article>
               </div>
@@ -678,65 +641,59 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel">
               <div className="section-head reveal">
-                <div className="section-kicker">Video Tutorials Guide</div>
-                <h2 className="section-title">
-                  Watch these 3 short videos before you join.
-                </h2>
-                <p className="section-subtitle">
-                  These tutorials help new members move from zero to ready:
-                  wallet, USDT funding, and how RICO MATRIX works.
-                </p>
+                <div className="section-kicker">{t("videos.kicker")}</div>
+                <h2 className="section-title">{t("videos.title")}</h2>
+                <p className="section-subtitle">{t("videos.subtitle")}</p>
               </div>
 
               <div className="video-grid">
                 <article className="video-card reveal">
                   <h3 className="video-title">
-                    1. How to create a SafePal wallet
+                    {t("videos.tutorials.tutorial1.title")}
                   </h3>
                   <p className="video-desc">
-                    Step-by-step guide to install SafePal, create your wallet,
-                    secure your seed phrase and connect to BNB Smart Chain.
+                    {t("videos.tutorials.tutorial1.description")}
                   </p>
                   <div className="video-embed">
                     <iframe
                       src="https://www.youtube.com/embed/V0WrNFZlehg"
                       allowFullScreen
                       loading="lazy"
-                      title="How to create a SafePal wallet"
+                      title={t("videos.tutorials.tutorial1.title")}
                     />
                   </div>
                 </article>
 
                 <article className="video-card reveal">
                   <h3 className="video-title">
-                    2. How to buy USDT on Bybit P2P
+                    {t("videos.tutorials.tutorial2.title")}
                   </h3>
                   <p className="video-desc">
-                    Learn how to use Bybit P2P marketplace to safely convert
-                    your local currency into USDT BEP-20.
+                    {t("videos.tutorials.tutorial2.description")}
                   </p>
                   <div className="video-embed">
                     <iframe
                       src="https://www.youtube.com/embed/gqHHsPycihI"
                       allowFullScreen
                       loading="lazy"
-                      title="How to buy USDT on Bybit P2P"
+                      title={t("videos.tutorials.tutorial2.title")}
                     />
                   </div>
                 </article>
 
                 <article className="video-card reveal">
-                  <h3 className="video-title">3. How RICO MATRIX works</h3>
+                  <h3 className="video-title">
+                    {t("videos.tutorials.tutorial3.title")}
+                  </h3>
                   <p className="video-desc">
-                    Overview of X3 &amp; X6, royalty pool, unilevel and RICO
-                    coin farming so you understand the full engine.
+                    {t("videos.tutorials.tutorial3.description")}
                   </p>
                   <div className="video-embed">
                     <iframe
                       src="https://www.youtube.com/embed/gqHHsPycihI"
                       allowFullScreen
                       loading="lazy"
-                      title="How RICO MATRIX works"
+                      title={t("videos.tutorials.tutorial3.title")}
                     />
                   </div>
                 </article>
@@ -750,14 +707,9 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel reveal">
               <div className="section-head">
-                <div className="section-kicker">Strategic partners</div>
-                <h2 className="section-title">
-                  Trusted by big Web3 infrastructures.
-                </h2>
-                <p className="section-subtitle">
-                  RICO MATRIX interacts with well-known tools in the BNB Smart
-                  Chain ecosystem.
-                </p>
+                <div className="section-kicker">{t("partners.kicker")}</div>
+                <h2 className="section-title">{t("partners.title")}</h2>
+                <p className="section-subtitle">{t("partners.subtitle")}</p>
               </div>
 
               <div className="partners-grid">
@@ -810,14 +762,9 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel image-block reveal">
               <div className="section-head">
-                <div className="section-kicker">12 Unilevel Earning ladder</div>
-                <h2 className="section-title">
-                  Share 70% of every chapter bought among 12 referral unilevel.
-                </h2>
-                <p className="section-subtitle">
-                  Every chapter purchase instantly rewards your referral tree
-                  through the smart contract.
-                </p>
+                <div className="section-kicker">{t("unilevel.kicker")}</div>
+                <h2 className="section-title">{t("unilevel.title")}</h2>
+                <p className="section-subtitle">{t("unilevel.subtitle")}</p>
               </div>
               <div className="image-frame">
                 <img
@@ -835,14 +782,8 @@ const RicoMatrixLandingPage: React.FC = () => {
             <div className="block-panel">
               <div className="levels-wrap">
                 <div className="levels-content reveal">
-                  <div className="section-kicker">
-                    12 Chapters • X3 &amp; X6
-                  </div>
-                  <p className="section-subtitle">
-                    Both X3 and X6 have 12 identical chapters. Each new chapter
-                    costs 2× more than the previous one and pays approximately
-                    2× more in matrix profits when filled and recycled.
-                  </p>
+                  <div className="section-kicker">{t("levels.kicker")}</div>
+                  <p className="section-subtitle">{t("levels.subtitle")}</p>
 
                   <div
                     className="levels-grid"
@@ -850,84 +791,24 @@ const RicoMatrixLandingPage: React.FC = () => {
                       marginTop: 18,
                     }}
                   >
-                    <div className="level-card">
-                      <div className="level-label">Level 1</div>
-                      <div className="level-price">$5</div>
-                      <div className="level-meta">
-                        Entry chapter — start your engine.
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((level) => (
+                      <div
+                        key={level}
+                        className={`level-card ${
+                          level === 9 ? "level-card--highlight" : ""
+                        }`}
+                      >
+                        <div className="level-label">
+                          {t(`levels.chapters.level${level}`)}
+                        </div>
+                        <div className="level-price">
+                          {t(`levels.prices.level${level}`)}
+                        </div>
+                        <div className="level-meta">
+                          {t(`levels.descriptions.level${level}`)}
+                        </div>
                       </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 2</div>
-                      <div className="level-price">$10</div>
-                      <div className="level-meta">
-                        Double your earning capacity.
-                      </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 3</div>
-                      <div className="level-price">$20</div>
-                      <div className="level-meta">
-                        Growing team, growing royalties.
-                      </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 4</div>
-                      <div className="level-price">$40</div>
-                      <div className="level-meta">
-                        More spillovers, larger cycles.
-                      </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 5</div>
-                      <div className="level-price">$80</div>
-                      <div className="level-meta">Serious builders zone.</div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 6</div>
-                      <div className="level-price">$160</div>
-                      <div className="level-meta">Core team leadership.</div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 7</div>
-                      <div className="level-price">$320</div>
-                      <div className="level-meta">
-                        Long-term royalty leverage.
-                      </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 8</div>
-                      <div className="level-price">$640</div>
-                      <div className="level-meta">
-                        Momentum and duplication.
-                      </div>
-                    </div>
-                    <div className="level-card level-card--highlight">
-                      <div className="level-label">Level 9</div>
-                      <div className="level-price">$1,280</div>
-                      <div className="level-meta">
-                        Global spillover hotspot — strongly recommended.
-                      </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 10</div>
-                      <div className="level-price">$2,560</div>
-                      <div className="level-meta">
-                        Scaling deep unilevel earnings.
-                      </div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 11</div>
-                      <div className="level-price">$5,120</div>
-                      <div className="level-meta">Leadership &amp; whales.</div>
-                    </div>
-                    <div className="level-card">
-                      <div className="level-label">Level 12</div>
-                      <div className="level-price">$10,240</div>
-                      <div className="level-meta">
-                        Flagship chapter — top of the library.
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
                   <p
@@ -935,12 +816,8 @@ const RicoMatrixLandingPage: React.FC = () => {
                     style={{
                       marginTop: 14,
                     }}
-                  >
-                    <strong>Good to know:</strong> Chapters never expire.
-                    Auto-recycle re-opens them when filled so you can keep
-                    earning. If you don't upgrade, you may lose potential
-                    earnings to an upline who already owns the next chapter.
-                  </p>
+                    dangerouslySetInnerHTML={renderHTML(t("levels.note"))}
+                  />
                 </div>
               </div>
             </div>
@@ -954,65 +831,79 @@ const RicoMatrixLandingPage: React.FC = () => {
               <div className="grid grid--2">
                 <div className="reveal">
                   <div className="section-kicker">
-                    Why RICO Matrix is different
+                    {t("whyDifferent.kicker")}
                   </div>
 
                   <div className="why-grid">
                     <article className="why-card">
-                      <div className="why-tag">Decentralized</div>
+                      <div className="why-tag">
+                        {t("whyDifferent.features.decentralized.tag")}
+                      </div>
                       <h3 className="why-title">
-                        100% decentralized smart contract
+                        {t("whyDifferent.features.decentralized.title")}
                       </h3>
                       <p className="why-body">
-                        No owner withdrawals, no manual control over funds once
-                        live. The rules are locked on-chain.
+                        {t("whyDifferent.features.decentralized.description")}
                       </p>
                     </article>
 
                     <article className="why-card">
-                      <div className="why-tag">Dual-track engine</div>
+                      <div className="why-tag">
+                        {t("whyDifferent.features.dualTrack.tag")}
+                      </div>
                       <h3 className="why-title">
-                        X3 for directs, X6 for spillovers
+                        {t("whyDifferent.features.dualTrack.title")}
                       </h3>
                       <p className="why-body">
-                        X3 rewards your personal referrals, while X6 is built
-                        for global and team spillovers from the whole community.
+                        {t("whyDifferent.features.dualTrack.description")}
                       </p>
                     </article>
 
                     <article className="why-card">
-                      <div className="why-tag">Royalties</div>
-                      <h3 className="why-title">Royalty passive income</h3>
+                      <div className="why-tag">
+                        {t("whyDifferent.features.royalties.tag")}
+                      </div>
+                      <h3 className="why-title">
+                        {t("whyDifferent.features.royalties.title")}
+                      </h3>
                       <p className="why-body">
-                        A global pool shares long-term royalties with both
-                        active and inactive members based on chapter activity.
+                        {t("whyDifferent.features.royalties.description")}
                       </p>
                     </article>
 
                     <article className="why-card">
-                      <div className="why-tag">Unilevel</div>
-                      <h3 className="why-title">12-level referral program</h3>
+                      <div className="why-tag">
+                        {t("whyDifferent.features.unilevel.tag")}
+                      </div>
+                      <h3 className="why-title">
+                        {t("whyDifferent.features.unilevel.title")}
+                      </h3>
                       <p className="why-body">
-                        70% of every chapter price is instantly distributed
-                        across 12 uplines through the smart contract.
+                        {t("whyDifferent.features.unilevel.description")}
                       </p>
                     </article>
 
                     <article className="why-card">
-                      <div className="why-tag">RICO coin</div>
-                      <h3 className="why-title">Free RICO coin farming</h3>
+                      <div className="why-tag">
+                        {t("whyDifferent.features.coin.tag")}
+                      </div>
+                      <h3 className="why-title">
+                        {t("whyDifferent.features.coin.title")}
+                      </h3>
                       <p className="why-body">
-                        1:1 RICO drops on every buy, upgrade and unilevel payout
-                        build real on-chain token circulation.
+                        {t("whyDifferent.features.coin.description")}
                       </p>
                     </article>
 
                     <article className="why-card">
-                      <div className="why-tag">Chapters as IP</div>
-                      <h3 className="why-title">Education with real utility</h3>
+                      <div className="why-tag">
+                        {t("whyDifferent.features.ip.tag")}
+                      </div>
+                      <h3 className="why-title">
+                        {t("whyDifferent.features.ip.title")}
+                      </h3>
                       <p className="why-body">
-                        Each level unlocks educational content so you're not
-                        just earning — you're also building long-term knowledge.
+                        {t("whyDifferent.features.ip.description")}
                       </p>
                     </article>
                   </div>
@@ -1020,7 +911,7 @@ const RicoMatrixLandingPage: React.FC = () => {
 
                 <div className="reveal">
                   <h3 style={{ margin: "0 0 6px" }}>
-                    Re-watch the RICO MATRIX overview.
+                    {t("Common.watchVideo")}
                   </h3>
                   <p
                     style={{
@@ -1029,8 +920,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                       color: "var(--text-muted)",
                     }}
                   >
-                    After watching the three tutorials above, this is where
-                    serious builders usually decide what chapter to start from.
+                    {t("Common.watchDescription")}
                   </p>
                   <div
                     className="video-embed"
@@ -1057,11 +947,9 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel image-block reveal">
               <div className="section-head">
-                <div className="section-kicker">Earn Free Airdrop</div>
+                <div className="section-kicker">{t("coinAirdrop.kicker")}</div>
                 <p className="section-subtitle">
-                  Earn free RICO coins automatically into your crypto wallet
-                  based on your buy, upgrade and referral activities inside the
-                  RICO MATRIX system.
+                  {t("coinAirdrop.description")}
                 </p>
               </div>
               <div className="image-frame">
@@ -1076,18 +964,16 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="block-panel">
               <div className="section-head reveal">
-                <div className="section-kicker">FAQ</div>
-                <h2 className="section-title">
-                  Answers to the most important questions.
-                </h2>
+                <div className="section-kicker">{t("faq.kicker")}</div>
+                <h2 className="section-title">{t("faq.title")}</h2>
               </div>
 
               <div className="faq-list">
-                {faqItems.map((item) => (
+                {faqKeys.map((key, index) => (
                   <RicoMatrixFaqItem
-                    key={item.question}
-                    question={item.question}
-                    answer={item.answer}
+                    key={key}
+                    question={t(`faq.${key}.question`)}
+                    answer={t(`faq.${key}.answer`)}
                   />
                 ))}
               </div>
@@ -1099,16 +985,16 @@ const RicoMatrixLandingPage: React.FC = () => {
         <section className="section section--tight">
           <div className="container">
             <div className="block-panel support-strip reveal">
-              <div>Need help getting started or stuck on any step?</div>
+              <div>{t("support.help")}</div>
               <div>
-                Team Support:{" "}
+                {t("support.team")}{" "}
                 <strong>
                   <a
                     href="https://t.me/defilordly"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    @ricomatrix
+                    {t("support.telegram")}
                   </a>
                 </strong>
               </div>
@@ -1120,13 +1006,8 @@ const RicoMatrixLandingPage: React.FC = () => {
         <section id="cta" className="section">
           <div className="container">
             <div className="final-cta reveal">
-              <h2>Ready to switch on your RICO Engine?</h2>
-              <p>
-                Get your wallet ready with USDT BEP-20, start at Chapter&nbsp;1
-                — or position higher up to Chapter&nbsp;9 and above — and bring
-                at least three serious partners. The RICO MATRIX smart contract
-                will handle the rest.
-              </p>
+              <h2>{t("cta.title")}</h2>
+              <p>{t("cta.description")}</p>
 
               <div className="hero-ctas mt-6 flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-6 lg:gap-8">
                 <MemoizedMobileWalletConnector />
@@ -1137,7 +1018,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-secondary flex items-center justify-center h-14 px-8 text-lg rounded-xl"
                 >
-                  Join Telegram
+                  {t("joinTelegram")}
                 </a>
               </div>
               <div
@@ -1146,9 +1027,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   color: "var(--text-muted)",
                 }}
               >
-                Reminder: This is not investment advice. Always do your own
-                research before interacting with any smart contract or DeFi
-                system.
+                {t("cta.disclaimer")}
               </div>
             </div>
           </div>
@@ -1158,33 +1037,36 @@ const RicoMatrixLandingPage: React.FC = () => {
       {/* Footer */}
       <footer className="site-footer">
         <div className="footer-inner">
-          <div>
-            © <span>{year}</span> RICO MATRIX. All rights reserved.
-          </div>
+          // Footer section - fix for the copyright line
+          <div
+            dangerouslySetInnerHTML={renderHTML(
+              t("footer.copyright", { year })
+            )}
+          />{" "}
           <div className="footer-links">
             <a href="https://ricomatrix.com/" target="_blank" rel="noreferrer">
-              ricomatrix.com
+              {t("footer.links.website")}
             </a>
             <a
               href="https://t.me/ricomatrixdapp"
               target="_blank"
               rel="noreferrer"
             >
-              Telegram
+              {t("footer.links.telegram")}
             </a>
             <a
               href="https://x.com/ricomatrixdapp"
               target="_blank"
               rel="noreferrer"
             >
-              X (Twitter)
+              {t("footer.links.twitter")}
             </a>
             <a
               href="https://www.youtube.com/@ricomatrix"
               target="_blank"
               rel="noreferrer"
             >
-              YouTube Channel
+              {t("footer.links.youtube")}
             </a>
           </div>
         </div>

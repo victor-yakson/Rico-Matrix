@@ -8,11 +8,13 @@ import { ProfileInfo } from '../../components/Profile/ProfileInfo';
 import { ReferralSection } from '../../components/Profile/ReferralSection';
 import { useQuantuMatrix } from '../../hooks/useQuantuMatrix';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function ProfilePage() {
   const { isConnected, address } = useAccount();
   const { userData, refetchUserData } = useQuantuMatrix();
   const [mounted, setMounted] = useState(false);
+  const t = useTranslations('ProfilePage');
 
   useEffect(() => {
     setMounted(true);
@@ -32,13 +34,13 @@ export default function ProfilePage() {
         <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4">
           <div className="text-center mb-8">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
-              Profile
+              {t('loading.label')}
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-              Loading your profile…
+              {t('loading.title')}
             </h1>
             <p className="text-sm md:text-base text-slate-400">
-              Fetching your on-chain activity and referral stats.
+              {t('loading.description')}
             </p>
           </div>
           <div className="flex justify-center items-center">
@@ -56,14 +58,13 @@ export default function ProfilePage() {
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
           <div className="max-w-md w-full rounded-2xl border border-yellow-500/20 bg-black/70 px-6 py-10 text-center shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
-              Profile Access
+              {t('connect.accessLabel')}
             </p>
             <h1 className="text-3xl font-bold text-slate-50 mb-4">
-              Connect to View Profile
+              {t('connect.title')}
             </h1>
             <p className="text-sm md:text-base text-slate-400 mb-8">
-              Connect your wallet to view your profile, matrix progress, and
-              referral earnings.
+              {t('connect.description')}
             </p>
             <div className="flex justify-center">
               <ConnectWallet />
@@ -82,14 +83,13 @@ export default function ProfilePage() {
           {/* Header */}
           <div className="text-center mb-8 md:mb-10">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
-              Your Profile
+              {t('header.label')}
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-              Account Overview
+              {t('header.title')}
             </h1>
             <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
-              Track your chapters, earnings, status, and referral network inside
-              the QuantuMatrix ecosystem.
+              {t('header.description')}
             </p>
           </div>
 

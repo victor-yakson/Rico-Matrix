@@ -139,7 +139,6 @@ button {
     padding: 22px 16px 22px;
   }
 }
-
 /* Header */
 
 .site-header {
@@ -180,8 +179,6 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 30% 20%, #28d639, #000000);
-  box-shadow: 0 0 22px rgba(246, 184, 36, 0.6);
 }
 
 .logo-img {
@@ -270,20 +267,110 @@ button {
   background: var(--text-main);
 }
 
-@media (max-width: 780px) {
-  .nav-links {
-    display: none;
-  }
+/* Group actions on the right side (language + CTA + burger) */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
+/* Desktop language switcher wrapper */
+.language-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* If your LanguageSwitcher renders a button/select, this makes it match the header style */
+.language-switcher button,
+.language-switcher select {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(92, 99, 130, 0.9);
+  background: radial-gradient(
+    circle at top left,
+    rgba(16, 185, 129, 0.18),
+    rgba(7, 10, 22, 0.95)
+  );
+  color: var(--text-main);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.language-switcher button:hover,
+.language-switcher select:hover {
+  border-color: rgba(246, 184, 36, 0.8);
+  box-shadow: 0 0 12px rgba(246, 184, 36, 0.4);
+  transform: translateY(-0.5px);
+}
+
+/* Optional smaller caret styling if you use a <select> */
+.language-switcher select {
+  appearance: none;
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, #f6b824 50%),
+    linear-gradient(135deg, #f6b824 50%, transparent 50%);
+  background-position: calc(100% - 10px) 8px, calc(100% - 6px) 8px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* Mobile placement */
+.nav-mobile-language {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(52, 58, 80, 0.8);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Hide mobile version on desktop, tweak in media query */
+.language-switcher--mobile {
+  width: fit-content;
+}
+
+/* --- Responsive adjustments --- */
+@media (max-width: 780px) {
   .nav {
     gap: 10px;
   }
 
+  /* Hide desktop links */
+  .nav-links {
+    display: none;
+  }
+
+  /* Show burger on mobile */
   .burger {
     display: flex;
   }
 
-  .nav-links--mobile {
+  /* On mobile, keep actions tight: language + CTA + burger */
+  .nav-actions {
+    gap: 8px;
+  }
+
+  /* Slightly smaller CTA on mobile */
+  .nav-cta {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .language-switcher button,
+  .language-switcher select {
+    font-size: 0.75rem;
+    padding: 5px 9px;
+  }
+
+  /* ✅ Explicit style for the mobile nav container */
+  .nav-links.nav-links--mobile {
     position: fixed;
     inset: 54px 14px auto 14px;
     background: rgba(10, 11, 19, 0.98);

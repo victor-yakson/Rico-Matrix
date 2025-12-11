@@ -1,6 +1,7 @@
 import React from "react";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
+import { useTranslations } from "next-intl";
 
 interface LeaderboardsProps {
   topEarners?: [string[], string[]] | null;
@@ -8,7 +9,8 @@ interface LeaderboardsProps {
 }
 
 const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
-  const { address: userAddress } = useAccount(); // Renamed to userAddress
+  const { address: userAddress } = useAccount();
+  const t = useTranslations("Dashboard.leaderboards");
 
   // Parse leaderboard data from props with type safety
   const leaderboardAddresses = topEarners?.[0] || [];
@@ -38,24 +40,38 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
       }, BigInt(0))
     : BigInt(0);
 
+  // Helper function to format address
+  const formatAddress = (address: string) => {
+    if (!address) return "--";
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  // Helper function to format USDT amount
+  const formatUSDT = (amount: string) => {
+    const formatted = formatUnits(BigInt(amount || "0"), 18);
+    return parseFloat(formatted).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   // No leaderboard data at all
   if (!hasTopEarners && !hasTopReferrers) {
     return (
       <div className="mb-8 md:mb-10 lg:mb-12">
         <h2 className="text-2xl font-bold text-slate-50 mb-6 text-center">
-          🏆 Lifetime Leaderboards
+          {t("title")}
         </h2>
         <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-950 to-slate-900/90 p-8 text-center shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
           <div className="text-5xl mb-4">🏆</div>
           <h3 className="text-xl font-bold text-slate-300 mb-2">
-            Leaderboards Empty
+            {t("empty.title")}
           </h3>
           <p className="text-slate-500 mb-4">
-            Leaderboards will populate as users start earning and referring
-            others.
+            {t("empty.message")}
           </p>
           <div className="text-sm text-slate-600">
-            Be the first to appear on the leaderboard!
+            {t("empty.motivation")}
           </div>
         </div>
       </div>
@@ -65,14 +81,14 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
   return (
     <div className="mb-8 md:mb-10 lg:mb-12">
       <h2 className="text-2xl font-bold text-slate-50 mb-6 text-center">
-        🏆 Lifetime Leaderboards
+        {t("title")}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Earners Leaderboard */}
         <div className="rounded-2xl border border-yellow-500/40 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
           <h3 className="text-xl font-bold text-yellow-300 mb-4 flex items-center gap-2">
-            <span className="text-2xl">💰</span> Top Earners (USDT)
+            <span className="text-2xl">💰</span> {t("topEarners.title")}
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
             {hasTopEarners ? (
@@ -80,17 +96,14 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                 (leaderAddress: string, index: number) => {
                   if (
                     !leaderAddress ||
-                    leaderAddress ===
-                      "0x0000000000000000000000000000000000000000"
+                    leaderAddress === "0x0000000000000000000000000000000000000000"
                   ) {
                     return null;
                   }
 
-                  // Check if this address is the current user - FIXED: use userAddress
                   const isCurrentUser =
                     leaderAddress.toLowerCase() === userAddress?.toLowerCase();
                   const earnings = leaderboardEarnings[index] || "0";
-                  const formattedEarnings = formatUnits(BigInt(earnings), 18);
 
                   return (
                     <div
@@ -118,34 +131,22 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-200">
-                            {leaderAddress
-                              ? `${leaderAddress.slice(
-                                  0,
-                                  6
-                                )}...${leaderAddress.slice(-4)}`
-                              : "--"}
+                            {formatAddress(leaderAddress)}
                           </p>
                           {isCurrentUser && (
                             <span className="text-xs text-cyan-400 font-semibold">
-                              (You)
+                              {t("topEarners.yourBadge")}
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-yellow-300">
-                          {parseFloat(formattedEarnings).toLocaleString(
-                            "en-US",
-                            {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }
-                          )}{" "}
-                          USDT
+                          {formatUSDT(earnings)} USDT
                         </p>
                         {index === 0 && hasTopEarners && (
                           <p className="text-xs text-yellow-500/70 mt-1">
-                            🥇 Top Earner
+                            {t("topEarners.topEarnerBadge")}
                           </p>
                         )}
                       </div>
@@ -156,9 +157,11 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-3">💰</div>
-                <p className="text-slate-500">No earnings data yet</p>
+                <p className="text-slate-500">
+                  {t("topEarners.noData.message")}
+                </p>
                 <p className="text-sm text-slate-600 mt-1">
-                  Start earning USDT to appear here!
+                  {t("topEarners.noData.motivation")}
                 </p>
               </div>
             )}
@@ -167,7 +170,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
           {hasTopEarners && (
             <div className="mt-4 pt-4 border-t border-slate-800/50">
               <div className="flex justify-between text-sm text-slate-500">
-                <span>Total Top 10 Earnings:</span>
+                <span>{t("topEarners.total")}</span>
                 <span className="text-yellow-300 font-semibold">
                   {parseFloat(formattedTotalEarnings).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -183,7 +186,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
         {/* Top Referrers Leaderboard */}
         <div className="rounded-2xl border border-purple-500/40 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
           <h3 className="text-xl font-bold text-purple-300 mb-4 flex items-center gap-2">
-            <span className="text-2xl">👥</span> Top Referrers
+            <span className="text-2xl">👥</span> {t("topReferrers.title")}
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
             {hasTopReferrers ? (
@@ -191,16 +194,13 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                 (referrerAddress: string, index: number) => {
                   if (
                     !referrerAddress ||
-                    referrerAddress ===
-                      "0x0000000000000000000000000000000000000000"
+                    referrerAddress === "0x0000000000000000000000000000000000000000"
                   ) {
                     return null;
                   }
 
-                  // Check if this address is the current user - FIXED: use userAddress
                   const isCurrentUser =
-                    referrerAddress.toLowerCase() ===
-                    userAddress?.toLowerCase();
+                    referrerAddress.toLowerCase() === userAddress?.toLowerCase();
                   const partnerCount = referrerCounts[index] || "0";
 
                   return (
@@ -229,16 +229,11 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-200">
-                            {referrerAddress
-                              ? `${referrerAddress.slice(
-                                  0,
-                                  6
-                                )}...${referrerAddress.slice(-4)}`
-                              : "--"}
+                            {formatAddress(referrerAddress)}
                           </p>
                           {isCurrentUser && (
                             <span className="text-xs text-cyan-400 font-semibold">
-                              (You)
+                              {t("topReferrers.yourBadge")}
                             </span>
                           )}
                         </div>
@@ -246,11 +241,11 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                       <div className="text-right">
                         <p className="text-lg font-bold text-purple-300">
                           {parseInt(partnerCount.toString()).toLocaleString()}{" "}
-                          Partners
+                          {t("topReferrers.partners")}
                         </p>
                         {index === 0 && hasTopReferrers && (
                           <p className="text-xs text-purple-500/70 mt-1">
-                            🥇 Top Referrer
+                            {t("topReferrers.topReferrerBadge")}
                           </p>
                         )}
                       </div>
@@ -261,9 +256,11 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-3">👥</div>
-                <p className="text-slate-500">No referral data yet</p>
+                <p className="text-slate-500">
+                  {t("topReferrers.noData.message")}
+                </p>
                 <p className="text-sm text-slate-600 mt-1">
-                  Start referring others to appear here!
+                  {t("topReferrers.noData.motivation")}
                 </p>
               </div>
             )}
@@ -272,7 +269,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
           {hasTopReferrers && (
             <div className="mt-4 pt-4 border-t border-slate-800/50">
               <div className="flex justify-between text-sm text-slate-500">
-                <span>Total Top 10 Referrals:</span>
+                <span>{t("topReferrers.total")}</span>
                 <span className="text-purple-300 font-semibold">
                   {parseInt(totalTop10Referrals.toString()).toLocaleString()}
                 </span>
@@ -287,24 +284,23 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
         <div className="inline-flex items-center gap-4 text-sm text-slate-500 bg-slate-900/40 px-4 py-2 rounded-full">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/30"></div>
-            <span>1st Place</span>
+            <span>{t("legend.firstPlace")}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-slate-600/20 border border-slate-600/30"></div>
-            <span>2nd Place</span>
+            <span>{t("legend.secondPlace")}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-amber-700/20 border border-amber-700/30"></div>
-            <span>3rd Place</span>
+            <span>{t("legend.thirdPlace")}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-cyan-500/20 border border-cyan-500/30"></div>
-            <span>Your Position</span>
+            <span>{t("legend.yourPosition")}</span>
           </div>
         </div>
         <p className="text-xs text-slate-600 mt-3">
-          Leaderboards update in real-time. Positions are based on lifetime
-          totals.
+          {t("legend.note")}
         </p>
       </div>
     </div>

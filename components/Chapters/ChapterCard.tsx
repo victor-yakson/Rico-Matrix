@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { formatUnits } from "viem";
+import { useTranslations } from "next-intl";
 
 interface ChapterCardProps {
   track: number;
@@ -30,6 +31,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
 }) => {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const t = useTranslations("ChaptersPage.ChapterCard");
 
   const getChapterPdfUrl = (chapterNumber: number) => {
     const pdfUrls = [
@@ -57,9 +59,9 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const getStatusText = () => {
-    if (isUnlocked) return "Unlocked";
-    if (chapter > 1) return "Locked — Complete previous chapter";
-    return "Available to unlock";
+    if (isUnlocked) return t("status.unlocked");
+    if (chapter > 1) return t("status.lockedPrevious");
+    return t("status.available");
   };
 
   const getStatusColor = () => {
@@ -83,11 +85,11 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const getButtonText = () => {
-    if (isUnlocked) return "Chapter Unlocked";
-    if (isApproving) return "Approving...";
-    if (disabled) return "Processing...";
-    if (needsApproval) return "Approve USDT";
-    return "Unlock Chapter";
+    if (isUnlocked) return t("button.unlocked");
+    if (isApproving) return t("button.approving");
+    if (disabled) return t("button.processing");
+    if (needsApproval) return t("button.approve");
+    return t("button.unlock");
   };
 
   const getButtonClass = () => {
@@ -110,7 +112,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
     setShowPdfViewer(false);
   };
 
-  // Just block context menu, don’t swallow all events
+  // Just block context menu, don't swallow all events
   const preventDownload = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -130,6 +132,10 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
     chapter
   )}#toolbar=0&navpanes=0&scrollbar=0`;
 
+  const getTrackText = (track: number) => {
+    return track === 1 ? t("track.x3") : t("track.x6");
+  };
+
   return (
     <>
       <div className="group relative overflow-hidden rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-black via-slate-950 to-slate-900 p-5 shadow-[0_0_40px_rgba(0,0,0,0.7)] transition-all duration-300 hover:-translate-y-1 hover:border-yellow-400 hover:shadow-[0_0_60px_rgba(250,204,21,0.4)]">
@@ -143,12 +149,12 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
             )}`}
           >
             <span className="inline-block h-2 w-2 rounded-full bg-black/60" />
-            Track {track}
+            {t("track.label")} {track}
           </span>
 
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
-              Chapter
+              {t("chapter.label")}
             </p>
             <p className="text-2xl font-extrabold text-yellow-300 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]">
               #{chapter}
@@ -162,15 +168,17 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
 
         <div className="relative space-y-3 rounded-xl bg-slate-900/60 p-3 ring-1 ring-slate-700/70">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Price</span>
+            <span className="text-slate-400">{t("price.label")}</span>
             <span className="font-semibold text-yellow-300">
               {formattedPrice}{" "}
-              <span className="text-xs text-slate-400">USDT</span>
+              <span className="text-xs text-slate-400">
+                {t("price.currency")}
+              </span>
             </span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Status</span>
+            <span className="text-slate-400">{t("status.label")}</span>
             <span className={`font-medium ${getStatusColor()}`}>
               {getStatusText()}
             </span>
@@ -178,13 +186,15 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
 
           {!isUnlocked && chapter === 1 && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">Approval</span>
+              <span className="text-slate-400">{t("approval.label")}</span>
               <span
                 className={`font-medium ${
                   needsApproval ? "text-amber-400" : "text-emerald-400"
                 }`}
               >
-                {needsApproval ? "Required" : "Approved"}
+                {needsApproval
+                  ? t("approval.required")
+                  : t("approval.approved")}
               </span>
             </div>
           )}
@@ -203,14 +213,14 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
             <div className="rounded-lg bg-emerald-500/10 p-3 border border-emerald-500/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-emerald-300">
-                  📖 Chapter Content
+                  📖 {t("pdfContent.title")}
                 </span>
                 <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
-                  Available
+                  {t("pdfContent.available")}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mb-3">
-                Read the PDF content for this chapter in our secure viewer.
+                {t("pdfContent.description")}
               </p>
               <button
                 onClick={handleReadPdf}
@@ -229,7 +239,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Read Chapter PDF
+                {t("pdfContent.button")}
               </button>
             </div>
           </div>
@@ -237,7 +247,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
 
         {needsApproval && !isUnlocked && chapter === 1 && (
           <div className="mt-2 text-xs text-blue-400 text-center">
-            Approve USDT first to unlock this chapter
+            {t("approval.warning")}
           </div>
         )}
 
@@ -268,13 +278,16 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                     {title}
                   </h3>
                   <p className="text-sm text-slate-400">
-                    Track {track} • Secure PDF Viewer • Reading only
+                    {t("pdfViewer.subtitle", {
+                      track: getTrackText(track),
+                      trackNumber: track,
+                    })}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-                  No Download
+                  {t("pdfViewer.noDownload")}
                 </div>
                 <button
                   onClick={handleClosePdf}
@@ -314,10 +327,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                     />
                   </svg>
-                  <span>
-                    Secure PDF Viewer • Downloading is discouraged • Right-click
-                    disabled
-                  </span>
+                  <span>{t("pdfViewer.secureMessage")}</span>
                 </div>
               </div>
 
@@ -328,7 +338,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                     ref={iframeRef}
                     src={pdfUrl}
                     className="w-full h-full"
-                    title={`Chapter ${chapter} - ${title}`}
+                    title={t("pdfViewer.iframeTitle", { chapter, title })}
                     onContextMenu={preventDownload}
                     onLoad={() => {
                       console.log("PDF loaded:", pdfUrl);
@@ -365,13 +375,14 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                       />
                     </svg>
-                    <span>Protected content - Reading only</span>
+                    <span>{t("pdfViewer.protectedMessage")}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleZoomIn}
                       className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300"
+                      title={t("pdfViewer.zoomIn")}
                     >
                       <svg
                         className="w-5 h-5"
@@ -390,6 +401,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                     <button
                       onClick={handleZoomOut}
                       className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300"
+                      title={t("pdfViewer.zoomOut")}
                     >
                       <svg
                         className="w-5 h-5"
@@ -410,7 +422,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                       onClick={handleClosePdf}
                       className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg font-medium transition-colors"
                     >
-                      Close Viewer
+                      {t("pdfViewer.closeButton")}
                     </button>
                   </div>
                 </div>

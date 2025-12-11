@@ -4,6 +4,7 @@ import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
 import { useAccount } from "wagmi";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface Track2Data {
   currentReferrer: string;
@@ -29,13 +30,15 @@ export const Track2Matrix = () => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Use refs to track previous values and avoid unnecessary re-renders
+  const t = useTranslations("Matrix.Track2");
+
   // Use refs to track previous values and avoid unnecessary re-renders
   const prevAddressRef = useRef<string | undefined>(undefined);
   const prevUnlockedChaptersRef = useRef<number>(0);
 
   // ... later in the code ...
   const isSameAddress = prevAddressRef.current === address;
+  
   // Get unlocked chapters safely
   const unlockedChapters = useMemo(() => {
     if (!userData?.exists) return 0;
@@ -110,7 +113,7 @@ export const Track2Matrix = () => {
           }, delay);
           setRetryCount((prev) => prev + 1);
         } else {
-          setError("Unable to load matrix data after multiple attempts");
+          setError(t("error.afterRetries"));
         }
       } catch (err) {
         console.error("Error fetching track 2 matrix data:", err);
@@ -123,13 +126,13 @@ export const Track2Matrix = () => {
           }, delay);
           setRetryCount((prev) => prev + 1);
         } else {
-          setError("Failed to load matrix data. Please try again later.");
+          setError(t("error.failed"));
         }
       } finally {
         setLoading(false);
       }
     },
-    [address, unlockedChapters, fetchAllTrack2Chapters, retryCount, track2Data]
+    [address, unlockedChapters, fetchAllTrack2Chapters, retryCount, track2Data, t]
   );
 
   // Single chapter retry - stable function
@@ -146,10 +149,10 @@ export const Track2Matrix = () => {
         }));
       } catch (err) {
         console.error(`Error retrying chapter ${chapter}:`, err);
-        setError(`Failed to load chapter ${chapter}`);
+        setError(t("error.failed", { chapter }));
       }
     },
-    [address, fetchTrack2Matrix]
+    [address, fetchTrack2Matrix, t]
   );
 
   // Initial fetch and refetch when dependencies change
@@ -227,10 +230,10 @@ export const Track2Matrix = () => {
         <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
           <div className="text-5xl mb-4">🔗</div>
           <h3 className="mb-3 text-xl font-semibold text-slate-50">
-            Connect Wallet
+            {t("connectWallet.title")}
           </h3>
           <p className="text-sm text-slate-400 mb-6">
-            Please connect your wallet to view your X6 matrix.
+            {t("connectWallet.description")}
           </p>
         </div>
       </div>
@@ -244,11 +247,11 @@ export const Track2Matrix = () => {
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
         <p className="text-slate-400">
           {retryCount > 0
-            ? `Loading X6 Matrix data (retry ${retryCount}/3)...`
-            : "Loading X6 Matrix data..."}
+            ? t("loading.retrying", { retryCount })
+            : t("loading.loading")}
         </p>
         {retryCount > 0 && (
-          <p className="text-xs text-slate-500">Taking longer than usual...</p>
+          <p className="text-xs text-slate-500">{t("loading.takingLonger")}</p>
         )}
       </div>
     );
@@ -260,29 +263,28 @@ export const Track2Matrix = () => {
       <div className="py-10">
         <div className="mx-auto max-w-md rounded-2xl border border-amber-400/40 bg-amber-500/5 p-6 shadow-[0_0_26px_rgba(0,0,0,0.75)]">
           <h3 className="mb-2 text-lg font-semibold text-amber-200">
-            Matrix Data Unavailable
+            {t("error.title")}
           </h3>
           <p className="mb-4 text-sm text-amber-100/90">
-            The matrix visualization features are currently unavailable. You can
-            still purchase chapters and earn rewards.
+            {t("error.description")}
           </p>
           <div className="rounded-xl border border-blue-500/40 bg-slate-950/80 p-4 text-left">
             <h4 className="mb-2 text-sm font-semibold text-blue-300">
-              Your X6 Matrix Stats
+              {t("error.statsTitle")}
             </h4>
             <div className="space-y-2 text-sm text-slate-200">
               <div className="flex justify-between">
-                <span>Total Earnings:</span>
+                <span>{t("stats.totalEarnings")}</span>
                 <span className="font-semibold text-blue-300">
                   ${totalEarned.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Chapters Unlocked:</span>
+                <span>{t("stats.chaptersUnlocked")}</span>
                 <span className="font-semibold">{unlockedChapters}/12</span>
               </div>
               <div className="flex justify-between">
-                <span>Total Cycles:</span>
+                <span>{t("stats.totalCycles")}</span>
                 <span className="font-semibold">{totalCycles}</span>
               </div>
             </div>
@@ -292,13 +294,13 @@ export const Track2Matrix = () => {
               onClick={handleManualRefresh}
               className="mr-3 inline-block rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
             >
-              Retry Loading
+              {t("error.retry")}
             </button>
             <Link
               href="/dashboard"
               className="inline-block rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
             >
-              Return to Dashboard
+              {t("error.return")}
             </Link>
           </div>
         </div>
@@ -312,17 +314,16 @@ export const Track2Matrix = () => {
         <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
           <div className="text-5xl mb-4">🌐</div>
           <h3 className="mb-3 text-xl font-semibold text-slate-50">
-            Not a Reader Yet
+            {t("notRegistered.title")}
           </h3>
           <p className="text-sm text-slate-400 mb-6">
-            Join the library to start building your X6 matrix network and earn
-            from 2×3 matrix structure.
+            {t("notRegistered.description")}
           </p>
           <Link
             href="/dashboard"
             className="inline-block rounded-xl bg-gradient-to-r from-blue-400 to-cyan-500 px-6 py-3 text-sm font-semibold text-black shadow-[0_0_16px_rgba(59,130,246,0.7)] hover:brightness-110 transition-all"
           >
-            Go to Dashboard to Register
+            {t("notRegistered.register")}
           </Link>
         </div>
       </div>
@@ -334,11 +335,10 @@ export const Track2Matrix = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-          🌐 X6 Matrix Network
+          {t("title")}
         </h1>
         <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
-          Track your 2×3 matrix positions with first line and second line
-          referrals.
+          {t("description")}
         </p>
         <div className="mt-4 flex justify-center items-center gap-4">
           <button
@@ -359,10 +359,10 @@ export const Track2Matrix = () => {
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            Refresh Data
+            {t("refresh")}
           </button>
           <span className="text-xs text-slate-500">
-            Auto-refreshes every 30s
+            {t("autoRefresh")}
           </span>
         </div>
       </div>
@@ -370,7 +370,7 @@ export const Track2Matrix = () => {
       {/* Chapter Selector */}
       <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
         <h2 className="text-lg font-semibold text-slate-50 mb-4">
-          Select Chapter
+          {t("chapterSelector.title")}
         </h2>
         <div className="flex flex-wrap gap-2">
           {unlockedChapters > 0 ? (
@@ -385,7 +385,7 @@ export const Track2Matrix = () => {
                         : "border border-blue-500/20 bg-slate-950/70 text-slate-300 hover:border-blue-400/60 hover:text-blue-300"
                     }`}
                   >
-                    Chapter {chapter}
+                    {t("chapter", { chapter })}
                   </button>
                   {track2Data[chapter] && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500/90 flex items-center justify-center">
@@ -397,20 +397,22 @@ export const Track2Matrix = () => {
             )
           ) : (
             <div className="w-full text-center py-4">
-              <p className="text-slate-500">No chapters unlocked yet.</p>
+              <p className="text-slate-500">{t("chapterSelector.noChapters")}</p>
               <Link
                 href="/chapters"
                 className="inline-block mt-2 rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
               >
-                Buy Your First Chapter
+                {t("chapterSelector.buyFirst")}
               </Link>
             </div>
           )}
         </div>
         {unlockedChapters > 0 && (
           <div className="mt-4 text-xs text-slate-500">
-            Showing {Object.keys(track2Data).length} of {unlockedChapters}{" "}
-            chapters loaded
+            {t("chapterSelector.loaded", { 
+              loaded: Object.keys(track2Data).length, 
+              total: unlockedChapters 
+            })}
           </div>
         )}
       </div>
@@ -421,7 +423,7 @@ export const Track2Matrix = () => {
           <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-50">
-                X6 Matrix — Chapter {selectedChapter}
+                {t("matrixVisualization.title", { chapter: selectedChapter })}
               </h3>
               <button
                 onClick={() => retrySingleChapter(selectedChapter)}
@@ -440,22 +442,22 @@ export const Track2Matrix = () => {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Refresh
+                {t("matrixVisualization.refresh")}
               </button>
             </div>
 
             {/* Current Referrer */}
             <div className="mb-8">
               <h4 className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Your Referrer
+                {t("matrixVisualization.yourReferrer.title")}
               </h4>
               <div className="rounded-xl border border-slate-700/80 bg-slate-900/80 p-4">
                 <p className="truncate font-mono text-sm text-slate-200">
-                  {currentData.currentReferrer || "No direct referrer"}
+                  {currentData.currentReferrer || t("matrixVisualization.yourReferrer.none")}
                 </p>
                 {currentData.currentReferrer && (
                   <p className="mt-1 text-xs text-slate-500">
-                    The reader who referred you to this chapter
+                    {t("matrixVisualization.yourReferrer.description")}
                   </p>
                 )}
               </div>
@@ -465,7 +467,7 @@ export const Track2Matrix = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  First Line (Direct)
+                  {t("matrixVisualization.firstLine.title")}
                 </h4>
                 <span className="text-sm font-semibold text-blue-300">
                   {currentData.firstLineReferrals.length}/2
@@ -484,12 +486,12 @@ export const Track2Matrix = () => {
                             {referral}
                           </p>
                           <p className="mt-1 text-xs uppercase tracking-[0.16em] text-blue-500">
-                            Direct Position {index + 1}
+                            {t("matrixVisualization.firstLine.position", { index: index + 1 })}
                           </p>
                         </div>
                         <div className="text-right">
                           <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/40">
-                            Direct
+                            {t("matrixVisualization.firstLine.tag")}
                           </span>
                         </div>
                       </div>
@@ -498,7 +500,7 @@ export const Track2Matrix = () => {
                 ) : (
                   <div className="rounded-xl bg-slate-900/60 p-4 text-center">
                     <p className="text-sm text-slate-400">
-                      No first line referrals yet.
+                      {t("matrixVisualization.firstLine.empty")}
                     </p>
                   </div>
                 )}
@@ -509,7 +511,7 @@ export const Track2Matrix = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Second Line (Spillover)
+                  {t("matrixVisualization.secondLine.title")}
                 </h4>
                 <span className="text-sm font-semibold text-cyan-300">
                   {currentData.secondLineReferrals.length}/4
@@ -528,12 +530,12 @@ export const Track2Matrix = () => {
                             {referral}
                           </p>
                           <p className="mt-1 text-xs uppercase tracking-[0.16em] text-cyan-500">
-                            Spillover Position {index + 1}
+                            {t("matrixVisualization.secondLine.position", { index: index + 1 })}
                           </p>
                         </div>
                         <div className="text-right">
                           <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/40">
-                            Spillover
+                            {t("matrixVisualization.secondLine.tag")}
                           </span>
                         </div>
                       </div>
@@ -542,7 +544,7 @@ export const Track2Matrix = () => {
                 ) : (
                   <div className="rounded-xl bg-slate-900/60 p-4 text-center">
                     <p className="text-sm text-slate-400">
-                      No second line referrals yet.
+                      {t("matrixVisualization.secondLine.empty")}
                     </p>
                   </div>
                 )}
@@ -552,11 +554,13 @@ export const Track2Matrix = () => {
             {/* Status */}
             <div className="rounded-xl bg-slate-900/80 p-6 border border-slate-700/80">
               <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Chapter Status
+                {t("matrixVisualization.chapterStatus.title")}
               </h4>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Status</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    {t("matrixVisualization.chapterStatus.status")}
+                  </p>
                   <div
                     className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
                       currentData.blocked
@@ -564,16 +568,23 @@ export const Track2Matrix = () => {
                         : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40"
                     }`}
                   >
-                    {currentData.blocked ? "⛔ Blocked" : "✅ Active"}
+                    {currentData.blocked 
+                      ? t("matrixVisualization.chapterStatus.blocked")
+                      : t("matrixVisualization.chapterStatus.active")
+                    }
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Reinvest Cycles</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    {t("matrixVisualization.chapterStatus.reinvestCycles")}
+                  </p>
                   <div className="flex items-center">
                     <span className="text-2xl font-bold text-blue-300">
                       {currentData.reinvestCount}
                     </span>
-                    <span className="ml-2 text-sm text-slate-400">cycles</span>
+                    <span className="ml-2 text-sm text-slate-400">
+                      {t("matrixVisualization.chapterStatus.cycles")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -581,13 +592,15 @@ export const Track2Matrix = () => {
               {/* Closed Part */}
               {currentData.closedPart && (
                 <div className="pt-4 border-t border-slate-700/50">
-                  <p className="text-xs text-slate-500 mb-2">Closed Part</p>
+                  <p className="text-xs text-slate-500 mb-2">
+                    {t("matrixVisualization.chapterStatus.closedPart")}
+                  </p>
                   <div className="rounded-lg border border-purple-500/30 bg-slate-900/60 p-3">
                     <p className="truncate font-mono text-sm text-purple-300">
                       {currentData.closedPart}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Fully cycled sub-matrix
+                      {t("matrixVisualization.chapterStatus.closedDescription")}
                     </p>
                   </div>
                 </div>
@@ -599,75 +612,74 @@ export const Track2Matrix = () => {
           <div className="space-y-8">
             <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
               <h3 className="mb-4 text-xl font-bold text-blue-300">
-                X6 Matrix Rules
+                {t("matrixInfo.rules.title")}
               </h3>
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span>
-                    <strong>6 positions</strong> total (2×3 matrix structure)
+                    <strong>{t("matrixInfo.rules.positions")}</strong>
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span>
-                    <strong>First line:</strong> 2 direct referrals you place
+                    <strong>{t("matrixInfo.rules.firstLine")}</strong>
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span>
-                    <strong>Second line:</strong> 4 spillovers from referrer's
-                    matrix
+                    <strong>{t("matrixInfo.rules.secondLine")}</strong>
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span>
-                    <strong>Auto-reinvest</strong> when all 6 positions are
-                    filled
+                    <strong>{t("matrixInfo.rules.autoReinvest")}</strong>
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span>
-                    <strong>Closed part</strong> indicates fully cycled
-                    sub-matrix
+                    <strong>{t("matrixInfo.rules.closedPart")}</strong>
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
-                  <span>Earnings from both lines and reinvestments</span>
+                  <span>{t("matrixInfo.rules.earnings")}</span>
                 </li>
               </ul>
 
               <div className="mt-6 rounded-xl bg-blue-900/20 p-5 border border-blue-700/30">
                 <h4 className="mb-3 text-sm font-semibold text-blue-300">
-                  Current Chapter Stats
+                  {t("matrixInfo.stats.title")}
                 </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Total Referrals:</span>
+                    <span className="text-slate-400">{t("matrixInfo.stats.totalReferrals")}</span>
                     <span className="font-semibold text-blue-300">
                       {totalReferrals}/6
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">First Line:</span>
+                    <span className="text-slate-400">{t("matrixInfo.stats.firstLine")}</span>
                     <span className="font-semibold text-blue-300">
                       {currentData.firstLineReferrals.length}/2
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Second Line:</span>
+                    <span className="text-slate-400">{t("matrixInfo.stats.secondLine")}</span>
                     <span className="font-semibold text-cyan-300">
                       {currentData.secondLineReferrals.length}/4
                     </span>
                   </div>
                   <div className="pt-2">
                     <div className="flex justify-between text-xs text-slate-500 mb-1">
-                      <span>Matrix Progress</span>
-                      <span>{Math.round((totalReferrals / 6) * 100)}%</span>
+                      <span>{t("matrixInfo.stats.matrixProgress")}</span>
+                      <span>{t("matrixInfo.stats.progress", { 
+                        percent: Math.round((totalReferrals / 6) * 100) 
+                      })}</span>
                     </div>
                     <div className="w-full bg-slate-800 rounded-full h-2">
                       <div
@@ -682,44 +694,42 @@ export const Track2Matrix = () => {
 
             <div className="rounded-2xl border border-emerald-500/30 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
               <h3 className="mb-4 text-xl font-bold text-emerald-300">
-                Chapter {selectedChapter} Earnings Snapshot
+                {t("matrixInfo.earnings.title", { chapter: selectedChapter })}
               </h3>
               <div className="space-y-4">
                 <div className="bg-slate-900/60 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-300">Total X6 Earnings:</span>
+                    <span className="text-slate-300">{t("matrixInfo.earnings.totalEarnings")}</span>
                     <span className="text-xl font-bold text-emerald-300">
                       ${totalEarned.toFixed(2)}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
-                    Lifetime earnings from all X6 matrix chapters
+                    {t("matrixInfo.earnings.totalDescription")}
                   </p>
                 </div>
 
                 <div className="bg-slate-900/60 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-300">
-                      Current Chapter Cycles:
-                    </span>
+                    <span className="text-slate-300">{t("matrixInfo.earnings.currentCycles")}</span>
                     <span className="text-xl font-bold text-blue-300">
                       {currentData.reinvestCount}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
-                    Reinvestment cycles for Chapter {selectedChapter}
+                    {t("matrixInfo.earnings.currentDescription", { chapter: selectedChapter })}
                   </p>
                 </div>
 
                 <div className="bg-slate-900/60 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-300">Total X6 Cycles:</span>
+                    <span className="text-slate-300">{t("matrixInfo.earnings.totalCycles")}</span>
                     <span className="text-xl font-bold text-cyan-300">
                       {totalCycles}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
-                    Total reinvestments across all X6 chapters
+                    {t("matrixInfo.earnings.totalCyclesDescription")}
                   </p>
                 </div>
               </div>
@@ -727,7 +737,7 @@ export const Track2Matrix = () => {
               <div className="mt-6 pt-6 border-t border-slate-800/50">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-semibold text-slate-400">
-                    Matrix Status
+                    {t("matrixInfo.status.title")}
                   </h4>
                   <span
                     className={`text-sm font-semibold ${
@@ -739,25 +749,27 @@ export const Track2Matrix = () => {
                     }`}
                   >
                     {currentData.blocked
-                      ? "Blocked"
+                      ? t("matrixInfo.status.blocked")
                       : totalReferrals >= 6
-                      ? "Ready to Cycle"
-                      : "Building"}
+                      ? t("matrixInfo.status.ready")
+                      : t("matrixInfo.status.building")
+                    }
                   </span>
                 </div>
                 <p className="text-xs text-slate-600">
                   {currentData.blocked
-                    ? "Unlock the next chapter to unblock this matrix"
+                    ? t("matrixInfo.status.blockedDesc")
                     : totalReferrals >= 6
-                    ? "All 6 positions filled! Next placement will trigger reinvestment"
-                    : "Place more referrals to complete the matrix"}
+                    ? t("matrixInfo.status.readyDesc")
+                    : t("matrixInfo.status.buildingDesc")
+                  }
                 </p>
               </div>
             </div>
 
             <div className="rounded-2xl border border-purple-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
               <h3 className="mb-4 text-xl font-bold text-purple-300">
-                Quick Actions
+                {t("matrixInfo.quickActions.title")}
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <Link
@@ -766,7 +778,7 @@ export const Track2Matrix = () => {
                 >
                   <div className="text-2xl mb-2">📚</div>
                   <p className="text-sm font-semibold text-purple-300">
-                    Buy Chapters
+                    {t("matrixInfo.quickActions.buyChapters")}
                   </p>
                 </Link>
                 <Link
@@ -775,7 +787,7 @@ export const Track2Matrix = () => {
                 >
                   <div className="text-2xl mb-2">💰</div>
                   <p className="text-sm font-semibold text-emerald-300">
-                    View Earnings
+                    {t("matrixInfo.quickActions.viewEarnings")}
                   </p>
                 </Link>
               </div>
@@ -786,23 +798,23 @@ export const Track2Matrix = () => {
         <div className="rounded-2xl border border-amber-400/40 bg-amber-500/5 p-8 text-center">
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="mb-2 text-lg font-semibold text-amber-200">
-            Data Not Available for Chapter {selectedChapter}
+            {t("dataNotAvailable.title", { chapter: selectedChapter })}
           </h3>
           <p className="text-sm text-amber-100/90">
-            No matrix data found for this chapter.
+            {t("dataNotAvailable.description")}
           </p>
           <div className="mt-6 flex justify-center gap-4">
             <button
               onClick={() => retrySingleChapter(selectedChapter)}
               className="rounded-xl bg-amber-500/10 px-6 py-2 text-sm font-semibold text-amber-300 border border-amber-400/60 hover:bg-amber-500/20 transition-all"
             >
-              Retry This Chapter
+              {t("error.retrySingle")}
             </button>
             <button
               onClick={handleManualRefresh}
               className="rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
             >
-              Reload All Chapters
+              {t("error.reloadAll")}
             </button>
           </div>
         </div>

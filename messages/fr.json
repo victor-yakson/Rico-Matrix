@@ -1,0 +1,1211 @@
+{
+  "LandingPage": {
+    "title": "La Première Matrice de Bibliothèque Décentralisée au Monde Qui Pai des Revenus Passifs en Redevances.",
+    "subtitle": "Achetez des chapitres, débloquez des connaissances et gagnez grâce à une matrice à double voie X3 + X6, 12 niveaux de récompenses unilevel, pools de redevances et farming gratuit de pièces RICO — le tout fonctionnant sur un contrat intelligent auto-exécutable sur BNB Chain.",
+    "activateLevel": "Activer Niveau 1",
+    "joinTelegram": "Rejoindre Telegram",
+    "nav": {
+      "howItWorks": "Comment ça marche",
+      "videos": "Vidéos",
+      "levels": "Niveaux",
+      "faq": "FAQ"
+    },
+    "matrixOverview": {
+      "title": "Aperçu Matrice X3 + X6",
+      "subtitle": "Chapitres = niveaux • Niveaux = chapitres de livre que vous possédez pour toujours",
+      "blockchain": "BNB Smart Chain",
+      "note": "12 chapitres par voie · chaque chapitre suivant coûte 2× plus et rapporte 2× plus.",
+      "chapters": {
+        "chapter1": "Chapitre 1",
+        "chapter4": "Chapitre 4",
+        "chapter9": "Chapitre 9",
+        "chapter10": "Chapitre 10",
+        "chapter11": "Chapitre 11",
+        "chapter12": "Chapitre 12"
+      },
+      "prices": {
+        "entry": "Entrée",
+        "teamBuilder": "Constructeur d'équipe",
+        "globalSpillover": "Zone de débordement global",
+        "scaling": "Mise à l'échelle",
+        "leaders": "Leaders",
+        "whales": "Baleines"
+      },
+      "footer": {
+        "royalty": "Pool de redevances : 30% pour les paiements à long terme de la communauté plus les frais de plateforme.",
+        "farming": "Farming de pièces RICO : 1:1 pièces gratuites sur les achats, upgrades & unilevel."
+      }
+    },
+    "launchInfo": {
+      "launching": "Lancement 15 Déc 2025",
+      "time": "16:00 WAT — BNB Smart Chain",
+      "badges": {
+        "decentralized": "100% décentralisé — contrat intelligent totalement abandonné",
+        "earnings": "Gains directs X3 + débordement X6",
+        "royalty": "Pool communautaire de redevances & unilevel"
+      },
+      "recommendation": "Entrée recommandée : au moins Niveau 9 pour les débordements globaux",
+      "partners": "Amenez 3 partenaires prêts pour activer votre moteur dès le premier jour.",
+      "countdown": {
+        "label": "Compte à rebours du lancement",
+        "days": "Jours",
+        "hours": "Heures",
+        "mins": "Minutes",
+        "secs": "Secondes",
+        "note": "Préparez votre portefeuille avec USDT BEP-20 avant le lancement pour éviter la congestion du réseau."
+      }
+    },
+    "visuals": {
+      "x3": {
+        "kicker": "VISUEL RICO X3",
+        "title": "UNE LIGNE - 3 PLACES",
+        "subtitle": "RÉINVESTISSEMENTS AUTOMATIQUES ILLIMITÉS",
+        "note": "La matrice X3 est votre moteur de vente direct. C'est une matrice à 3 positions de parrainage où vous gagnez directement sur chaque référence."
+      },
+      "x6": {
+        "kicker": "VISUEL RICO X6",
+        "title": "DEUX LIGNES - 2 + 4 PLACES",
+        "note": "La matrice X6 fonctionne sur un système de débordement. C'est une matrice à 6 positions qui se remplit grâce à vos efforts directs, aux efforts de votre upline et aux efforts de votre downline. Cela crée un potentiel de gains passifs et de croissance en équipe."
+      }
+    },
+    "whyJoin": {
+      "kicker": "Pourquoi les gens rejoignent",
+      "title": "Multiples flux de revenus on-chain depuis une seule matrice de bibliothèque.",
+      "subtitle": "RICO MATRIX combine les récompenses matricielles, les commissions unilevel, les dividendes de redevances, la propriété intellectuelle et le farming de pièces RICO — le tout encodé dans un contrat intelligent intraçable.",
+      "features": {
+        "spillovers": {
+          "kicker": "Débordements",
+          "title": "Gagnez grâce à l'activité globale X6",
+          "description": "La matrice X6 est conçue pour les débordements d'équipe et communautaires. L'activité de votre upline, downline et crossline peut remplir vos places de matrice, vous donnant la chance de gagner même si vous n'êtes pas un bon recruteur."
+        },
+        "ip": {
+          "kicker": "Propriété intellectuelle",
+          "title": "Chaque niveau débloque un vrai chapitre",
+          "description": "Chaque niveau est un chapitre de livre dans la Bibliothèque RICO. Lorsque vous achetez un chapitre, vous débloquez des connaissances et possédez ce contenu pour toujours — votre participation est soutenue par une valeur IP à long terme."
+        },
+        "royalty": {
+          "kicker": "Redevances & unilevel",
+          "title": "Pool de redevances + unilevel 12 niveaux",
+          "description": "Chaque achat et upgrade alimente les pools de redevances et de parrainage. 70% du prix de chaque chapitre est instantanément distribué à 12 uplines sur votre unilevel, tandis que 30% des pools de redevances globaux récompensent à la fois les utilisateurs actifs et inactifs au fil du temps plus les frais de plateforme."
+        }
+      }
+    },
+    "howItWorks": {
+      "kicker": "Comment ça marche",
+      "title": "Trois étapes simples pour activer votre moteur RICO.",
+      "subtitle": "RICO MATRIX est un algorithme auto-exécutable sur Binance Smart Chain. Une fois le contrat vivant, il gère automatiquement les inscriptions, placements matriciels, réinvestissements, paiements unilevel et distributions de redevances.",
+      "steps": {
+        "step1": {
+          "index": "1",
+          "title": "Connectez votre portefeuille BEP-20",
+          "description": "Utilisez Trust Wallet, SafePal, MetaMask, TokenPocket, OKX, ou tout portefeuille compatible BNB Smart Chain. Financez-le avec une petite quantité de BNB pour le gas et au moins 5$ USDT BEP-20 pour votre premier chapitre."
+        },
+        "step2": {
+          "index": "2",
+          "title": "Activez Chapitre 1 dans X3 & X6",
+          "description": "Avec 5$ USDT vous entrez simultanément dans RICO X3 et RICO X6. X3 est votre moteur de vente direct (3 places), tandis que X6 est votre moteur de débordement (2+4 places). Tous les paiements se font de portefeuille à portefeuille via le contrat intelligent."
+        },
+        "step3": {
+          "index": "3",
+          "title": "Upgradez, recyclez & scalez vos chapitres",
+          "description": "Les Chapitres 2–12 coûtent chacun 2× le prix précédent et rapportent 2× plus de profits matriciels lorsqu'ils sont remplis et recyclés. L'auto-recycle maintient les chapitres ouverts. Les pools unilevel et de redevances récompensent l'activité globale du réseau, tandis que le farming de pièces RICO distribue des tokens gratuits basés sur vos achats, upgrades et parrainages."
+        }
+      }
+    },
+    "videos": {
+      "kicker": "Guide des Tutoriels Vidéo",
+      "title": "Regardez ces 3 vidéos courtes avant de rejoindre.",
+      "subtitle": "Ces tutoriels aident les nouveaux membres à passer de zéro à prêt : portefeuille, financement USDT, et fonctionnement de RICO MATRIX.",
+      "tutorials": {
+        "tutorial1": {
+          "title": "1. Comment créer un portefeuille SafePal",
+          "description": "Guide étape par étape pour installer SafePal, créer votre portefeuille, sécuriser votre phrase de récupération et vous connecter à BNB Smart Chain."
+        },
+        "tutorial2": {
+          "title": "2. Comment acheter USDT sur Bybit P2P",
+          "description": "Apprenez à utiliser le marketplace Bybit P2P pour convertir en toute sécurité votre devise locale en USDT BEP-20."
+        },
+        "tutorial3": {
+          "title": "3. Comment fonctionne RICO MATRIX",
+          "description": "Aperçu de X3 & X6, pool de redevances, unilevel et farming de pièces RICO pour comprendre le moteur complet."
+        }
+      }
+    },
+    "partners": {
+      "kicker": "Partenaires stratégiques",
+      "title": "Fait confiance par les grandes infrastructures Web3.",
+      "subtitle": "RICO MATRIX interagit avec des outils reconnus dans l'écosystème BNB Smart Chain."
+    },
+    "unilevel": {
+      "kicker": "Échelle de gains 12 Unilevel",
+      "title": "Partagez 70% de chaque chapitre acheté parmi 12 niveaux de parrainage unilevel.",
+      "subtitle": "Chaque achat de chapitre récompense instantanément votre arbre de parrainage via le contrat intelligent."
+    },
+    "levels": {
+      "kicker": "12 Chapitres • X3 & X6",
+      "subtitle": "X3 et X6 ont tous deux 12 chapitres identiques. Chaque nouveau chapitre coûte 2× plus que le précédent et rapporte environ 2× plus de profits matriciels lorsqu'il est rempli et recyclé.",
+      "note": "Bon à savoir : Les chapitres n'expirent jamais. L'auto-recycle les rouvre lorsqu'ils sont remplis pour que vous puissiez continuer à gagner. Si vous n'upgradez pas, vous pourriez perdre des gains potentiels au profit d'un upline qui possède déjà le chapitre suivant.",
+      "chapters": {
+        "level1": "Niveau 1",
+        "level2": "Niveau 2",
+        "level3": "Niveau 3",
+        "level4": "Niveau 4",
+        "level5": "Niveau 5",
+        "level6": "Niveau 6",
+        "level7": "Niveau 7",
+        "level8": "Niveau 8",
+        "level9": "Niveau 9",
+        "level10": "Niveau 10",
+        "level11": "Niveau 11",
+        "level12": "Niveau 12"
+      },
+      "prices": {
+        "level1": "5$",
+        "level2": "10$",
+        "level3": "20$",
+        "level4": "40$",
+        "level5": "80$",
+        "level6": "160$",
+        "level7": "320$",
+        "level8": "640$",
+        "level9": "1 280$",
+        "level10": "2 560$",
+        "level11": "5 120$",
+        "level12": "10 240$"
+      },
+      "descriptions": {
+        "level1": "Chapitre d'entrée — démarrez votre moteur.",
+        "level2": "Doublez votre capacité de gain.",
+        "level3": "Équipe grandissante, redevances grandissantes.",
+        "level4": "Plus de débordements, cycles plus larges.",
+        "level5": "Zone des constructeurs sérieux.",
+        "level6": "Leadership d'équipe central.",
+        "level7": "Effet de levier des redevances à long terme.",
+        "level8": "Momentum et duplication.",
+        "level9": "Point chaud de débordement global — fortement recommandé.",
+        "level10": "Mise à l'échelle des gains unilevel profonds.",
+        "level11": "Leadership & baleines.",
+        "level12": "Chapitre phare — sommet de la bibliothèque."
+      }
+    },
+    "whyDifferent": {
+      "kicker": "Pourquoi RICO Matrix est différent",
+      "features": {
+        "decentralized": {
+          "tag": "Décentralisé",
+          "title": "Contrat intelligent 100% décentralisé",
+          "description": "Aucun retrait du propriétaire, aucun contrôle manuel des fonds une fois vivant. Les règles sont verrouillées on-chain."
+        },
+        "dualTrack": {
+          "tag": "Moteur double voie",
+          "title": "X3 pour directs, X6 pour débordements",
+          "description": "X3 récompense vos parrainages personnels, tandis que X6 est conçu pour les débordements globaux et d'équipe de toute la communauté."
+        },
+        "royalties": {
+          "tag": "Redevances",
+          "title": "Revenus passifs en redevances",
+          "description": "Un pool global partage les redevances à long terme avec les membres actifs et inactifs basé sur l'activité des chapitres."
+        },
+        "unilevel": {
+          "tag": "Unilevel",
+          "title": "Programme de parrainage 12 niveaux",
+          "description": "70% du prix de chaque chapitre est instantanément distribué sur 12 uplines via le contrat intelligent."
+        },
+        "coin": {
+          "tag": "Pièce RICO",
+          "title": "Farming gratuit de pièces RICO",
+          "description": "1:1 distribution RICO sur chaque achat, upgrade et paiement unilevel construit une circulation réelle de tokens on-chain."
+        },
+        "ip": {
+          "tag": "Chapitres comme PI",
+          "title": "Éducation avec utilité réelle",
+          "description": "Chaque niveau débloque du contenu éducatif donc vous ne faites pas que gagner — vous construisez aussi des connaissances à long terme."
+        }
+      }
+    },
+    "coinAirdrop": {
+      "kicker": "Gagnez un Airdrop Gratuit",
+      "description": "Gagnez des pièces RICO gratuites automatiquement dans votre portefeuille crypto basé sur vos activités d'achat, upgrade et parrainage dans le système RICO MATRIX."
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Réponses aux questions les plus importantes.",
+      "questions": [
+        {
+          "question": "RICO MATRIX est-il vraiment décentralisé ?",
+          "answer": "Oui. RICO MATRIX fonctionne comme un contrat intelligent auto-exécutable sur BNB Smart Chain. Toutes les règles clés — inscriptions, placements matriciels, paiements unilevel, redevances et farming de pièces RICO — sont encodées on-chain. Une fois déployé, aucun admin ne peut changer la logique ou mettre en pause vos gains."
+        },
+        {
+          "question": "Comment gagne-t-on réellement ici ?",
+          "answer": "Vous gagnez de multiples flux : matrice X3 (parrainages directs), matrice X6 (débordements d'équipe et activité globale), programme de parrainage unilevel 12 niveaux, pools de redevances alimentés par chaque chapitre, et farming gratuit de pièces RICO sur les achats, upgrades et parrainages."
+        },
+        {
+          "question": "Ai-je besoin de parrainages pour gagner ?",
+          "answer": "Les parrainages accélèrent tout, mais ne sont pas le seul moyen de gagner. Le système de débordement X6 peut remplir les places grâce à l'activité de votre upline et globale. Cependant, si vous voulez des résultats sérieux, nous suggérons fortement d'amener au moins trois partenaires actifs et de les aider à atteindre des chapitres plus élevés avec vous."
+        },
+        {
+          "question": "Pourquoi le Niveau 9 est-il recommandé au lancement ?",
+          "answer": "Au lancement, la plupart des leaders ciblent les chapitres mi-élevés pour se positionner pour les débordements globaux et le volume unilevel. Démarrer au Niveau 9 (ou plus) vous positionne dans le flux central d'activité matricielle et de redevances, au lieu de rester tout en bas tandis que les chapitres plus élevés explosent au-dessus de vous."
+        },
+        {
+          "question": "Est-ce un conseil financier ou d'investissement ?",
+          "answer": "Non. RICO MATRIX est un système de bibliothèque de contrats intelligents décentralisés avec des récompenses codées. La participation est entièrement à vos risques. Faites toujours vos propres recherches et ne dépensez jamais des fonds que vous ne pouvez pas vous permettre de perdre."
+        }
+      ]
+    },
+    "support": {
+      "help": "Besoin d'aide pour démarrer ou bloqué à une étape ?",
+      "team": "Support d'Équipe :",
+      "telegram": "@ricomatrix"
+    },
+    "cta": {
+      "title": "Prêt à activer votre Moteur RICO ?",
+      "description": "Préparez votre portefeuille avec USDT BEP-20, commencez au Chapitre 1 — ou positionnez-vous plus haut au Chapitre 9 et au-dessus — et amenez au moins trois partenaires sérieux. Le contrat intelligent RICO MATRIX gérera le reste.",
+      "disclaimer": "Rappel : Ceci n'est pas un conseil d'investissement. Faites toujours vos propres recherches avant d'interagir avec un contrat intelligent ou un système DeFi."
+    },
+    "footer": {
+      "copyright": "© {year} RICO MATRIX. Tous droits réservés.",
+      "links": {
+        "website": "ricomatrix.com",
+        "telegram": "Telegram",
+        "twitter": "X (Twitter)",
+        "youtube": "Chaîne YouTube"
+      }
+    },
+    "Common": {
+      "watchVideo": "Revoir l'aperçu de RICO MATRIX.",
+      "watchDescription": "Après avoir regardé les trois tutoriels ci-dessus, c'est ici que les constructeurs sérieux décident généralement de quel chapitre démarrer."
+    }
+  },
+
+  
+  "Header": {
+    "logo": {
+      "alt": "Logo Rico Matrix",
+      "text": "RICO MATRIX"
+    },
+    "navigation": {
+      "dashboard": "Tableau de bord",
+      "chapters": "Chapitres",
+      "matrix": "Matrice",
+      "royalty": "Royalties",
+      "profile": "Profil"
+    },
+    "socials": {
+      "followUs": "Suivez-nous",
+      "connect": "Connecter",
+      "connectWithUs": "Connectez-vous avec nous",
+      "community": "Rejoignez notre communauté sur toutes les plateformes",
+      "emailSupport": "Support par email"
+    },
+    "mobile": {
+      "menuButton": "Basculer le menu",
+      "more": "Plus"
+    }
+  }
+,
+  "Dashboard": {
+    "leaderboards": {
+      "title": "🏆 Classements à Vie",
+      "empty": {
+        "title": "Classements Vides",
+        "message": "Les classements se rempliront au fur et à mesure que les utilisateurs commenceront à gagner et à parrainer d'autres personnes.",
+        "motivation": "Soyez le premier à apparaître dans le classement !"
+      },
+      "topEarners": {
+        "title": "💰 Top des Gagnants (USDT)",
+        "noData": {
+          "message": "Aucune donnée de gains pour l'instant",
+          "motivation": "Commencez à gagner des USDT pour apparaître ici !"
+        },
+        "total": "Total des 10 Meilleurs Gains :",
+        "topEarnerBadge": "🥇 Meilleur Gagnant",
+        "yourBadge": "(Vous)"
+      },
+      "topReferrers": {
+        "title": "👥 Top des Parrains",
+        "noData": {
+          "message": "Aucune donnée de parrainage pour l'instant",
+          "motivation": "Commencez à parrainer d'autres personnes pour apparaître ici !"
+        },
+        "total": "Total des 10 Meilleurs Parrainages :",
+        "topReferrerBadge": "🥇 Meilleur Parrain",
+        "yourBadge": "(Vous)",
+        "partners": "Partenaires"
+      },
+      "legend": {
+        "firstPlace": "1ère Place",
+        "secondPlace": "2ème Place",
+        "thirdPlace": "3ème Place",
+        "yourPosition": "Votre Position",
+        "note": "Les classements se mettent à jour en temps réel. Les positions sont basées sur les totaux à vie."
+      }
+    },
+
+    "profile": {
+      "title": "Profil",
+      "status": {
+        "active": "Lecteur Actif",
+        "inactive": "Non Enregistré"
+      },
+      "wallet": {
+        "title": "Votre Portefeuille",
+        "copy": "Copier l'adresse"
+      },
+      "readerId": "ID Lecteur",
+      "referrer": "Parrain",
+      "none": "Aucun",
+      "partners": {
+        "title": "Partenaires Directs",
+        "description": "Total des utilisateurs que vous avez directement parrainés"
+      },
+      "rico": {
+        "title": "🪙 Farming de Tokens RICO",
+        "viewToken": "Voir le token sur BSCScan",
+        "stats": {
+          "totalEarned": "Total Gagné",
+          "received": "Reçu",
+          "pending": "En Attente"
+        },
+        "progress": "Progression de Distribution",
+        "info": {
+          "ratio": "🔄 1 RICO = 1 USDT dépensé/gagné",
+          "pending": "⏳ RICO en attente envoyé automatiquement"
+        }
+      },
+      "royalty": {
+        "title": "👑 Partage de Redevances",
+        "available": "Disponible",
+        "claimed": "Réclamé",
+        "description": "Votre part du pool de redevances basée sur les achats de chapitres"
+      },
+      "tracks": {
+        "track1": "Voie 1 Débloquée",
+        "track2": "Voie 2 Débloquée"
+      },
+      "earnings": {
+        "title": "Gains Totaux",
+        "track1": "Voie 1",
+        "track2": "Voie 2",
+        "total": "Total"
+      },
+      "notRegistered": {
+        "title": "Pas Encore Enregistré",
+        "message": "Rejoignez la bibliothèque RICOMATRIX pour commencer à gagner sur les deux voies et farmer des tokens RICO !",
+        "features": [
+          "Farmer des tokens RICO 1:1 avec toute activité USDT",
+          "Gagner des USDT grâce au système matriciel",
+          "Participer au pool de redevances"
+        ]
+      },
+      "lastUpdated": "Données de profil mises à jour en temps réel"
+    },
+    "stats": {
+      "title": "Vue d'ensemble des Performances",
+      "progress": {
+        "title": "Progression des Chapitres",
+        "chapters": "Chapitres",
+        "cycles": "Cycles",
+        "earned": "Gagné"
+      },
+      "trackPerformance": {
+        "title": "Performance des Voies",
+        "x3": "Matrice X3",
+        "x6": "Matrice X6",
+        "earnings": "Gains :",
+        "cycles": "Cycles :",
+        "chapters": "Chapitres :"
+      },
+      "quickStats": {
+        "title": "Statistiques Rapides",
+        "ricoActive": "🪙 Farming RICO Actif",
+        "global": "Global",
+        "pending": "En Attente",
+        "farmed": "Farmé",
+        "progress": "Progression",
+        "distributed": "Distribué",
+        "ricoSummary": {
+          "title": "Résumé du Farming RICO",
+          "totalEarned": "Total Gagné",
+          "received": "Reçu",
+          "pending": "En Attente",
+          "note": "📈 Vous farmez 1 RICO pour chaque 1 USDT dépensé/gagné. Les RICO en attente sont envoyés automatiquement quand disponibles."
+        },
+        "metrics": [
+          {
+            "name": "Gains Totaux",
+            "description": "Gains combinés des deux voies",
+            "icon": "💰"
+          },
+          {
+            "name": "Redevances Disponibles",
+            "description": "Redevances disponibles à réclamer",
+            "icon": "👑"
+          },
+          {
+            "name": "Chapitres Débloqués",
+            "description": "Total de chapitres sur les deux voies",
+            "icon": "📚"
+          },
+          {
+            "name": "Cycles Matriciels",
+            "description": "Total des cycles de réinvestissement",
+            "icon": "🔄"
+          },
+          {
+            "name": "RICO Gagné",
+            "description": "Total des tokens RICO farmés",
+            "icon": "🪙"
+          },
+          {
+            "name": "RICO En Attente",
+            "description": "RICO en attente d'être envoyé",
+            "icon": "⏳"
+          },
+          {
+            "name": "RICO Global Envoyé",
+            "description": "Total des RICO distribués",
+            "icon": "🌍"
+          },
+          {
+            "name": "RICO Global En Attente",
+            "description": "Total des RICO à distribuer",
+            "icon": "📊"
+          }
+        ]
+      }
+    },
+
+    "referral": {
+      "title": "Programme de Parrainage",
+      "benefits": {
+        "title": "Gagnez 50% de Bonus de Parrainage",
+        "items": [
+          "50% du premier achat du parrainé",
+          "Bonus unilevel de votre downline",
+          "Construisez votre réseau matriciel plus rapidement"
+        ]
+      },
+      "link": {
+        "label": "Votre Lien de Parrainage",
+        "copy": "Copier le Lien",
+        "copied": "Copié !",
+        "copiedMessage": "Lien copié dans le presse-papiers !",
+        "noWallet": "Connectez votre portefeuille pour obtenir le lien de parrainage"
+      },
+      "share": {
+        "button": "Partager sur Twitter",
+        "twitterText": "Rejoignez-moi sur RicoMatrix - Lisez de vrais chapitres de livres et gagnez des récompenses sur la blockchain ! 🚀📚\n\nUtilisez mon lien de parrainage : {link}\n\n#RicoMatrix #Blockchain #GagnezEnLisant"
+      },
+      "stats": {
+        "title": "Avantages du Parrainage",
+        "directBonus": "Bonus Direct",
+        "unilevel": "Unilevel"
+      }
+    },
+    "Registration": {
+      "header": {
+        "title": "Rejoindre la Bibliothèque RicoMatrix (Accès Chapitre 1)",
+        "step": "Étape {stepIndex} sur 2"
+      },
+      "benefits": {
+        "title": "Ce que vous débloquez avec le Chapitre 1",
+        "subtitle": "Un enregistrement unique sur la blockchain qui vous positionne dans X3 & X6.",
+        "matrixBadge": "Matrice X3 + X6",
+        "items": [
+          {
+            "title": "Entrée double voie matricielle",
+            "description": "Placement instantané dans les matrices X3 et X6 pour le Chapitre 1."
+          },
+          {
+            "title": "Position matricielle globale",
+            "description": "Éligible aux débordements et à l'activité d'équipe au fur et à mesure que la bibliothèque grandit."
+          },
+          {
+            "title": "Droits de gains par parrainage",
+            "description": "Partagez votre lien et gagnez sur chaque activation de Chapitre 1."
+          },
+          {
+            "title": "Accès au pool de redevances",
+            "description": "Participez aux redevances sur la blockchain alimentées par de vrais chapitres de livres."
+          }
+        ]
+      },
+      "terms": {
+        "title": "J'accepte les Conditions Générales de RicoMatrix",
+        "description": "En cochant cette case, vous reconnaissez et acceptez nos conditions d'utilisation, y compris les règles de participation, les directives de parrainage et les standards de la communauté.",
+        "readTerms": "Lire les Conditions Générales complètes"
+      },
+      "disclaimer": {
+        "title": "Je comprends et accepte l'Avertissement Financier",
+        "description": "En cochant cette case, vous confirmez que vous comprenez les risques liés aux investissements en cryptomonnaie et à la participation aux matrices. Les performances passées ne garantissent pas les résultats futurs.",
+        "readDisclaimer": "Lire l'Avertissement complet"
+      },
+      "referral": {
+        "detected": "Parrainage détecté",
+        "referrer": "Parrain : {address}",
+        "linked": "Lié à votre position matricielle"
+      },
+      "cost": {
+        "registrationCost": "Coût d'Inscription",
+        "balance": "Votre Solde USDT",
+        "allowance": "Autorisation USDT",
+        "ready": "Prêt",
+        "approvalRequired": "Approbation requise"
+      },
+      "buttons": {
+        "reviewRequired": "Examen des Conditions Requis",
+        "insufficientBalance": "Solde Insuffisant",
+        "processing": "Traitement en cours...",
+        "waitingApproval": "En attente d'approbation...",
+        "confirmingRegistration": "Confirmation d'inscription...",
+        "approveUsdt": "Approuver {amount} USDT",
+        "completeRegistration": "Terminer l'Inscription",
+        "confirmingInWallet": "Confirmation dans le portefeuille..."
+      },
+      "error": {
+        "approvalFailed": "Échec de l'approbation USDT. Veuillez confirmer la transaction dans votre portefeuille et réessayer.",
+        "registrationFailed": "Échec de l'inscription. Veuillez confirmer la transaction dans votre portefeuille et réessayer.",
+        "insufficientBalance": "Solde USDT insuffisant. Vous avez besoin de {joinCost} USDT mais vous avez actuellement {usdtBalance} USDT."
+      },
+      "progress": {
+        "step1": "1. Approuver USDT",
+        "step2": "2. Enregistrer le Portefeuille",
+        "note": "Toutes les actions se font directement sur BSC via votre portefeuille. RicoMatrix ne peut pas déplacer vos fonds sans votre approbation de transaction.",
+        "confirming": "Confirmation de votre inscription sur la blockchain..."
+      },
+      "modals": {
+        "terms": {
+          "title": "Conditions Générales RicoMatrix",
+          "lastUpdated": "Dernière mise à jour : {date}",
+          "sections": {
+            "acceptance": {
+              "title": "1. Acceptation des Conditions",
+              "content": "En accédant et utilisant RicoMatrix, vous acceptez et vous engagez à respecter ces Conditions Générales. Si vous n'êtes pas d'accord avec une partie de ces conditions, vous ne devez pas utiliser nos services."
+            },
+            "serviceDescription": {
+              "title": "2. Description du Service",
+              "content": "RicoMatrix est une application décentralisée construite sur la technologie blockchain qui permet aux utilisateurs de participer à des programmes de parrainage matriciels par l'achat de chapitres. La plateforme fonctionne sur Binance Smart Chain (BSC)."
+            },
+            "userResponsibilities": {
+              "title": "3. Responsabilités de l'Utilisateur",
+              "items": [
+                "Vous devez avoir au moins 18 ans pour utiliser nos services",
+                "Vous êtes responsable de la sécurité de votre portefeuille",
+                "Vous devez respecter toutes les lois et réglementations applicables",
+                "Vous ne pouvez pas utiliser le service pour des activités illégales",
+                "Vous êtes seul responsable de vos activités de parrainage"
+              ]
+            },
+            "matrixRules": {
+              "title": "4. Règles de Participation aux Matrices",
+              "items": [
+                "Les positions matricielles sont non transférables",
+                "Les gains de parrainage sont calculés selon la logique du contrat intelligent",
+                "Le cyclage des matrices suit des règles prédéfinies du contrat intelligent",
+                "Le déblocage de chapitres nécessite un paiement en USDT",
+                "Les distributions de redevances suivent les pourcentages spécifiés dans le contrat"
+              ]
+            },
+            "intellectualProperty": {
+              "title": "5. Propriété Intellectuelle",
+              "content": "Tout contenu, y compris les documents PDF, les structures matricielles et la conception de la plateforme, sont la propriété intellectuelle de RicoMatrix. Vous ne pouvez pas reproduire, distribuer ou créer d'œuvres dérivées sans autorisation."
+            },
+            "termination": {
+              "title": "6. Résiliation",
+              "content": "Nous nous réservons le droit de résilier ou suspendre votre accès à la plateforme à notre seule discrétion, sans préavis, pour tout comportement que nous estimons contraire à ces Conditions Générales ou préjudiciable aux autres utilisateurs."
+            }
+          },
+          "importantNotice": {
+            "title": "Avis Important",
+            "content": "En cochant la case d'accord, vous confirmez avoir lu, compris et accepté d'être lié par ces Conditions Générales. Cet accord constitue un contrat légalement contraignant entre vous et RicoMatrix."
+          },
+          "buttons": {
+            "accept": "J'Accepte les Conditions",
+            "close": "Fermer"
+          }
+        },
+        "disclaimer": {
+          "title": "Avertissement de Risque Financier",
+          "subtitle": "Informations importantes avant de continuer",
+          "warning": {
+            "title": "ATTENTION : RISQUE FINANCIER ÉLEVÉ",
+            "content": "La participation aux programmes matriciels implique un risque financier significatif. Vous pourriez perdre tout ou partie de votre investissement."
+          },
+          "sections": {
+            "noAdvice": {
+              "title": "1. Pas de Conseil Financier",
+              "content": "RicoMatrix ne fournit pas de conseils financiers. Toutes les informations fournies sont à des fins éducatives uniquement. Vous devriez consulter un conseiller financier qualifié avant de prendre toute décision d'investissement."
+            },
+            "volatility": {
+              "title": "2. Volatilité des Cryptomonnaies",
+              "content": "Les cryptomonnaies, y compris l'USDT, sont très volatiles. Les fluctuations du marché peuvent affecter considérablement la valeur de vos investissements. Les performances passées ne sont pas indicatives des résultats futurs."
+            },
+            "matrixRisks": {
+              "title": "3. Risques des Programmes Matriciels",
+              "items": [
+                "Les programmes matriciels dépendent de nouveaux participants",
+                "Les gains ne sont pas garantis et peuvent fluctuer",
+                "Vous pourriez ne pas récupérer votre investissement initial",
+                "La saturation du marché peut affecter le potentiel de gains",
+                "Des risques de contrat intelligent existent (malgré les audits)"
+              ]
+            },
+            "regulatory": {
+              "title": "4. Considérations Réglementaires",
+              "content": "Les réglementations sur les cryptomonnaies varient selon les juridictions. Vous êtes responsable de comprendre et de respecter toutes les lois applicables dans votre pays de résidence. Certaines juridictions peuvent restreindre ou interdire la participation aux programmes matriciels."
+            },
+            "investmentWarning": {
+              "title": "5. Avertissement d'Investissement",
+              "items": [
+                "N'investissez que ce que vous pouvez vous permettre de perdre complètement",
+                "Diversifiez vos investissements sur différents actifs",
+                "La participation aux matrices ne devrait pas être votre stratégie d'investissement principale",
+                "Considérez cela comme un investissement spéculatif à haut risque",
+                "Préparez-vous à la possibilité d'une perte totale"
+              ]
+            },
+            "technicalRisks": {
+              "title": "6. Risques Techniques",
+              "content": "Bien que nous visions la sécurité, la technologie blockchain implique des risques incluant les vulnérabilités des contrats intelligents, les problèmes de sécurité des portefeuilles, les défaillances des exchanges et les changements technologiques qui pourraient affecter la fonctionnalité de la plateforme."
+            }
+          },
+          "acknowledgment": {
+            "title": "Reconnaissance Requise",
+            "content": "En procédant à l'inscription, vous reconnaissez avoir lu cet avertissement, compris les risques impliqués et accepté l'entière responsabilité de vos décisions d'investissement. Vous confirmez que vous participez volontairement et à vos propres risques."
+          },
+          "buttons": {
+            "accept": "J'Accepte les Risques",
+            "close": "Fermer"
+          }
+        }
+      }
+    },
+    "page": {
+      "loading": {
+        "subtitle": "Bibliothèque Rico",
+        "title": "🔥📚✨ RICOMATRIX",
+        "description": "LIRE • GAGNER • POSSÉDER — De vrais chapitres de livres sur la blockchain avec récompenses matricielles et redevances."
+      },
+      "header": {
+        "subtitle": "Tableau de Bord",
+        "title": "🔥📚✨ RICOMATRIX",
+        "description": "LIRE • GAGNER • POSSÉDER — Gérez vos positions matricielles, débloquez des chapitres et surveillez vos gains de redevances en un seul endroit.",
+        "ricoAnnouncement": "Gagnez des tokens RICO 1:1 avec toute activité USDT !",
+        "telegram": "Rejoignez notre Telegram pour les mises à jour"
+      },
+      "ricoFarmingSection": {
+        "title": "🪙 Farming de Tokens RICO",
+        "viewToken": "Voir le Token",
+        "yourBalance": "Votre Solde RICO",
+        "stats": {
+          "totalEarned": "Total Gagné",
+          "fromPurchases": "De tous les achats de chapitres",
+          "alreadyReceived": "Déjà Reçu",
+          "autoSent": "Envoyé automatiquement au portefeuille",
+          "pending": "En Attente",
+          "willBeSent": "Sera envoyé automatiquement",
+          "distributionProgress": "Progression de Distribution"
+        },
+        "note": "Farming RICO  Vous gagnez 1 RICO pour chaque 1 USDT dépensé sur des chapitres, plus 1 RICO pour chaque 1 USDT gagné dans les récompenses de upline. Le RICO est envoyé automatiquement quand disponible dans le contrat.",
+        "globalStats": {
+          "title": "Distribution RICO Globale",
+          "totalShouldFarm": "Total à Farmer",
+          "totalDistributed": "Total Distribué",
+          "remainingToFarm": "Reste à Farmer"
+        }
+      },
+      "quickLinks": {
+        "viewChapters": {
+          "title": "Voir les Chapitres",
+          "description": "Explorez tous les chapitres de livres disponibles et montez de niveau au fur et à mesure de votre croissance.",
+          "button": "Parcourir les Chapitres"
+        },
+        "checkMatrix": {
+          "title": "Vérifier la Matrice",
+          "description": "Visualisez votre réseau matriciel et suivez la croissance de votre downline.",
+          "button": "Voir la Matrice"
+        },
+        "checkRoyalty": {
+          "title": "Vérifier les Redevances",
+          "description": "Consultez votre part du pool de redevances et réclamez les gains de l'activité de la bibliothèque.",
+          "button": "Voir les Redevances"
+        },
+        "viewRICO": {
+          "title": "Voir le Farming RICO",
+          "description": "Suivez vos gains de tokens RICO provenant des achats de chapitres et des récompenses de upline.",
+          "button": "Voir les Stats RICO"
+        }
+      },
+      "globalSummary": {
+        "title": "🌍 Résumé du Réseau Global",
+        "stats": {
+          "totalReaders": "Total de Lecteurs",
+          "chaptersPurchased": "Chapitres Achetés",
+          "usdtDistributed": "USDT Distribués",
+          "royaltyPool": "Pool de Redevances",
+          "ricoFarmed": "RICO Farmé",
+          "activeReferrers": "Parrains Actifs"
+        },
+        "refreshButton": {
+          "refreshing": "Rafraîchissement...",
+          "refresh": "Rafraîchir Toutes les Données"
+        }
+      },
+      "royaltyClaim": {
+        "button": "Réclamer {amount} $ USDT",
+        "processing": "Traitement de la réclamation de redevances...",
+        "note": "Votre solde de redevances se met à jour automatiquement après une réclamation réussie."
+      }
+    }
+  },
+
+  "Matrix": {
+    "MatrixPage": {
+      "connect": {
+        "accessLabel": "Accès aux Matrices",
+        "title": "Connectez-vous pour voir les Matrices",
+        "description": "Connectez votre portefeuille pour visualiser vos réseaux de matrices X3 & X6 et surveiller comment votre structure évolue en temps réel."
+      },
+      "header": {
+        "networksLabel": "Réseaux de Matrices",
+        "title": "Vue d'ensemble des Matrices X3 & X6",
+        "description": "Suivez la croissance de votre réseau, les cycles de réinvestissement et les gains sur les deux pistes de matrices dans une vue unifiée."
+      },
+      "trackSelection": {
+        "x3Track": "Piste Matrice X3",
+        "x6Track": "Piste Matrice X6"
+      }
+    },
+    "MatrixStats": {
+      "stats": {
+        "x3Earnings": {
+          "name": "Gains totaux X3",
+          "description": "Gains de la matrice X3"
+        },
+        "x6Earnings": {
+          "name": "Gains totaux X6",
+          "description": "Gains de la matrice X6"
+        },
+        "x3Cycles": {
+          "name": "Cycles X3",
+          "description": "Cycles de réinvestissement"
+        },
+        "x6Cycles": {
+          "name": "Cycles X6",
+          "description": "Cycles de réinvestissement"
+        }
+      }
+    },
+    "track1": {
+      "title": "🌐 Réseau Matrice X3",
+      "description": "Suivez vos positions matricielles 1×3 avec parrainages directs et réinvestissement automatique.",
+      "connect": {
+        "title": "Connecter le Portefeuille",
+        "description": "Veuillez connecter votre portefeuille pour voir votre matrice X3."
+      },
+      "chapter": "Chapitre {chapter}",
+      "loading": {
+        "default": "Chargement des données de la Matrice X3...",
+        "retry": "Chargement des données de la Matrice X3 (essai {count}/3)...",
+        "slow": "Cela prend plus de temps que d'habitude..."
+      },
+      "error": {
+        "title": "Données Matricielles Indisponibles",
+        "description": "Les fonctionnalités de visualisation de la matrice sont actuellement indisponibles. Vous pouvez toujours acheter des chapitres et gagner des récompenses.",
+        "stats": "Vos Statistiques Matrice X3",
+        "refresh": "Réessayer le Chargement",
+        "dashboard": "Retour au Tableau de Bord"
+      },
+      "notRegistered": {
+        "title": "Pas Encore Lecteur",
+        "description": "Rejoignez la bibliothèque pour commencer à construire votre réseau matriciel X3 et gagner avec la structure matricielle 1×3.",
+        "button": "Aller au Tableau de Bord pour vous Inscrire"
+      },
+      "header": {
+        "refresh": "Rafraîchir les Données",
+        "autoRefresh": "Auto-rafraîchissement toutes les 30s"
+      },
+      "chapterSelector": {
+        "title": "Sélectionner un Chapitre",
+        "noChapters": "Aucun chapitre débloqué pour l'instant.",
+        "buyChapter": "Acheter votre Premier Chapitre",
+        "loaded": "Affichage de {loaded} sur {unlocked} chapitres chargés"
+      },
+      "matrixVisualization": {
+        "title": "Matrice X3 — Chapitre {chapter}",
+        "refresh": "Rafraîchir",
+        "referrer": {
+          "title": "Votre Parrain",
+          "description": "Le lecteur qui vous a parrainé vers ce chapitre",
+          "none": "Pas de parrain direct"
+        },
+        "directReferrals": {
+          "title": "Parrainages Directs",
+          "position": "Position {number}",
+          "badge": "Direct",
+          "empty": "Pas de parrainage direct pour l'instant."
+        },
+        "status": {
+          "title": "Statut du Chapitre",
+          "statusLabel": "Statut",
+          "active": "✅ Actif",
+          "blocked": "⛔ Bloqué",
+          "reinvestCycles": "Cycles de Réinvestissement",
+          "cycles": "cycles",
+          "progress": {
+            "label": "Progression Matricielle",
+            "percentage": "{percentage}%"
+          }
+        }
+      },
+      "matrixRules": {
+        "title": "Règles de la Matrice X3",
+        "items": [
+          "<strong>3 positions</strong> au total (structure matricielle 1×3)",
+          "<strong>Parrainages directs :</strong> 3 positions à remplir",
+          "<strong>Structure simple :</strong> Pas de débordement ou deuxième ligne",
+          "<strong>Réinvestissement automatique</strong> quand les 3 positions sont remplies",
+          "<strong>Gains directs</strong> de vos parrainages",
+          "Gains des parrainages et des réinvestissements"
+        ],
+        "currentStats": {
+          "title": "Statistiques du Chapitre Actuel",
+          "totalReferrals": "Total des Parrainages :",
+          "matrixCompletion": "Complétion Matricielle :",
+          "progress": "Progression",
+          "positions": "{current}/3 positions"
+        }
+      },
+      "earningsSnapshot": {
+        "title": "Aperçu des Gains du Chapitre {chapter}",
+        "totalEarnings": {
+          "label": "Total des Gains X3 :",
+          "description": "Gains à vie de tous les chapitres matriciels X3"
+        },
+        "currentChapterCycles": {
+          "label": "Cycles du Chapitre Actuel :",
+          "description": "Cycles de réinvestissement pour le Chapitre {chapter}"
+        },
+        "totalCycles": {
+          "label": "Total des Cycles X3 :",
+          "description": "Total des réinvestissements sur tous les chapitres X3"
+        },
+        "matrixStatus": {
+          "title": "Statut de la Matrice",
+          "blocked": "Bloqué",
+          "readyToCycle": "Prêt à Recycler",
+          "building": "Construction",
+          "descriptions": {
+            "blocked": "Débloquez le prochain chapitre pour débloquer cette matrice",
+            "readyToCycle": "Les 3 positions sont remplies ! Le prochain placement déclenchera le réinvestissement",
+            "building": "Placez plus de parrainages pour compléter la matrice"
+          }
+        }
+      },
+      "quickActions": {
+        "title": "Actions Rapides",
+        "buyChapters": {
+          "title": "Acheter des Chapitres",
+          "icon": "📚"
+        },
+        "viewEarnings": {
+          "title": "Voir les Gains",
+          "icon": "💰"
+        }
+      },
+      "noData": {
+        "title": "Données Indisponibles pour le Chapitre {chapter}",
+        "description": "Aucune donnée matricielle trouvée pour ce chapitre.",
+        "retryChapter": "Réessayer ce Chapitre",
+        "reloadAll": "Recharger Tous les Chapitres"
+      },
+      "stats": {
+        "totalEarnings": "Total des Gains :",
+        "chaptersUnlocked": "Chapitres Débloqués :",
+        "totalCycles": "Total des Cycles :"
+      }
+    },
+
+    "Track2": {
+      "title": "🌐 Réseau Matrice X6",
+      "description": "Suivez vos positions de matrice 2×3 avec les références de première et deuxième ligne.",
+      "refresh": "Actualiser les données",
+      "autoRefresh": "Actualisation automatique toutes les 30s",
+      "chapter": "Chapitre {chapter}",
+      "connectWallet": {
+        "title": "Connecter le Portefeuille",
+        "description": "Veuillez connecter votre portefeuille pour voir votre matrice X6."
+      },
+
+      "loading": {
+        "loading": "Chargement des données de la matrice X6...",
+        "retrying": "Chargement des données de la matrice X6 (réessai {retryCount}/3)...",
+        "takingLonger": "Cela prend plus de temps que d'habitude..."
+      },
+
+      "error": {
+        "title": "Données de matrice indisponibles",
+        "description": "Les fonctionnalités de visualisation de matrice sont actuellement indisponibles. Vous pouvez toujours acheter des chapitres et gagner des récompenses.",
+        "statsTitle": "Vos statistiques de matrice X6",
+        "retry": "Réessayer le chargement",
+        "return": "Retour au tableau de bord",
+        "failed": "Échec du chargement des données de matrice. Veuillez réessayer plus tard.",
+        "retrySingle": "Réessayer ce chapitre",
+        "reloadAll": "Recharger tous les chapitres",
+        "afterRetries": "Impossible de charger les données de matrice après plusieurs tentatives"
+      },
+
+      "notRegistered": {
+        "title": "Pas encore lecteur",
+        "description": "Rejoignez la bibliothèque pour commencer à construire votre réseau de matrice X6 et gagner avec la structure de matrice 2×3.",
+        "register": "Aller au tableau de bord pour s'inscrire"
+      },
+
+      "chapterSelector": {
+        "title": "Sélectionner le chapitre",
+        "noChapters": "Aucun chapitre débloqué pour le moment.",
+        "buyFirst": "Acheter votre premier chapitre",
+        "loaded": "{loaded} chapitres chargés sur {total}"
+      },
+
+      "matrixVisualization": {
+        "title": "Matrice X6 — Chapitre {chapter}",
+        "refresh": "Actualiser",
+
+        "yourReferrer": {
+          "title": "Votre parrain",
+          "description": "Le lecteur qui vous a parrainé dans ce chapitre",
+          "none": "Aucun parrain direct"
+        },
+
+        "firstLine": {
+          "title": "Première ligne (Directe)",
+          "position": "Position directe {index}",
+          "tag": "Direct",
+          "empty": "Aucune référence de première ligne pour le moment."
+        },
+
+        "secondLine": {
+          "title": "Deuxième ligne (Débordement)",
+          "position": "Position débordement {index}",
+          "tag": "Débordement",
+          "empty": "Aucune référence de deuxième ligne pour le moment."
+        },
+
+        "chapterStatus": {
+          "title": "Statut du chapitre",
+          "status": "Statut",
+          "active": "✅ Actif",
+          "blocked": "⛔ Bloqué",
+          "reinvestCycles": "Cycles de réinvestissement",
+          "cycles": "cycles",
+          "closedPart": "Partie fermée",
+          "closedDescription": "Sous-matrice complètement cyclée"
+        }
+      },
+
+      "matrixInfo": {
+        "rules": {
+          "title": "Règles de la matrice X6",
+          "positions": "6 positions au total (structure de matrice 2×3)",
+          "firstLine": "Première ligne : 2 références directes que vous placez",
+          "secondLine": "Deuxième ligne : 4 débordements de la matrice du parrain",
+          "autoReinvest": "Réinvestissement automatique lorsque les 6 positions sont remplies",
+          "closedPart": "La partie fermée indique une sous-matrice complètement cyclée",
+          "earnings": "Gains des deux lignes et des réinvestissements"
+        },
+
+        "stats": {
+          "title": "Statistiques du chapitre actuel",
+          "totalReferrals": "Références totales :",
+          "firstLine": "Première ligne :",
+          "secondLine": "Deuxième ligne :",
+          "matrixProgress": "Progression de la matrice",
+          "progress": "{percent}%"
+        },
+
+        "earnings": {
+          "title": "Aperçu des gains du chapitre {chapter}",
+          "totalEarnings": "Gains totaux X6 :",
+          "totalDescription": "Gains à vie de tous les chapitres de matrice X6",
+          "currentCycles": "Cycles du chapitre actuel :",
+          "currentDescription": "Cycles de réinvestissement pour le chapitre {chapter}",
+          "totalCycles": "Cycles totaux X6 :",
+          "totalCyclesDescription": "Réinvestissements totaux sur tous les chapitres X6"
+        },
+
+        "status": {
+          "title": "Statut de la matrice",
+          "blocked": "Bloqué",
+          "ready": "Prêt à cycler",
+          "building": "En construction",
+          "blockedDesc": "Débloquez le prochain chapitre pour débloquer cette matrice",
+          "readyDesc": "Les 6 positions sont remplies ! Le prochain placement déclenchera un réinvestissement",
+          "buildingDesc": "Placez plus de références pour compléter la matrice"
+        },
+
+        "quickActions": {
+          "title": "Actions rapides",
+          "buyChapters": "Acheter des chapitres",
+          "viewEarnings": "Voir les gains"
+        }
+      },
+
+      "stats": {
+        "totalEarnings": "Gains totaux :",
+        "chaptersUnlocked": "Chapitres débloqués :",
+        "totalCycles": "Cycles totaux :"
+      },
+
+      "dataNotAvailable": {
+        "title": "Données non disponibles pour le chapitre {chapter}",
+        "description": "Aucune donnée de matrice trouvée pour ce chapitre."
+      }
+    }
+  },
+  "RoyaltyPage": {
+    "RoyaltyPool": {
+      "header": {
+        "label": "Pool de Royalties",
+        "title": "Gains de Royalties Globaux"
+      },
+      "status": {
+        "processing": "Traitement de la transaction sur la blockchain…",
+        "ready": "Statistiques du pool sur la blockchain"
+      },
+      "stats": {
+        "share": {
+          "title": "Votre Part de Royalties",
+          "description": "Du pool de royalties global actif"
+        },
+        "available": {
+          "title": "Disponible à réclamer",
+          "currency": "USDT"
+        },
+        "claimed": {
+          "title": "Total Réclamé",
+          "description": "Royalties à vie"
+        }
+      },
+      "claim": {
+        "processing": "Traitement de la réclamation de royalties...",
+        "button": "Réclamer ${amount} USDT"
+      },
+      "info": {
+        "title": "Fonctionnement des Royalties",
+        "points": {
+          "share": "Votre part est basée sur votre contribution totale et votre niveau d'activité.",
+          "payouts": "Les paiements sont entièrement sur la blockchain et distribués proportionnellement.",
+          "claim": "Vous pouvez réclamer à tout moment — pas de période de blocage ou de délai."
+        }
+      }
+    },
+
+    "connect": {
+      "accessLabel": "Accès aux Royalties",
+      "title": "Connectez-vous pour voir les Royalties",
+      "description": "Connectez votre portefeuille pour voir votre part des royalties globales et réclamez vos gains directement sur la blockchain."
+    },
+    "dashboard": {
+      "label": "Tableau de bord des Royalties",
+      "title": "Pool de Royalties",
+      "description": "Suivez votre part du pool de royalties global et réclamez vos récompenses USDT quand vous le souhaitez."
+    }
+  },
+
+  "ChaptersPage": {
+    "connect": {
+      "label": "Connecter le Portefeuille",
+      "title": "Connectez-vous pour voir les Chapitres",
+      "description": "Connectez votre portefeuille Web3 pour débloquer des chapitres de livre et commencer à gagner des royalties sur la blockchain."
+    },
+    "header": {
+      "label": "Chapitres Quantiques",
+      "title": "Chapitres du Livre",
+      "description": "Débloquez de vrais chapitres de livre sur la blockchain, possédez l'accès à la propriété intellectuelle et gagnez des récompenses matricielles + royalties au fur et à mesure que la bibliothèque grandit."
+    },
+    "ChapterCard": {
+      "track": {
+        "label": "Piste",
+        "x3": "Matrice X3",
+        "x6": "Matrice X6"
+      },
+      "chapter": {
+        "label": "Chapitre"
+      },
+      "price": {
+        "label": "Prix",
+        "currency": "USDT"
+      },
+      "status": {
+        "label": "Statut",
+        "unlocked": "Débloqué",
+        "lockedPrevious": "Bloqué — Complétez le chapitre précédent",
+        "available": "Disponible à débloquer"
+      },
+      "approval": {
+        "label": "Approbation",
+        "required": "Requis",
+        "approved": "Approuvé",
+        "warning": "Approuvez d'abord l'USDT pour débloquer ce chapitre"
+      },
+      "button": {
+        "unlocked": "Chapitre Débloqué",
+        "approving": "Approbation en cours...",
+        "processing": "Traitement...",
+        "approve": "Approuver USDT",
+        "unlock": "Débloquer le Chapitre"
+      },
+      "pdfContent": {
+        "title": "Contenu du Chapitre",
+        "available": "Disponible",
+        "description": "Lisez le contenu PDF de ce chapitre dans notre visionneuse sécurisée.",
+        "button": "Lire le PDF du Chapitre"
+      },
+      "pdfViewer": {
+        "subtitle": "Piste {trackNumber} • Visionneuse PDF sécurisée • Lecture uniquement",
+        "noDownload": "Pas de Téléchargement",
+        "secureMessage": "Visionneuse PDF sécurisée • Le téléchargement est déconseillé • Clic droit désactivé",
+        "iframeTitle": "Chapitre {chapter} - {title}",
+        "protectedMessage": "Contenu protégé - Lecture uniquement",
+        "zoomIn": "Zoom avant",
+        "zoomOut": "Zoom arrière",
+        "closeButton": "Fermer la visionneuse"
+      }
+    },
+    "ChapterGrid": {
+      "balance": {
+        "title": "Solde USDT",
+        "currency": "USDT",
+        "approved": "Approuvé",
+        "warning": "Vous avez besoin d'USDT pour acheter des chapitres. Assurez-vous d'avoir un solde suffisant."
+      },
+      "tracks": {
+        "x3": "Piste Matrice X3",
+        "x6": "Piste Matrice X6"
+      },
+      "transactionStatus": {
+        "approving": "Approbation USDT en cours...",
+        "processing": "Traitement de la transaction..."
+      }
+    }
+  },
+  "ProfilePage": {
+    "loading": {
+      "label": "Profil",
+      "title": "Chargement de votre profil…",
+      "description": "Récupération de votre activité sur la blockchain et de vos statistiques de parrainage."
+    },
+    "connect": {
+      "accessLabel": "Accès au Profil",
+      "title": "Connectez-vous pour voir le Profil",
+      "description": "Connectez votre portefeuille pour voir votre profil, votre progression dans les matrices et vos gains de parrainage."
+    },
+    "header": {
+      "label": "Votre Profil",
+      "title": "Aperçu du Compte",
+      "description": "Suivez vos chapitres, gains, statut et réseau de parrainage dans l'écosystème QuantuMatrix."
+    }
+  }
+}

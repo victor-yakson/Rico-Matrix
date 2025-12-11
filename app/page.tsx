@@ -2,8 +2,6 @@
 
 import { useAccount, useWaitForTransactionReceipt } from "wagmi";
 import { useQuantuMatrix } from "../hooks/useQuantuMatrix";
-import { ConnectWallet } from "../components/Common/ConnectWallet";
-import { Stats } from "../components/Dashboard/Stats";
 import { Header } from "../components/Navigation/Header";
 import ProfileInfo from "../components/Dashboard/ProfileInfo";
 import { ReferralSection } from "../components/Profile/ReferralSection";
@@ -12,40 +10,28 @@ import { RegistrationSection } from "../components/Dashboard/RegistrationSection
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import MobileWalletConnector from "@/components/Common/MobileWalletConnector";
-import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import { formatUnits } from "viem";
 import Leaderboards from "@/components/Dashboard/Leaderboards";
+import { useTranslations } from "next-intl";
+import { Stats } from "../components/Dashboard/Stats";
+import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 
 export default function Dashboard() {
+  const t = useTranslations("Dashboard.page");
+  
   const { address, isConnected } = useAccount();
-  // Use the hook with all new data
   const {
-    // User data
     userData,
-
-    // Global data
     globalStats,
     globalSummary,
     globalRicoFarming,
-
-    // Leaderboards
     topEarners,
     topReferrers,
-
-    // Token addresses
-    usdtAddress,
     rewardTokenAddress,
-
-    // USDT data
     usdtBalance,
     usdtAllowance,
     joinCost,
-
-    // Loading state
     loading,
-
-    // Actions
     approveUsdt,
     joinLibrary,
     buyChapter,
@@ -58,10 +44,7 @@ export default function Dashboard() {
   } = useQuantuMatrix();
 
   const [mounted, setMounted] = useState(false);
-  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
-    null
-  );
-
+  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(null);
   const searchParams = useSearchParams();
   const referralAddress = searchParams.get("ref");
 
@@ -83,7 +66,6 @@ export default function Dashboard() {
     }
   }, [address, isConnected, refetchUserData]);
 
-  // Refresh data after royalty claim confirmation
   useEffect(() => {
     if (isConfirmed) {
       refetchUserData();
@@ -110,6 +92,11 @@ export default function Dashboard() {
     ? Number(userData.royaltyAvailable).toFixed(2)
     : "0.00";
 
+  // Helper function to render HTML
+  const renderHTML = (html: string) => {
+    return { __html: html };
+  };
+
   if (!mounted) {
     return (
       <>
@@ -117,14 +104,13 @@ export default function Dashboard() {
         <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 bg-gradient-to-br from-slate-950 via-black to-slate-900">
           <div className="text-center mb-8">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
-              Rico Library
+              {t("loading.subtitle")}
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-              🔥📚✨ RICOMATRIX
+              {t("loading.title")}
             </h1>
             <p className="text-sm md:text-base text-slate-400">
-              READ • EARN • OWN — Real book chapters on-chain with matrix &
-              royalty rewards.
+              {t("loading.description")}
             </p>
           </div>
           <div className="flex justify-center items-center">
@@ -139,11 +125,8 @@ export default function Dashboard() {
   }
 
   if (!isConnected) {
-    return (
-      <>
-        <RicoMatrixLandingPage />
-      </>
-    );
+    // Assuming you have a LandingPage component with translations
+    return <RicoMatrixLandingPage />;
   }
 
   return (
@@ -155,24 +138,22 @@ export default function Dashboard() {
             {/* Header */}
             <div className="text-center mb-8 md:mb-10 lg:mb-12">
               <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
-                Dashboard
+                {t("header.subtitle")}
               </p>
               <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-                🔥📚✨ RICOMATRIX
+                {t("header.title")}
               </h1>
               <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
-                READ • EARN • OWN — Manage your matrix positions, unlock
-                chapters, and monitor royalty earnings in one place.
+                {t("header.description")}
               </p>
 
               {/* RICO Token Announcement */}
               {globalRicoFarming?.[0] &&
-                parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) >
-                  0 && (
+                parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) > 0 && (
                   <div className="mt-4">
                     <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-xs md:text-sm font-medium text-cyan-200 hover:bg-cyan-500/20 transition-all">
                       <span className="text-base">🪙</span>
-                      <span>Earn RICO tokens 1:1 with all USDT activity!</span>
+                      <span>{t("header.ricoAnnouncement")}</span>
                     </div>
                   </div>
                 )}
@@ -180,13 +161,13 @@ export default function Dashboard() {
               {/* Telegram button in header */}
               <div className="mt-4 flex justify-center">
                 <a
-                  href="https://t.me/ricomatrix"
+                  href="https://t.me/ricomatrixdapp"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-full border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-xs md:text-sm font-medium text-sky-200 hover:bg-sky-500/20 transition-all"
                 >
                   <span className="text-base">📲</span>
-                  <span>Join our Telegram for updates</span>
+                  <span>{t("header.telegram")}</span>
                 </a>
               </div>
             </div>
@@ -249,24 +230,23 @@ export default function Dashboard() {
                         `}
                       >
                         {isProcessingRoyalty
-                          ? "Processing royalty claim..."
-                          : `Claim $${royaltyAvailable} USDT`}
+                          ? t("royaltyClaim.processing")
+                          : t("royaltyClaim.button", { amount: royaltyAvailable })}
                       </button>
                       <p className="mt-2 text-[0.7rem] text-slate-500 text-center">
-                        Your royalty balance updates automatically after a
-                        successful claim.
+                        {t("royaltyClaim.note")}
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* NEW: RICO Farming Section */}
+                {/* RICO Farming Section */}
                 {userData?.exists && (
                   <div className="rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-xl font-bold text-cyan-300 flex items-center gap-3">
                         <span className="text-2xl">🪙</span>
-                        RICO Token Farming
+                        {t("ricoFarmingSection.title")}
                       </h3>
                       {rewardTokenAddress && (
                         <a
@@ -275,7 +255,7 @@ export default function Dashboard() {
                           rel="noopener noreferrer"
                           className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
                         >
-                          <span>View Token</span>
+                          <span>{t("ricoFarmingSection.viewToken")}</span>
                           <span>↗</span>
                         </a>
                       )}
@@ -284,12 +264,12 @@ export default function Dashboard() {
                     {/* Personal RICO Stats */}
                     <div className="mb-8">
                       <h4 className="text-lg font-semibold text-slate-200 mb-4">
-                        Your RICO Balance
+                        {t("ricoFarmingSection.yourBalance")}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="rounded-xl bg-slate-900/60 p-4 border border-cyan-700/40">
                           <p className="text-sm text-slate-400 mb-1">
-                            Total Earned
+                            {t("ricoFarmingSection.stats.totalEarned")}
                           </p>
                           <p className="text-2xl font-bold text-cyan-400">
                             {userData.ricoShouldHave
@@ -298,12 +278,12 @@ export default function Dashboard() {
                             RICO
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
-                            From all chapter purchases
+                            {t("ricoFarmingSection.stats.fromPurchases")}
                           </p>
                         </div>
                         <div className="rounded-xl bg-slate-900/60 p-4 border border-emerald-700/40">
                           <p className="text-sm text-slate-400 mb-1">
-                            Already Received
+                            {t("ricoFarmingSection.stats.alreadyReceived")}
                           </p>
                           <p className="text-2xl font-bold text-emerald-400">
                             {userData.ricoSent
@@ -312,11 +292,13 @@ export default function Dashboard() {
                             RICO
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
-                            Automatically sent to wallet
+                            {t("ricoFarmingSection.stats.autoSent")}
                           </p>
                         </div>
-                        <div className="rounded-xl bg-slate-900/60 p-4 border border-yellow-700/40">
-                          <p className="text-sm text-slate-400 mb-1">Pending</p>
+                        {/* <div className="rounded-xl bg-slate-900/60 p-4 border border-yellow-700/40">
+                          <p className="text-sm text-slate-400 mb-1">
+                            {t("ricoFarmingSection.stats.pending")}
+                          </p>
                           <p className="text-2xl font-bold text-yellow-400">
                             {userData.ricoPending
                               ? parseFloat(userData.ricoPending).toFixed(2)
@@ -324,9 +306,9 @@ export default function Dashboard() {
                             RICO
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
-                            Will be sent automatically
+                            {t("ricoFarmingSection.stats.willBeSent")}
                           </p>
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Progress bar */}
@@ -334,7 +316,7 @@ export default function Dashboard() {
                         parseFloat(userData.ricoShouldHave) > 0 && (
                           <div className="mt-4">
                             <div className="flex justify-between text-sm text-slate-400 mb-1">
-                              <span>Distribution Progress</span>
+                              <span>{t("ricoFarmingSection.stats.distributionProgress")}</span>
                               <span>
                                 {userData.ricoSent &&
                                 parseFloat(userData.ricoSent) > 0
@@ -356,9 +338,7 @@ export default function Dashboard() {
                                     parseFloat(userData.ricoShouldHave) > 0
                                       ? `${Math.min(
                                           (parseFloat(userData.ricoSent) /
-                                            parseFloat(
-                                              userData.ricoShouldHave
-                                            )) *
+                                            parseFloat(userData.ricoShouldHave)) *
                                             100,
                                           100
                                         )}%`
@@ -370,32 +350,27 @@ export default function Dashboard() {
                         )}
 
                       {/* Note about automatic farming */}
-                      <p className="mt-4 text-sm text-slate-500 p-3 bg-slate-900/40 rounded-lg">
-                        📈 <span className="text-cyan-300">RICO Farming:</span>{" "}
-                        You earn 1 RICO for every 1 USDT spent on chapters, plus
-                        1 RICO for every 1 USDT earned in upline rewards. RICO
-                        is sent automatically when available in the contract.
-                      </p>
+                      <p 
+                        className="mt-4 text-sm text-slate-500 p-3 bg-slate-900/40 rounded-lg"
+                        dangerouslySetInnerHTML={renderHTML(t("ricoFarmingSection.note"))}
+                      />
                     </div>
 
                     {/* Global RICO Stats */}
                     {globalRicoFarming && (
                       <div className="mt-6 pt-6 border-t border-slate-800">
                         <h4 className="text-lg font-semibold text-slate-200 mb-4">
-                          Global RICO Distribution
+                          {t("ricoFarmingSection.globalStats.title")}
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                           <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
                             <p className="text-sm text-slate-400 mb-1">
-                              Total Should Farm
+                              {t("ricoFarmingSection.globalStats.totalShouldFarm")}
                             </p>
                             <p className="text-xl font-bold text-cyan-400">
                               {globalRicoFarming?.[0]
                                 ? parseFloat(
-                                    formatUnits(
-                                      BigInt(globalRicoFarming[0]),
-                                      18
-                                    )
+                                    formatUnits(BigInt(globalRicoFarming[0]), 18)
                                   ).toFixed(2)
                                 : "0.00"}{" "}
                               RICO
@@ -403,15 +378,12 @@ export default function Dashboard() {
                           </div>
                           <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
                             <p className="text-sm text-slate-400 mb-1">
-                              Total Distributed
+                              {t("ricoFarmingSection.globalStats.totalDistributed")}
                             </p>
                             <p className="text-xl font-bold text-emerald-400">
                               {globalRicoFarming?.[1]
                                 ? parseFloat(
-                                    formatUnits(
-                                      BigInt(globalRicoFarming[1]),
-                                      18
-                                    )
+                                    formatUnits(BigInt(globalRicoFarming[1]), 18)
                                   ).toFixed(2)
                                 : "0.00"}{" "}
                               RICO
@@ -419,15 +391,12 @@ export default function Dashboard() {
                           </div>
                           <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
                             <p className="text-sm text-slate-400 mb-1">
-                              Remaining to Farm
+                              {t("ricoFarmingSection.globalStats.remainingToFarm")}
                             </p>
                             <p className="text-xl font-bold text-yellow-400">
                               {globalRicoFarming?.[2]
                                 ? parseFloat(
-                                    formatUnits(
-                                      BigInt(globalRicoFarming[2]),
-                                      18
-                                    )
+                                    formatUnits(BigInt(globalRicoFarming[2]), 18)
                                   ).toFixed(2)
                                 : "0.00"}{" "}
                               RICO
@@ -446,25 +415,25 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            {/* Add this wrapper */}
+
+            {/* Quick Links Section */}
             {userData?.exists && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 lg:gap-6  mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 lg:gap-6 mb-8">
                 <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 flex items-center justify-center text-xl mb-4 mx-auto">
                     📚
                   </div>
                   <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    View Chapters
+                    {t("quickLinks.viewChapters.title")}
                   </h3>
                   <p className="text-sm text-slate-400 mb-4">
-                    Explore all available book chapters and upgrade levels as
-                    you grow.
+                    {t("quickLinks.viewChapters.description")}
                   </p>
                   <Link
                     href="/chapters"
                     className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
                   >
-                    Browse Chapters
+                    {t("quickLinks.viewChapters.button")}
                   </Link>
                 </div>
 
@@ -473,16 +442,16 @@ export default function Dashboard() {
                     🕸️
                   </div>
                   <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    Check Matrix
+                    {t("quickLinks.checkMatrix.title")}
                   </h3>
                   <p className="text-sm text-slate-400 mb-4">
-                    View your matrix network and track your downline growth.
+                    {t("quickLinks.checkMatrix.description")}
                   </p>
                   <Link
                     href="/matrix"
                     className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
                   >
-                    View Matrix
+                    {t("quickLinks.checkMatrix.button")}
                   </Link>
                 </div>
 
@@ -491,17 +460,16 @@ export default function Dashboard() {
                     👑
                   </div>
                   <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    Check Royalty
+                    {t("quickLinks.checkRoyalty.title")}
                   </h3>
                   <p className="text-sm text-slate-400 mb-4">
-                    View your royalty pool share and claim earnings from library
-                    activity.
+                    {t("quickLinks.checkRoyalty.description")}
                   </p>
                   <Link
                     href="/royalty"
                     className="inline-block rounded-xl bg-emerald-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
                   >
-                    View Royalty
+                    {t("quickLinks.checkRoyalty.button")}
                   </Link>
                 </div>
 
@@ -510,21 +478,21 @@ export default function Dashboard() {
                     🪙
                   </div>
                   <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    View RICO Farming
+                    {t("quickLinks.viewRICO.title")}
                   </h3>
                   <p className="text-sm text-slate-400 mb-4">
-                    Track your RICO token earnings from chapter purchases and
-                    upline rewards.
+                    {t("quickLinks.viewRICO.description")}
                   </p>
                   <Link
                     href="/rico"
                     className="inline-block rounded-xl bg-cyan-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(34,211,238,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
                   >
-                    View RICO Stats
+                    {t("quickLinks.viewRICO.button")}
                   </Link>
                 </div>
               </div>
             )}
+
             {/* Leaderboards Section */}
             {userData?.exists && (
               <Leaderboards
@@ -534,99 +502,7 @@ export default function Dashboard() {
             )}
 
             {/* Global Summary for All Users */}
-            <div className="mb-8 md:mb-10 lg:mb-12">
-              <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
-                <h3 className="text-xl font-bold text-slate-200 mb-6 flex items-center gap-3">
-                  <span className="text-2xl">🌍</span>
-                  Global Network Summary
-                </h3>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  <div className="rounded-xl bg-slate-900/60 p-4">
-                    <p className="text-xs text-slate-400 mb-1">Total Readers</p>
-                    <p className="text-lg font-bold text-slate-100">
-                      {globalSummary?.totalReaders?.toString() || "0"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900/60 p-4">
-                    <p className="text-xs text-slate-400 mb-1">
-                      Chapters Purchased
-                    </p>
-                    <p className="text-lg font-bold text-cyan-300">
-                      {globalSummary?.globalTotalChaptersPurchased?.toString() ||
-                        "0"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900/60 p-4">
-                    <p className="text-xs text-slate-400 mb-1">
-                      USDT Distributed
-                    </p>
-                    <p className="text-lg font-bold text-yellow-300">
-                      {globalSummary?.globalTotalUnilevelPaid
-                        ? parseFloat(
-                            formatUnits(
-                              BigInt(globalSummary.globalTotalUnilevelPaid),
-                              18
-                            )
-                          ).toFixed(2)
-                        : "0.00"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900/60 p-4">
-                    <p className="text-xs text-slate-400 mb-1">Royalty Pool</p>
-                    <p className="text-lg font-bold text-purple-300">
-                      {globalSummary?.royaltyPot
-                        ? parseFloat(
-                            formatUnits(BigInt(globalSummary.royaltyPot), 18)
-                          ).toFixed(2)
-                        : "0.00"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900/60 p-4">
-                    <p className="text-xs text-slate-400 mb-1">RICO Farmed</p>
-                    <p className="text-lg font-bold text-cyan-400">
-                      {globalSummary?.ricoExpectedTotal
-                        ? parseFloat(
-                            formatUnits(
-                              BigInt(globalSummary.ricoExpectedTotal),
-                              18
-                            )
-                          ).toFixed(2)
-                        : "0.00"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900/60 p-4">
-                    <p className="text-xs text-slate-400 mb-1">
-                      Active Referrers
-                    </p>
-                    <p className="text-lg font-bold text-emerald-300">
-                      {globalSummary?.globalActiveReferrers?.toString() || "0"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Refresh Button */}
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={refetchAllData}
-                    disabled={loading}
-                    className="flex items-center gap-2 rounded-xl bg-slate-800/50 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700/50 transition-all border border-slate-700/50"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></div>
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-lg">🔄</span>
-                        Refresh All Data
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>

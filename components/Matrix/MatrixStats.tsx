@@ -1,50 +1,54 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface MatrixStatsProps {
   userData: any;
 }
 
 export const MatrixStats = ({ userData }: MatrixStatsProps) => {
+  const t = useTranslations('Matrix.MatrixStats');
+
   const stats = [
     {
-      name: 'X3 Total Earnings',
+      name: t('stats.x3Earnings.name'),
       value: userData?.exists
         ? `$${Number(userData.track1TotalEarned || 0).toFixed(2)}`
         : '$0.00',
-      description: 'Earnings from X3 Matrix',
+      description: t('stats.x3Earnings.description'),
       accent: 'from-yellow-400 via-amber-500 to-yellow-300',
       dot: 'bg-yellow-300',
       border: 'border-yellow-400/60',
       glow: 'shadow-[0_0_24px_rgba(250,204,21,0.45)]',
     },
     {
-      name: 'X6 Total Earnings',
+      name: t('stats.x6Earnings.name'),
       value: userData?.exists
         ? `$${Number(userData.track2TotalEarned || 0).toFixed(2)}`
         : '$0.00',
-      description: 'Earnings from X6 Matrix',
+      description: t('stats.x6Earnings.description'),
       accent: 'from-violet-500 via-purple-500 to-fuchsia-400',
       dot: 'bg-purple-300',
       border: 'border-purple-400/60',
       glow: 'shadow-[0_0_24px_rgba(192,132,252,0.45)]',
     },
     {
-      name: 'X3 Cycles',
+      name: t('stats.x3Cycles.name'),
       value: userData?.exists
         ? String(userData.track1TotalCycles || 0)
         : '0',
-      description: 'Reinvestment cycles',
+      description: t('stats.x3Cycles.description'),
       accent: 'from-emerald-500 via-emerald-400 to-teal-300',
       dot: 'bg-emerald-300',
       border: 'border-emerald-400/60',
       glow: 'shadow-[0_0_24px_rgba(52,211,153,0.45)]',
     },
     {
-      name: 'X6 Cycles',
+      name: t('stats.x6Cycles.name'),
       value: userData?.exists
         ? String(userData.track2TotalCycles || 0)
         : '0',
-      description: 'Reinvestment cycles',
+      description: t('stats.x6Cycles.description'),
       accent: 'from-sky-500 via-cyan-400 to-blue-400',
       dot: 'bg-sky-300',
       border: 'border-sky-400/60',

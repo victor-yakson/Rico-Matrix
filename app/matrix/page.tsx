@@ -8,11 +8,13 @@ import { Track2Matrix } from '../../components/Matrix/Track2Matrix';
 import { MatrixStats } from '../../components/Matrix/MatrixStats';
 import { useQuantuMatrix } from '../../hooks/useQuantuMatrix';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function MatrixPage() {
   const { isConnected } = useAccount();
   const { userData } = useQuantuMatrix();
   const [activeTrack, setActiveTrack] = useState<1 | 2>(1);
+  const t = useTranslations('Matrix.MatrixPage');
 
   if (!isConnected) {
     return (
@@ -21,14 +23,13 @@ export default function MatrixPage() {
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
           <div className="max-w-md w-full rounded-2xl border border-yellow-500/20 bg-black/70 px-6 py-10 text-center shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
-              Matrix Access
+              {t('connect.accessLabel')}
             </p>
             <h1 className="text-3xl font-bold text-slate-50 mb-4">
-              Connect to View Matrix
+              {t('connect.title')}
             </h1>
             <p className="text-sm md:text-base text-slate-400 mb-8">
-              Connect your wallet to visualize your X3 & X6 matrix networks and
-              monitor how your structure is growing in real time.
+              {t('connect.description')}
             </p>
             <div className="flex justify-center">
               <ConnectWallet />
@@ -47,14 +48,13 @@ export default function MatrixPage() {
           {/* Header */}
           <div className="text-center mb-10 md:mb-12">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
-              Matrix Networks
+              {t('header.networksLabel')}
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
-              X3 & X6 Matrix Overview
+              {t('header.title')}
             </h1>
             <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
-              Track your network growth, reinvest cycles, and earnings across
-              both matrix tracks in one unified view.
+              {t('header.description')}
             </p>
           </div>
 
@@ -72,7 +72,7 @@ export default function MatrixPage() {
                     : 'text-slate-300 hover:text-yellow-300 hover:bg-yellow-500/5'
                 }`}
               >
-                X3 Matrix Track
+                {t('trackSelection.x3Track')}
               </button>
               <button
                 onClick={() => setActiveTrack(2)}
@@ -82,7 +82,7 @@ export default function MatrixPage() {
                     : 'text-slate-300 hover:text-purple-300 hover:bg-purple-500/10'
                 }`}
               >
-                X6 Matrix Track
+                {t('trackSelection.x6Track')}
               </button>
             </div>
           </div>

@@ -2,6 +2,8 @@ export const CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 export const USDT_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_USDT_CONTRACT_ADDRESS as `0x${string}`;
+export const TOKEN_CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
 
 export const CONTRACT_ABI = [
   {

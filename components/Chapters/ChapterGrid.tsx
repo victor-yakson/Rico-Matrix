@@ -6,6 +6,7 @@ import { CHAPTER_NAMES } from '../../utils/constants';
 import { useWaitForTransactionReceipt } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { formatEther, formatUnits } from 'viem';
+import { useTranslations } from 'next-intl';
 
 export const ChapterGrid = () => {
   const { 
@@ -22,6 +23,7 @@ export const ChapterGrid = () => {
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(null);
   const [currentApproveHash, setCurrentApproveHash] = useState<`0x${string}` | null>(null);
   const [isApproving, setIsApproving] = useState(false);
+  const t = useTranslations('ChaptersPage.ChapterGrid');
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: currentTxHash!,
@@ -110,24 +112,24 @@ export const ChapterGrid = () => {
       <div className="rounded-2xl border border-blue-500/20 bg-slate-900/60 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-sm font-medium text-slate-400">USDT Balance</h4>
-            <p className="text-lg font-bold text-slate-50">{usdtBalance || '0'} USDT</p>
+            <h4 className="text-sm font-medium text-slate-400">{t('balance.title')}</h4>
+            <p className="text-lg font-bold text-slate-50">{usdtBalance || '0'} {t('balance.currency')}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-slate-400">Approved</h4>
-            <p className="text-lg font-bold text-emerald-400">{parseInt(usdtAllowance,18) || '0'} USDT</p>
+            <h4 className="text-sm font-medium text-slate-400">{t('balance.approved')}</h4>
+            <p className="text-lg font-bold text-emerald-400">{parseInt(usdtAllowance, 18) || '0'} {t('balance.currency')}</p>
           </div>
         </div>
         {parseFloat(usdtBalance || '0') === 0 && (
           <div className="mt-2 text-sm text-amber-400">
-            You need USDT to purchase chapters. Make sure you have sufficient balance.
+            {t('balance.warning')}
           </div>
         )}
       </div>
 
       {/* Track 1 - X3 Matrix */}
       <div>
-        <h3 className="text-2xl font-bold text-white mb-6">X3 Matrix Track</h3>
+        <h3 className="text-2xl font-bold text-white mb-6">{t('tracks.x3')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
@@ -154,7 +156,7 @@ export const ChapterGrid = () => {
 
       {/* Track 2 - X6 Matrix */}
       <div>
-        <h3 className="text-2xl font-bold text-white mb-6">X6 Matrix Track</h3>
+        <h3 className="text-2xl font-bold text-white mb-6">{t('tracks.x6')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
@@ -185,7 +187,7 @@ export const ChapterGrid = () => {
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-400 border-t-transparent"></div>
             <span className="text-sm text-slate-300">
-              {isApprovalProcessing ? 'Approving USDT...' : 'Processing transaction...'}
+              {isApprovalProcessing ? t('transactionStatus.approving') : t('transactionStatus.processing')}
             </span>
           </div>
         </div>
