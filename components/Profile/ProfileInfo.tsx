@@ -127,7 +127,7 @@ export const ProfileInfo = ({ userData }: ProfileInfoProps) => {
         </label>
         <p className="text-sm text-slate-200">
           {userData?.exists
-            ? 'Active member of the QuantuMatrix library.'
+            ? 'Active member of the RicoMatrix library.'
             : 'Join today to start reading and earning.'}
         </p>
       </div>

@@ -293,7 +293,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                     <MemoizedMobileWalletConnector />
 
                     <a
-                      href="https://t.me/ricomatrix"
+                      href="https://t.me/ricomatrixdapp"
                       target="_blank"
                       rel="noreferrer"
                       className="btn btn-secondary flex items-center justify-center h-14 px-8 text-lg rounded-xl"
@@ -690,7 +690,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   </p>
                   <div className="video-embed">
                     <iframe
-                      src="https://www.youtube.com/embed/gqHHsPycihI"
+                      src="https://www.youtube.com/embed/ZhBtH28m3es"
                       allowFullScreen
                       loading="lazy"
                       title={t("videos.tutorials.tutorial3.title")}
@@ -930,7 +930,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                     }}
                   >
                     <iframe
-                      src="https://www.youtube.com/embed/gqHHsPycihI"
+                      src="https://www.youtube.com/embed/_niJrog0TYk"
                       allowFullScreen
                       loading="lazy"
                       title="RICO MATRIX overview"
@@ -1013,7 +1013,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                 <MemoizedMobileWalletConnector />
 
                 <a
-                  href="https://t.me/ricomatrix"
+                  href="https://t.me/ricomatrixdapp"
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-secondary flex items-center justify-center h-14 px-8 text-lg rounded-xl"
@@ -1037,7 +1037,6 @@ const RicoMatrixLandingPage: React.FC = () => {
       {/* Footer */}
       <footer className="site-footer">
         <div className="footer-inner">
-          // Footer section - fix for the copyright line
           <div
             dangerouslySetInnerHTML={renderHTML(
               t("footer.copyright", { year })

@@ -23,7 +23,7 @@ export const ReferralSection = () => {
 
   const shareOnTwitter = () => {
     if (!address || !referralLink || !referralLink.startsWith('http')) return;
-    const text = `Join me on QuantuMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: ${referralLink}\n\n#QuantuMatrix #Blockchain #EarnWhileYouRead`;
+    const text = `Join me on RicoMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: ${referralLink}\n\n#RicoMatrix #Blockchain #EarnWhileYouRead`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
     )}`;
@@ -32,7 +32,7 @@ export const ReferralSection = () => {
 
   const shareOnTelegram = () => {
     if (!address || !referralLink || !referralLink.startsWith('http')) return;
-    const text = `Join me on QuantuMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: ${referralLink}`;
+    const text = `Join me on RicoMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: ${referralLink}`;
     const url = `https://t.me/share/url?url=${encodeURIComponent(
       referralLink
     )}&text=${encodeURIComponent(text)}`;

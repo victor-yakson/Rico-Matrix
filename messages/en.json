@@ -1,6 +1,7 @@
 {
+
   "LandingPage": {
-    "title": "The World's First Decentralized Library Matrix  That Pays Royalty Passive Income.",
+    "title": "The World's First Decentralized Library Matrix That Pays Royalty Passive Income.",
     "subtitle": "Buy chapters, unlock knowledge, and earn from a dual-track X3 + X6 matrix, 12 unilevel rewards, royalty pools and free RICO coin farming — all running on a self-executing smart contract on BNB Chain.",
     "activateLevel": "Activate Level1",
     "joinTelegram": "Join Telegram",
@@ -37,8 +38,8 @@
       }
     },
     "launchInfo": {
-      "launching": "Launching 15 Dec 2025",
-      "time": "4:00 PM WAT — BNB Smart Chain",
+      "launching": "NOW LIVE",
+      "time": "Live on BNB Smart Chain",
       "badges": {
         "decentralized": "100% decentralized — smart contract fully renounced",
         "earnings": "X3 direct + X6 spillover earnings",
@@ -47,12 +48,12 @@
       "recommendation": "Recommended entry: at least Level 9 for global spillovers",
       "partners": "Bring 3 ready partners to activate your engine from day one.",
       "countdown": {
-        "label": "Launch countdown",
-        "days": "Days",
-        "hours": "Hours",
-        "mins": "Mins",
-        "secs": "Secs",
-        "note": "Get your wallet ready with USDT BEP-20 before launch to avoid network congestion."
+        "label": "Contract is Live",
+        "days": "Live",
+        "hours": "",
+        "mins": "",
+        "secs": "",
+        "note": "Connect your wallet with USDT BEP-20 to start earning immediately."
       }
     },
     "visuals": {
@@ -288,7 +289,8 @@
       "chapters": "Chapters",
       "matrix": "Matrix",
       "royalty": "Royalty",
-      "profile": "Profile"
+      "profile": "Profile",
+      "documentation": "Documentation"
     },
     "socials": {
       "followUs": "Follow Us",
@@ -538,9 +540,21 @@
         "readDisclaimer": "Read full Disclaimer"
       },
       "referral": {
-        "detected": "Referral detected",
+        "detected": "Referral Detected",
+        "invalid": "Invalid Referral Address",
+        "checking": "Checking Referral...",
+        "linked": "Linked",
+        "invalidBadge": "Invalid",
+        "checkingBadge": "Checking",
         "referrer": "Referrer: {address}",
-        "linked": "Linked to your matrix position"
+        "warning": "Warning: The address {address} is not registered in the system.",
+        "warningNote": "You can still register with this referral, but it may not receive referral rewards.",
+        "title": "Referral Address",
+        "subtitle": "Required for registration",
+        "required": "Referral required",
+        "inputHelp": "Enter a valid Ethereum address",
+        "requiredWarning": "A referral address is required to complete registration",
+        "clear": "Clear"
       },
       "cost": {
         "registrationCost": "Registration Cost",
@@ -550,19 +564,21 @@
         "approvalRequired": "Approval required"
       },
       "buttons": {
-        "reviewRequired": "Review Terms Required",
+        "approving": "Approving...",
+        "registering": "Registering...",
+        "reviewRequired": "Review Required",
         "insufficientBalance": "Insufficient Balance",
         "processing": "Processing...",
-        "waitingApproval": "Waiting for approval...",
-        "confirmingRegistration": "Confirming registration...",
         "approveUsdt": "Approve {amount} USDT",
-        "completeRegistration": "Complete Registration",
-        "confirmingInWallet": "Confirming in wallet..."
+        "completeRegistration": "Complete Registration"
       },
       "error": {
-        "approvalFailed": "USDT approval failed. Please confirm the transaction in your wallet and try again.",
-        "registrationFailed": "Registration failed. Please confirm the transaction in your wallet and try again.",
-        "insufficientBalance": "Insufficient USDT balance. You need {joinCost} USDT but currently have {usdtBalance} USDT."
+        "invalidAddress": "Invalid Ethereum address format",
+        "invalidReferral": "The referral address does not exist in the system. Please check the address or register without a referral.",
+        "insufficientBalance": "Insufficient USDT balance. You need {joinCost} USDT but only have {usdtBalance} USDT.",
+        "approvalFailed": "USDT approval failed. Please try again.",
+        "registrationFailed": "Registration failed. Please try again.",
+        "referralRequired": "Referral address is required to register"
       },
       "progress": {
         "step1": "1. Approve USDT",
@@ -1114,16 +1130,21 @@
 
   "ChaptersPage": {
     "connect": {
-      "label": "Connect Wallet",
-      "title": "Connect to View Chapters",
-      "description": "Link your Web3 wallet to unlock book chapters and start earning on-chain royalties."
+      "label": "Connect Required",
+      "title": "Connect Your Wallet",
+      "description": "Please connect your wallet to view and purchase chapters."
+    },
+    "registration": {
+      "label": "Registration Required",
+      "title": "Complete Registration First",
+      "description": "You need to register in the RicoMatrix before you can access chapters.",
+      "button": "Go to Dashboard"
     },
     "header": {
-      "label": "Quantum Chapters",
-      "title": "Book Chapters",
-      "description": "Unlock real book chapters on-chain, own the intellectual property access, and earn matrix + royalty rewards as the library grows."
+      "label": "RicoMatrix • Chapters",
+      "title": "Matrix Chapters",
+      "description": "Unlock and progress through the matrix chapters to maximize your earnings."
     },
-
     "ChapterCard": {
       "track": {
         "label": "Track",
@@ -1154,7 +1175,8 @@
         "approving": "Approving...",
         "processing": "Processing...",
         "approve": "Approve USDT",
-        "unlock": "Unlock Chapter"
+        "unlock": "Unlock Chapter",
+        "requiresPrevious": "Complete Previous Chapter"
       },
       "pdfContent": {
         "title": "Chapter Content",
@@ -1204,7 +1226,84 @@
     "header": {
       "label": "Your Profile",
       "title": "Account Overview",
-      "description": "Track your chapters, earnings, status, and referral network inside the QuantuMatrix ecosystem."
+      "description": "Track your chapters, earnings, status, and referral network inside the Ricomatrix ecosystem."
+    }
+  },
+
+  "Documentation": {
+    "title": "Business Documentation",
+    "subtitle": "Learn about our business model, vision, and roadmap",
+    "backToDashboard": "Back to Dashboard",
+    "version": "Version 1.0",
+    "stats": {
+      "pages": "Pages",
+      "lastUpdated": "Last Updated",
+      "fileSize": "File Size",
+      "fileType": "File Type"
+    
+
+    },
+    "toc": {
+      "title": "Table of Contents",
+      "sections": {
+        "introduction": "Introduction & Vision",
+        "businessModel": "Business Model",
+        "tokenomics": "Tokenomics",
+        "roadmap": "Roadmap",
+        "team": "Team & Advisors",
+        "technology": "Technology Stack",
+        "legal": "Legal & Compliance",
+        "faq": "Frequently Asked Questions"
+      },
+      "quickActions": "Quick Actions"
+    },
+    "actions": {
+      "download": "Download PDF",
+      "print": "Print Document",
+      "openNew": "Open in New Tab"
+    },
+    "help": {
+      "title": "Need Help?",
+      "description": "Contact our support team for any questions about the documentation.",
+      "contact": "Contact Support"
+    },
+    "viewer": {
+      "title": "Business Documentation",
+      "subtitle": "Official business documentation and whitepaper",
+      "footer": "Scroll to navigate • Use Ctrl+P to print",
+      "secure": "Secure Document • Encrypted"
+    },
+    "loading": "Loading document...",
+    "error": {
+      "title": "Failed to Load Document",
+      "loading": "Failed to load PDF",
+      "downloadInstead": "Download Instead"
+    },
+    "menu": {
+      "download": "Download PDF",
+      "print": "Print Document",
+      "copyLink": "Copy Link"
+    },
+    "summary": {
+      "keyPoints": "Key Points",
+      "point1": "Decentralized matrix system",
+      "point2": "Automated referral rewards",
+      "point3": "Smart contract security",
+      "point4": "Transparent tokenomics",
+      "documentInfo": "Document Information",
+      "format": "Format: PDF",
+      "pages": "Pages: 24",
+      "size": "Size: 2.4 MB",
+      "language": "Language: English"
+    },
+    "related": {
+      "title": "Related Resources",
+      "terms": "Terms & Conditions",
+      "termsDesc": "Legal terms and conditions",
+      "privacy": "Privacy Policy",
+      "privacyDesc": "Data protection and privacy",
+      "faq": "FAQ",
+      "faqDesc": "Frequently asked questions"
     }
   }
 }

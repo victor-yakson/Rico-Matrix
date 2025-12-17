@@ -18,7 +18,7 @@ import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
-  
+
   const { address, isConnected } = useAccount();
   const {
     userData,
@@ -44,9 +44,11 @@ export default function Dashboard() {
   } = useQuantuMatrix();
 
   const [mounted, setMounted] = useState(false);
-  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(null);
+  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
+    null
+  );
   const searchParams = useSearchParams();
-  const referralAddress = searchParams.get("ref");
+  const urlReferral = searchParams.get("ref");
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -82,6 +84,10 @@ export default function Dashboard() {
       console.error("Claim failed:", error);
       setCurrentTxHash(null);
     }
+  };
+   const handleRegistrationComplete = () => {
+    refetchAllData()
+    console.log('Registration complete!');
   };
 
   const isProcessingRoyalty = loading || isConfirming;
@@ -149,7 +155,8 @@ export default function Dashboard() {
 
               {/* RICO Token Announcement */}
               {globalRicoFarming?.[0] &&
-                parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) > 0 && (
+                parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) >
+                  0 && (
                   <div className="mt-4">
                     <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-xs md:text-sm font-medium text-cyan-200 hover:bg-cyan-500/20 transition-all">
                       <span className="text-base">🪙</span>
@@ -177,8 +184,8 @@ export default function Dashboard() {
               <div className="mb-8 md:mb-10 lg:mb-12">
                 <div className="rounded-3xl border border-yellow-500/25 bg-gradient-to-br from-slate-950 via-slate-950/95 to-slate-900/90 p-4 sm:p-5 md:p-6 lg:p-7 shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
                   <RegistrationSection
-                    referralAddress={referralAddress}
-                    onRegistrationComplete={refetchUserData}
+                    referralAddress={urlReferral}
+                    onRegistrationComplete={handleRegistrationComplete}
                   />
                 </div>
               </div>
@@ -231,7 +238,9 @@ export default function Dashboard() {
                       >
                         {isProcessingRoyalty
                           ? t("royaltyClaim.processing")
-                          : t("royaltyClaim.button", { amount: royaltyAvailable })}
+                          : t("royaltyClaim.button", {
+                              amount: royaltyAvailable,
+                            })}
                       </button>
                       <p className="mt-2 text-[0.7rem] text-slate-500 text-center">
                         {t("royaltyClaim.note")}
@@ -316,7 +325,11 @@ export default function Dashboard() {
                         parseFloat(userData.ricoShouldHave) > 0 && (
                           <div className="mt-4">
                             <div className="flex justify-between text-sm text-slate-400 mb-1">
-                              <span>{t("ricoFarmingSection.stats.distributionProgress")}</span>
+                              <span>
+                                {t(
+                                  "ricoFarmingSection.stats.distributionProgress"
+                                )}
+                              </span>
                               <span>
                                 {userData.ricoSent &&
                                 parseFloat(userData.ricoSent) > 0
@@ -338,7 +351,9 @@ export default function Dashboard() {
                                     parseFloat(userData.ricoShouldHave) > 0
                                       ? `${Math.min(
                                           (parseFloat(userData.ricoSent) /
-                                            parseFloat(userData.ricoShouldHave)) *
+                                            parseFloat(
+                                              userData.ricoShouldHave
+                                            )) *
                                             100,
                                           100
                                         )}%`
@@ -350,9 +365,11 @@ export default function Dashboard() {
                         )}
 
                       {/* Note about automatic farming */}
-                      <p 
+                      <p
                         className="mt-4 text-sm text-slate-500 p-3 bg-slate-900/40 rounded-lg"
-                        dangerouslySetInnerHTML={renderHTML(t("ricoFarmingSection.note"))}
+                        dangerouslySetInnerHTML={renderHTML(
+                          t("ricoFarmingSection.note")
+                        )}
                       />
                     </div>
 
@@ -365,12 +382,17 @@ export default function Dashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                           <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
                             <p className="text-sm text-slate-400 mb-1">
-                              {t("ricoFarmingSection.globalStats.totalShouldFarm")}
+                              {t(
+                                "ricoFarmingSection.globalStats.totalShouldFarm"
+                              )}
                             </p>
                             <p className="text-xl font-bold text-cyan-400">
                               {globalRicoFarming?.[0]
                                 ? parseFloat(
-                                    formatUnits(BigInt(globalRicoFarming[0]), 18)
+                                    formatUnits(
+                                      BigInt(globalRicoFarming[0]),
+                                      18
+                                    )
                                   ).toFixed(2)
                                 : "0.00"}{" "}
                               RICO
@@ -378,12 +400,17 @@ export default function Dashboard() {
                           </div>
                           <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
                             <p className="text-sm text-slate-400 mb-1">
-                              {t("ricoFarmingSection.globalStats.totalDistributed")}
+                              {t(
+                                "ricoFarmingSection.globalStats.totalDistributed"
+                              )}
                             </p>
                             <p className="text-xl font-bold text-emerald-400">
                               {globalRicoFarming?.[1]
                                 ? parseFloat(
-                                    formatUnits(BigInt(globalRicoFarming[1]), 18)
+                                    formatUnits(
+                                      BigInt(globalRicoFarming[1]),
+                                      18
+                                    )
                                   ).toFixed(2)
                                 : "0.00"}{" "}
                               RICO
@@ -391,12 +418,17 @@ export default function Dashboard() {
                           </div>
                           <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-700">
                             <p className="text-sm text-slate-400 mb-1">
-                              {t("ricoFarmingSection.globalStats.remainingToFarm")}
+                              {t(
+                                "ricoFarmingSection.globalStats.remainingToFarm"
+                              )}
                             </p>
                             <p className="text-xl font-bold text-yellow-400">
                               {globalRicoFarming?.[2]
                                 ? parseFloat(
-                                    formatUnits(BigInt(globalRicoFarming[2]), 18)
+                                    formatUnits(
+                                      BigInt(globalRicoFarming[2]),
+                                      18
+                                    )
                                   ).toFixed(2)
                                 : "0.00"}{" "}
                               RICO
@@ -502,7 +534,93 @@ export default function Dashboard() {
             )}
 
             {/* Global Summary for All Users */}
-            
+            {/* <div className="mb-8 md:mb-10 lg:mb-12">
+              <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                <h3 className="text-xl font-bold text-slate-200 mb-6 flex items-center gap-3">
+                  <span className="text-2xl">🌍</span>
+                  {t("globalSummary.title")}
+                </h3>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {t("globalSummary.stats.totalReaders")}
+                    </p>
+                    <p className="text-lg font-bold text-slate-100">
+                      {globalSummary?.totalReaders?.toString() || "0"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {t("globalSummary.stats.chaptersPurchased")}
+                    </p>
+                    <p className="text-lg font-bold text-cyan-300">
+                      {globalSummary?.globalTotalChaptersPurchased?.toString() || "0"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {t("globalSummary.stats.usdtDistributed")}
+                    </p>
+                    <p className="text-lg font-bold text-yellow-300">
+                      {globalSummary?.globalTotalUnilevelPaid
+                        ? parseFloat(
+                            formatUnits(BigInt(globalSummary.globalTotalUnilevelPaid), 18)
+                          ).toFixed(2)
+                        : "0.00"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {t("globalSummary.stats.royaltyPool")}
+                    </p>
+                    <p className="text-lg font-bold text-purple-300">
+                      {globalSummary?.royaltyPot
+                        ? parseFloat(formatUnits(BigInt(globalSummary.royaltyPot), 18)).toFixed(2)
+                        : "0.00"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {t("globalSummary.stats.ricoFarmed")}
+                    </p>
+                    <p className="text-lg font-bold text-cyan-400">
+                      {globalSummary?.ricoExpectedTotal
+                        ? parseFloat(formatUnits(BigInt(globalSummary.ricoExpectedTotal), 18)).toFixed(2)
+                        : "0.00"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/60 p-4">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {t("globalSummary.stats.activeReferrers")}
+                    </p>
+                    <p className="text-lg font-bold text-emerald-300">
+                      {globalSummary?.globalActiveReferrers?.toString() || "0"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={refetchAllData}
+                    disabled={loading}
+                    className="flex items-center gap-2 rounded-xl bg-slate-800/50 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700/50 transition-all border border-slate-700/50"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></div>
+                        {t("globalSummary.refreshButton.refreshing")}
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-lg">🔄</span>
+                        {t("globalSummary.refreshButton.refresh")}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div> */}
           </div>
         </div>
       </div>

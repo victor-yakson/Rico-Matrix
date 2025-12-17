@@ -12,19 +12,46 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
   const { address: userAddress } = useAccount();
   const t = useTranslations("Dashboard.leaderboards");
 
+  // Address to remove from leaderboards
+  const ADDRESS_TO_REMOVE = "0xf2a8728B61f7a924fe7C2A208dc94BCCFc369cFc";
+
   // Parse leaderboard data from props with type safety
   const leaderboardAddresses = topEarners?.[0] || [];
   const leaderboardEarnings = topEarners?.[1] || [];
   const referrerAddresses = topReferrers?.[0] || [];
   const referrerCounts = topReferrers?.[1] || [];
 
-  // Check if we have leaderboard data
-  const hasTopEarners = leaderboardAddresses && leaderboardAddresses.length > 0;
-  const hasTopReferrers = referrerAddresses && referrerAddresses.length > 0;
+  // Filter out the address to remove from top earners
+  const filteredTopEarners = leaderboardAddresses.reduce((acc: { addresses: string[], earnings: string[] }, address, index) => {
+    if (address && address.toLowerCase() !== ADDRESS_TO_REMOVE.toLowerCase()) {
+      acc.addresses.push(address);
+      acc.earnings.push(leaderboardEarnings[index] || "0");
+    }
+    return acc;
+  }, { addresses: [], earnings: [] });
 
-  // Calculate total earnings for top 10
+  // Filter out the address to remove from top referrers
+  const filteredTopReferrers = referrerAddresses.reduce((acc: { addresses: string[], counts: string[] }, address, index) => {
+    if (address && address.toLowerCase() !== ADDRESS_TO_REMOVE.toLowerCase()) {
+      acc.addresses.push(address);
+      acc.counts.push(referrerCounts[index] || "0");
+    }
+    return acc;
+  }, { addresses: [], counts: [] });
+
+  // Use filtered data
+  const filteredLeaderboardAddresses = filteredTopEarners.addresses;
+  const filteredLeaderboardEarnings = filteredTopEarners.earnings;
+  const filteredReferrerAddresses = filteredTopReferrers.addresses;
+  const filteredReferrerCounts = filteredTopReferrers.counts;
+
+  // Check if we have leaderboard data after filtering
+  const hasTopEarners = filteredLeaderboardAddresses && filteredLeaderboardAddresses.length > 0;
+  const hasTopReferrers = filteredReferrerAddresses && filteredReferrerAddresses.length > 0;
+
+  // Calculate total earnings for top 10 (after filtering)
   const totalTop10Earnings = hasTopEarners
-    ? leaderboardEarnings
+    ? filteredLeaderboardEarnings
         .slice(0, 10)
         .reduce((sum: bigint, earning: string) => {
           return sum + BigInt(earning || "0");
@@ -33,9 +60,9 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
 
   const formattedTotalEarnings = formatUnits(totalTop10Earnings, 18);
 
-  // Calculate total referrals for top 10
+  // Calculate total referrals for top 10 (after filtering)
   const totalTop10Referrals = hasTopReferrers
-    ? referrerCounts.slice(0, 10).reduce((sum: bigint, count: string) => {
+    ? filteredReferrerCounts.slice(0, 10).reduce((sum: bigint, count: string) => {
         return sum + BigInt(count || "0");
       }, BigInt(0))
     : BigInt(0);
@@ -55,7 +82,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
     });
   };
 
-  // No leaderboard data at all
+  // No leaderboard data at all (after filtering)
   if (!hasTopEarners && !hasTopReferrers) {
     return (
       <div className="mb-8 md:mb-10 lg:mb-12">
@@ -92,7 +119,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
             {hasTopEarners ? (
-              leaderboardAddresses.map(
+              filteredLeaderboardAddresses.map(
                 (leaderAddress: string, index: number) => {
                   if (
                     !leaderAddress ||
@@ -103,7 +130,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
 
                   const isCurrentUser =
                     leaderAddress.toLowerCase() === userAddress?.toLowerCase();
-                  const earnings = leaderboardEarnings[index] || "0";
+                  const earnings = filteredLeaderboardEarnings[index] || "0";
 
                   return (
                     <div
@@ -167,7 +194,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
             )}
           </div>
 
-          {hasTopEarners && (
+          {/* {hasTopEarners && (
             <div className="mt-4 pt-4 border-t border-slate-800/50">
               <div className="flex justify-between text-sm text-slate-500">
                 <span>{t("topEarners.total")}</span>
@@ -180,7 +207,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                 </span>
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Top Referrers Leaderboard */}
@@ -190,7 +217,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
             {hasTopReferrers ? (
-              referrerAddresses.map(
+              filteredReferrerAddresses.map(
                 (referrerAddress: string, index: number) => {
                   if (
                     !referrerAddress ||
@@ -201,7 +228,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
 
                   const isCurrentUser =
                     referrerAddress.toLowerCase() === userAddress?.toLowerCase();
-                  const partnerCount = referrerCounts[index] || "0";
+                  const partnerCount = filteredReferrerCounts[index] || "0";
 
                   return (
                     <div
@@ -266,7 +293,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
             )}
           </div>
 
-          {hasTopReferrers && (
+          {/* {hasTopReferrers && (
             <div className="mt-4 pt-4 border-t border-slate-800/50">
               <div className="flex justify-between text-sm text-slate-500">
                 <span>{t("topReferrers.total")}</span>
@@ -275,7 +302,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                 </span>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

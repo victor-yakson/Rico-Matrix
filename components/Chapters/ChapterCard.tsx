@@ -73,8 +73,9 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   const formattedPrice =
     price && price !== "0" ? formatUnits(BigInt(price), 18) : "0";
 
-  const isButtonDisabled = isUnlocked || disabled || chapter > 1;
-  const isApproveButtonDisabled = isUnlocked || isApproving || chapter > 1;
+  // FIXED: Remove chapter > 1 from disabled conditions
+  const isButtonDisabled = isUnlocked || disabled;
+  const isApproveButtonDisabled = isUnlocked || isApproving;
 
   const handleAction = () => {
     if (needsApproval) {
@@ -184,25 +185,24 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
             </span>
           </div>
 
-          {!isUnlocked && chapter === 1 && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">{t("approval.label")}</span>
-              <span
-                className={`font-medium ${
-                  needsApproval ? "text-amber-400" : "text-emerald-400"
-                }`}
-              >
-                {needsApproval
-                  ? t("approval.required")
-                  : t("approval.approved")}
-              </span>
-            </div>
-          )}
+          {/* Show approval status for all chapters, not just chapter 1 */}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-400">{t("approval.label")}</span>
+            <span
+              className={`font-medium ${
+                needsApproval ? "text-amber-400" : "text-emerald-400"
+              }`}
+            >
+              {needsApproval
+                ? t("approval.required")
+                : t("approval.approved")}
+            </span>
+          </div>
         </div>
 
         <button
           onClick={handleAction}
-          disabled={isButtonDisabled || isApproveButtonDisabled}
+          disabled={needsApproval ? isApproveButtonDisabled : isButtonDisabled}
           className={`relative mt-4 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200 ${getButtonClass()}`}
         >
           {getButtonText()}
@@ -245,7 +245,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
           </div>
         )}
 
-        {needsApproval && !isUnlocked && chapter === 1 && (
+        {needsApproval && !isUnlocked && (
           <div className="mt-2 text-xs text-blue-400 text-center">
             {t("approval.warning")}
           </div>

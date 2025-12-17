@@ -60,11 +60,17 @@ export const Header = () => {
       current: pathname === "/royalty",
       icon: "💰",
     },
+    // {
+    //   name: t("navigation.profile"),
+    //   href: "/profile",
+    //   current: pathname === "/profile",
+    //   icon: "👤",
+    // },
     {
-      name: t("navigation.profile"),
-      href: "/profile",
-      current: pathname === "/profile",
-      icon: "👤",
+      name: t("navigation.documentation"),
+      href: "/documentation",
+      current: pathname === "/documentation",
+      icon: "📄",
     },
   ];
 

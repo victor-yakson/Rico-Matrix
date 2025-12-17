@@ -6,7 +6,7 @@ import {
   usePublicClient,
 } from "wagmi";
 import { quantuMatrixContract, usdtContract } from "../utils/contracts";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
 import { TOKEN_CONTRACT_ADDRESS } from "@/utils/constants";
@@ -47,6 +47,50 @@ interface Track2Data {
   blocked: boolean;
   reinvestCount: number;
   closedPart: string;
+}
+
+interface UserData {
+  exists: boolean;
+  // Basic totals
+  track1TotalEarned: string;
+  track2TotalEarned: string;
+  track1TotalCycles: number;
+  track2TotalCycles: number;
+  track1Unlocked: number;
+  track2Unlocked: number;
+
+  // Royalty
+  royaltyAvailable: string;
+  royaltiesClaimed: string;
+  royaltyPercent: number;
+
+  // RICO Farming
+  ricoShouldHave: string;
+  ricoSent: string;
+  ricoPending: string;
+
+  // Reader Summary data
+  readerId?: string;
+  referrer?: string;
+  partnersCount?: string;
+  track1TotalEarnedFromSummary?: string;
+  track2TotalEarnedFromSummary?: string;
+
+  // Migration data
+  migrationStatus?: {
+    existsV2: boolean;
+    migrated: boolean;
+    fullImported: boolean;
+    existsV1: boolean;
+  };
+  migrationData?: {
+    legacySnap: string;
+    legacyClaimable: string;
+    v2RoyaltyAvail: string;
+    shouldMigrate: boolean;
+    canClaimLegacy: boolean;
+    hasV1: boolean;
+  };
 }
 
 export const useQuantuMatrix = () => {
@@ -122,6 +166,29 @@ export const useQuantuMatrix = () => {
       args: address ? [address] : undefined,
       query: {
         enabled: !!address && !!userExists,
+      },
+    });
+
+  // Read migration status
+  const { data: migrationStatusData, refetch: refetchMigrationStatus } =
+    useReadContract({
+      ...quantuMatrixContract,
+      functionName: "migrationStatus",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
+    });
+
+  // Read migration summary
+  const { data: migrationSummary, refetch: refetchMigrationSummary } =
+    useReadContract({
+      ...quantuMatrixContract,
+      functionName: "getSummaryForUI",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+        select: safeBigInt,
       },
     });
 
@@ -213,13 +280,6 @@ export const useQuantuMatrix = () => {
     functionName: "usdt",
   });
 
-  // const {
-  //   data: rewardTokenAddress
-  // } = useReadContract({
-  //   ...quantuMatrixContract,
-  //   functionName: 'rewardToken',
-  // });
-
   // Calculate join cost
   const joinCost =
     chapterPrices && Array.isArray(chapterPrices) && chapterPrices.length > 1
@@ -251,7 +311,53 @@ export const useQuantuMatrix = () => {
     };
   };
 
-  // Bulk fetch all Track2 chapters - MOST EFFICIENT METHOD
+  // Process migration status
+  const processMigrationStatus = (data: any) => {
+    if (data && Array.isArray(data) && data.length >= 4) {
+      const [existsV2, migrated, fullImported, existsV1] = data;
+      return {
+        existsV2: Boolean(existsV2),
+        migrated: Boolean(migrated),
+        fullImported: Boolean(fullImported),
+        existsV1: Boolean(existsV1),
+      };
+    }
+    return {
+      existsV2: false,
+      migrated: false,
+      fullImported: false,
+      existsV1: false,
+    };
+  };
+
+  // Process migration summary
+  const processMigrationSummary = (data: any) => {
+    if (data && Array.isArray(data) && data.length >= 8) {
+      const legacySnap = data[5]?.toString() || "0";
+      const legacyClaimable = data[6]?.toString() || "0";
+      const v2RoyaltyAvail = data[7]?.toString() || "0";
+      const existsV1 = data[4];
+
+      return {
+        legacySnap: formatUnits(BigInt(legacySnap), 18),
+        legacyClaimable: formatUnits(BigInt(legacyClaimable), 18),
+        v2RoyaltyAvail: formatUnits(BigInt(v2RoyaltyAvail), 18),
+        shouldMigrate: Boolean(existsV1) && !Boolean(data[1]), // existsV1 && !migrated
+        canClaimLegacy: Number(legacyClaimable) > 0,
+        hasV1: Boolean(existsV1),
+      };
+    }
+    return {
+      legacySnap: "0",
+      legacyClaimable: "0",
+      v2RoyaltyAvail: "0",
+      shouldMigrate: false,
+      canClaimLegacy: false,
+      hasV1: false,
+    };
+  };
+
+  // Bulk fetch all Track2 chapters
   const fetchAllTrack2Chapters = useCallback(
     async (
       userAddress: string,
@@ -339,7 +445,7 @@ export const useQuantuMatrix = () => {
     [publicClient, matrixCache.track2]
   );
 
-  // Single chapter fetch (for retries or specific needs)
+  // Single chapter fetch
   const fetchTrack2Matrix = useCallback(
     async (userAddress: string, chapter: number): Promise<Track2Data> => {
       if (!publicClient || !userAddress) {
@@ -376,7 +482,7 @@ export const useQuantuMatrix = () => {
     [publicClient]
   );
 
-  // Track1 matrix functions (if needed)
+  // Track1 matrix functions
   const fetchTrack1Matrix = useCallback(
     async (userAddress: string, chapter: number) => {
       if (!publicClient || !userAddress) {
@@ -529,8 +635,70 @@ export const useQuantuMatrix = () => {
     setMatrixCache({ track1: {}, track2: {} });
   }, []);
 
-  // Approve USDT function with toast notifications
+  // Refetch all user data
+  const refetchUserData = useCallback(() => {
+    refetchUserExists();
+    refetchUsdtAllowance();
+    refetchUsdtBalance();
+    refetchMigrationStatus();
+    refetchMigrationSummary();
 
+    if (userExists) {
+      refetchReaderTotals();
+      refetchReaderSummary();
+      refetchRicoFarming();
+      refetchRoyalty();
+      refetchRoyaltyPercent();
+    }
+
+    // Clear cache on refetch
+    if (address) {
+      clearMatrixCache(address);
+    }
+  }, [
+    refetchUserExists,
+    refetchReaderTotals,
+    refetchReaderSummary,
+    refetchRicoFarming,
+    refetchRoyalty,
+    refetchRoyaltyPercent,
+    refetchUsdtAllowance,
+    refetchUsdtBalance,
+    refetchMigrationStatus,
+    refetchMigrationSummary,
+    userExists,
+    address,
+    clearMatrixCache,
+  ]);
+
+  // Refetch all global data
+  const refetchAllData = useCallback(() => {
+    toast.info("Refreshing all data...", {
+      duration: 2000,
+    });
+
+    refetchUserData();
+    refetchGlobalStats();
+    refetchGlobalSummary();
+    refetchGlobalRicoFarming();
+    refetchTopEarners();
+    refetchTopReferrers();
+    refetchChapterPrices();
+
+    toast.success("Data refreshed!", {
+      duration: 2000,
+    });
+  }, [
+    refetchUserData,
+    refetchGlobalStats,
+    refetchGlobalSummary,
+    refetchGlobalRicoFarming,
+    refetchTopEarners,
+    refetchTopReferrers,
+    refetchChapterPrices,
+  ]);
+
+  // Approve USDT function
   const approveUsdt = useCallback(
     async (amount: string) => {
       const toastId = "approve-usdt";
@@ -538,7 +706,6 @@ export const useQuantuMatrix = () => {
       try {
         setLoading(true);
 
-        // Check if publicClient is available
         if (!publicClient) {
           throw new Error(
             "Wallet client not available. Please connect your wallet."
@@ -556,7 +723,7 @@ export const useQuantuMatrix = () => {
         const hash = await writeContractAsync({
           ...usdtContract,
           functionName: "approve",
-          args: [quantuMatrixContract.address, amountInWei],
+          args: [quantuMatrixContract.address, amount],
         });
 
         toast.loading("Transaction Submitted", {
@@ -579,6 +746,13 @@ export const useQuantuMatrix = () => {
             description: `USDT approved successfully.`,
             duration: 5000,
           });
+
+          // Refresh user data after successful approval
+          if (refetchAllData) {
+            setTimeout(() => {
+              refetchAllData();
+            }, 2000);
+          }
         } else {
           throw new Error("Transaction failed on-chain");
         }
@@ -612,9 +786,10 @@ export const useQuantuMatrix = () => {
         setLoading(false);
       }
     },
-    [writeContractAsync, publicClient]
+    [writeContractAsync, publicClient, refetchAllData]
   );
 
+  // Join library function
   const joinLibrary = useCallback(
     async (referrer: string) => {
       const toastId = "join-library";
@@ -622,7 +797,6 @@ export const useQuantuMatrix = () => {
       try {
         setLoading(true);
 
-        // Check if publicClient is available
         if (!publicClient) {
           throw new Error(
             "Wallet client not available. Please connect your wallet."
@@ -649,7 +823,6 @@ export const useQuantuMatrix = () => {
           )}...${hash.slice(-8)}`,
         });
 
-        // Wait for transaction confirmation
         const receipt = await publicClient.waitForTransactionReceipt({
           hash,
           confirmations: 1,
@@ -661,6 +834,12 @@ export const useQuantuMatrix = () => {
             description: "You have successfully joined RICOMATRIX!",
             duration: 5000,
           });
+
+          if (refetchAllData) {
+            setTimeout(() => {
+              refetchAllData();
+            }, 2000);
+          }
         } else {
           throw new Error("Transaction failed on-chain");
         }
@@ -694,19 +873,29 @@ export const useQuantuMatrix = () => {
         setLoading(false);
       }
     },
-    [writeContractAsync, publicClient]
+    [writeContractAsync, publicClient, refetchAllData]
   );
-  // Buy chapter function with toast notifications
+
+  // Buy chapter function
   const buyChapter = useCallback(
     async (track: number, chapter: number) => {
+      const toastId = "buy-chapter";
+
       try {
         setLoading(true);
+
+        if (!publicClient) {
+          throw new Error(
+            "Wallet client not available. Please connect your wallet."
+          );
+        }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
 
         toast.info("Purchasing Chapter...", {
+          id: toastId,
           description: `Buying Chapter ${chapter} of ${trackName}. Please confirm in wallet.`,
-          duration: 3000,
+          duration: 10000,
         });
 
         const hash = await writeContractAsync({
@@ -715,17 +904,37 @@ export const useQuantuMatrix = () => {
           args: [track, chapter],
         });
 
-        toast.success("Chapter Purchase Submitted!", {
+        toast.loading("Transaction Submitted", {
+          id: toastId,
           description: `Chapter ${chapter} purchase in progress. Transaction: ${hash.slice(
             0,
-            8
-          )}...`,
-          duration: 5000,
+            10
+          )}...${hash.slice(-8)}`,
         });
 
-        // Clear cache after purchase
-        if (address) {
-          clearMatrixCache(address);
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status === "success") {
+          toast.success("Chapter Purchase Successful!", {
+            id: toastId,
+            description: `Successfully purchased Chapter ${chapter} of ${trackName}!`,
+            duration: 5000,
+          });
+
+          if (address) {
+            clearMatrixCache(address);
+          }
+
+          if (refetchAllData) {
+            setTimeout(() => {
+              refetchAllData();
+            }, 2000);
+          }
+        } else {
+          throw new Error("Transaction failed on-chain");
         }
 
         return hash;
@@ -733,7 +942,7 @@ export const useQuantuMatrix = () => {
         console.error("Error buying chapter:", error);
 
         let errorMessage = "Failed to purchase chapter";
-        if (error?.message?.includes("rejected")) {
+        if (error?.message?.includes("rejected") || error?.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet";
         } else if (error?.message?.includes("insufficient")) {
           errorMessage = "Insufficient USDT balance or allowance";
@@ -741,11 +950,17 @@ export const useQuantuMatrix = () => {
           errorMessage = "You need to unlock the previous chapter first";
         } else if (error?.message?.includes("ChapterAlreadyUnlocked")) {
           errorMessage = "This chapter is already unlocked";
+        } else if (error?.message?.includes("on-chain")) {
+          errorMessage = "Transaction failed on-chain";
+        } else if (error?.message?.includes("Wallet client not available")) {
+          errorMessage =
+            "Wallet not connected. Please connect your wallet first.";
         }
 
         toast.error("Purchase Failed", {
+          id: toastId,
           description: errorMessage,
-          duration: 5000,
+          duration: 7000,
         });
 
         throw error;
@@ -753,10 +968,386 @@ export const useQuantuMatrix = () => {
         setLoading(false);
       }
     },
-    [writeContractAsync, address, clearMatrixCache]
+    [
+      writeContractAsync,
+      address,
+      clearMatrixCache,
+      publicClient,
+      refetchAllData,
+    ]
   );
 
-  // Claim royalty function with toast notifications
+  // Migrate self function
+  const migrateSelf = useCallback(async () => {
+    const toastId = "migrate-self";
+
+    try {
+      setLoading(true);
+
+      if (!publicClient) {
+        throw new Error(
+          "Wallet client not available. Please connect your wallet."
+        );
+      }
+
+      // Get current migration status
+      const currentStatus = processMigrationStatus(migrationStatusData);
+      if (currentStatus.migrated) {
+        throw new Error("You have already migrated from V1");
+      }
+
+      if (!currentStatus.existsV1) {
+        throw new Error("You are not registered in V1");
+      }
+
+      toast.info("Migrating to V2...", {
+        id: toastId,
+        description: "Please confirm the migration transaction in your wallet.",
+        duration: 10000,
+      });
+
+      const hash = await writeContractAsync({
+        ...quantuMatrixContract,
+        functionName: "migrateSelf",
+      });
+
+      toast.loading("Migration Submitted!", {
+        id: toastId,
+        description: `Migration transaction: ${hash.slice(
+          0,
+          10
+        )}...${hash.slice(-8)}`,
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      if (receipt.status === "success") {
+        toast.success("Migration Successful!", {
+          id: toastId,
+          description: "You have successfully migrated from V1 to V2!",
+          duration: 5000,
+        });
+
+        setTimeout(() => {
+          refetchAllData();
+          refetchMigrationStatus();
+          refetchMigrationSummary();
+        }, 2000);
+      } else {
+        throw new Error("Migration transaction failed on-chain");
+      }
+
+      return hash;
+    } catch (error: any) {
+      console.error("Error migrating:", error);
+
+      let errorMessage = "Failed to migrate";
+      if (error?.message?.includes("rejected") || error?.code === 4001) {
+        errorMessage = "Transaction was rejected in your wallet";
+      } else if (error?.message?.includes("AlreadyMigrated")) {
+        errorMessage = "You have already migrated from V1";
+      } else if (error?.message?.includes("NotInV1")) {
+        errorMessage = "You are not registered in V1";
+      } else if (error?.message?.includes("on-chain")) {
+        errorMessage = "Migration transaction failed on-chain";
+      } else if (error?.message?.includes("Wallet client not available")) {
+        errorMessage =
+          "Wallet not connected. Please connect your wallet first.";
+      }
+
+      toast.error("Migration Failed", {
+        id: toastId,
+        description: errorMessage,
+        duration: 7000,
+      });
+
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    writeContractAsync,
+    publicClient,
+    migrationStatusData,
+    refetchAllData,
+    refetchMigrationStatus,
+    refetchMigrationSummary,
+  ]);
+
+  // Claim legacy royalty function
+  const claimLegacyRoyalty = useCallback(
+    async (amount?: string) => {
+      const toastId = "claim-legacy-royalty";
+
+      try {
+        setLoading(true);
+
+        if (!publicClient) {
+          throw new Error(
+            "Wallet client not available. Please connect your wallet."
+          );
+        }
+
+        // Check migration status
+        const currentStatus = processMigrationStatus(migrationStatusData);
+        if (!currentStatus.migrated) {
+          throw new Error("You need to migrate from V1 first");
+        }
+
+        const claimAmount = amount ? parseUnits(amount, 18) : BigInt(0);
+
+        toast.info("Claiming Legacy Royalty...", {
+          id: toastId,
+          description: amount
+            ? `Claiming ${amount} USDT from V1 royalty`
+            : "Claiming all available V1 royalty",
+          duration: 10000,
+        });
+
+        const hash = await writeContractAsync({
+          ...quantuMatrixContract,
+          functionName: "claimLegacyRoyalty",
+          args: [claimAmount],
+        });
+
+        toast.loading("Claim Submitted!", {
+          id: toastId,
+          description: `Claim transaction: ${hash.slice(0, 10)}...${hash.slice(
+            -8
+          )}`,
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status === "success") {
+          toast.success("Legacy Royalty Claimed!", {
+            id: toastId,
+            description: "Successfully claimed V1 royalty!",
+            duration: 5000,
+          });
+
+          setTimeout(() => {
+            refetchMigrationSummary();
+            refetchUserData();
+          }, 2000);
+        } else {
+          throw new Error("Claim transaction failed on-chain");
+        }
+
+        return hash;
+      } catch (error: any) {
+        console.error("Error claiming legacy royalty:", error);
+
+        let errorMessage = "Failed to claim legacy royalty";
+        if (error?.message?.includes("rejected") || error?.code === 4001) {
+          errorMessage = "Transaction was rejected in your wallet";
+        } else if (error?.message?.includes("NotMigrated")) {
+          errorMessage = "You need to migrate from V1 first";
+        } else if (error?.message?.includes("NoLegacyRoyalty")) {
+          errorMessage = "No legacy royalty available to claim";
+        } else if (error?.message?.includes("on-chain")) {
+          errorMessage = "Claim transaction failed on-chain";
+        } else if (error?.message?.includes("Wallet client not available")) {
+          errorMessage =
+            "Wallet not connected. Please connect your wallet first.";
+        }
+
+        toast.error("Claim Failed", {
+          id: toastId,
+          description: errorMessage,
+          duration: 7000,
+        });
+
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      writeContractAsync,
+      publicClient,
+      migrationStatusData,
+      refetchMigrationSummary,
+      refetchUserData,
+    ]
+  );
+
+  // Claim RICO function
+  const claimRico = useCallback(
+    async (amount?: string) => {
+      const toastId = "claim-rico";
+
+      try {
+        setLoading(true);
+
+        if (!publicClient) {
+          throw new Error(
+            "Wallet client not available. Please connect your wallet."
+          );
+        }
+
+        const claimAmount = amount ? parseUnits(amount, 18) : BigInt(0);
+
+        toast.info("Claiming RICO...", {
+          id: toastId,
+          description: amount
+            ? `Claiming ${amount} RICO tokens`
+            : "Claiming all available RICO tokens",
+          duration: 10000,
+        });
+
+        const hash = await writeContractAsync({
+          ...quantuMatrixContract,
+          functionName: "claimRico",
+          args: [claimAmount],
+        });
+
+        toast.loading("RICO Claim Submitted!", {
+          id: toastId,
+          description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status === "success") {
+          toast.success("RICO Claimed Successfully!", {
+            id: toastId,
+            description: "RICO tokens claimed successfully!",
+            duration: 5000,
+          });
+
+          setTimeout(() => {
+            refetchRicoFarming();
+            refetchUserData();
+          }, 2000);
+        } else {
+          throw new Error("RICO claim transaction failed on-chain");
+        }
+
+        return hash;
+      } catch (error: any) {
+        console.error("Error claiming RICO:", error);
+
+        let errorMessage = "Failed to claim RICO tokens";
+        if (error?.message?.includes("rejected") || error?.code === 4001) {
+          errorMessage = "Transaction was rejected in your wallet";
+        } else if (error?.message?.includes("NoRicoToClaim")) {
+          errorMessage = "No RICO tokens available to claim";
+        } else if (error?.message?.includes("on-chain")) {
+          errorMessage = "Claim transaction failed on-chain";
+        } else if (error?.message?.includes("Wallet client not available")) {
+          errorMessage =
+            "Wallet not connected. Please connect your wallet first.";
+        }
+
+        toast.error("RICO Claim Failed", {
+          id: toastId,
+          description: errorMessage,
+          duration: 7000,
+        });
+
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [writeContractAsync, publicClient, refetchRicoFarming, refetchUserData]
+  );
+
+  // Claim V2 royalty function
+  const claimRoyaltyV2 = useCallback(async () => {
+    const toastId = "claim-royalty-v2";
+
+    try {
+      setLoading(true);
+
+      if (!publicClient) {
+        throw new Error(
+          "Wallet client not available. Please connect your wallet."
+        );
+      }
+
+      toast.info("Claiming V2 Royalty...", {
+        id: toastId,
+        description: "Claiming fresh V2 royalty earnings",
+        duration: 10000,
+      });
+
+      const hash = await writeContractAsync({
+        ...quantuMatrixContract,
+        functionName: "claimRoyaltyV2",
+      });
+
+      toast.loading("V2 Royalty Claim Submitted!", {
+        id: toastId,
+        description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      if (receipt.status === "success") {
+        toast.success("V2 Royalty Claimed!", {
+          id: toastId,
+          description: "Successfully claimed V2 royalty!",
+          duration: 5000,
+        });
+
+        setTimeout(() => {
+          refetchRoyalty();
+          refetchMigrationSummary();
+          refetchUserData();
+        }, 2000);
+      } else {
+        throw new Error("V2 royalty claim transaction failed on-chain");
+      }
+
+      return hash;
+    } catch (error: any) {
+      console.error("Error claiming V2 royalty:", error);
+
+      let errorMessage = "Failed to claim V2 royalty";
+      if (error?.message?.includes("rejected") || error?.code === 4001) {
+        errorMessage = "Transaction was rejected in your wallet";
+      } else if (error?.message?.includes("NoRoyalty")) {
+        errorMessage = "No V2 royalty available to claim";
+      } else if (error?.message?.includes("on-chain")) {
+        errorMessage = "Claim transaction failed on-chain";
+      } else if (error?.message?.includes("Wallet client not available")) {
+        errorMessage =
+          "Wallet not connected. Please connect your wallet first.";
+      }
+
+      toast.error("V2 Royalty Claim Failed", {
+        id: toastId,
+        description: errorMessage,
+        duration: 7000,
+      });
+
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    writeContractAsync,
+    publicClient,
+    refetchRoyalty,
+    refetchMigrationSummary,
+    refetchUserData,
+  ]);
+
+  // Legacy claim royalty function (keep for compatibility)
   const claimRoyalty = useCallback(async () => {
     try {
       setLoading(true);
@@ -801,68 +1392,10 @@ export const useQuantuMatrix = () => {
     }
   }, [writeContractAsync]);
 
-  // Refetch all user data
-  const refetchUserData = useCallback(() => {
-    refetchUserExists();
-    refetchUsdtAllowance();
-    refetchUsdtBalance();
-    if (userExists) {
-      refetchReaderTotals();
-      refetchReaderSummary();
-      refetchRicoFarming();
-      refetchRoyalty();
-      refetchRoyaltyPercent();
-    }
-
-    // Clear cache on refetch
-    if (address) {
-      clearMatrixCache(address);
-    }
-  }, [
-    refetchUserExists,
-    refetchReaderTotals,
-    refetchReaderSummary,
-    refetchRicoFarming,
-    refetchRoyalty,
-    refetchRoyaltyPercent,
-    refetchUsdtAllowance,
-    refetchUsdtBalance,
-    userExists,
-    address,
-    clearMatrixCache,
-  ]);
-
-  // Refetch all global data
-  const refetchAllData = useCallback(() => {
-    toast.info("Refreshing all data...", {
-      duration: 2000,
-    });
-
-    refetchUserData();
-    refetchGlobalStats();
-    refetchGlobalSummary();
-    refetchGlobalRicoFarming();
-    refetchTopEarners();
-    refetchTopReferrers();
-    refetchChapterPrices();
-
-    toast.success("Data refreshed!", {
-      duration: 2000,
-    });
-  }, [
-    refetchUserData,
-    refetchGlobalStats,
-    refetchGlobalSummary,
-    refetchGlobalRicoFarming,
-    refetchTopEarners,
-    refetchTopReferrers,
-    refetchChapterPrices,
-  ]);
-
-  // Format user data
-  const userData = userExists
+  // Format user data with migration info
+  const userData: UserData = userExists
     ? {
-        exists: true as const,
+        exists: true,
         // Basic totals
         track1TotalEarned: readerTotals
           ? formatUnits(BigInt((readerTotals as any)[0] || "0"), 18)
@@ -903,7 +1436,7 @@ export const useQuantuMatrix = () => {
           ? formatUnits(BigInt((ricoFarming as any)[2] || "0"), 18)
           : "0",
 
-        // Reader Summary data (if available)
+        // Reader Summary data
         ...(readerSummary
           ? {
               readerId: (readerSummary as any).id?.toString(),
@@ -919,9 +1452,27 @@ export const useQuantuMatrix = () => {
               ),
             }
           : {}),
+
+        // Migration data
+        migrationStatus: processMigrationStatus(migrationStatusData),
+        migrationData: processMigrationSummary(migrationSummary),
       }
     : {
-        exists: false as const,
+        exists: false,
+        track1TotalEarned: "0",
+        track2TotalEarned: "0",
+        track1TotalCycles: 0,
+        track2TotalCycles: 0,
+        track1Unlocked: 0,
+        track2Unlocked: 0,
+        royaltyAvailable: "0",
+        royaltiesClaimed: "0",
+        royaltyPercent: 0,
+        ricoShouldHave: "0",
+        ricoSent: "0",
+        ricoPending: "0",
+        migrationStatus: processMigrationStatus(migrationStatusData),
+        migrationData: processMigrationSummary(migrationSummary),
       };
 
   const formattedUsdtBalance = usdtBalance
@@ -954,7 +1505,7 @@ export const useQuantuMatrix = () => {
     usdtAllowance: formattedUsdtAllowance,
     joinCost,
 
-    // Matrix data fetching - BULK OPTIMIZED
+    // Matrix data fetching
     fetchTrack1Matrix,
     fetchTrack2Matrix,
     fetchAllTrack1Chapters,
@@ -972,11 +1523,19 @@ export const useQuantuMatrix = () => {
     approveUsdt,
     joinLibrary,
     buyChapter,
-    claimRoyalty,
+    migrateSelf,
+    claimLegacyRoyalty,
+    claimRico,
+    claimRoyaltyV2,
+    claimRoyalty, // Legacy function for compatibility
+
+    // Refresh functions
     refetchUserData,
     refetchAllData,
     refetchGlobalStats,
     refetchGlobalSummary,
     refetchGlobalRicoFarming,
+    refetchMigrationStatus,
+    refetchMigrationSummary,
   };
 };
