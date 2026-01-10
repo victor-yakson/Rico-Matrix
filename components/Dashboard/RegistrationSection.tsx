@@ -198,7 +198,7 @@ export const RegistrationSection = ({
 
     const valid = /^0x[a-fA-F0-9]{40}$/.test(effectiveReferralAddress);
     if (!valid) {
-      setError(t("error.invalidAddress") || "Invalid Ethereum address format");
+      setError(t("error.invalidAddress"));
       return;
     }
 
@@ -206,7 +206,7 @@ export const RegistrationSection = ({
       userAddress &&
       effectiveReferralAddress.toLowerCase() === userAddress.toLowerCase()
     ) {
-      setError(t("error.selfReferral") || "You cannot refer yourself");
+      setError(t("error.selfReferral"));
       return;
     }
 
@@ -254,16 +254,13 @@ export const RegistrationSection = ({
   const handleRegister = async () => {
     // If user is already registered, don't proceed
     if (userData?.exists) {
-      setError(t("error.alreadyRegistered") || "You are already registered");
+      setError(t("error.alreadyRegistered"));
       return;
     }
 
     // Check if referral is provided
     if (!effectiveReferralAddress) {
-      setError(
-        t("error.referralRequired") ||
-          "Referral address is required to register"
-      );
+      setError(t("error.referralRequired"));
       return;
     }
 
@@ -275,10 +272,7 @@ export const RegistrationSection = ({
       showReferralWarning
     ) {
       if (!effectiveReferralAddress) {
-        setError(
-          t("error.referralRequired") ||
-            "Referral address is required to register"
-        );
+        setError(t("error.referralRequired"));
       }
       return;
     }
@@ -291,21 +285,16 @@ export const RegistrationSection = ({
 
       const valid = /^0x[a-fA-F0-9]{40}$/.test(referrer);
       if (!valid) {
-        throw new Error(
-          t("error.invalidAddress") || "Invalid Ethereum address format"
-        );
+        throw new Error(t("error.invalidAddress"));
       }
 
       if (userAddress && referrer.toLowerCase() === userAddress.toLowerCase()) {
-        throw new Error(t("error.selfReferral") || "You cannot refer yourself");
+        throw new Error(t("error.selfReferral"));
       }
 
       // referralExists from contract check (unless fallback)
       if (referralExists === false && referrer !== FALLBACK_REFERRER) {
-        throw new Error(
-          t("error.invalidReferral") ||
-            "The referral address provided does not exist in the system."
-        );
+        throw new Error(t("error.invalidReferral"));
       }
 
       await joinLibrary(referrer);
@@ -320,18 +309,16 @@ export const RegistrationSection = ({
 
       const msg = String(err?.message || "");
       if (msg.toLowerCase().includes("invalid") && msg.includes("address")) {
-        setError(
-          t("error.invalidAddress") || "Invalid Ethereum address format"
-        );
+        setError(t("error.invalidAddress"));
       } else if (msg.toLowerCase().includes("refer yourself")) {
-        setError(t("error.selfReferral") || "You cannot refer yourself");
+        setError(t("error.selfReferral"));
       } else if (msg.toLowerCase().includes("referral")) {
-        setError(t("error.invalidReferral") || "Invalid referral address");
+        setError(t("error.invalidReferral"));
       } else if (
         msg.toLowerCase().includes("already registered") ||
         msg.toLowerCase().includes("already exists")
       ) {
-        setError(t("error.alreadyRegistered") || "You are already registered");
+        setError(t("error.alreadyRegistered"));
       } else {
         setError(err?.message || t("error.registrationFailed"));
       }
@@ -348,10 +335,10 @@ export const RegistrationSection = ({
 
   const getReferralStatusText = () => {
     if (userData?.exists) {
-      return t("referral.registered") || "Already registered";
+      return t("referral.alreadyRegisteredStatus");
     }
     if (!effectiveReferralAddress) {
-      return t("referral.required") || "Referral required";
+      return t("referral.required");
     }
     if (checkingReferral) {
       return t("referral.checking");
@@ -375,22 +362,24 @@ export const RegistrationSection = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-[0.7rem] uppercase tracking-[0.25em] text-yellow-300/80 mb-1">
-              RicoMatrix • Onboarding
+              {t("header.subtitle")}
             </p>
             <h2 className="text-lg md:text-2xl font-semibold text-slate-50">
-              {t("header.title")}
+              {t("sectionTitle")}
             </h2>
           </div>
           <div className="flex items-center gap-2 text-[0.7rem] text-slate-400">
             <span className="rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-emerald-300">
-              {t("header.step", { stepIndex })}
+              {t("header.stepIndicator", { stepIndex })}
             </span>
             <span className="text-xs text-slate-500">
-              Allowance: {Number( usdtAllowance).toFixed(2)} USDT
+              {t("header.allowanceLabel", {
+                allowance: Number(usdtAllowance).toFixed(2),
+              })}
             </span>
             {userData?.exists && (
               <span className="rounded-full bg-green-500/15 border border-green-500/40 px-3 py-1 text-green-300">
-                {t("header.registered") || "Registered"}
+                {t("header.registeredBadge")}
               </span>
             )}
           </div>
@@ -417,7 +406,7 @@ export const RegistrationSection = ({
 
               <div className="grid gap-3 md:grid-cols-2 text-xs md:text-[0.8rem]">
                 {t.raw("benefits.items").map((item: any, index: number) => (
-                  <div key={index} className="flex gap-3">
+                  <div className="flex gap-3" key={index}>
                     <div className="mt-1 h-6 w-6 flex items-center justify-center rounded-lg bg-slate-900 border border-blue-500/40 text-[0.7rem] text-blue-300">
                       {index + 1}
                     </div>
@@ -435,13 +424,12 @@ export const RegistrationSection = ({
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-semibold text-slate-100 mb-1">
-                    {t("referral.title") || "Referral Address"}
+                    {t("referral.title")}
                   </h3>
                   <p className="text-xs text-slate-400">
                     {userData?.exists
-                      ? t("referral.alreadyRegistered") ||
-                        "You are already registered"
-                      : t("referral.subtitle") || "Required for registration"}
+                      ? t("referral.noReferralNeeded")
+                      : t("referral.subtitle")}
                   </p>
                 </div>
                 {/* Removed clear button */}
@@ -468,11 +456,10 @@ export const RegistrationSection = ({
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-green-300">
-                          {t("referral.registered") || "Already registered"}
+                          {t("referral.alreadyRegistered")}
                         </div>
                         <div className="text-[0.7rem] text-slate-100">
-                          {t("referral.noReferralNeeded") ||
-                            "No referral needed - you are already part of the system"}
+                          {t("referral.noReferralNeeded")}
                         </div>
                       </div>
                     </div>
@@ -576,7 +563,7 @@ export const RegistrationSection = ({
                         : isSelfReferral
                         ? t("referral.selfReferralBadge")
                         : isReferralValid && referralExists !== false
-                        ? t("referral.linked")
+                        ? t("referral.validBadge")
                         : t("referral.invalidBadge")}
                     </span>
                   </div>
@@ -591,8 +578,7 @@ export const RegistrationSection = ({
                       className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <p className="text-xs text-slate-400">
-                      {t("referral.inputHelp") ||
-                        "Enter a valid Ethereum address"}
+                      {t("referral.inputHelp")}
                     </p>
                   </div>
                 )}
@@ -614,8 +600,7 @@ export const RegistrationSection = ({
                         />
                       </svg>
                       <div className="text-xs text-amber-200">
-                        {t("referral.requiredWarning") ||
-                          "A referral address is required to complete registration"}
+                        {t("referral.requiredWarning")}
                       </div>
                     </div>
                   </div>
@@ -734,44 +719,12 @@ export const RegistrationSection = ({
               numericJoinCost > 0 &&
               !userData?.exists && (
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-200">
-                  {t("error.insufficientBalance", {
+                  {t("alerts.insufficientBalance", {
                     joinCost: joinCost || "0",
                     usdtBalance: usdtBalance || "0",
                   })}
                 </div>
               )}
-
-            {/* Debug info (remove in production) */}
-            {/* <div className="rounded-xl border border-slate-700/30 bg-slate-900/30 p-3 text-xs text-slate-400">
-              <div className="font-mono space-y-1">
-                <div>Allowance: {usdtAllowance} USDT</div>
-                <div>Cost: {joinCost} USDT</div>
-                <div>
-                  Has Sufficient Allowance:{" "}
-                  {hasSufficientAllowance ? "Yes" : "No"}
-                </div>
-                <div>
-                  Referral Valid Format: {isReferralValid ? "Yes" : "No"}
-                </div>
-                <div>
-                  Referral Exists:{" "}
-                  {checkingReferral
-                    ? "Checking..."
-                    : referralExists
-                    ? "Yes"
-                    : "No"}
-                </div>
-                <div>Self Referral: {isSelfReferral ? "Yes" : "No"}</div>
-                <div>
-                  Show Referral Warning: {showReferralWarning ? "Yes" : "No"}
-                </div>
-                <div>Current Step: {step}</div>
-                <div>
-                  Persisted Referral: {effectiveReferralAddress || "None"}
-                </div>
-                <div>User Registered: {userData?.exists ? "Yes" : "No"}</div>
-              </div>
-            </div> */}
           </div>
 
           {/* RIGHT: Cost / actions */}
@@ -791,7 +744,7 @@ export const RegistrationSection = ({
                     {t("cost.balance")}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-slate-100">
-                    {Number( usdtBalance).toFixed(2) || "0"} USDT
+                    {Number(usdtBalance).toFixed(2) || "0"} USDT
                   </div>
                 </div>
               </div>
@@ -829,11 +782,10 @@ export const RegistrationSection = ({
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-green-300 mb-2">
-                    {t("cost.alreadyRegistered") || "Already Registered"}
+                    {t("referral.alreadyRegistered")}
                   </h3>
                   <p className="text-sm text-slate-400">
-                    {t("cost.registrationComplete") ||
-                      "Your registration is already complete. Welcome to the community!"}
+                    {t("referral.noReferralNeeded")}
                   </p>
                 </div>
               ) : (

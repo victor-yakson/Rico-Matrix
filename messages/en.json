@@ -1,5 +1,4 @@
 {
-
   "LandingPage": {
     "title": "The World's First Decentralized Library Matrix That Pays Royalty Passive Income.",
     "subtitle": "Buy chapters, unlock knowledge, and earn from a dual-track X3 + X6 matrix, 12 unilevel rewards, royalty pools and free RICO coin farming — all running on a self-executing smart contract on BNB Chain.",
@@ -485,11 +484,11 @@
         ]
       },
       "link": {
-        "label": "Your Referral Link",
+        "noWallet": "Connect wallet to get referral link",
         "copy": "Copy Link",
         "copied": "Copied!",
-        "copiedMessage": "Link copied to clipboard!",
-        "noWallet": "Connect your wallet to get referral link"
+        "copiedMessage": "Link copied to clipboard",
+        "copyFailed": "Could not copy automatically. Please copy manually:"
       },
       "share": {
         "button": "Share on Twitter",
@@ -501,10 +500,14 @@
         "unilevel": "Unilevel"
       }
     },
+
     "Registration": {
       "header": {
         "title": "Join the RicoMatrix Library (Chapter 1 Access)",
-        "step": "Step {stepIndex} of 2"
+        "subtitle": "Join RicoMatrix • Onboarding",
+        "stepIndicator": "Step {stepIndex} of 2",
+        "allowanceLabel": "Allowance: {allowance} USDT",
+        "registeredBadge": "Registered ✓"
       },
       "benefits": {
         "title": "What you unlock with Chapter 1",
@@ -540,21 +543,28 @@
         "readDisclaimer": "Read full Disclaimer"
       },
       "referral": {
-        "detected": "Referral Detected",
-        "invalid": "Invalid Referral Address",
-        "checking": "Checking Referral...",
-        "linked": "Linked",
-        "invalidBadge": "Invalid",
-        "checkingBadge": "Checking",
-        "referrer": "Referrer: {address}",
-        "warning": "Warning: The address {address} is not registered in the system.",
-        "warningNote": "You can still register with this referral, but it may not receive referral rewards.",
+        "detectedV2": "Valid V2 referral",
+        "detectedV1": "Valid V1 referral",
+        "linkedV2": "Linked V2",
+        "detected": "Detected",
+        "linkedV1": "Linked V1",
         "title": "Referral Address",
         "subtitle": "Required for registration",
+        "alreadyRegistered": "Already registered",
+        "noReferralNeeded": "No referral needed - you are already part of the system",
         "required": "Referral required",
-        "inputHelp": "Enter a valid Ethereum address",
+        "checking": "Checking referral...",
+        "selfReferral": "Cannot refer yourself",
+        "invalid": "Invalid referral",
+        "validBadge": "Valid referral",
         "requiredWarning": "A referral address is required to complete registration",
-        "clear": "Clear"
+        "inputHelp": "Enter a valid Ethereum address",
+        "warning": "The address {address} is not registered in V1 or V2.",
+        "warningNote": "Please ensure the referral address exists in either V1 or V2 system.",
+        "checkingBadge": "Checking...",
+        "selfReferralBadge": "Self Referral",
+        "invalidBadge": "Invalid",
+        "registeredBadge": "Registered"
       },
       "cost": {
         "registrationCost": "Registration Cost",
@@ -573,12 +583,14 @@
         "completeRegistration": "Complete Registration"
       },
       "error": {
+        "invalidReferral": "The referral address does not exist in V1 or V2.",
         "invalidAddress": "Invalid Ethereum address format",
-        "invalidReferral": "The referral address does not exist in the system. Please check the address or register without a referral.",
-        "insufficientBalance": "Insufficient USDT balance. You need {joinCost} USDT but only have {usdtBalance} USDT.",
-        "approvalFailed": "USDT approval failed. Please try again.",
-        "registrationFailed": "Registration failed. Please try again.",
-        "referralRequired": "Referral address is required to register"
+        "selfReferral": "You cannot refer yourself",
+        "referralRequired": "Referral address is required to register",
+        "alreadyRegistered": "You are already registered",
+        "approvalFailed": "USDT approval failed",
+        "registrationFailed": "Registration failed",
+        "insufficientBalance": "Insufficient USDT balance. Required: {joinCost} USDT, Available: {usdtBalance} USDT"
       },
       "progress": {
         "step1": "1. Approve USDT",
@@ -691,9 +703,12 @@
             "close": "Close"
           }
         }
-      }
+      },
+      "alerts": {
+        "insufficientBalance": "Insufficient USDT balance. You need {joinCost} USDT but only have {usdtBalance} USDT"
+      },
+      "sectionTitle": "Create Your Account"
     },
-
     "page": {
       "loading": {
         "subtitle": "Rico Library",
@@ -1192,7 +1207,13 @@
         "protectedMessage": "Protected content - Reading only",
         "zoomIn": "Zoom In",
         "zoomOut": "Zoom Out",
-        "closeButton": "Close Viewer"
+        "closeButton": "Close Viewer",
+        "loading": "Loading PDF...",
+        "loadError": "Failed to load PDF",
+        "previousPage": "Previous page",
+        "nextPage": "Next page",
+        "resetZoom": "Reset zoom",
+        "shortcuts": "Use ← → keys to navigate, +/- to zoom"
       }
     },
     "ChapterGrid": {
@@ -1240,8 +1261,6 @@
       "lastUpdated": "Last Updated",
       "fileSize": "File Size",
       "fileType": "File Type"
-    
-
     },
     "toc": {
       "title": "Table of Contents",
@@ -1260,7 +1279,13 @@
     "actions": {
       "download": "Download PDF",
       "print": "Print Document",
-      "openNew": "Open in New Tab"
+      "openNew": "Open in New Tab",
+      "openPdf": "Open PDF",
+      "prev": "Prev",
+      "next": "Next",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "retry": "Retry"
     },
     "help": {
       "title": "Need Help?",
@@ -1271,7 +1296,8 @@
       "title": "Business Documentation",
       "subtitle": "Official business documentation and whitepaper",
       "footer": "Scroll to navigate • Use Ctrl+P to print",
-      "secure": "Secure Document • Encrypted"
+      "secure": "Secure Document • Encrypted",
+      "ready": "Viewer Ready"
     },
     "loading": "Loading document...",
     "error": {
@@ -1304,6 +1330,148 @@
       "privacyDesc": "Data protection and privacy",
       "faq": "FAQ",
       "faqDesc": "Frequently asked questions"
+    }
+  },
+  "MigrationPanel": {
+    "title": "Refresh Required",
+    "subtitle": "Account Refresh",
+    "v1Status": "Legacy Account",
+    "v2Status": "Current Status",
+    "legacyRoyalty": "Legacy Royalty",
+    "v2Royalty": "Current Royalty",
+    "benefits": {
+      "title": "Refresh Benefits",
+      "transferHistory": "Transfer your complete earning history",
+      "preserveEarnings": "Preserve legacy royalty and RICO balances",
+      "accessV2": "Access new features and rewards"
+    },
+    "status": {
+      "found": "Found",
+      "notMigrated": "Needs Refresh",
+      "success": "Refresh successful! Your account is now ready."
+    },
+    "button": {
+      "ready": "Refresh Account Now",
+      "busy": "Refreshing..."
+    },
+    "oneTime": "One-time process • Free refresh",
+    "error": "Refresh failed. Please try again."
+  },
+  "MigrationStatus": {
+    "title": "Migration Status",
+    "subtitle": "Track your V1 to V2 migration progress",
+    "loading": "Loading migration status...",
+    "status": {
+      "notInV1": "Not in V1",
+      "pending": "Migration Pending",
+      "completed": "Migration Complete"
+    },
+    "v1Status": "V1 Account",
+    "v2Status": "V2 Status",
+    "notFound": "Not Found",
+    "found": "Found",
+    "migrated": "Migrated",
+    "notMigrated": "Not Migrated",
+    "availableRoyalty": "Available Royalties",
+    "legacy": "Legacy (V1)",
+    "v2Fresh": "Fresh (V2)",
+    "totalClaimable": "Total Claimable",
+    "v1RoyaltyShare": "V1 Royalty Share",
+    "migrationRequired": "Migration to V2 required",
+    "migrationInstructions": "Click 'Migrate Now' in the main panel to transfer your account",
+    "migrationComplete": "Migration successfully completed",
+    "accessAllFeatures": "You now have access to all V2 features"
+  },
+  "RoyaltyPool": {
+    "header": {
+      "label": "Royalty Pool • Earnings",
+      "title": "Claim Your Royalties"
+    },
+    "status": {
+      "processing": "Processing...",
+      "ready": "Ready to Claim"
+    },
+    "migration": {
+      "v1Found": "Legacy Account Found - Migration Required",
+      "migrated": "Migrated from Legacy System",
+      "legacyAvailable": "Legacy Royalty Available"
+    },
+    "summary": {
+      "title": "🎁 Royalty Available",
+      "descriptionBoth": "You have both legacy and current royalties available",
+      "descriptionLegacy": "You have legacy royalty from your migration snapshot",
+      "descriptionCurrent": "You have current royalty earnings available",
+      "totalClaimable": "Total Claimable"
+    },
+    "stats": {
+      "royaltyShare": "Royalty Share",
+      "legacyShare": "Legacy Share",
+      "currentShare": "Current Share",
+      "fromMigration": "From migration snapshot",
+      "activeShare": "Current active share",
+      "availableRoyalty": "Available Royalty",
+      "currentRoyalty": "Current",
+      "active": "Active",
+      "legacyRoyalty": "Legacy",
+      "snapshot": "Snapshot",
+      "fromRecent": "From recent purchases",
+      "fromSnapshot": "From migration snapshot",
+      "noRoyalty": "No royalty available to claim",
+      "totalClaimed": "Total Claimed",
+      "claimedDescription": "All royalties claimed to date",
+      "currentClaimed": "Current Claimed:",
+      "legacyClaimed": "Legacy Claimed:"
+    },
+    "claims": {
+      "legacy": {
+        "title": "Legacy Royalty",
+        "subtitle": "From your legacy account snapshot",
+        "description": "This is a one-time claim of your legacy royalty balance at migration time",
+        "button": "Claim Legacy Royalty"
+      },
+      "current": {
+        "title": "Current Royalty",
+        "subtitle": "Active earnings from purchases",
+        "description": "Earned from your recent purchases and activity",
+        "button": "Claim Current Royalty"
+      },
+      "none": {
+        "title": "No Royalty Available",
+        "description": "You don't have any royalty available to claim at the moment",
+        "hint": "Royalty is earned from every purchase in the system. Make purchases to start earning!"
+      }
+    },
+    "info": {
+      "title": "About Royalty Earnings",
+      "subtitle": "Understanding your royalty earnings",
+      "legacyTitle": "About Legacy & Current Royalties",
+      "legacySection": {
+        "title": "Legacy Royalty",
+        "items": [
+          "From your legacy account snapshot at migration time",
+          "Separate from fresh current royalty earnings",
+          "One-time claim - will not replenish"
+        ]
+      },
+      "currentSection": {
+        "title": "Current Royalty",
+        "items": [
+          "Based on your royalty share percentage",
+          "Replenishes as you make more purchases"
+        ]
+      },
+      "items": [
+        {
+          "icon": "📊",
+          "title": "Share Based Distribution",
+          "description": "Your share percentage determines your portion of the pool"
+        },
+        {
+          "icon": "⚡",
+          "title": "Instant Claims",
+          "description": "Claim anytime - no waiting periods or restrictions"
+        }
+      ]
     }
   }
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Header } from "@/components/Navigation/Header";
 
 import { Document, Page, pdfjs } from "react-pdf";
@@ -12,16 +12,20 @@ import "react-pdf/dist/Page/TextLayer.css";
 // ✅ Local worker (no CDN)
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
 
-const PDF_URL = "/pdfs/rico_matrix_business.pdf";
-
-type TocItem = { section: string; title: string; page: number };
-
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function DocumentationPage() {
   const t = useTranslations("Documentation");
+  const locale = useLocale();
+
+  // Dynamic PDF URL based on language
+  const PDF_URL = useMemo(() => {
+    return locale === "fr" 
+      ? "/pdfs/rico_matrix_business_fr.pdf"
+      : "/pdfs/rico_matrix_business.pdf";
+  }, [locale]);
 
   const tocItems: TocItem[] = useMemo(
     () => [
@@ -88,7 +92,7 @@ export default function DocumentationPage() {
   const zoomOut = useCallback(() => setScale((s) => Math.max(0.75, Number((s - 0.1).toFixed(2)))), []);
   const zoomIn = useCallback(() => setScale((s) => Math.min(2.0, Number((s + 0.1).toFixed(2)))), []);
 
-  const openPdf = useCallback(() => window.open(PDF_URL, "_blank", "noopener,noreferrer"), []);
+  const openPdf = useCallback(() => window.open(PDF_URL, "_blank", "noopener,noreferrer"), [PDF_URL]);
   const copyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -323,7 +327,7 @@ export default function DocumentationPage() {
                     <div>
                       <div className="font-semibold text-emerald-100">{t("help.title") || "Need Help?"}</div>
                       <div className="mt-1 text-sm text-emerald-100/80">
-                        {t("help.description") || "If the PDF doesn’t load, download it directly or contact support."}
+                        {t("help.description") || "If the PDF doesn't load, download it directly or contact support."}
                       </div>
                       <a
                         href="mailto:support@ricomatrix.com"
@@ -364,7 +368,7 @@ export default function DocumentationPage() {
                       disabled={pageNumber <= 1}
                       className="rounded-2xl border border-slate-800/60 bg-slate-900/25 px-4 py-2 text-sm text-slate-100 hover:bg-slate-900/45 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      Prev
+                      {t("actions.prev") || "Prev"}
                     </button>
 
                     <button
@@ -372,14 +376,14 @@ export default function DocumentationPage() {
                       disabled={numPages ? pageNumber >= numPages : false}
                       className="rounded-2xl border border-slate-800/60 bg-slate-900/25 px-4 py-2 text-sm text-slate-100 hover:bg-slate-900/45 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      Next
+                      {t("actions.next") || "Next"}
                     </button>
 
                     <button
                       onClick={zoomOut}
                       className="rounded-2xl border border-slate-800/60 bg-slate-900/25 px-3 py-2 text-sm text-slate-100 hover:bg-slate-900/45 transition"
-                      aria-label="Zoom out"
-                      title="Zoom out"
+                      aria-label={t("actions.zoomOut") || "Zoom out"}
+                      title={t("actions.zoomOut") || "Zoom out"}
                     >
                       −
                     </button>
@@ -387,8 +391,8 @@ export default function DocumentationPage() {
                     <button
                       onClick={zoomIn}
                       className="rounded-2xl border border-slate-800/60 bg-slate-900/25 px-3 py-2 text-sm text-slate-100 hover:bg-slate-900/45 transition"
-                      aria-label="Zoom in"
-                      title="Zoom in"
+                      aria-label={t("actions.zoomIn") || "Zoom in"}
+                      title={t("actions.zoomIn") || "Zoom in"}
                     >
                       +
                     </button>
@@ -397,7 +401,7 @@ export default function DocumentationPage() {
                       onClick={openPdf}
                       className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 transition"
                     >
-                      Open PDF
+                      {t("actions.openPdf") || "Open PDF"}
                     </button>
                   </div>
                 </div>
@@ -451,13 +455,13 @@ export default function DocumentationPage() {
                             onClick={retry}
                             className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm text-red-100 hover:bg-red-500/15 transition"
                           >
-                            Retry
+                            {t("actions.retry") || "Retry"}
                           </button>
                           <button
                             onClick={openPdf}
                             className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 transition"
                           >
-                            Open / Download PDF
+                            {t("actions.download") || "Open / Download PDF"}
                           </button>
                         </div>
                       </div>
@@ -486,7 +490,7 @@ export default function DocumentationPage() {
                   <div>{t("viewer.footer") || "Tip: Use TOC to jump sections • Zoom for readability"}</div>
                   <div className="inline-flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/90" />
-                    Viewer Ready
+                    {t("viewer.ready") || "Viewer Ready"}
                   </div>
                 </div>
               </div>
@@ -497,3 +501,5 @@ export default function DocumentationPage() {
     </div>
   );
 }
+
+type TocItem = { section: string; title: string; page: number };

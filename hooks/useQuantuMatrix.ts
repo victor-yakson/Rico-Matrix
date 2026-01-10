@@ -49,48 +49,44 @@ interface Track2Data {
   closedPart: string;
 }
 
+// Migration Status interface
+interface MigrationStatus {
+  status: number; // 0 = Not found in V1, 1 = Found in V1 but not migrated, 2 = Migrated ✅
+}
+
+// Migration Data interface
+interface MigrationData {
+  status: number;
+  v1RoyaltyPercent: number;
+  legacyClaimable: string;
+  v2Claimable: string;
+  totalClaimable: string;
+  shouldMigrate: boolean; // status === 1
+  canClaimLegacy: boolean; // legacyClaimable > 0
+  hasV1: boolean; // status === 1 || status === 2
+}
+
 interface UserData {
   exists: boolean;
-  // Basic totals
+  // From readerSummary
+  readerId: string;
+  referrer: string;
+  partnersCount: string;
   track1TotalEarned: string;
   track2TotalEarned: string;
   track1TotalCycles: number;
   track2TotalCycles: number;
   track1Unlocked: number;
   track2Unlocked: number;
-
-  // Royalty
   royaltyAvailable: string;
   royaltiesClaimed: string;
   royaltyPercent: number;
-
-  // RICO Farming
   ricoShouldHave: string;
   ricoSent: string;
   ricoPending: string;
-
-  // Reader Summary data
-  readerId?: string;
-  referrer?: string;
-  partnersCount?: string;
-  track1TotalEarnedFromSummary?: string;
-  track2TotalEarnedFromSummary?: string;
-
   // Migration data
-  migrationStatus?: {
-    existsV2: boolean;
-    migrated: boolean;
-    fullImported: boolean;
-    existsV1: boolean;
-  };
-  migrationData?: {
-    legacySnap: string;
-    legacyClaimable: string;
-    v2RoyaltyAvail: string;
-    shouldMigrate: boolean;
-    canClaimLegacy: boolean;
-    hasV1: boolean;
-  };
+  migrationStatus?: MigrationStatus;
+  migrationData?: MigrationData;
 }
 
 export const useQuantuMatrix = () => {
@@ -148,7 +144,7 @@ export const useQuantuMatrix = () => {
     },
   });
 
-  // Read royalty available
+  // Read royalty available (V1 style)
   const { data: royaltyAvailable, refetch: refetchRoyalty } = useReadContract({
     ...quantuMatrixContract,
     functionName: "viewRoyalty",
@@ -158,7 +154,7 @@ export const useQuantuMatrix = () => {
     },
   });
 
-  // Read royalty percent
+  // Read royalty percent (V1 style)
   const { data: royaltyPercent, refetch: refetchRoyaltyPercent } =
     useReadContract({
       ...quantuMatrixContract,
@@ -180,17 +176,59 @@ export const useQuantuMatrix = () => {
       },
     });
 
-  // Read migration summary
-  const { data: migrationSummary, refetch: refetchMigrationSummary } =
+  // Read migration and royalty UI (combined function)
+  const { data: migrationAndRoyaltyUI, refetch: refetchMigrationAndRoyaltyUI } =
     useReadContract({
       ...quantuMatrixContract,
-      functionName: "getSummaryForUI",
+      functionName: "getMigrationAndRoyaltyUI",
       args: address ? [address] : undefined,
       query: {
         enabled: !!address,
         select: safeBigInt,
       },
     });
+
+  // Read legacy claimable
+  const { data: legacyClaimable, refetch: refetchLegacyClaimable } =
+    useReadContract({
+      ...quantuMatrixContract,
+      functionName: "viewLegacyClaimable",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
+    });
+
+  // Read royalty V2 (fresh V2 royalty)
+  const { data: royaltyV2, refetch: refetchRoyaltyV2 } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: "viewRoyaltyV2",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    },
+  });
+
+  // Read royalty percent V2
+  const { data: royaltyPercentV2, refetch: refetchRoyaltyPercentV2 } =
+    useReadContract({
+      ...quantuMatrixContract,
+      functionName: "viewRoyaltyPercentV2",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
+    });
+
+  // Read RICO pending
+  const { data: ricoPending, refetch: refetchRicoPending } = useReadContract({
+    ...quantuMatrixContract,
+    functionName: "viewRicoPending",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    },
+  });
 
   // Read global stats
   const { data: globalStats, refetch: refetchGlobalStats } = useReadContract({
@@ -312,48 +350,56 @@ export const useQuantuMatrix = () => {
   };
 
   // Process migration status
-  const processMigrationStatus = (data: any) => {
-    if (data && Array.isArray(data) && data.length >= 4) {
-      const [existsV2, migrated, fullImported, existsV1] = data;
+  const processMigrationStatus = (data: any): MigrationStatus => {
+    if (data !== undefined && data !== null) {
+      const status = toNumber(data, 0);
+      return { status };
+    }
+    return { status: 0 };
+  };
+
+  // Process migration and royalty UI data
+  const processMigrationAndRoyaltyUI = (data: any) => {
+    if (data && Array.isArray(data) && data.length >= 5) {
+      const [
+        status,
+        v1RoyaltyPercent,
+        legacyClaimable,
+        v2Claimable,
+        totalClaimable,
+      ] = data;
       return {
-        existsV2: Boolean(existsV2),
-        migrated: Boolean(migrated),
-        fullImported: Boolean(fullImported),
-        existsV1: Boolean(existsV1),
+        status: toNumber(status, 0),
+        v1RoyaltyPercent: toNumber(v1RoyaltyPercent, 0),
+        legacyClaimable: formatUnits(
+          BigInt(legacyClaimable?.toString() || "0"),
+          18
+        ),
+        v2Claimable: formatUnits(BigInt(v2Claimable?.toString() || "0"), 18),
+        totalClaimable: formatUnits(
+          BigInt(totalClaimable?.toString() || "0"),
+          18
+        ),
       };
     }
     return {
-      existsV2: false,
-      migrated: false,
-      fullImported: false,
-      existsV1: false,
+      status: 0,
+      v1RoyaltyPercent: 0,
+      legacyClaimable: "0",
+      v2Claimable: "0",
+      totalClaimable: "0",
     };
   };
 
-  // Process migration summary
-  const processMigrationSummary = (data: any) => {
-    if (data && Array.isArray(data) && data.length >= 8) {
-      const legacySnap = data[5]?.toString() || "0";
-      const legacyClaimable = data[6]?.toString() || "0";
-      const v2RoyaltyAvail = data[7]?.toString() || "0";
-      const existsV1 = data[4];
+  // Process migration data
+  const processMigrationData = (data: any): MigrationData => {
+    const migrationUI = processMigrationAndRoyaltyUI(data);
 
-      return {
-        legacySnap: formatUnits(BigInt(legacySnap), 18),
-        legacyClaimable: formatUnits(BigInt(legacyClaimable), 18),
-        v2RoyaltyAvail: formatUnits(BigInt(v2RoyaltyAvail), 18),
-        shouldMigrate: Boolean(existsV1) && !Boolean(data[1]), // existsV1 && !migrated
-        canClaimLegacy: Number(legacyClaimable) > 0,
-        hasV1: Boolean(existsV1),
-      };
-    }
     return {
-      legacySnap: "0",
-      legacyClaimable: "0",
-      v2RoyaltyAvail: "0",
-      shouldMigrate: false,
-      canClaimLegacy: false,
-      hasV1: false,
+      ...migrationUI,
+      shouldMigrate: migrationUI.status === 1,
+      canClaimLegacy: parseFloat(migrationUI.legacyClaimable) > 0,
+      hasV1: migrationUI.status === 1 || migrationUI.status === 2,
     };
   };
 
@@ -612,6 +658,64 @@ export const useQuantuMatrix = () => {
     [publicClient, matrixCache.track1]
   );
 
+  // Find free Track1 referrer
+  const findFreeTrack1Referrer = useCallback(
+    async (userAddress: string, chapter: number): Promise<string> => {
+      const toastId = "find-free-track1-referrer";
+
+      try {
+        if (!publicClient) {
+          throw new Error("Wallet client not available");
+        }
+
+        const result = await publicClient.readContract({
+          ...quantuMatrixContract,
+          functionName: "findFreeTrack1Referrer",
+          args: [userAddress as `0x${string}`, chapter],
+        });
+
+        return result as string;
+      } catch (error: any) {
+        console.error("Error finding free Track1 referrer:", error);
+        toast.error("Failed to find referrer", {
+          id: toastId,
+          description: error.message,
+        });
+        throw error;
+      }
+    },
+    [publicClient]
+  );
+
+  // Find free Track2 referrer
+  const findFreeTrack2Referrer = useCallback(
+    async (userAddress: string, chapter: number): Promise<string> => {
+      const toastId = "find-free-track2-referrer";
+
+      try {
+        if (!publicClient) {
+          throw new Error("Wallet client not available");
+        }
+
+        const result = await publicClient.readContract({
+          ...quantuMatrixContract,
+          functionName: "findFreeTrack2Referrer",
+          args: [userAddress as `0x${string}`, chapter],
+        });
+
+        return result as string;
+      } catch (error: any) {
+        console.error("Error finding free Track2 referrer:", error);
+        toast.error("Failed to find referrer", {
+          id: toastId,
+          description: error.message,
+        });
+        throw error;
+      }
+    },
+    [publicClient]
+  );
+
   // Clear matrix cache for a user
   const clearMatrixCache = useCallback((userAddress: string) => {
     setMatrixCache((prev) => {
@@ -635,13 +739,132 @@ export const useQuantuMatrix = () => {
     setMatrixCache({ track1: {}, track2: {} });
   }, []);
 
+  // Parse user data from multiple sources
+  const parseUserDataFromMultipleSources = () => {
+    if (!userExists) {
+      return {
+        exists: false,
+        readerId: "0",
+        referrer: address || "",
+        partnersCount: "0",
+        track1TotalEarned: "0",
+        track2TotalEarned: "0",
+        track1TotalCycles: 0,
+        track2TotalCycles: 0,
+        track1Unlocked: 0,
+        track2Unlocked: 0,
+        royaltyAvailable: "0",
+        royaltiesClaimed: "0",
+        royaltyPercent: 0,
+        ricoShouldHave: "0",
+        ricoSent: "0",
+        ricoPending: "0",
+      };
+    }
+
+    // Get migration and royalty UI data first
+    const migrationUI = processMigrationAndRoyaltyUI(migrationAndRoyaltyUI);
+
+    // Use readerSummary as primary source
+    if (readerSummary) {
+      return {
+        exists: true,
+        readerId: (readerSummary as any).id?.toString() || "0",
+        referrer: (readerSummary as any).referrer || address || "",
+        partnersCount: (readerSummary as any).partnersCount?.toString() || "0",
+        track1TotalEarned: formatUnits(
+          BigInt((readerSummary as any).track1TotalEarned || "0"),
+          18
+        ),
+        track2TotalEarned: formatUnits(
+          BigInt((readerSummary as any).track2TotalEarned || "0"),
+          18
+        ),
+        track1TotalCycles: Number(
+          (readerSummary as any).track1TotalCycles || "0"
+        ),
+        track2TotalCycles: Number(
+          (readerSummary as any).track2TotalCycles || "0"
+        ),
+        track1Unlocked: Number((readerSummary as any).track1Unlocked || "0"),
+        track2Unlocked: Number((readerSummary as any).track2Unlocked || "0"),
+        royaltyAvailable: migrationUI.totalClaimable,
+        royaltiesClaimed: formatUnits(
+          BigInt((readerSummary as any).royaltyClaimed || "0"),
+          18
+        ),
+        royaltyPercent: Number((readerSummary as any).royaltyPercent || "0"),
+        ricoShouldHave: formatUnits(
+          BigInt((readerSummary as any).ricoShouldHave || "0"),
+          18
+        ),
+        ricoSent: formatUnits(
+          BigInt((readerSummary as any).ricoSent || "0"),
+          18
+        ),
+        ricoPending: formatUnits(
+          BigInt((readerSummary as any).ricoPending || "0"),
+          18
+        ),
+      };
+    }
+
+    // Fallback to individual data sources
+    return {
+      exists: true,
+      readerId: "0",
+      referrer: address || "",
+      partnersCount: "0",
+      track1TotalEarned: readerTotals
+        ? formatUnits(BigInt((readerTotals as any)[0] || "0"), 18)
+        : "0",
+      track2TotalEarned: readerTotals
+        ? formatUnits(BigInt((readerTotals as any)[1] || "0"), 18)
+        : "0",
+      track1TotalCycles: readerTotals
+        ? Number((readerTotals as any)[2] || "0")
+        : 0,
+      track2TotalCycles: readerTotals
+        ? Number((readerTotals as any)[3] || "0")
+        : 0,
+      track1Unlocked: readerTotals
+        ? Number((readerTotals as any)[4] || "0")
+        : 0,
+      track2Unlocked: readerTotals
+        ? Number((readerTotals as any)[5] || "0")
+        : 0,
+      royaltyAvailable: migrationUI.totalClaimable,
+      royaltiesClaimed: readerTotals
+        ? formatUnits(BigInt((readerTotals as any)[7] || "0"), 18)
+        : "0",
+      royaltyPercent: royaltyPercent ? Number(royaltyPercent) : 0,
+      ricoShouldHave: ricoFarming
+        ? formatUnits(BigInt((ricoFarming as any)[0] || "0"), 18)
+        : "0",
+      ricoSent: ricoFarming
+        ? formatUnits(BigInt((ricoFarming as any)[1] || "0"), 18)
+        : "0",
+      ricoPending: ricoFarming
+        ? formatUnits(BigInt((ricoFarming as any)[2] || "0"), 18)
+        : "0",
+    };
+  };
+
   // Refetch all user data
   const refetchUserData = useCallback(() => {
+    toast.info("Refreshing user data...", {
+      duration: 2000,
+    });
+
     refetchUserExists();
     refetchUsdtAllowance();
     refetchUsdtBalance();
     refetchMigrationStatus();
-    refetchMigrationSummary();
+    refetchMigrationAndRoyaltyUI();
+    refetchLegacyClaimable();
+    refetchRoyaltyV2();
+    refetchRoyaltyPercentV2();
+    refetchRicoPending();
 
     if (userExists) {
       refetchReaderTotals();
@@ -651,10 +874,13 @@ export const useQuantuMatrix = () => {
       refetchRoyaltyPercent();
     }
 
-    // Clear cache on refetch
     if (address) {
       clearMatrixCache(address);
     }
+
+    toast.success("User data refreshed!", {
+      duration: 2000,
+    });
   }, [
     refetchUserExists,
     refetchReaderTotals,
@@ -665,7 +891,11 @@ export const useQuantuMatrix = () => {
     refetchUsdtAllowance,
     refetchUsdtBalance,
     refetchMigrationStatus,
-    refetchMigrationSummary,
+    refetchMigrationAndRoyaltyUI,
+    refetchLegacyClaimable,
+    refetchRoyaltyV2,
+    refetchRoyaltyPercentV2,
+    refetchRicoPending,
     userExists,
     address,
     clearMatrixCache,
@@ -685,7 +915,7 @@ export const useQuantuMatrix = () => {
     refetchTopReferrers();
     refetchChapterPrices();
 
-    toast.success("Data refreshed!", {
+    toast.success("All data refreshed!", {
       duration: 2000,
     });
   }, [
@@ -723,7 +953,7 @@ export const useQuantuMatrix = () => {
         const hash = await writeContractAsync({
           ...usdtContract,
           functionName: "approve",
-          args: [quantuMatrixContract.address, amount],
+          args: [quantuMatrixContract.address, amountInWei],
         });
 
         toast.loading("Transaction Submitted", {
@@ -748,11 +978,9 @@ export const useQuantuMatrix = () => {
           });
 
           // Refresh user data after successful approval
-          if (refetchAllData) {
-            setTimeout(() => {
-              refetchAllData();
-            }, 2000);
-          }
+          setTimeout(() => {
+            refetchAllData();
+          }, 2000);
         } else {
           throw new Error("Transaction failed on-chain");
         }
@@ -835,11 +1063,9 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
-          if (refetchAllData) {
-            setTimeout(() => {
-              refetchAllData();
-            }, 2000);
-          }
+          setTimeout(() => {
+            refetchAllData();
+          }, 2000);
         } else {
           throw new Error("Transaction failed on-chain");
         }
@@ -928,11 +1154,9 @@ export const useQuantuMatrix = () => {
             clearMatrixCache(address);
           }
 
-          if (refetchAllData) {
-            setTimeout(() => {
-              refetchAllData();
-            }, 2000);
-          }
+          setTimeout(() => {
+            refetchAllData();
+          }, 2000);
         } else {
           throw new Error("Transaction failed on-chain");
         }
@@ -992,11 +1216,11 @@ export const useQuantuMatrix = () => {
 
       // Get current migration status
       const currentStatus = processMigrationStatus(migrationStatusData);
-      if (currentStatus.migrated) {
+      if (currentStatus.status === 2) {
         throw new Error("You have already migrated from V1");
       }
 
-      if (!currentStatus.existsV1) {
+      if (currentStatus.status === 0) {
         throw new Error("You are not registered in V1");
       }
 
@@ -1034,7 +1258,7 @@ export const useQuantuMatrix = () => {
         setTimeout(() => {
           refetchAllData();
           refetchMigrationStatus();
-          refetchMigrationSummary();
+          refetchMigrationAndRoyaltyUI();
         }, 2000);
       } else {
         throw new Error("Migration transaction failed on-chain");
@@ -1074,7 +1298,7 @@ export const useQuantuMatrix = () => {
     migrationStatusData,
     refetchAllData,
     refetchMigrationStatus,
-    refetchMigrationSummary,
+    refetchMigrationAndRoyaltyUI,
   ]);
 
   // Claim legacy royalty function
@@ -1093,7 +1317,7 @@ export const useQuantuMatrix = () => {
 
         // Check migration status
         const currentStatus = processMigrationStatus(migrationStatusData);
-        if (!currentStatus.migrated) {
+        if (currentStatus.status !== 2) {
           throw new Error("You need to migrate from V1 first");
         }
 
@@ -1133,7 +1357,7 @@ export const useQuantuMatrix = () => {
           });
 
           setTimeout(() => {
-            refetchMigrationSummary();
+            refetchMigrationAndRoyaltyUI();
             refetchUserData();
           }, 2000);
         } else {
@@ -1173,7 +1397,7 @@ export const useQuantuMatrix = () => {
       writeContractAsync,
       publicClient,
       migrationStatusData,
-      refetchMigrationSummary,
+      refetchMigrationAndRoyaltyUI,
       refetchUserData,
     ]
   );
@@ -1305,8 +1529,8 @@ export const useQuantuMatrix = () => {
         });
 
         setTimeout(() => {
-          refetchRoyalty();
-          refetchMigrationSummary();
+          refetchRoyaltyV2();
+          refetchMigrationAndRoyaltyUI();
           refetchUserData();
         }, 2000);
       } else {
@@ -1342,19 +1566,28 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     publicClient,
-    refetchRoyalty,
-    refetchMigrationSummary,
+    refetchRoyaltyV2,
+    refetchMigrationAndRoyaltyUI,
     refetchUserData,
   ]);
 
   // Legacy claim royalty function (keep for compatibility)
   const claimRoyalty = useCallback(async () => {
+    const toastId = "claim-royalty";
+
     try {
       setLoading(true);
 
+      if (!publicClient) {
+        throw new Error(
+          "Wallet client not available. Please connect your wallet."
+        );
+      }
+
       toast.info("Claiming Royalty...", {
+        id: toastId,
         description: "Please confirm the transaction in your wallet.",
-        duration: 3000,
+        duration: 10000,
       });
 
       const hash = await writeContractAsync({
@@ -1362,118 +1595,64 @@ export const useQuantuMatrix = () => {
         functionName: "claimRoyalty",
       });
 
-      toast.success("Royalty Claim Submitted!", {
-        description: `Royalty claim in progress. Transaction: ${hash.slice(
-          0,
-          8
-        )}...`,
-        duration: 5000,
+      toast.loading("Royalty Claim Submitted!", {
+        id: toastId,
+        description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
       });
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      if (receipt.status === "success") {
+        toast.success("Royalty Claimed!", {
+          id: toastId,
+          description: "Successfully claimed royalty!",
+          duration: 5000,
+        });
+
+        setTimeout(() => {
+          refetchRoyalty();
+          refetchUserData();
+        }, 2000);
+      } else {
+        throw new Error("Royalty claim transaction failed on-chain");
+      }
 
       return hash;
     } catch (error: any) {
       console.error("Error claiming royalty:", error);
 
       let errorMessage = "Failed to claim royalty";
-      if (error?.message?.includes("rejected")) {
+      if (error?.message?.includes("rejected") || error?.code === 4001) {
         errorMessage = "Transaction was rejected in your wallet";
       } else if (error?.message?.includes("NoRoyalty")) {
         errorMessage = "No royalty available to claim";
+      } else if (error?.message?.includes("on-chain")) {
+        errorMessage = "Claim transaction failed on-chain";
+      } else if (error?.message?.includes("Wallet client not available")) {
+        errorMessage =
+          "Wallet not connected. Please connect your wallet first.";
       }
 
       toast.error("Claim Failed", {
+        id: toastId,
         description: errorMessage,
-        duration: 5000,
+        duration: 7000,
       });
 
       throw error;
     } finally {
       setLoading(false);
     }
-  }, [writeContractAsync]);
+  }, [writeContractAsync, publicClient, refetchRoyalty, refetchUserData]);
 
-  // Format user data with migration info
-  const userData: UserData = userExists
-    ? {
-        exists: true,
-        // Basic totals
-        track1TotalEarned: readerTotals
-          ? formatUnits(BigInt((readerTotals as any)[0] || "0"), 18)
-          : "0",
-        track2TotalEarned: readerTotals
-          ? formatUnits(BigInt((readerTotals as any)[1] || "0"), 18)
-          : "0",
-        track1TotalCycles: readerTotals
-          ? Number((readerTotals as any)[2] || "0")
-          : 0,
-        track2TotalCycles: readerTotals
-          ? Number((readerTotals as any)[3] || "0")
-          : 0,
-        track1Unlocked: readerTotals
-          ? Number((readerTotals as any)[4] || "0")
-          : 0,
-        track2Unlocked: readerTotals
-          ? Number((readerTotals as any)[5] || "0")
-          : 0,
-
-        // Royalty
-        royaltyAvailable: royaltyAvailable
-          ? formatUnits(royaltyAvailable as bigint, 18)
-          : "0",
-        royaltiesClaimed: readerTotals
-          ? formatUnits(BigInt((readerTotals as any)[7] || "0"), 18)
-          : "0",
-        royaltyPercent: royaltyPercent ? Number(royaltyPercent) : 0,
-
-        // RICO Farming
-        ricoShouldHave: ricoFarming
-          ? formatUnits(BigInt((ricoFarming as any)[0] || "0"), 18)
-          : "0",
-        ricoSent: ricoFarming
-          ? formatUnits(BigInt((ricoFarming as any)[1] || "0"), 18)
-          : "0",
-        ricoPending: ricoFarming
-          ? formatUnits(BigInt((ricoFarming as any)[2] || "0"), 18)
-          : "0",
-
-        // Reader Summary data
-        ...(readerSummary
-          ? {
-              readerId: (readerSummary as any).id?.toString(),
-              referrer: (readerSummary as any).referrer,
-              partnersCount: (readerSummary as any).partnersCount?.toString(),
-              track1TotalEarnedFromSummary: formatUnits(
-                BigInt((readerSummary as any).track1TotalEarned || "0"),
-                18
-              ),
-              track2TotalEarnedFromSummary: formatUnits(
-                BigInt((readerSummary as any).track2TotalEarned || "0"),
-                18
-              ),
-            }
-          : {}),
-
-        // Migration data
-        migrationStatus: processMigrationStatus(migrationStatusData),
-        migrationData: processMigrationSummary(migrationSummary),
-      }
-    : {
-        exists: false,
-        track1TotalEarned: "0",
-        track2TotalEarned: "0",
-        track1TotalCycles: 0,
-        track2TotalCycles: 0,
-        track1Unlocked: 0,
-        track2Unlocked: 0,
-        royaltyAvailable: "0",
-        royaltiesClaimed: "0",
-        royaltyPercent: 0,
-        ricoShouldHave: "0",
-        ricoSent: "0",
-        ricoPending: "0",
-        migrationStatus: processMigrationStatus(migrationStatusData),
-        migrationData: processMigrationSummary(migrationSummary),
-      };
+  const userData: UserData = {
+    ...parseUserDataFromMultipleSources(),
+    migrationStatus: processMigrationStatus(migrationStatusData),
+    migrationData: processMigrationData(migrationAndRoyaltyUI),
+  };
 
   const formattedUsdtBalance = usdtBalance
     ? formatUnits(usdtBalance as bigint, 18)
@@ -1496,6 +1675,17 @@ export const useQuantuMatrix = () => {
     topReferrers: topReferrers as any,
     chapterPrices: chapterPrices as string[] | undefined,
 
+    // Migration and royalty UI data
+    migrationAndRoyaltyUI: processMigrationData(migrationAndRoyaltyUI),
+
+    // Individual data points
+    legacyClaimable: legacyClaimable
+      ? formatUnits(legacyClaimable as bigint, 18)
+      : "0",
+    royaltyV2: royaltyV2 ? formatUnits(royaltyV2 as bigint, 18) : "0",
+    royaltyPercentV2: royaltyPercentV2 ? Number(royaltyPercentV2) : 0,
+    ricoPending: ricoPending ? formatUnits(ricoPending as bigint, 18) : "0",
+
     // Token addresses
     usdtAddress: usdtAddress as `0x${string}` | undefined,
     rewardTokenAddress,
@@ -1504,6 +1694,10 @@ export const useQuantuMatrix = () => {
     usdtBalance: formattedUsdtBalance,
     usdtAllowance: formattedUsdtAllowance,
     joinCost,
+
+    // Find referrer functions
+    findFreeTrack1Referrer,
+    findFreeTrack2Referrer,
 
     // Matrix data fetching
     fetchTrack1Matrix,
@@ -1518,6 +1712,7 @@ export const useQuantuMatrix = () => {
 
     // State
     loading,
+    isConnected,
 
     // Actions
     approveUsdt,
@@ -1527,7 +1722,7 @@ export const useQuantuMatrix = () => {
     claimLegacyRoyalty,
     claimRico,
     claimRoyaltyV2,
-    claimRoyalty, // Legacy function for compatibility
+    claimRoyalty,
 
     // Refresh functions
     refetchUserData,
@@ -1536,6 +1731,6 @@ export const useQuantuMatrix = () => {
     refetchGlobalSummary,
     refetchGlobalRicoFarming,
     refetchMigrationStatus,
-    refetchMigrationSummary,
+    refetchMigrationAndRoyaltyUI,
   };
 };

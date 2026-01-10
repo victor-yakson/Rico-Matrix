@@ -486,11 +486,12 @@
         ]
       },
       "link": {
-        "label": "Votre Lien de Parrainage",
-        "copy": "Copier le Lien",
+        "label": "Votre lien de parrainage",
+        "noWallet": "Connectez votre portefeuille pour obtenir le lien",
+        "copy": "Copier le lien",
         "copied": "Copié !",
-        "copiedMessage": "Lien copié dans le presse-papiers !",
-        "noWallet": "Connectez votre portefeuille pour obtenir le lien de parrainage"
+        "copiedMessage": "Lien copié dans le presse-papier",
+        "copyFailed": "Impossible de copier automatiquement. Veuillez copier manuellement :"
       },
       "share": {
         "button": "Partager sur Twitter",
@@ -502,27 +503,31 @@
         "unilevel": "Unilevel"
       }
     },
+
     "Registration": {
       "header": {
-        "title": "Rejoindre la Bibliothèque RicoMatrix (Accès Chapitre 1)",
-        "step": "Étape {stepIndex} sur 2"
+        "title": "Rejoignez la Bibliothèque RicoMatrix (Accès Chapitre 1)",
+        "subtitle": "Rejoindre RicoMatrix • Intégration",
+        "stepIndicator": "Étape {stepIndex} sur 2",
+        "allowanceLabel": "Autorisation : {allowance} USDT",
+        "registeredBadge": "Inscrit ✓"
       },
       "benefits": {
         "title": "Ce que vous débloquez avec le Chapitre 1",
-        "subtitle": "Un enregistrement unique sur la blockchain qui vous positionne dans X3 & X6.",
+        "subtitle": "Une inscription unique sur la blockchain qui vous positionne dans X3 et X6.",
         "matrixBadge": "Matrice X3 + X6",
         "items": [
           {
-            "title": "Entrée double voie matricielle",
+            "title": "Entrée double piste matricielle",
             "description": "Placement instantané dans les matrices X3 et X6 pour le Chapitre 1."
           },
           {
             "title": "Position matricielle globale",
-            "description": "Éligible aux débordements et à l'activité d'équipe au fur et à mesure que la bibliothèque grandit."
+            "description": "Éligible aux déversements et activités d'équipe à mesure que la bibliothèque grandit."
           },
           {
             "title": "Droits de gains par parrainage",
-            "description": "Partagez votre lien et gagnez sur chaque activation de Chapitre 1."
+            "description": "Partagez votre lien et gagnez sur chaque activation du Chapitre 1."
           },
           {
             "title": "Accès au pool de redevances",
@@ -532,29 +537,38 @@
       },
       "terms": {
         "title": "J'accepte les Conditions Générales de RicoMatrix",
-        "description": "En cochant cette case, vous reconnaissez et acceptez nos conditions d'utilisation, y compris les règles de participation, les directives de parrainage et les standards de la communauté.",
+        "description": "En cochant cette case, vous reconnaissez et acceptez nos conditions d'utilisation, y compris les règles de participation, les directives de parrainage et les normes communautaires.",
         "readTerms": "Lire les Conditions Générales complètes"
       },
       "disclaimer": {
-        "title": "Je comprends et accepte l'Avertissement Financier",
-        "description": "En cochant cette case, vous confirmez que vous comprenez les risques liés aux investissements en cryptomonnaie et à la participation aux matrices. Les performances passées ne garantissent pas les résultats futurs.",
+        "title": "Je comprends et j'accepte l'Avertissement Financier",
+        "description": "En cochant cette case, vous confirmez que vous comprenez les risques liés aux investissements en cryptomonnaies et à la participation matricielle. Les performances passées ne garantissent pas les résultats futurs.",
         "readDisclaimer": "Lire l'Avertissement complet"
       },
       "referral": {
+        "detectedV2": "Parrainage V2 valide",
+        "detectedV1": "Parrainage V1 valide",
+        "linkedV2": "Lié V2",
+        "linkedV1": "Lié V1",
+        "detected": "Détecté",
+
         "title": "Adresse de Parrainage",
         "subtitle": "Requis pour l'inscription",
+        "alreadyRegistered": "Déjà inscrit",
+        "noReferralNeeded": "Pas besoin de parrainage - vous faites déjà partie du système",
         "required": "Parrainage requis",
-        "inputHelp": "Entrez une adresse Ethereum valide",
+        "checking": "Vérification du parrainage...",
+        "selfReferral": "Impossible de se parrainer soi-même",
+        "invalid": "Parrainage invalide",
         "requiredWarning": "Une adresse de parrainage est requise pour compléter l'inscription",
-        "detected": "Parrainage Détecté",
-        "invalid": "Adresse de Parrainage Invalide",
-        "checking": "Vérification du Parrainage...",
-        "linked": "Lié",
+        "inputHelp": "Entrez une adresse Ethereum valide",
+        "warning": "L'adresse {address} n'est pas enregistrée dans V1 ou V2.",
+        "warningNote": "Veuillez vérifier que l'adresse de parrainage existe dans le système V1 ou V2.",
+        "checkingBadge": "Vérification...",
+        "selfReferralBadge": "Auto-parrainage",
         "invalidBadge": "Invalide",
-        "checkingBadge": "Vérification",
-        "referrer": "Parrain : {address}",
-        "warning": "Avertissement : L'adresse {address} n'est pas enregistrée dans le système.",
-        "warningNote": "Vous pouvez toujours vous inscrire avec ce parrainage, mais il ne recevra peut-être pas les récompenses de parrainage."
+        "validBadge": "Parrainage valide",
+        "registeredBadge": "Inscrit"
       },
       "cost": {
         "registrationCost": "Coût d'Inscription",
@@ -566,39 +580,40 @@
       "buttons": {
         "approving": "Approbation en cours...",
         "registering": "Inscription en cours...",
-        "reviewRequired": "Examen requis",
-        "insufficientBalance": "Solde insuffisant",
+        "reviewRequired": "Révision Requise",
+        "insufficientBalance": "Solde Insuffisant",
         "processing": "Traitement en cours...",
         "approveUsdt": "Approuver {amount} USDT",
-        "completeRegistration": "Terminer l'inscription"
+        "completeRegistration": "Finaliser l'Inscription"
       },
       "error": {
-        "referralRequired": "L'adresse de parrainage est requise pour s'inscrire",
+        "invalidReferral": "L'adresse de parrainage n'existe pas dans V1 ou V2.",
         "invalidAddress": "Format d'adresse Ethereum invalide",
         "selfReferral": "Vous ne pouvez pas vous parrainer vous-même",
-        "invalidReferral": "L'adresse de parrainage fournie n'existe pas dans le système.",
+        "referralRequired": "L'adresse de parrainage est requise pour s'inscrire",
+        "alreadyRegistered": "Vous êtes déjà inscrit",
         "approvalFailed": "Échec de l'approbation USDT",
         "registrationFailed": "Échec de l'inscription",
-        "insufficientBalance": "Solde insuffisant. Coût : {joinCost} USDT, Votre solde : {usdtBalance} USDT"
+        "insufficientBalance": "Solde USDT insuffisant. Requis : {joinCost} USDT, Disponible : {usdtBalance} USDT"
       },
       "progress": {
         "step1": "1. Approuver USDT",
-        "step2": "2. Enregistrer le Portefeuille",
-        "note": "Toutes les actions se font directement sur BSC via votre portefeuille. RicoMatrix ne peut pas déplacer vos fonds sans votre approbation de transaction.",
+        "step2": "2. Inscrire le Portefeuille",
+        "note": "Toutes les actions se produisent directement sur BSC via votre portefeuille. RicoMatrix ne peut pas déplacer vos fonds sans votre approbation de transaction.",
         "confirming": "Confirmation de votre inscription sur la blockchain..."
       },
       "modals": {
         "terms": {
-          "title": "Conditions Générales RicoMatrix",
+          "title": "Conditions Générales de RicoMatrix",
           "lastUpdated": "Dernière mise à jour : {date}",
           "sections": {
             "acceptance": {
               "title": "1. Acceptation des Conditions",
-              "content": "En accédant et utilisant RicoMatrix, vous acceptez et vous engagez à respecter ces Conditions Générales. Si vous n'êtes pas d'accord avec une partie de ces conditions, vous ne devez pas utiliser nos services."
+              "content": "En accédant et en utilisant RicoMatrix, vous acceptez et vous engagez à respecter ces Conditions Générales. Si vous n'acceptez pas une partie de ces conditions, vous ne devez pas utiliser nos services."
             },
             "serviceDescription": {
               "title": "2. Description du Service",
-              "content": "RicoMatrix est une application décentralisée construite sur la technologie blockchain qui permet aux utilisateurs de participer à des programmes de parrainage matriciels par l'achat de chapitres. La plateforme fonctionne sur Binance Smart Chain (BSC)."
+              "content": "RicoMatrix est une application décentralisée construite sur la technologie blockchain qui permet aux utilisateurs de participer à des programmes de parrainage matriciels via l'achat de chapitres. La plateforme fonctionne sur le Binance Smart Chain (BSC)."
             },
             "userResponsibilities": {
               "title": "3. Responsabilités de l'Utilisateur",
@@ -611,27 +626,27 @@
               ]
             },
             "matrixRules": {
-              "title": "4. Règles de Participation aux Matrices",
+              "title": "4. Règles de Participation Matricielle",
               "items": [
-                "Les positions matricielles sont non transférables",
-                "Les gains de parrainage sont calculés selon la logique du contrat intelligent",
-                "Le cyclage des matrices suit des règles prédéfinies du contrat intelligent",
-                "Le déblocage de chapitres nécessite un paiement en USDT",
+                "Les positions matricielles ne sont pas transférables",
+                "Les gains de parrainage sont calculés sur la base de la logique des smart contracts",
+                "Le cyclage matriciel suit des règles prédéfinies de smart contracts",
+                "Le déblocage des chapitres nécessite un paiement en USDT",
                 "Les distributions de redevances suivent les pourcentages spécifiés dans le contrat"
               ]
             },
             "intellectualProperty": {
               "title": "5. Propriété Intellectuelle",
-              "content": "Tout contenu, y compris les documents PDF, les structures matricielles et la conception de la plateforme, sont la propriété intellectuelle de RicoMatrix. Vous ne pouvez pas reproduire, distribuer ou créer d'œuvres dérivées sans autorisation."
+              "content": "Tout le contenu, y compris les documents PDF, les structures matricielles et la conception de la plateforme, sont la propriété intellectuelle de RicoMatrix. Vous ne pouvez pas reproduire, distribuer ou créer d'œuvres dérivées sans autorisation."
             },
             "termination": {
               "title": "6. Résiliation",
-              "content": "Nous nous réservons le droit de résilier ou suspendre votre accès à la plateforme à notre seule discrétion, sans préavis, pour tout comportement que nous estimons contraire à ces Conditions Générales ou préjudiciable aux autres utilisateurs."
+              "content": "Nous nous réservons le droit de résilier ou de suspendre votre accès à la plateforme à notre seule discrétion, sans préavis, pour toute conduite que nous estimons contraire à ces Conditions Générales ou préjudiciable aux autres utilisateurs."
             }
           },
           "importantNotice": {
             "title": "Avis Important",
-            "content": "En cochant la case d'accord, vous confirmez avoir lu, compris et accepté d'être lié par ces Conditions Générales. Cet accord constitue un contrat légalement contraignant entre vous et RicoMatrix."
+            "content": "En cochant la case d'accord, vous confirmez avoir lu, compris et accepté d'être lié par ces Conditions Générales. Cet accord constitue un contrat juridiquement contraignant entre vous et RicoMatrix."
           },
           "buttons": {
             "accept": "J'Accepte les Conditions",
@@ -639,15 +654,15 @@
           }
         },
         "disclaimer": {
-          "title": "Avertissement de Risque Financier",
-          "subtitle": "Informations importantes avant de continuer",
+          "title": "Avertissement sur les Risques Financiers",
+          "subtitle": "Informations importantes avant de poursuivre",
           "warning": {
-            "title": "ATTENTION : RISQUE FINANCIER ÉLEVÉ",
-            "content": "La participation aux programmes matriciels implique un risque financier significatif. Vous pourriez perdre tout ou partie de votre investissement."
+            "title": "AVERTISSEMENT : RISQUE FINANCIER ÉLEVÉ",
+            "content": "La participation à des programmes matriciels implique des risques financiers importants. Vous pourriez perdre une partie ou la totalité de votre investissement."
           },
           "sections": {
             "noAdvice": {
-              "title": "1. Pas de Conseil Financier",
+              "title": "1. Aucun Conseil Financier",
               "content": "RicoMatrix ne fournit pas de conseils financiers. Toutes les informations fournies sont à des fins éducatives uniquement. Vous devriez consulter un conseiller financier qualifié avant de prendre toute décision d'investissement."
             },
             "volatility": {
@@ -657,11 +672,11 @@
             "matrixRisks": {
               "title": "3. Risques des Programmes Matriciels",
               "items": [
-                "Les programmes matriciels dépendent de nouveaux participants",
+                "Les programmes matriciels dépendent de l'arrivée de nouveaux participants",
                 "Les gains ne sont pas garantis et peuvent fluctuer",
                 "Vous pourriez ne pas récupérer votre investissement initial",
                 "La saturation du marché peut affecter le potentiel de gains",
-                "Des risques de contrat intelligent existent (malgré les audits)"
+                "Il existe des risques liés aux smart contracts (malgré les audits)"
               ]
             },
             "regulatory": {
@@ -669,30 +684,34 @@
               "content": "Les réglementations sur les cryptomonnaies varient selon les juridictions. Vous êtes responsable de comprendre et de respecter toutes les lois applicables dans votre pays de résidence. Certaines juridictions peuvent restreindre ou interdire la participation aux programmes matriciels."
             },
             "investmentWarning": {
-              "title": "5. Avertissement d'Investissement",
+              "title": "5. Avertissement sur l'Investissement",
               "items": [
                 "N'investissez que ce que vous pouvez vous permettre de perdre complètement",
                 "Diversifiez vos investissements sur différents actifs",
-                "La participation aux matrices ne devrait pas être votre stratégie d'investissement principale",
+                "La participation matricielle ne devrait pas être votre stratégie d'investissement principale",
                 "Considérez cela comme un investissement spéculatif à haut risque",
-                "Préparez-vous à la possibilité d'une perte totale"
+                "Soyez préparé à la possibilité d'une perte totale"
               ]
             },
             "technicalRisks": {
               "title": "6. Risques Techniques",
-              "content": "Bien que nous visions la sécurité, la technologie blockchain implique des risques incluant les vulnérabilités des contrats intelligents, les problèmes de sécurité des portefeuilles, les défaillances des exchanges et les changements technologiques qui pourraient affecter la fonctionnalité de la plateforme."
+              "content": "Bien que nous nous efforcions d'assurer la sécurité, la technologie blockchain implique des risques incluant les vulnérabilités des smart contracts, les problèmes de sécurité des portefeuilles, les défaillances des exchanges et les changements technologiques qui pourraient affecter la fonctionnalité de la plateforme."
             }
           },
           "acknowledgment": {
             "title": "Reconnaissance Requise",
-            "content": "En procédant à l'inscription, vous reconnaissez avoir lu cet avertissement, compris les risques impliqués et accepté l'entière responsabilité de vos décisions d'investissement. Vous confirmez que vous participez volontairement et à vos propres risques."
+            "content": "En poursuivant l'inscription, vous reconnaissez avoir lu cet avertissement, comprendre les risques impliqués et accepter la pleine responsabilité de vos décisions d'investissement. Vous confirmez que vous participez volontairement et à vos propres risques."
           },
           "buttons": {
             "accept": "J'Accepte les Risques",
             "close": "Fermer"
           }
         }
-      }
+      },
+      "alerts": {
+        "insufficientBalance": "Solde USDT insuffisant. Vous avez besoin de {joinCost} USDT mais n'avez que {usdtBalance} USDT"
+      },
+      "sectionTitle": "Créer Votre Compte"
     },
     "page": {
       "loading": {
@@ -1183,15 +1202,22 @@
         "description": "Lisez le contenu PDF de ce chapitre dans notre visionneuse sécurisée.",
         "button": "Lire le PDF du Chapitre"
       },
+
       "pdfViewer": {
         "subtitle": "Piste {trackNumber} • Visionneuse PDF sécurisée • Lecture uniquement",
-        "noDownload": "Pas de Téléchargement",
-        "secureMessage": "Visionneuse PDF sécurisée • Le téléchargement est déconseillé • Clic droit désactivé",
+        "noDownload": "Téléchargement interdit",
+        "secureMessage": "Visionneuse PDF sécurisée • Téléchargement déconseillé • Clic droit désactivé",
         "iframeTitle": "Chapitre {chapter} - {title}",
         "protectedMessage": "Contenu protégé - Lecture uniquement",
         "zoomIn": "Zoom avant",
         "zoomOut": "Zoom arrière",
-        "closeButton": "Fermer la visionneuse"
+        "closeButton": "Fermer la visionneuse",
+        "loading": "Chargement du PDF...",
+        "loadError": "Échec du chargement du PDF",
+        "previousPage": "Page précédente",
+        "nextPage": "Page suivante",
+        "resetZoom": "Réinitialiser le zoom",
+        "shortcuts": "Utilisez les touches ← → pour naviguer, +/- pour zoomer"
       }
     },
     "ChapterGrid": {
@@ -1230,15 +1256,15 @@
   },
 
   "Documentation": {
-    "title": "Documentation d'Entreprise",
+    "title": "Documentation Commerciale",
     "subtitle": "Découvrez notre modèle commercial, notre vision et notre feuille de route",
     "backToDashboard": "Retour au Tableau de Bord",
     "version": "Version 1.0",
     "stats": {
       "pages": "Pages",
-      "lastUpdated": "Dernière mise à jour",
-      "fileSize": "Taille du fichier",
-      "fileType": "Type de fichier"
+      "lastUpdated": "Dernière Mise à Jour",
+      "fileSize": "Taille du Fichier",
+      "fileType": "Type de Fichier"
     },
     "toc": {
       "title": "Table des Matières",
@@ -1249,58 +1275,182 @@
         "roadmap": "Feuille de Route",
         "team": "Équipe & Conseillers",
         "technology": "Stack Technologique",
-        "legal": "Légal & Conformité",
-        "faq": "Foire aux Questions"
+        "legal": "Juridique & Conformité",
+        "faq": "Questions Fréquentes"
       },
       "quickActions": "Actions Rapides"
     },
     "actions": {
-      "download": "Télécharger PDF",
+      "download": "Télécharger le PDF",
       "print": "Imprimer le Document",
-      "openNew": "Ouvrir dans un Nouvel Onglet"
+      "openNew": "Ouvrir dans un Nouvel Onglet",
+      "openPdf": "Ouvrir PDF",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "zoomOut": "Zoom arrière",
+      "zoomIn": "Zoom avant",
+      "retry": "Réessayer"
     },
     "help": {
       "title": "Besoin d'Aide ?",
-      "description": "Contactez notre équipe de support pour toute question concernant la documentation.",
+      "description": "Contactez notre équipe support pour toute question concernant la documentation.",
       "contact": "Contacter le Support"
     },
     "viewer": {
-      "title": "Documentation d'Entreprise",
-      "subtitle": "Documentation officielle et livre blanc",
-      "footer": "Défiler pour naviguer • Utilisez Ctrl+P pour imprimer",
-      "secure": "Document Sécurisé • Chiffré"
+      "title": "Documentation Commerciale",
+      "subtitle": "Documentation commerciale et whitepaper officiels",
+      "footer": "Défilez pour naviguer • Utilisez Ctrl+P pour imprimer",
+      "secure": "Document Sécurisé • Chiffré",
+      "ready": "Visionneuse Prête"
     },
     "loading": "Chargement du document...",
     "error": {
       "title": "Échec du Chargement du Document",
       "loading": "Échec du chargement du PDF",
-      "downloadInstead": "Télécharger à la Place"
+      "downloadInstead": "Télécharger à la place"
     },
     "menu": {
       "download": "Télécharger PDF",
-      "print": "Imprimer le Document",
+      "print": "Imprimer Document",
       "copyLink": "Copier le Lien"
     },
     "summary": {
       "keyPoints": "Points Clés",
-      "point1": "Système de matrice décentralisé",
+      "point1": "Système matriciel décentralisé",
       "point2": "Récompenses de parrainage automatisées",
       "point3": "Sécurité des contrats intelligents",
-      "point4": "Tokenomics transparents",
+      "point4": "Tokenomics transparente",
       "documentInfo": "Informations du Document",
       "format": "Format : PDF",
       "pages": "Pages : 24",
       "size": "Taille : 2,4 Mo",
-      "language": "Langue : Anglais"
+      "language": "Langue : Français"
     },
     "related": {
-      "title": "Ressources Connexes",
+      "title": "Ressources Associées",
       "terms": "Conditions Générales",
       "termsDesc": "Conditions légales générales",
       "privacy": "Politique de Confidentialité",
       "privacyDesc": "Protection des données et confidentialité",
       "faq": "FAQ",
       "faqDesc": "Questions fréquemment posées"
+    }
+  },
+  "MigrationPanel": {
+    "title": "Actualisation requise",
+    "subtitle": "Actualisation du compte",
+    "v1Status": "Compte hérité",
+    "v2Status": "Statut actuel",
+    "legacyRoyalty": "Redevance héritée",
+    "v2Royalty": "Redevance actuelle",
+    "benefits": {
+      "title": "Avantages de l'actualisation",
+      "transferHistory": "Transférez votre historique complet des gains",
+      "preserveEarnings": "Préservez les soldes hérités de redevances et RICO",
+      "accessV2": "Accédez aux nouvelles fonctionnalités et récompenses"
+    },
+    "status": {
+      "found": "Trouvé",
+      "notMigrated": "Actualisation nécessaire",
+      "success": "Actualisation réussie ! Votre compte est maintenant prêt."
+    },
+    "button": {
+      "ready": "Actualiser le compte maintenant",
+      "busy": "Actualisation en cours..."
+    },
+    "oneTime": "Processus unique • Actualisation gratuite",
+    "error": "Échec de l'actualisation. Veuillez réessayer."
+  },
+  "RoyaltyPool": {
+    "header": {
+      "label": "Pool de Redevances • Gains",
+      "title": "Réclamez Vos Redevances"
+    },
+    "status": {
+      "processing": "Traitement en cours...",
+      "ready": "Prêt à Réclamer"
+    },
+    "migration": {
+      "v1Found": "Compte Hérité Trouvé - Migration Requise",
+      "migrated": "Migré depuis l'Ancien Système",
+      "legacyAvailable": "Redevances Héritées Disponibles"
+    },
+    "summary": {
+      "title": "🎁 Redevances Disponibles",
+      "descriptionBoth": "Vous avez à la fois des redevances héritées et actuelles disponibles",
+      "descriptionLegacy": "Vous avez des redevances héritées depuis votre instantané de migration",
+      "descriptionCurrent": "Vous avez des gains de redevances actuels disponibles",
+      "totalClaimable": "Total Réclamable"
+    },
+    "stats": {
+      "royaltyShare": "Part de Redevances",
+      "legacyShare": "Part Héritée",
+      "currentShare": "Part Actuelle",
+      "fromMigration": "Depuis l'instantané de migration",
+      "activeShare": "Part active actuelle",
+      "availableRoyalty": "Redevances Disponibles",
+      "currentRoyalty": "Actuel",
+      "active": "Actif",
+      "legacyRoyalty": "Hérité",
+      "snapshot": "Instantané",
+      "fromRecent": "Des achats récents",
+      "fromSnapshot": "Depuis l'instantané de migration",
+      "noRoyalty": "Aucune redevance disponible à réclamer",
+      "totalClaimed": "Total Réclamé",
+      "claimedDescription": "Toutes les redevances réclamées à ce jour",
+      "currentClaimed": "Actuel Réclamé:",
+      "legacyClaimed": "Hérité Réclamé:"
+    },
+    "claims": {
+      "legacy": {
+        "title": "Redevances Héritées",
+        "subtitle": "Depuis l'instantané de votre compte hérité",
+        "description": "Il s'agit d'une réclamation unique de votre solde de redevances héritées au moment de la migration",
+        "button": "Réclamer les Redevances Héritées"
+      },
+      "current": {
+        "title": "Redevances Actuelles",
+        "subtitle": "Gains actifs des achats",
+        "description": "Gagnées grâce à vos achats et activités récentes",
+        "button": "Réclamer les Redevances Actuelles"
+      },
+      "none": {
+        "title": "Aucune Redevance Disponible",
+        "description": "Vous n'avez aucune redevance disponible à réclamer pour le moment",
+        "hint": "Les redevances sont gagnées à partir  chaque achat dans le système. Effectuez des achats pour commencer à gagner!"
+      }
+    },
+    "info": {
+      "title": "À propos des Gains de Redevances",
+      "subtitle": "Comprendre vos gains de redevances",
+      "legacyTitle": "À propos des Redevances Héritées et Actuelles",
+      "legacySection": {
+        "title": "Redevances Héritées",
+        "items": [
+          "Depuis l'instantané de votre compte hérité au moment de la migration",
+          "Séparées des gains de redevances actuelles fraîches",
+          "Réclamation unique - ne se reconstituera pas"
+        ]
+      },
+      "currentSection": {
+        "title": "Redevances Actuelles",
+        "items": [
+          "Basées sur votre pourcentage de part de redevances",
+          "Se reconstitue à mesure que vous effectuez plus d'achats"
+        ]
+      },
+      "items": [
+        {
+          "icon": "📊",
+          "title": "Distribution Basée sur la Part",
+          "description": "Votre pourcentage de part détermine votre portion du pool"
+        },
+        {
+          "icon": "⚡",
+          "title": "Réclamations Instantanées",
+          "description": "Réclamez à tout moment - pas de périodes d'attente ni de restrictions"
+        }
+      ]
     }
   }
 }

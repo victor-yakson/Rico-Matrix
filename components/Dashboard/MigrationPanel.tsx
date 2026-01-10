@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
+import { useTranslations } from "next-intl";
 
 interface MigrationPanelProps {
   onMigrationComplete?: () => void;
@@ -8,20 +9,37 @@ interface MigrationPanelProps {
 const MigrationPanel: React.FC<MigrationPanelProps> = ({
   onMigrationComplete,
 }) => {
-  const { userData, migrateSelf, loading, refetchAllData } = useQuantuMatrix();
+  const { 
+    userData, 
+    migrateSelf, 
+    loading, 
+    refetchAllData,
+    migrationAndRoyaltyUI 
+  } = useQuantuMatrix();
+  const t = useTranslations("MigrationPanel");
 
   const [isMigrating, setIsMigrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  // Determine if panel should be shown
   const shouldShow = useMemo(() => {
-    if (!userData) return false;
-    const existsInV1 = !!userData.migrationStatus?.existsV1;
-    const migrated = !!userData.migrationStatus?.migrated;
-    return existsInV1 && !migrated;
+    if (!userData?.migrationData) return false;
+    
+    const status = userData.migrationData.status;
+    // Show panel only if user exists in V1 (status 1) and hasn't migrated
+    return status === 1;
   }, [userData]);
 
-  if (!shouldShow) return null;
+  // Legacy claimable amount
+  const legacyClaimable = useMemo(() => {
+    return migrationAndRoyaltyUI?.legacyClaimable || "0";
+  }, [migrationAndRoyaltyUI]);
+
+  // V2 claimable amount
+  const v2Claimable = useMemo(() => {
+    return migrationAndRoyaltyUI?.v2Claimable || "0";
+  }, [migrationAndRoyaltyUI]);
 
   const onMigrate = async () => {
     setError(null);
@@ -34,13 +52,16 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
       setDone(true);
       onMigrationComplete?.();
     } catch (e: any) {
-      setError(e?.message ?? "Migration failed. Try again.");
+      setError(t("error") || e?.message || "Migration failed. Try again.");
     } finally {
       setIsMigrating(false);
     }
   };
 
   const busy = loading || isMigrating;
+
+  // Don't show panel if user shouldn't migrate
+  if (!shouldShow) return null;
 
   return (
     <div className="w-full max-w-md mx-auto p-4">
@@ -69,26 +90,88 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
             </div>
 
             <div className="min-w-0">
-              <div className="text-sm text-white/70">Upgrade required</div>
+              <div className="text-sm text-white/70">{t("subtitle")}</div>
               <div className="text-lg font-semibold text-[#d4af37] truncate">
-                Move to V2
+                {t("title")}
               </div>
             </div>
           </div>
 
-          {/* Minimal feedback only */}
+          {/* Migration Details */}
+          <div className="mt-4 space-y-3">
+            {/* V1 Status */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-white/60">{t("v1Status")}</span>
+              <span className="text-sm font-medium text-yellow-400">
+                {t("status.found")}
+              </span>
+            </div>
+
+            {/* V2 Status */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-white/60">{t("v2Status")}</span>
+              <span className="text-sm font-medium text-red-400">
+                {t("status.notMigrated")}
+              </span>
+            </div>
+
+            {/* Legacy Royalty */}
+            {parseFloat(legacyClaimable) > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/60">{t("legacyRoyalty")}</span>
+                <span className="text-sm font-medium text-green-400">
+                  {parseFloat(legacyClaimable).toFixed(2)} USDT
+                </span>
+              </div>
+            )}
+
+            {/* V2 Royalty */}
+            {parseFloat(v2Claimable) > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/60">{t("v2Royalty")}</span>
+                <span className="text-sm font-medium text-blue-400">
+                  {parseFloat(v2Claimable).toFixed(2)} USDT
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Migration Benefits */}
+          <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-yellow-900/20 to-yellow-800/10 border border-yellow-700/30">
+            <h4 className="text-sm font-semibold text-yellow-400 mb-2">
+              {t("benefits.title")}
+            </h4>
+            <ul className="space-y-1 text-xs text-white/70">
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-0.5">✓</span>
+                {t("benefits.transferHistory")}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-0.5">✓</span>
+                {t("benefits.preserveEarnings")}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-0.5">✓</span>
+                {t("benefits.accessV2")}
+              </li>
+            </ul>
+          </div>
+
+          {/* Error Feedback */}
           {error && (
             <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {error}
             </div>
           )}
 
+          {/* Success Feedback */}
           {done && (
             <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-              Done.
+              {t("status.success")}
             </div>
           )}
 
+          {/* Migrate Button */}
           <button
             onClick={onMigrate}
             disabled={busy}
@@ -103,15 +186,16 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
             {busy ? (
               <span className="inline-flex items-center justify-center gap-2">
                 <span className="h-4 w-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                Upgrading…
+                {t("button.busy")}
               </span>
             ) : (
-              "Upgrade Now"
+              t("button.ready")
             )}
           </button>
 
+          {/* Info Text */}
           <div className="mt-3 text-center text-xs text-white/45">
-            One-time action.
+            {t("oneTime")}
           </div>
         </div>
       </div>

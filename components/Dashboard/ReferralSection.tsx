@@ -9,19 +9,60 @@ export const ReferralSection = () => {
   const [copied, setCopied] = useState(false);
   const t = useTranslations('Dashboard.referral');
 
-  const referralLink = address 
-    ? `${window.location.origin}?ref=${address}`
-    : t('link.noWallet');
+  const getReferralLink = () => {
+    if (!address || typeof window === 'undefined') {
+      return t('link.noWallet');
+    }
+    return `${window.location.origin}?ref=${address}`;
+  };
+
+  const referralLink = getReferralLink();
 
   const copyReferralLink = async () => {
-    if (address) {
+    if (!address) return;
+    
+    try {
+      // Modern clipboard API
       await navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Clipboard API failed:', err);
+      
+      // Fallback for older browsers or non-HTTPS
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = referralLink;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        textArea.style.pointerEvents = 'none';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // For mobile devices
+        
+        const successful = document.execCommand('copy');
+        if (!successful) {
+          throw new Error('execCommand failed');
+        }
+        
+        document.body.removeChild(textArea);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr);
+        // Last resort: show the link for manual copy
+        alert(`${t('link.copyFailed')}\n\n${referralLink}`);
+        return;
+      }
     }
+    
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const shareOnTwitter = () => {
+    if (!address) return;
+    
     const text = t('share.twitterText', { link: referralLink });
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
@@ -70,7 +111,7 @@ export const ReferralSection = () => {
           </button>
         </div>
         {copied && (
-          <p className="text-green-400 text-xs mt-1">
+          <p className="text-green-400 text-xs mt-1 animate-pulse">
             {t('link.copiedMessage')}
           </p>
         )}

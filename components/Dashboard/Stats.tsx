@@ -320,7 +320,7 @@ export const Stats = ({
       </div>
 
       {/* RICO Farming Summary */}
-      {userData?.exists &&
+      {/* {userData?.exists &&
         (parseFloat(ricoTotal) > 0 || parseFloat(ricoPending) > 0) && (
           <div className="mt-6 p-4 rounded-xl border border-cyan-500/20 bg-cyan-950/10">
             <div className="flex items-center gap-3 mb-2">
@@ -361,7 +361,7 @@ export const Stats = ({
               {t("ricoSummary.note")}
             </p>
           </div>
-        )}
+        )} */}
     </div>
   );
 };
