@@ -6,13 +6,15 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "books:extract": "node --experimental-modules scripts/extractBooksToJson.ts"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.9",
     "@tanstack/react-query": "^5.90.11",
     "@walletconnect/modal": "^2.7.0",
     "framer-motion": "^12.23.24",
+    "mespeak": "^2.0.2",
     "next": "^16.0.7",
     "next-intl": "^4.5.8",
     "pdfjs-dist": "^4.10.38",

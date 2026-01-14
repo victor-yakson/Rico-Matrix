@@ -1,0 +1,166 @@
+{
+  "id": "chapter-7",
+  "chapterNumber": 7,
+  "track": 1,
+  "title": "WHAT DeFi PROTOCOLS ARE (PLAIN ENGLISH)",
+  "episodes": [
+    {
+      "id": "episode-1",
+      "title": "WHAT DeFi PROTOCOLS ARE (PLAIN ENGLISH)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A DeFi protocol is a set of smart contracts that runfinancial services without banks. They do not ask for permission. They execute rules. 🧠Core DeFi Protocol Types 1⃣DEX (Decentralized Exchanges) Swap tokens directly from wallets Use liquidity pools instead of order books Examples: AMM-based swaps Key Risks: slippage, pool imbalance, malicious tokens 2⃣Lending & Borrowing Deposit assets to earn interest Borrow against collateral Key Risks: liquidation cascades, oracle errors 3⃣Yield & Vaults Automated strategies that move funds to optimize returns Key Risks: strategy bugs, compounding errors 4⃣Stablecoins Pegged tofiat or assets Backed by collateral or algorithms Key Risks: de-pegging, collateral quality"
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "AMM",
+              "meaning": "Automated Market Maker"
+            },
+            {
+              "term": "Liquidity pool",
+              "meaning": "Shared funds for swaps/loans"
+            },
+            {
+              "term": "Collateral",
+              "meaning": "Assets locked to secure borrowing"
+            },
+            {
+              "term": "Liquidation",
+              "meaning": "Forced sale when collateral falls"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-2",
+      "title": "COMMON EXPLOIT TYPES (VERY IMPORTANT)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Most losses repeat the same patterns. 🚨Exploit Taxonomy 1⃣Reentrancy Attacks Contract is called repeatedly before state updates Classic drain pattern 2⃣Oracle Manipulation Fake prices injected to trick protocols 3⃣Flash Loan Attacks Huge capital borrowed instantly to exploit logic 4⃣Integer Overflow/Underflow Math errors causing unexpected balances 5⃣Access Control Bugs Missing or weak permission checks 6⃣Approval Exploits Unlimited approvals abused later 7⃣Rug Pull Mechanics Liquidity removal Owner drains Fee hikes"
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Flash loan",
+              "meaning": "Uncollateralized loan within one transaction"
+            },
+            {
+              "term": "Reentrancy",
+              "meaning": "Recursive calls before statefinalization"
+            },
+            {
+              "term": "Oracle",
+              "meaning": "External data feed (prices/events)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-3",
+      "title": "WHAT AUDITS REALLY MEAN",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "An audit is a professional review of code at a point in time. It is not a guarantee. 🧾Audit Truths Audits reduce risk Audits do not remove risk New upgrades can reintroduce bugs Economic attacks may bypass audits 🧠How to Read an Audit Check for: Critical issues resolved Scope (what was audited) Date (old audits miss new risks) Auditor reputation"
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Scope",
+              "meaning": "Code included in the audit"
+            },
+            {
+              "term": "Severity",
+              "meaning": "Impact level of a bug"
+            },
+            {
+              "term": "Remediation",
+              "meaning": "Fixing reported issues"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-4",
+      "title": "BEFORE YOU INTERACT (SAFETY CHECKLIST)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Never interact blindly. ✅Pre-Interaction Checklist"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Verify contract address on explorer",
+            "Confirm protocol documentation",
+            "Check token approvals",
+            "Start with small test amounts",
+            "Understand fees and slippage",
+            "Check admin privileges"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "If you can’t explain what will happen… don’t click."
+        }
+      ]
+    },
+    {
+      "id": "episode-5",
+      "title": "SAFE TOOLING (YOUR ARMOR)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Tools don’t remove risk. They reveal it. 🧰Essential Safety Tools 🔍Block Explorers Etherscan BscScan Polygonscan Use to: verify contracts read functions track transactions 🧪Transaction Simulators Tenderly Wallet built-in simulation Use to: preview outcomes detect drains 🔓Approval Management (Revoke Tools) Revoke.cash Etherscan token approvals Use to: remove unlimited allowances 🚨Monitoring & Alerts Wallet alerts Price alerts Exploit feeds"
+        }
+      ]
+    },
+    {
+      "id": "episode-6",
+      "title": "ANALYSIS: WHY DeFi FAILURES HAPPEN",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Failures usually come from: speed over safety complexity over clarity incentives over design Risk is the price of innovation. 📊Analysis Summary Most exploits are known patterns Education reduces loss more than audits Simple protocols survive longer"
+        }
+      ]
+    },
+    {
+      "id": "episode-7",
+      "title": "FORECAST: SAFER DeFi, SMARTER USERS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The future of DeFi includes: better simulations formal verification modular contracts safer defaults Users will: demand transparency manage approvals actively value safety over hype"
+        }
+      ]
+    },
+    {
+      "id": "episode-8",
+      "title": "CONFIDENCE THROUGH UNDERSTANDING",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Confidence doesn’t come from ignoring risk. It comes from seeing it clearly. When you understand: how protocols work how exploits happen how to protect yourself You stop fearing DeFi. You respect it. ⚠DISCLAIMER (READ CAREFULLY) This chapter is provided for educational purposes only. Rico Matrix does not offerfinancial, investment, legal, tax advice, or profit guarantees. Crypto, DeFi, and smart‑contract systems involve real risks, including loss of funds, exploits, volatility, and regulatory changes. All tools, links, and platforms mentioned are third‑party resources. Rico Matrix does not own, control, or guarantee their accuracy, security, or outcomes. You are solely responsible for your decisions. Do your own research (DYOR), secure your keys, and understand protocols before interacting. Knowledge reduces risk — it does not eliminate it. 🧰TRUSTED TOOLS & REFERENCES (LEVEL 7) All references below are widely used industry resources to help you learn, verify, and grow safely in DeFi. 🔍Blockchain Explorers (Verification) Ethereum:https://etherscan.io BNB Smart Chain:https://bscscan.com Polygon:https://polygonscan.com Use for: contract verification, transactions, permissions, on‑chain truth. 🧪Transaction Simulation & Debugging Tenderly:https://tenderly.co Use for: previewing transactions, detecting unexpected fund movement. 🔓Token Approval Management Revoke.cash:https://revoke.cash Use for: reviewing and removing unlimited or unused approvals. 📊Market Data & DeFi Analytics CoinGecko:https://www.coingecko.com CoinMarketCap:https://coinmarketcap.com DeFiLlama (TVL & ecosystem data):https://defillama.com Use for: supply analysis, TVL tracking, ecosystem trends. ⚙Smart Contract Development & Standards Solidity Docs:https://docs.soliditylang.org OpenZeppelin Docs:https://docs.openzeppelin.com Ethereum Developer Portal:https://ethereum.org/developers Use for: learning smart‑contract development, secure patterns, standards. 🛡Smart Contract Audits & Security Research OpenZeppelin Security:https://www.openzeppelin.com/security CertiK:https://www.certik.com Trail of Bits:https://www.trailofbits.com Immunefi(bug bounties):https://immunefi.com Use for: understanding vulnerabilities, audit practices, exploit patterns. ⚖Regulation & Compliance Learning FATF Virtual Assets:https://www.fatf-gafi.org/en/topics/virtual-assets.html BIS & CBDC Research:https://www.bis.org Use for: understanding global crypto regulation and compliance direction. 🎓Trading, Strategy & Risk Education CoinGecko Learn:https://www.coingecko.com/learn Binance Academy:https://academy.binance.com Use for: foundational trading knowledge, DeFi mechanics, risk education. 📘End of Chapter 7 Episode ➡Proceed to Level 8 Episode:DeFi Strategies, Yield Logic & Risk Management📈🛡"
+        }
+      ]
+    }
+  ],
+  "extractionStats": {
+    "numPages": 5,
+    "totalLines": 192,
+    "totalNonEmptyLines": 192,
+    "lowTextPages": []
+  },
+  "officialName": "When Code Manages Money",
+  "slogan": "“Yield Is Earned. Risk Is Managed.”"
+}

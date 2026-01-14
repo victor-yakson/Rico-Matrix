@@ -1,0 +1,291 @@
+{
+  "id": "chapter-6",
+  "chapterNumber": 6,
+  "track": 1,
+  "title": "THE PROMISE THAT FAILED",
+  "episodes": [
+    {
+      "id": "episode-1",
+      "title": "THE PROMISE THAT FAILED",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🌾Story Returns: Bamu’s Loan and the Paper Trap Bamufinally got a loan. He was happy. He signed papers he didn’t fully understand. The bank smiled. Then the rainy season came. The harvest was weak. He asked for time. The bank asked for payment. Bamu: “But you know I’m not a bad person.” Bank: “We don’t punish people. We enforce contracts.” Bamu learned the cold truth: A contract is not a friend. It is a rule. And rules don’t care how you feel."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If a rule was perfectly fair… but had no mercy… would you accept it?"
+        }
+      ]
+    },
+    {
+      "id": "episode-2",
+      "title": "WHAT A SMART CONTRACT REALLY IS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A smart contract is like a tiny robot living on the blockchain. It has one job: When conditions are met, execute automatically. It doesn’t sleep. It doesn’t forget. It doesn’t negotiate."
+        },
+        {
+          "type": "metaphor",
+          "title": "Metaphor: The Vending Machine",
+          "text": "You don’t beg a vending machine."
+        },
+        {
+          "type": "paragraph",
+          "text": "You follow the rule: insert coins select item receive product Smart contracts are vending machines forfinance, ownership, and agreements."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Smart contract",
+              "meaning": "Self‑executing code deployed on a blockchain that runs exactly as written."
+            },
+            {
+              "term": "Condition",
+              "meaning": "A requirement that must be true before something happens."
+            },
+            {
+              "term": "Execution",
+              "meaning": "The action the contract performs (send tokens, record ownership, mint, swap)."
+            },
+            {
+              "term": "Deterministic",
+              "meaning": "Same input → same output."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-3",
+      "title": "A SHORT HISTORY (WHERE IT STARTED)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Long before Ethereum, the idea existed. A man named Nick Szabo described “smart contracts” in the 1990s. The concept was simple: “Turn agreements into code.” But there was a missing piece: A public computer that nobody controls. Bitcoin proved a decentralized ledger could exist. Ethereum then expanded the idea: “What if the blockchain could run programs?” That is why Ethereum is called a “world computer.”"
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "World computer",
+              "meaning": "A blockchain capable of running general smart contract programs."
+            },
+            {
+              "term": "DApp",
+              "meaning": "Decentralized application (app powered by smart contracts)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-4",
+      "title": "EARLY PROJECTS THAT PROVED IT WORKS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Early Ethereum‑era projects showed smart contracts could be real systems:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "MakerDAO (early DeFi)"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "introduced decentralized collateralized borrowing and stablecoins."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Augur (early prediction markets)"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "let people create markets around future outcomes."
+        },
+        {
+          "type": "list",
+          "items": [
+            "The DAO (a major early experiment)"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "proved both the power and danger of complex smart contracts. These projects taught the world a deep lesson: Smart contracts can replace institutions… but code must be correct."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If an app holds billions and has one bug… who pays the price?"
+        }
+      ]
+    },
+    {
+      "id": "episode-5",
+      "title": "TYPES OF SMART CONTRACTS (THE MAIN",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "CATEGORIES) 1) Token Contracts (Money in Code) create tokens transfer tokens define supply rules 2) DeFi Contracts (Finance Without Banks) lending/borrowing decentralized exchanges (DEX) yield vaults stablecoins 3) NFT & Ownership Contracts (Proof of Rights) digital art tickets certificates memberships 4) Governance Contracts (Voting Systems) proposal creation voting power treasury control 5) Oracle‑Driven Contracts (Real‑World Inputs) bring external data (prices, weather, events) 6) Factory & Router Contracts (Mass Deployment) create many contracts route transactions across pools 7) Upgradeable Proxy Contracts (Evolving Systems) allow logic upgrades via proxy patterns"
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "DEX",
+              "meaning": "Decentralized exchange"
+            },
+            {
+              "term": "Liquidity pool",
+              "meaning": "Shared funds used for swaps or lending"
+            },
+            {
+              "term": "Oracle",
+              "meaning": "A trusted data feed that provides off‑chain info (like price)"
+            },
+            {
+              "term": "Proxy",
+              "meaning": "A contract that forwards calls to a replaceable implementation"
+            },
+            {
+              "term": "Immutable",
+              "meaning": "Cannot be changed once deployed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-6",
+      "title": "WHAT SMART CONTRACTS CAN DO (REAL POWER)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A smart contract can: hold money move money split money (royalties) enforce rules (matrix logic) record ownership automate payouts prevent tampering It can act like: a bank a cashier a judge an accountant a distributor Except it has no emotions. 🎭Short Dialogue: “System ↔ People” People: “Please, can you make an exception?” System: “Rules executed.” People: “But my story is different.” System: “Code does not read stories.” This is why smart contracts feel harsh. But this is also why they feel fair."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If fairness required sacrificingflexibility… would you still want it?"
+        }
+      ]
+    },
+    {
+      "id": "episode-7",
+      "title": "HOW SMART CONTRACTS DISRUPT EVERY",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "INDUSTRY Because every industry has 3 repeating problems:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "trust",
+            "verification",
+            "settlement"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Smart contracts attack all three. Industries that can be disrupted: Finance: lending, payments, savings Real estate: fractional ownership, escrow automation Supply chain: tracking, authenticity Insurance: automatic payout triggers Media/music: royalties distribution Gaming: real asset ownership Government services: registries, permits"
+        }
+      ]
+    },
+    {
+      "id": "episode-8",
+      "title": "WHY EVERYTHING IS ABOUT TO BE TOKENIZED",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Tokenization is simple: Convert value into a token so it can move like crypto. Why the world wants it: 24/7 markets fractional ownership faster settlement global access programmable compliance If something has value… it can be tokenized: money property gold shares invoices royalties identity credentials"
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Tokenization",
+              "meaning": "Representing a real asset or right as a blockchain token."
+            },
+            {
+              "term": "RWA",
+              "meaning": "Real‑World Assets (Treasuries, property, invoices, etc.)"
+            },
+            {
+              "term": "Settlement",
+              "meaning": "Final completion of exchange (no take‑backs)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-9",
+      "title": "ANALYSIS: WHERE WE ARE TODAY (THE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "NUMBERS) We need numbers to see the big picture. A) Crypto Market Cap (All Crypto) th About $3.2T total market cap as of January 7 202. B) DeFi TVL (Capital actively used inside DeFi) About $125B TVL. C) Bigger Traditional Wealth Pools Gold: ~$31T Global Real Estate: ~$393T Global Broad Money Supply: ~$142T These pools are not “DeFi TVL” in the same way. But they are the places where human wealth currently sits. 📊Quick Comparison Table Wealth Pool Approx Size What It Represents Crypto Market Cap $3.2T Total crypto valuation DeFi TVL $0.125T Capital locked/working in DeFi Gold $31T Store of value Global Real Estate $393T Land + property wealth Broad Money $142T Spendable money in the system"
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If DeFi is $125B and real estate is $393T…"
+        },
+        {
+          "type": "paragraph",
+          "text": "what happens when even a tiny percentage moves on-chain?"
+        }
+      ]
+    },
+    {
+      "id": "episode-10",
+      "title": "FORECAST SCENARIO (THE “10% SHIFT”",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "THOUGHT EXPERIMENT) This is not a promise. It is a mental model. Imagine that over time: 10% of gold value becomes tokenized and enters crypto markets 10% of real estate value becomes tokenized and enters crypto markets 10% of broad moneyflows into on-chain settlement rails 10% of Each Wealth Pool 10% of gold (~$31T) = $3.1T 10% of real estate (~$393T) = $39.3T 10% of broad money (~$142T) = $14.2T Total hypothetical inflow: ~$56.6T If today’s crypto market cap is ~$3.2T, then: $3.2T + $56.6T ≈ $59.8T That would be a crypto market approaching the size of the largest wealth systems on earth. 🧠Why This Matters Because DeFi is not competing only with “other crypto.” It is competing with: banks brokerages escrow agents settlement layers And it wins when: settlement is faster trust becomes verifiable markets become global"
+        }
+      ]
+    },
+    {
+      "id": "episode-11",
+      "title": "CONFIDENCE: WHY DeFi CAN KEEP GROWING",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "DeFi growth is powered by: self-custody stablecoins tokenization global accessibility It is still early. Even global crypto ownership is estimated at hundreds of millions — still a minority of humanity. That is why education is the advantage."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If you could learn early… before the crowd arrives…"
+        },
+        {
+          "type": "paragraph",
+          "text": "what skill would you masterfirst?"
+        }
+      ]
+    },
+    {
+      "id": "episode-12",
+      "title": "RICO MATRIX ALIGNMENT (LEVELS &",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "ROYALTIES) Level 6 is the “system-level understanding” layer. In Rico Matrix, this is where people stop seeing crypto as gambling… …and start seeing it as infrastructure. Why this increases trust Because royalties feel believable when users understand: how code executes why smart contracts can automate payouts why systems can be transparent This level converts: beginners → builders users → educators participants → leaders ⚠DISCLAIMER This episode is for educational purposes only. Rico Matrix does not providefinancial advice, profit guarantees, or investment promises. Crypto and DeFi carry risks: smart contract bugs exploits volatility regulatory changes Always: verify contract addresses use reputable tools learn before you commit capital 📘End of Chapter 6 Episode ➡Proceed to Level 7 Episode:DeFi Protocols: DEX, Lending, Yield & Stablecoins💧⚡"
+        }
+      ]
+    }
+  ],
+  "extractionStats": {
+    "numPages": 7,
+    "totalLines": 264,
+    "totalNonEmptyLines": 264,
+    "lowTextPages": []
+  },
+  "officialName": "Code That Keeps Promises",
+  "slogan": "“When Rules Become Software, Power Moves.”"
+}

@@ -1,0 +1,262 @@
+{
+  "id": "chapter-2",
+  "chapterNumber": 2,
+  "track": 1,
+  "title": "THE ILLUSION OF OWNERSHIP",
+  "episodes": [
+    {
+      "id": "episode-1",
+      "title": "THE ILLUSION OF OWNERSHIP",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🏦Story Returns: Bamu and the Bank Years passed. Bamu’s farm expanded. His harvest improved. His savings grew. He trusted the bank the way a child trusts a roof over his head. Until one morning. Bank Teller: “Your account is temporarily unavailable.” Bamu: “But it’s my money.” Bank Teller: “It’s under review.” Temporary stretched into days. Days into silence. Bamu went home without answers. That silence taught him something no book ever had."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Custodial system",
+              "meaning": "A system where another party holds and controls your assets for you."
+            },
+            {
+              "term": "Account freeze",
+              "meaning": "When a centralized authority restricts access to your funds."
+            },
+            {
+              "term": "False ownership",
+              "meaning": "When you believe you own something, but control belongs to someone else."
+            }
+          ]
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If your entire life savings depended on someone else’s decision…"
+        },
+        {
+          "type": "paragraph",
+          "text": "would you still call it ownership?"
+        }
+      ]
+    },
+    {
+      "id": "episode-2",
+      "title": "THE CHILD AND THE KEY",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🧒Story Returns: The Curious Child The child from the village was older now. Regina held a phone the way previous generations held books. Her teacher drew a door on the board. Teacher: “This door opens with a key.” Regina: “Who keeps the key?” Teacher: “You do. And only you.” That day, Regina learned a word that would follow her for life: Self‑custody."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Self‑custody",
+              "meaning": "Holding and controlling your own assets without intermediaries."
+            },
+            {
+              "term": "Key (private key)",
+              "meaning": "A cryptographic secret that proves ownership and grants control."
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "The House Key",
+          "text": "If you give someone your house key:"
+        },
+        {
+          "type": "paragraph",
+          "text": "they can enter they can lock you out they decide when you belong Money works the same way."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If someone else held the keys to your home…"
+        },
+        {
+          "type": "paragraph",
+          "text": "would it still feel like yours?"
+        }
+      ]
+    },
+    {
+      "id": "episode-3",
+      "title": "WHAT A WALLET REALLY IS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "📱Story: The Trader Learns Too Late The trader loved speed. Charts. Notifications. Bamu left everything on an exchange. One night, the app stopped opening. No warning. No explanation. No keys. No control. Only regret."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Wallet",
+              "meaning": "A tool that stores private keys and allows interaction with blockchains."
+            },
+            {
+              "term": "Custodial wallet",
+              "meaning": "A wallet where a third party controls your keys."
+            },
+            {
+              "term": "Non‑custodial wallet",
+              "meaning": "A wallet where only you control the keys."
+            },
+            {
+              "term": "Exchange",
+              "meaning": "A centralized platform for trading crypto assets."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "🧠Truth Explained Simply Crypto is not stored in wallets. Crypto lives on the blockchain. Wallets store permission. Whoever holds the keys… holds the power."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If your phone vanished today…"
+        },
+        {
+          "type": "paragraph",
+          "text": "what else would vanish with it?"
+        }
+      ]
+    },
+    {
+      "id": "episode-4",
+      "title": "PRIVATE KEYS: THE REAL IDENTITY",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🔑Story Returns: The Migrant The migrant crossed borders again. Documents failed him. Names changed. Addresses disappeared. But one thing followed him everywhere. A seed phrase, memorized in silence. Twelve words. Access followed him when nothing else could."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Private key",
+              "meaning": "A secret cryptographic number that authorizes transactions."
+            },
+            {
+              "term": "Public address",
+              "meaning": "A shareable identifier used to receive funds."
+            },
+            {
+              "term": "Seed phrase",
+              "meaning": "A human‑readable backup (12–24 words) that restores wallet access."
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Digital Identity",
+          "text": "In Web3:"
+        },
+        {
+          "type": "paragraph",
+          "text": "your name does not matter your passport does not matter Your private key is you. Lose it… and the system forgets you exist."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If your memory was your only backup…"
+        },
+        {
+          "type": "paragraph",
+          "text": "would you protect it differently?"
+        }
+      ]
+    },
+    {
+      "id": "episode-5",
+      "title": "FREEDOM COMES WITH WEIGHT",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "👨‍👩‍👧Story: The Parent’s Dilemma A parent learned crypto. No bank. No gatekeeper. Then fear arrived. “What if I lose everything?” Freedom arrived carrying responsibility on its back."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Responsibility",
+              "meaning": "Full accountability for asset security."
+            },
+            {
+              "term": "Irreversibility",
+              "meaning": "Transactions cannot be undone once confirmed."
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Riding a Bicycle",
+          "text": "Training wheels feel safe."
+        },
+        {
+          "type": "paragraph",
+          "text": "But balance is learned only after they come off."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "Would you trade freedom for comfort?"
+        }
+      ]
+    },
+    {
+      "id": "episode-6",
+      "title": "SELF‑CUSTODY AS A LIFE SKILL",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Self‑custody is not technical. It is behavioral. It rewards: patience discipline attention The same traits required to build wealth. Parallel Timeline — CONTROL Old World New World Bank accounts Wallet addresses Password resets No resets Permission Ownership"
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If there was no undo button…"
+        },
+        {
+          "type": "paragraph",
+          "text": "would you act more carefully?"
+        }
+      ]
+    },
+    {
+      "id": "episode-7",
+      "title": "ANALYSIS: WHY SELF‑CUSTODY IS INEVITABLE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "History leaves patterns. Every system that controls value eventually tightens control. Banks. Payment apps. Governments. As value grows: surveillance increases freezes increase exclusions increase Self‑custody appears as an exit, not a rebellion. 📊Analysis Summary Custodial failures spike during crises Compliance grows faster than user protection Individuals seek sovereignty Wallet adoption follows instability."
+        }
+      ]
+    },
+    {
+      "id": "episode-8",
+      "title": "FORECAST: THE FUTURE OF OWNERSHIP",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "In the coming decade: wallets will replace bank accounts keys will replace identity documents self‑custody will be taught like literacy Those who learn early will move calmly. Those who delay will depend on permissions. 🔮Forecast Snapshot Self‑custody becomes: a survival skill a career advantage a generational divider"
+        }
+      ]
+    },
+    {
+      "id": "episode-9",
+      "title": "PREPARING FOR CODE AS LAW",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "You now understand: money ownership keys responsibility The next episode removes human judgment. Rules become code. Smart contracts arrive. ⚠DISCLAIMER This episode is for educational purposes only. Rico Matrix does not providefinancial advice, profit guarantees, or investment promises. Cryptocurrency involves risk. Always: Do your own research (DYOR) Never share private keys or seed phrases Accept responsibility for your actions Freedom requires knowledge. 📘End of Chapter 2 Episode ➡Proceed to Chapter 3 Episode:Blockchain, Networks & How Value Moves🔗"
+        }
+      ]
+    }
+  ],
+  "extractionStats": {
+    "numPages": 5,
+    "totalLines": 187,
+    "totalNonEmptyLines": 187,
+    "lowTextPages": []
+  },
+  "officialName": "The Day Ownership Became Personal",
+  "slogan": "“Not Your Keys. Not Your Power.”"
+}

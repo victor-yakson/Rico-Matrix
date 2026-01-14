@@ -1,0 +1,215 @@
+{
+  "id": "chapter-1",
+  "chapterNumber": 1,
+  "track": 1,
+  "title": "THE QUESTION THAT NEVER LEFT HUMANITY",
+  "episodes": [
+    {
+      "id": "episode-1",
+      "title": "THE QUESTION THAT NEVER LEFT HUMANITY",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Long before charts. Long before banks. Long before computers. Humans asked the same question: “How do I exchange what I have… for what I need?” This question shaped villages. It shaped empires. It shapes your life today. 🌾Story: The Village by the River (BEGINNING) The village sat quietly by the river. Children ran barefoot. Smoke rose from cookingfires. Everyone worked. Reginafished. Bamu farmed rice. Natasha shaped metal into tools. They were not poor. They were not rich. They were limited. One afternoon, Regina carriedfish to Bamu. Regina: “I need rice.” Bamu: “I already havefish.” She walked away hungry. This was barter. Barter was honest. Barter was fair. Barter was inefficient."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If you had value but no one wanted ittoday, how would you survive?"
+        },
+        {
+          "type": "paragraph",
+          "text": "That frustration is older than money itself."
+        }
+      ]
+    },
+    {
+      "id": "episode-2",
+      "title": "WHEN VALUE NEEDED A SYMBOL",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🪙Story Continues: The Shiny Agreement The elders gathered. They chose gold. Not because it was useful. But because everyone believed in it. Soon: fish → gold gold → rice rice → tools The symbol worked. Money was born. But gold had weight."
+        },
+        {
+          "type": "metaphor",
+          "title": "Metaphor: The School Star⭐",
+          "text": "In a school, children earned stars for good behavior."
+        },
+        {
+          "type": "paragraph",
+          "text": "Stars were not food. Stars were not toys. But stars opened doors. Money works the same way."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If value is just agreement… who controls the agreement?"
+        }
+      ]
+    },
+    {
+      "id": "episode-3",
+      "title": "THE AGE OF TRUST",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🏦Story: The Banker’s Promise As villages became cities, gold became dangerous. Thieves followed traders. Banks appeared. Bank: “Give us your gold. We’ll keep it safe.” They gave paper instead. Paper was light. Paper was fast. Trust replaced weight. 🎭Dialogue: Bank ↔ User User: “Is my gold really there?” Bank: “Trust the system.” User: “Can I see it?” Bank: “You don’t need to.” That sentence changed the world."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "How many systems in your life run on trust you cannot verify?"
+        }
+      ]
+    },
+    {
+      "id": "episode-4",
+      "title": "THE INVISIBLE TAX",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "💸Story: Bamu the Farmer (YEARS LATER) Bamu noticed something. Rice cost more. Nobody stole it. Money multiplied quietly. This was inflation. The silent tax."
+        },
+        {
+          "type": "metaphor",
+          "title": "Metaphor: The Watered Soup",
+          "text": "Add more water."
+        },
+        {
+          "type": "paragraph",
+          "text": "Same soup. Everyone eats less nutrition."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If your savings lost value every year… would you notice?"
+        }
+      ]
+    },
+    {
+      "id": "episode-5",
+      "title": "THE DAY TRUST BROKE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🧨Story: The Family Table (2008) A father stared at papers. Eviction. Child: “Did you make a mistake?” Father: “No. The system did.” Banks were saved. People were not. Trust collapsed. Parallel Timeline — OLD SYSTEM vs NEW THINKING Old System New Thinking Trust people Trust rules Closed doors Open networks Permission Permissionless"
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If the rules were fair but unforgiving… would you prefer them?"
+        }
+      ]
+    },
+    {
+      "id": "episode-6",
+      "title": "THE BUILDER WHO SPOKE WITH CODE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "👤Story: Satoshi No face. No country. Just code. “What if money didn’t need trust?” Bitcoin was born."
+        },
+        {
+          "type": "metaphor",
+          "title": "Metaphor: The Vending Machine",
+          "text": "Insert value."
+        },
+        {
+          "type": "paragraph",
+          "text": "Receive product. No emotion. No favoritism. Code replaces promises."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "Would you rather trust people… or predictable rules?"
+        }
+      ]
+    },
+    {
+      "id": "episode-7",
+      "title": "THE MAGIC NOTEBOOK",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "📓Story: The Classroom Every child writes the same notes. One lies. Others correct. Blockchain is shared truth. 🎭Dialogue: Teacher ↔ Child Child: “Who owns it?” Teacher: “Everyone.” Child: “Who can change it?” Teacher: “No one alone.” The child smiled."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If truth was public… would behavior change?"
+        }
+      ]
+    },
+    {
+      "id": "episode-8",
+      "title": "DECENTRALIZATION IN REAL LIFE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🌍Story: The Migrant Borders closed. Banks refused. Crypto asked one thing: “Do you have a phone?” Belonging changed. Parallel Timeline — ACCESS Old World: documents New World: keys"
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If access was global… how would your life change?"
+        }
+      ]
+    },
+    {
+      "id": "episode-9",
+      "title": "THE CALM IN THE STORM",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🪙Story: The Trader Prices jumped. Fear followed. Then came USDT. Trader: “Finally… stillness.”"
+        },
+        {
+          "type": "metaphor",
+          "title": "Metaphor: The Measuring Cup",
+          "text": "You don’t measure with shaking hands."
+        },
+        {
+          "type": "paragraph",
+          "text": "Stability enables learning."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "Would you learn faster in chaos… or calm?"
+        }
+      ]
+    },
+    {
+      "id": "episode-10",
+      "title": "THE STUDENT RETURNS (YEARS LATER)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "👩‍🎓Story: The Student She learned crypto. Not to gamble. But to understand systems. Years later… She built one."
+        },
+        {
+          "type": "metaphor",
+          "title": "Metaphor: Learning to Read",
+          "text": "Once you read…"
+        },
+        {
+          "type": "paragraph",
+          "text": "signs cannot fool you."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If you understood systems early… where would you be now?"
+        }
+      ]
+    },
+    {
+      "id": "episode-11",
+      "title": "THE HUNGER FOR OWNERSHIP",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "You understand money. But understanding is not ownership. Ownership requires: wallets keys responsibility The next episode begins here. ⚠DISCLAIMER This episode is for educational purposes only. Rico Matrix does not providefinancial advice, profit guarantees, or investment promises. Cryptocurrency involves risk. Always: Do your own research (DYOR) Never share private keys or seed phrases Learn before you earn Knowledge is the foundation. 📘End of Level 1 Episode ➡Proceed to Level 2 Episode:Wallets, Keys & Self‑Custody🔐"
+        }
+      ]
+    }
+  ],
+  "extractionStats": {
+    "numPages": 6,
+    "totalLines": 203,
+    "totalNonEmptyLines": 203,
+    "lowTextPages": []
+  },
+  "officialName": "The Birth of Digital Money",
+  "slogan": "“Every Money Has a Story. This One Changes Everything.”"
+}

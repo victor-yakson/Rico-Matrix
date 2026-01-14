@@ -1,0 +1,261 @@
+{
+  "id": "chapter-4",
+  "chapterNumber": 4,
+  "track": 1,
+  "title": "BEFORE CRYPTO: THE FIRST DIGITAL MONEY",
+  "episodes": [
+    {
+      "id": "episode-1",
+      "title": "BEFORE CRYPTO: THE FIRST DIGITAL MONEY",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "ATTEMPTS Long before Bitcoin, humans already tried to create digital money. They failed. Repeatedly. 🕰History: Web Money Before Crypto DigiCash (1989) Created by David Chaum. Goal: private digital cash cryptography-based payments Why it failed: required banks centralized control governments resisted E-Gold (1996) Digital money backed by gold. Why people liked it: stable value global transfers Why it failed: centralized servers seized by authorities Liberty Reserve (2006) Popular online payment system. Why it failed: centralized trust shutdown by governments 🧠Core Lesson Digital money failed until trust was removed."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Centralized system",
+              "meaning": "Controlled by a single entity"
+            },
+            {
+              "term": "Single point of failure",
+              "meaning": "One shutdown kills everything"
+            }
+          ]
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If money can be shut down… is it really yours?"
+        }
+      ]
+    },
+    {
+      "id": "episode-2",
+      "title": "BITCOIN: THE FIRST TRUE COIN",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Bitcoin did something radical: no company no CEO no server to seize It was not just money. It was architecture. 🧠Why Bitcoin Matters Bitcoin introduced: decentralization fixed supply (21 million) permissionless access This made Bitcoin a coin, not just a token."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Coin",
+              "meaning": "Native money of a blockchain"
+            },
+            {
+              "term": "Fixed supply",
+              "meaning": "No inflation beyond rules"
+            },
+            {
+              "term": "Permissionless",
+              "meaning": "No approval needed"
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Digital Gold",
+          "text": "Gold cannot be printed."
+        },
+        {
+          "type": "paragraph",
+          "text": "Bitcoin copied this property."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If money could not be inflated… how would governments change?"
+        }
+      ]
+    },
+    {
+      "id": "episode-3",
+      "title": "THE LIMITATION OF BITCOIN",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Bitcoin was powerful. But limited. It could: send value It could not: create applications execute complex logic A new idea was needed."
+        }
+      ]
+    },
+    {
+      "id": "episode-4",
+      "title": "ETHEREUM & THE BIRTH OF TOKENS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Ethereum introduced something new: Programmable money. Now value could: follow rules obey logic automate agreements 🧠Tokens Are Born Tokens are: not blockchains programs running on blockchains Anyone could create one. This was powerful. And dangerous."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Token",
+              "meaning": "A digital asset created on an existing blockchain"
+            },
+            {
+              "term": "Smart contract",
+              "meaning": "Code that controls token behavior"
+            },
+            {
+              "term": "ERC-20",
+              "meaning": "Standard for Ethereum tokens"
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Apps on a Phone",
+          "text": "Ethereum is the phone."
+        },
+        {
+          "type": "paragraph",
+          "text": "Tokens are the apps."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If anyone could print money… who would abuse it?"
+        }
+      ]
+    },
+    {
+      "id": "episode-5",
+      "title": "THE ICO ERA & MASS FAILURE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Between 2016–2018: Thousands of tokens launched. Most failed. Why? 🧨Why Most Tokens Failed No real use Infinite supply Poor incentive design Founder greed Money was created faster than value."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "ICO",
+              "meaning": "Initial Coin Offering"
+            },
+            {
+              "term": "Utility token",
+              "meaning": "Token with actual use"
+            },
+            {
+              "term": "Speculation",
+              "meaning": "Buying without understanding"
+            }
+          ]
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If something has no use… why should it have value?"
+        }
+      ]
+    },
+    {
+      "id": "episode-6",
+      "title": "TOKENOMICS: THE SCIENCE OF INCENTIVES",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Tokenomics answers: “Why should anyone hold this token?” It combines: economics psychology game theory 🧠Core Tokenomics Elements Supply Distribution Emissions Utility Incentives"
+        },
+        {
+          "type": "metaphor",
+          "title": "A Country’s Economy",
+          "text": "Bad laws collapse nations."
+        },
+        {
+          "type": "paragraph",
+          "text": "Bad tokenomics collapse tokens."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If rules reward dumping… what will people do?"
+        }
+      ]
+    },
+    {
+      "id": "episode-7",
+      "title": "HOW TO SPOT A GOOD TOKEN (PRACTICAL",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "GUIDE) This section is written to protect capital. Before buying any token, you must answer one question: “Does this tokenneedto exist?” 🧠TOKEN UTILITY (THE FIRST FILTER) A good token must do something. Ask: What problem does it solve? What happens if the token is removed? If the system still works without the token… 🚨That token is likely unnecessary. 🧠SUPPLY STRUCTURE (SCARCITY VS INFLATION) Key Supply Metrics Total Supply: Maximum number of tokens that can ever exist Circulating Supply: Tokens currently in the market Max Supply: Hard cap (if any) 🚩Red Flags: Unlimited supply No clear cap 🧠EMISSIONS (HOW TOKENS ENTER THE MARKET) Emissions answer: “How fast are new tokens created?” High emissions = constant selling pressure. Healthy systems: Reduce emissions over time Align emissions with usage 🧠INCENTIVES (HUMAN BEHAVIOR) People do what incentives reward. Check: Are holders rewarded for holding or dumping? Are builders aligned long-term? Bad incentive design collapses projects."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If rewards encourage selling… what will people do?"
+        }
+      ]
+    },
+    {
+      "id": "episode-8",
+      "title": "HOW TO AVOID BAD TOKENS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Most bad tokens fail for predictable reasons. 🚩COMMON RED FLAGS Anonymous team with no track record No documentation (whitepaper) Guaranteed returns language Aggressive marketing, weak product No real users 🧠PROJECT DUE DILIGENCE CHECKLIST Before buying, check: Website clarity Documentation quality Active development Community behavior Roadmap realism If everything feels rushed… it probably is."
+        }
+      ]
+    },
+    {
+      "id": "episode-9",
+      "title": "SCAM AVOIDANCE & CAPITAL PROTECTION",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Scams succeed because: greed overrides logic urgency disables thinking 🛑COMMON SCAM TYPES Fake airdrops Impersonation tokens Honeypots Liquidity traps 🧠PROTECTION RULES Never click random links Verify contract addresses Test with small amounts Use block explorers"
+        }
+      ]
+    },
+    {
+      "id": "episode-10",
+      "title": "TOKEN CONTRACT RED FLAGS (VERY IMPORTANT)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Smart contracts reveal truth. 🔍FUNCTIONS TO WATCH 🚩Mint Function Allows new tokens to be created. Risk: Infinite inflation 🚩Pause Function Allows transfers to be stopped. Risk: Trading freeze 🚩Blacklist Function Allows addresses to be blocked. Risk: Selective censorship 🚩Owner Privileges Check if owner can: change fees drain liquidity upgrade logic 🧠How to Check Contracts Use: Etherscan BscScan Look for: Renounced ownership Timelocks Audits"
+        }
+      ]
+    },
+    {
+      "id": "episode-11",
+      "title": "ANALYSIS: WHY MOST TOKENS FAIL",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Most tokens fail because: incentives break trust collapses supply overwhelms demand Failure is mathematical."
+        }
+      ]
+    },
+    {
+      "id": "episode-12",
+      "title": "FORECAST: SMARTER INVESTORS, STRONGER",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "TOKENS The future belongs to: educated users transparent protocols incentive-aligned systems Hype fades. Design remains."
+        }
+      ]
+    },
+    {
+      "id": "episode-13",
+      "title": "PREPARING FOR LEVEL 5",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "You now understand: how to evaluate tokens how to avoid scams how to read contracts Next, you will see where tokens live and operate. Centralized Finance. Decentralized Finance. You now understand: why coins exist why tokens exist why most fail how incentives shape outcomes The next level explains: Where these tokens are used. Centralizedfinance. Decentralizedfinance. ⚠DISCLAIMER This episode is for educational purposes only. Rico Matrix does not providefinancial advice, profit guarantees, or investment promises. Cryptocurrency involves risk. Always: Study tokenomics Avoid hype Understand incentives 📘End of Level 4 Episode ➡Proceed to Level 5 Episode:Centralized vs Decentralized Finance🏦🔓"
+        }
+      ]
+    }
+  ],
+  "extractionStats": {
+    "numPages": 7,
+    "totalLines": 274,
+    "totalNonEmptyLines": 274,
+    "lowTextPages": []
+  },
+  "officialName": "When Value Learned to Program Itself",
+  "slogan": "“Not Everything That Has a Price Has Value.”"
+}

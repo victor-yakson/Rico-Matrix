@@ -1,0 +1,276 @@
+{
+  "id": "chapter-3",
+  "chapterNumber": 3,
+  "track": 1,
+  "title": "HOW BLOCKCHAIN WAS BORN",
+  "episodes": [
+    {
+      "id": "episode-1",
+      "title": "HOW BLOCKCHAIN WAS BORN",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🕰A SHORT HISTORY After the 2008 financial crisis, one idea became clear: Trust had failed at scale. In 2009, Bitcoin introduced something new: a public ledger shared by thousands verified by math No central owner. This was called ablockchain."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Blockchain",
+              "meaning": "A distributed ledger where transactions are recorded permanently."
+            },
+            {
+              "term": "Ledger",
+              "meaning": "A record book of transactions."
+            },
+            {
+              "term": "Distributed",
+              "meaning": "Stored across many computers instead of one."
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "The Public Notebook",
+          "text": "Imagine a notebook:"
+        },
+        {
+          "type": "paragraph",
+          "text": "everyone owns a copy every page is numbered pages cannot be removed That notebook is blockchain."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If everyone could see the same truth… would cheating still work?"
+        }
+      ]
+    },
+    {
+      "id": "episode-2",
+      "title": "HOW A BLOCKCHAIN WORKS (STEP BY STEP)",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "A transaction is created",
+            "It is broadcast to the network",
+            "Validators check it",
+            "It is grouped into a block",
+            "The block is added permanently"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Once confirmed, it cannot be reversed."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Transaction",
+              "meaning": "A movement of value or data"
+            },
+            {
+              "term": "Block",
+              "meaning": "A group of transactions"
+            },
+            {
+              "term": "Validator / Miner",
+              "meaning": "A participant who verifies transactions"
+            },
+            {
+              "term": "Confirmation",
+              "meaning": "Network agreement that a transaction is valid"
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Mailing a Letter",
+          "text": "You don’t control the mail once it’s sent."
+        },
+        {
+          "type": "paragraph",
+          "text": "Blockchain works the same way."
+        }
+      ]
+    },
+    {
+      "id": "episode-3",
+      "title": "NETWORKS ARE CITIES",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🌍Story: Choosing Where to Live Some cities are fast. Some are expensive. Some are secure. Blockchains are the same. Each blockchain is anetwork."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Network",
+              "meaning": "A blockchain ecosystem where transactions are processed"
+            },
+            {
+              "term": "Mainnet",
+              "meaning": "The live blockchain"
+            },
+            {
+              "term": "Testnet",
+              "meaning": "A testing version of a blockchain"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "🔗Major Blockchain Networks EVM‑Compatible Networks(same address format): Ethereum Binance Smart Chain (BSC) Polygon Avalanche (C‑Chain) Arbitrum Optimism Fantom Base Non‑EVM Networks(different address formats): Bitcoin Solana Tron Cardano XRP Ledger Aptos Sui"
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "Would you live in a fast city, a cheap city, or a secure city?"
+        }
+      ]
+    },
+    {
+      "id": "episode-4",
+      "title": "EVM vs NON‑EVM (VERY IMPORTANT)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "🧠Core Difference EVM (Ethereum Virtual Machine):Executes smart contracts using the same logic Non‑EVM:Uses different programming and execution models 🧠How to Spot Wallet Addresses EVM Address:Starts with 0x (same on Ethereum, BSC, Polygon, etc.) Bitcoin Address:Starts with 1, 3, or bc1 Solana Address:Long random letters and numbers (no 0x) Tron Address:Starts with T Sending funds to the wrong network can result inpermanent loss."
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "If one wrong click could erase money… would you slow down?"
+        }
+      ]
+    },
+    {
+      "id": "episode-5",
+      "title": "GAS FEES (THE ROAD TOLLS)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Every network charges a fee. This fee is calledgas. It pays validators for processing transactions."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Gas fee",
+              "meaning": "Cost of executing a transaction"
+            },
+            {
+              "term": "Gwei",
+              "meaning": "Unit for measuring gas on Ethereum"
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Road Tolls",
+          "text": "Busy roads cost more."
+        },
+        {
+          "type": "paragraph",
+          "text": "Empty roads cost less."
+        }
+      ]
+    },
+    {
+      "id": "episode-6",
+      "title": "SMART CONTRACTS (CODE AS LAW)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A smart contract is: A program that runs exactly as written. No emotions. No bias."
+        },
+        {
+          "type": "terminology",
+          "items": [
+            {
+              "term": "Smart contract",
+              "meaning": "Self‑executing blockchain code"
+            },
+            {
+              "term": "Immutable",
+              "meaning": "Cannot be changed once deployed"
+            },
+            {
+              "term": "Audit",
+              "meaning": "Security review of contract code"
+            }
+          ]
+        },
+        {
+          "type": "metaphor",
+          "title": "Vending Machine",
+          "text": "Insert money."
+        },
+        {
+          "type": "paragraph",
+          "text": "Choose product. Receive output. No argument. 🔧Common Web3 Tools MetaMask / SafePal (wallets) BscScan / Etherscan (block explorers) Remix (contract testing) Hardhat / Foundry (development tools)"
+        }
+      ]
+    },
+    {
+      "id": "episode-7",
+      "title": "HOW TO ADD A NETWORK TO A WALLET",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "Open wallet",
+            "Select “Add Network”",
+            "Enter RPC details",
+            "Save and switch"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Each network has: RPC URL Chain ID Currency symbol"
+        },
+        {
+          "type": "pause_reflect",
+          "prompt": "Would you drive in a city without knowing the road rules?"
+        }
+      ]
+    },
+    {
+      "id": "episode-8",
+      "title": "ANALYSIS: WHY MULTI‑CHAIN EXISTS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "No blockchain can optimize everything. Trade‑offs exist: Speed Cost Security Decentralization This is whymany networks coexist. 📊Analysis Summary Ethereum prioritizes security BSC prioritizes cost Layer 2s prioritize speed"
+        }
+      ]
+    },
+    {
+      "id": "episode-9",
+      "title": "FORECAST: THE MULTI‑CHAIN FUTURE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The future is not one chain. It ismany chains, one experience. Users will: not care about networks use abstracted wallets interact through apps 🔮Forecast Snapshot Cross‑chain becomes invisible Wallets become super‑apps Users focus on outcomes, not infrastructure"
+        }
+      ]
+    },
+    {
+      "id": "episode-10",
+      "title": "PREPARING FOR LEVEL 4",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "You now understand: how blockchains work how value moves how to choose networks how to avoid fatal mistakes The next level explainswhat runs on top of these networks. Tokens. Protocols. Tokenomics. ⚠DISCLAIMER This episode is for educational purposes only. Rico Matrix does not provide financial advice, profit guarantees, or investment promises. Cryptocurrency involves risk. Always: Verify networks Double‑check addresses Learn before acting 📘End of Level 3 Episode ➡Proceed to Level 4 Episode:Tokens, Protocols & Tokenomics🪙"
+        }
+      ]
+    }
+  ],
+  "extractionStats": {
+    "numPages": 5,
+    "totalLines": 184,
+    "totalNonEmptyLines": 184,
+    "lowTextPages": []
+  },
+  "officialName": "When Rules Replaced People",
+  "slogan": "“In This World, Code Doesn’t Bend.”"
+}
