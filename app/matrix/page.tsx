@@ -21,7 +21,7 @@ export default function MatrixPage() {
       <>
         <Header />
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
-          <div className="max-w-md w-full rounded-2xl border border-yellow-500/20 bg-black/70 px-6 py-10 text-center shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+          <div className="max-w-md w-full rounded-2xl border ">
             <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
               {t('connect.accessLabel')}
             </p>

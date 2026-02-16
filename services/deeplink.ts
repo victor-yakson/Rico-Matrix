@@ -81,7 +81,6 @@ static createWalletDeepLink(walletId: WalletId, dappUrl: string): string {
     const wallet = WALLETS[walletId];
     const dappUrl = window.location.href;
     const deepLink = this.createWalletDeepLink(walletId, dappUrl);
-    console.log(`Opening wallet: ${walletId} with deep link: ${deepLink}`);
     // Store the wallet preference
     localStorage.setItem("preferredWallet", walletId);
     localStorage.setItem("lastConnectionAttempt", Date.now().toString());

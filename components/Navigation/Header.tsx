@@ -3,7 +3,7 @@
 import { ConnectWallet } from "../Common/ConnectWallet";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { LanguageSwitcher } from "../Common/LanguageSwitcher";
 import { useTranslations } from "next-intl";
@@ -12,27 +12,10 @@ export const Header = () => {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSocialsOpen, setIsSocialsOpen] = useState(false);
-  const socialsRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("Header");
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        socialsRef.current &&
-        !socialsRef.current.contains(event.target as Node)
-      ) {
-        setIsSocialsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const navigation = [
@@ -41,6 +24,12 @@ export const Header = () => {
       href: "/",
       current: pathname === "/",
       icon: "🏠",
+    },
+    {
+      name: t("navigation.authors"),
+      href: "/authors",
+      current: pathname === "/authors",
+      icon: "✍️",
     },
     {
       name: t("navigation.chapters"),
@@ -186,7 +175,7 @@ export const Header = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+            <nav className="hidden md:flex items-center space-x-2 lg:space-x-4 flex-wrap">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -200,106 +189,6 @@ export const Header = () => {
                   {item.name}
                 </Link>
               ))}
-
-              {/* Desktop Socials Dropdown */}
-              <div className="relative" ref={socialsRef}>
-                <button
-                  onClick={() => setIsSocialsOpen(!isSocialsOpen)}
-                  className="flex items-center space-x-1 px-3 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-purple-300 hover:bg-purple-500/10 hover:border-purple-500/40 border border-transparent transition-all"
-                >
-                  <span>🌐</span>
-                  <span className="hidden lg:inline">
-                    {t("socials.connect")}
-                  </span>
-                  <svg
-                    className={`w-4 h-4 transition-transform ${
-                      isSocialsOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Dropdown Menu */}
-                {isSocialsOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 rounded-xl border border-purple-500/30 bg-slate-900/95 backdrop-blur-xl shadow-[0_0_40px_rgba(120,40,200,0.3)] overflow-hidden z-50">
-                    <div className="p-4 border-b border-purple-500/20">
-                      <h3 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
-                        <span>🌐</span>
-                        {t("socials.connectWithUs")}
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {t("socials.community")}
-                      </p>
-                    </div>
-
-                    <div className="p-2">
-                      {socialLinks.map((social) => (
-                        <a
-                          key={social.name}
-                          href={social.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-slate-800/80 transition-colors group"
-                        >
-                          <div className={`p-2 rounded-lg ${social.bgColor}`}>
-                            <div className={`${social.color}`}>
-                              {social.icon}
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <span className="text-sm font-medium text-slate-200 group-hover:text-white">
-                              {social.name}
-                            </span>
-                            {social.name === "Email" && (
-                              <p className="text-xs text-slate-400">
-                                info@ricomatrix.com
-                              </p>
-                            )}
-                          </div>
-                          <svg
-                            className="w-4 h-4 text-slate-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                          </svg>
-                        </a>
-                      ))}
-                    </div>
-
-                    <div className="p-3 border-t border-purple-500/20 bg-slate-900/50">
-                      <a
-                        href="mailto:info@ricomatrix.com"
-                        className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 transition-colors text-sm font-medium"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                        </svg>
-                        {t("socials.emailSupport")}
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
             </nav>
 
             {/* Right side: language + wallet + mobile menu button */}

@@ -17,6 +17,9 @@ import { useTranslations } from "next-intl";
 import { Stats } from "../components/Dashboard/Stats";
 import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import MigrationStatus from "@/components/Dashboard/MigrationStatus";
+import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
+import { SurveyModal } from "@/components/Dashboard/SurveyModal";
+import { SurveyResultsPanel } from "@/components/Dashboard/SurveyResultsPanel";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
@@ -27,6 +30,8 @@ export default function Dashboard() {
     globalStats,
     globalSummary,
     globalRicoFarming,
+    totalReaders,
+    globalTransactions,
     topEarners,
     topReferrers,
     rewardTokenAddress,
@@ -91,19 +96,13 @@ export default function Dashboard() {
   const dashboardState = getDashboardState();
 
   // Log for debugging
-  console.log("Dashboard state:", dashboardState);
-  console.log("User data:", userData);
-  console.log("Migration data:", userData?.migrationData);
-  console.log("Migration status:", migrationAndRoyaltyUI);
 
   const handleRegistrationComplete = () => {
     refetchAllData();
-    console.log("Registration complete!");
   };
 
   const handleMigrationComplete = () => {
     refetchAllData();
-    console.log("Migration complete!");
   };
 
   // Handle V2 royalty claim
@@ -197,6 +196,7 @@ export default function Dashboard() {
   return (
     <>
       <Header />
+      {dashboardState === "dashboard" && <SurveyModal />}
       <div className="min-h-[calc(100vh-4rem)]">
         <div className="px-4 py-8 md:py-10">
           <div className="mx-auto max-w-7xl">
@@ -1003,6 +1003,19 @@ export default function Dashboard() {
                   topEarners={topEarners}
                   topReferrers={topReferrers}
                 />
+
+                <div className="mt-8">
+                  <SurveyResultsPanel />
+                </div>
+
+                <div className="mt-8">
+                  <GlobalPanel
+                    totalReaders={totalReaders}
+                    totalChapters={globalTransactions?.totalChapters}
+                    totalTransactionsUsdt={globalTransactions?.totalUsdt}
+                    isLoading={globalTransactions?.loading}
+                  />
+                </div>
               </>
             )}
           </div>

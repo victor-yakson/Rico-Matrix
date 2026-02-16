@@ -3,9 +3,11 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "../providers/Web3Provider";
 import { PageTransition } from "@/components/Layout/PageTransition";
+import SiteFooter from "@/components/Layout/SiteFooter";
 import { Toaster } from "sonner";
 import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
+import VisitTracker from "@/components/Common/VisitTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,7 +40,9 @@ export default async function RootLayout({
                 richColors
                 closeButton
               />
+              <VisitTracker />
               <PageTransition>{children}</PageTransition>
+              <SiteFooter />
             </Web3Provider>
           </NextIntlClientProvider>
         </body>

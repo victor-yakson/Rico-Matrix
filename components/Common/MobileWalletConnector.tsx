@@ -1,8 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
-import QRCode from "react-qr-code";
 import { WalletId } from "@/types/wallet";
 import { WALLETS } from "@/utils/wallets";
 import { DeeplinkService } from "@/services/deeplink";
@@ -10,8 +9,6 @@ import { isMobile } from "@/utils/platform";
 import styles from "./MobileWalletConnector.module.css";
 
 interface DesktopConnectionOptions {
-  showQRCode: boolean;
-  qrCodeValue: string;
   showDesktopModal: boolean;
 }
 
@@ -53,12 +50,9 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   >("idle");
   const [desktopOptions, setDesktopOptions] =
     useState<DesktopConnectionOptions>({
-      showQRCode: false,
-      qrCodeValue: "",
       showDesktopModal: false,
     });
 
-  const qrCodeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mobileCheck = isMobile();
@@ -91,18 +85,6 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
 
     setIsInAppWalletBrowser(detectInAppWalletBrowser());
 
-    // Generate QR code value
-    const generateQRCodeValue = () => {
-      const currentUrl = window.location.href;
-      // Add timestamp to make QR code dynamic
-      return `${currentUrl}?t=${Date.now()}`;
-    };
-
-    setDesktopOptions((prev) => ({
-      ...prev,
-      qrCodeValue: generateQRCodeValue(),
-    }));
-
     // Check for returning connection
     const checkReturningConnection = () => {
       const preferredWallet = localStorage.getItem(
@@ -114,7 +96,6 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
         const timeSinceConnection = Date.now() - parseInt(connectionTime);
 
         if (timeSinceConnection < 120000) {
-          console.log(`User returned after connecting with ${preferredWallet}`);
           // Optional: you can trigger a reconnection or show welcome message
           if (onConnectionSuccess) {
             // In real implementation, you would get the actual address
@@ -211,60 +192,7 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
     }
   };
 
-  const handleDesktopQRCode = () => {
-    setDesktopOptions((prev) => ({
-      ...prev,
-      showQRCode: !prev.showQRCode,
-    }));
-  };
-
-  const handleDownloadQRCode = () => {
-    if (!qrCodeRef.current) return;
-
-    const svg = qrCodeRef.current.querySelector("svg");
-    if (!svg) return;
-
-    // Clone the SVG to avoid modifying the original
-    const svgClone = svg.cloneNode(true) as SVGElement;
-
-    // Set background color
-    const bgRect = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "rect"
-    );
-    bgRect.setAttribute("width", "100%");
-    bgRect.setAttribute("height", "100%");
-    bgRect.setAttribute("fill", "#ffffff");
-    svgClone.insertBefore(bgRect, svgClone.firstChild);
-
-    const svgData = new XMLSerializer().serializeToString(svgClone);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    // Get SVG dimensions
-    const size = parseInt(svg.getAttribute("width") || "200");
-    canvas.width = size;
-    canvas.height = size;
-
-    img.onload = () => {
-      if (ctx) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-
-        const pngFile = canvas.toDataURL("image/png");
-        const downloadLink = document.createElement("a");
-        downloadLink.download = `dapp-qr-${Date.now()}.png`;
-        downloadLink.href = pngFile;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-    };
-
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
-  };
+  // QR code flow removed
 
   const DesktopConnectionModal = () => (
     <div className={styles.desktopModalOverlay}>
@@ -311,18 +239,6 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
             </div>
 
             <div className={styles.optionCard}>
-              <div className={styles.optionIcon}>📱</div>
-              <h3>Mobile QR Code</h3>
-              <p>Scan QR code with your mobile wallet app</p>
-              <button
-                onClick={handleDesktopQRCode}
-                className={styles.optionButton}
-              >
-                {desktopOptions.showQRCode ? "Hide QR Code" : "Show QR Code"}
-              </button>
-            </div>
-
-            <div className={styles.optionCard}>
               <div className={styles.optionIcon}>📲</div>
               <h3>Mobile Deep Link</h3>
               <p>
@@ -340,50 +256,6 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
               </button>
             </div>
           </div>
-
-          {desktopOptions.showQRCode && (
-            <div className={styles.qrCodeSection}>
-              <div className={styles.qrCodeContainer} ref={qrCodeRef}>
-                <QRCode
-                  value={desktopOptions.qrCodeValue}
-                  size={200}
-                  bgColor="#FFFFFF"
-                  fgColor="#000000"
-                  level="Q"
-                />
-              </div>
-              <p className={styles.qrCodeInstruction}>
-                Scan this QR code with your mobile wallet camera
-              </p>
-              <div className={styles.qrCodeActions}>
-                <button
-                  onClick={handleDownloadQRCode}
-                  className={styles.qrActionButton}
-                >
-                  Download QR Code
-                </button>
-                <button
-                  onClick={() =>
-                    navigator.clipboard.writeText(desktopOptions.qrCodeValue)
-                  }
-                  className={styles.qrActionButton}
-                >
-                  Copy Link
-                </button>
-                <button
-                  onClick={() => {
-                    setDesktopOptions((prev) => ({
-                      ...prev,
-                      qrCodeValue: `${window.location.href}?t=${Date.now()}`,
-                    }));
-                  }}
-                  className={styles.qrActionButton}
-                >
-                  Refresh QR
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className={styles.desktopHelp}>
             <h4>Need Help?</h4>
@@ -535,33 +407,6 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
         <p className={styles.desktopHint}>
           Use browser extension or scan QR code with mobile wallet
         </p>
-
-        <button onClick={handleDesktopQRCode} className={styles.qrToggleButton}>
-          {desktopOptions.showQRCode ? "Hide QR Code" : "Show Mobile QR Code"}
-        </button>
-
-        {desktopOptions.showQRCode && (
-          <div className={styles.desktopQRCode}>
-            <div className={styles.qrCodeWrapper}>
-              <QRCode
-                value={desktopOptions.qrCodeValue}
-                size={150}
-                bgColor="#FFFFFF"
-                fgColor="#000000"
-                level="M"
-              />
-            </div>
-            <p className={styles.qrCodeHint}>Scan with mobile wallet</p>
-            <button
-              onClick={() =>
-                navigator.clipboard.writeText(desktopOptions.qrCodeValue)
-              }
-              className={styles.copyLinkButton}
-            >
-              Copy Link
-            </button>
-          </div>
-        )}
 
         {desktopOptions.showDesktopModal && <DesktopConnectionModal />}
 

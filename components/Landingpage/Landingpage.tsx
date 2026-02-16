@@ -1,25 +1,17 @@
 "use client";
 
-import React, { useEffect, useState, MouseEvent, useMemo, memo } from "react";
+import React, { useEffect, useState, memo, useRef } from "react";
 import MobileWalletConnector from "../Common/MobileWalletConnector";
 import { useTranslations } from "next-intl";
-import { useLocale } from "next-intl";
 import { LanguageSwitcher } from "../Common/LanguageSwitcher";
+import WorldMap from "../WorldMap";
+import StatsCard from "../StatsCard";
 
-type Countdown = {
-  days: string;
-  hours: string;
-  mins: string;
-  secs: string;
-};
-
-const LAUNCH_TARGET = new Date("2025-12-15T15:00:00Z").getTime();
-
-const initialCountdown: Countdown = {
-  days: "--",
-  hours: "--",
-  mins: "--",
-  secs: "--",
+type CountryStat = {
+  country: string;
+  country_code: string;
+  total: number;
+  unique_visitors: number;
 };
 
 // Memoized MobileWalletConnector to prevent unnecessary re-renders
@@ -45,7 +37,11 @@ const RicoMatrixFaqItem: React.FC<{
   };
 
   return (
-    <article className={`faq-item reveal ${open ? "faq-item--open" : ""}`}>
+    <article
+      className={`faq-item reveal reveal--visible ${
+        open ? "faq-item--open" : ""
+      }`}
+    >
       <div className="faq-header" onClick={handleClick}>
         <div className="faq-question">{question}</div>
         <div className="faq-toggle">{open ? "–" : "+"}</div>
@@ -55,75 +51,17 @@ const RicoMatrixFaqItem: React.FC<{
   );
 };
 
-// Separate Countdown Component to isolate re-renders
-const CountdownDisplay: React.FC = () => {
-  const t = useTranslations("LandingPage.launchInfo.countdown");
-  const [countdown, setCountdown] = useState<Countdown>(initialCountdown);
-
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = Date.now();
-      let diff = Math.max(0, LAUNCH_TARGET - now);
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      diff -= days * 1000 * 60 * 60 * 24;
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      diff -= hours * 1000 * 60 * 60;
-      const mins = Math.floor(diff / (1000 * 60));
-      diff -= mins * 1000 * 60;
-      const secs = Math.floor(diff / 1000);
-
-      setCountdown({
-        days: String(days).padStart(2, "0"),
-        hours: String(hours).padStart(2, "0"),
-        mins: String(mins).padStart(2, "0"),
-        secs: String(secs).padStart(2, "0"),
-      });
-    };
-
-    updateCountdown();
-    const intervalId = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  return (
-    <div className="hero-countdown">
-      <div className="countdown-label">{t("label")}</div>
-      <div className="countdown-grid" id="countdown">
-        <div className="countdown-item">
-          <div className="countdown-value" id="cd-days">
-            {countdown.days}
-          </div>
-          <div className="countdown-label-small">{t("days")}</div>
-        </div>
-        <div className="countdown-item">
-          <div className="countdown-value" id="cd-hours">
-            {countdown.hours}
-          </div>
-          <div className="countdown-label-small">{t("hours")}</div>
-        </div>
-        <div className="countdown-item">
-          <div className="countdown-value" id="cd-mins">
-            {countdown.mins}
-          </div>
-          <div className="countdown-label-small">{t("mins")}</div>
-        </div>
-        <div className="countdown-item">
-          <div className="countdown-value" id="cd-secs">
-            {countdown.secs}
-          </div>
-          <div className="countdown-label-small">{t("secs")}</div>
-        </div>
-      </div>
-      <div className="launch-note">{t("note")}</div>
-    </div>
-  );
-};
 
 const RicoMatrixLandingPage: React.FC = () => {
   const t = useTranslations("LandingPage");
-  const locale = useLocale();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mapStats, setMapStats] = useState<CountryStat[]>([]);
+  const [mapTotals, setMapTotals] = useState({
+    totalVisits: 0,
+    uniqueVisitors: 0,
+    countries: 0,
+  });
+  const heroMediaRef = useRef<HTMLDivElement | null>(null);
 
   // Helper function to render HTML from translation
   const renderHTML = (html: string) => {
@@ -159,7 +97,72 @@ const RicoMatrixLandingPage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleNavClick = (id: string) => (e: MouseEvent<HTMLAnchorElement>) => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const loadStats = async () => {
+      try {
+        const res = await fetch("/api/stats");
+        if (!res.ok) return;
+        const json = await res.json();
+        const data: CountryStat[] = json?.data ?? [];
+        const totals = json?.totals ?? {};
+        const totalVisits =
+          typeof totals.total_visits !== "undefined"
+            ? Number(totals.total_visits)
+            : data.reduce((acc, cur) => acc + Number(cur.total || 0), 0);
+        const uniqueVisitors =
+          typeof totals.unique_visitors !== "undefined"
+            ? Number(totals.unique_visitors)
+            : data.reduce(
+                (acc, cur) => acc + Number(cur.unique_visitors || 0),
+                0
+              );
+        const countries =
+          typeof totals.countries !== "undefined"
+            ? Number(totals.countries)
+            : data.length;
+
+        setMapStats(data);
+        setMapTotals({ totalVisits, uniqueVisitors, countries });
+      } catch (error) {
+        // Silent fail to avoid blocking the UI
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  useEffect(() => {
+    const el = heroMediaRef.current;
+    if (!el) return;
+
+    const handleMove = (evt: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const relX = (evt.clientX - rect.left) / rect.width - 0.5;
+      const relY = (evt.clientY - rect.top) / rect.height - 0.5;
+      const max = 14;
+      el.style.setProperty("--parallax-x", `${relX * max}px`);
+      el.style.setProperty("--parallax-y", `${relY * max}px`);
+    };
+
+    const handleLeave = () => {
+      el.style.setProperty("--parallax-x", `0px`);
+      el.style.setProperty("--parallax-y", `0px`);
+    };
+
+    el.addEventListener("mousemove", handleMove);
+    el.addEventListener("mouseleave", handleLeave);
+
+    return () => {
+      el.removeEventListener("mousemove", handleMove);
+      el.removeEventListener("mouseleave", handleLeave);
+    };
+  }, []);
+
+  const handleNavClick = (id: string) => (
+    e: React.MouseEvent<HTMLAnchorElement>
+  ) => {
     e.preventDefault();
     scrollToId(id);
     setMobileNavOpen(false);
@@ -172,15 +175,6 @@ const RicoMatrixLandingPage: React.FC = () => {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
-
-  const year = new Date().getFullYear();
-  const heroTitle = t.rich("title", {
-    highlight: (chunks) => <span className="hero-highlight">{chunks}</span>,
-  });
-
-  const heroSubtitle = t.rich("subtitle", {
-    strong: (chunks) => <strong>{chunks}</strong>,
-  });
 
   return (
     <div className="page" id="top">
@@ -195,7 +189,7 @@ const RicoMatrixLandingPage: React.FC = () => {
             aria-label="Scroll to top"
           >
             <div className="logo-mark" aria-hidden="true">
-              <img src="/logo.png" alt="RICO MATRIX" className="logo-img" />
+              <div className="logo-text">RICO MATRIX</div>
             </div>
           </button>
 
@@ -272,34 +266,192 @@ const RicoMatrixLandingPage: React.FC = () => {
         )}
       </header>
 
-      <main>
+      <main className="landing-main">
         {/* HERO BLOCK */}
         <section className="hero hero--fullscreen">
           <div className="container">
-            <div className="hero-full">
-              <div className="hero-banner reveal">
-                <div className="hero-banner-inner">
-                  <h1
-                    className="hero-title"
-                    dangerouslySetInnerHTML={renderHTML(t("title"))}
-                  />
+            <div className="hero-layout">
+              <div className="hero-copy reveal">
+                <h1
+                  className="hero-title"
+                  dangerouslySetInnerHTML={renderHTML(t("title"))}
+                />
 
-                  <p
-                    className="hero-subtitle"
-                    dangerouslySetInnerHTML={renderHTML(t("subtitle"))}
-                  />
+                <p
+                  className="hero-subtitle clamp-3"
+                  dangerouslySetInnerHTML={renderHTML(t("subtitle"))}
+                />
 
-                  <div className="hero-ctas mt-6 flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-6 lg:gap-8">
-                    <MemoizedMobileWalletConnector />
+                <div className="hero-minimal-meta">
+                  <span>{t("launchInfo.launching")}</span>
+                  <span className="hero-minimal-dot" aria-hidden="true"></span>
+                  <span>{t("launchInfo.time")}</span>
+                </div>
 
-                    <a
-                      href="https://t.me/ricomatrixdapp"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btn-secondary flex items-center justify-center h-14 px-8 text-lg rounded-xl"
-                    >
-                      {t("joinTelegram")}
-                    </a>
+                <div className="hero-ctas mt-6 flex flex-col lg:flex-row items-stretch lg:items-start gap-4 lg:gap-6">
+                  <MemoizedMobileWalletConnector className="wallet-inline" />
+
+                  <a
+                    href="https://t.me/ricomatrixdapp"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-secondary cta-inline"
+                  >
+                    {t("joinTelegram")}
+                  </a>
+                </div>
+              </div>
+
+              <div className="hero-media reveal" ref={heroMediaRef}>
+                <div className="image-placeholder image-placeholder--hero">
+                  <div className="icon-scene">
+                    <div className="icon-orbit">
+                      <div className="icon-ring" aria-hidden="true"></div>
+                      <div className="icon-core" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img">
+                          <path
+                            d="M4 6.5C6.5 5 9 5 12 6.5c3-1.5 5.5-1.5 8 0v11c-2.5-1.5-5-1.5-8 0-3-1.5-5.5-1.5-8 0v-11z"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M12 6.5v11"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div className="icon-orb icon-orb--top" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                          <path
+                            d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </div>
+                      <div
+                        className="icon-orb icon-orb--right"
+                        aria-hidden="true"
+                      >
+                        <svg viewBox="0 0 24 24">
+                          <path
+                            d="M4 18h16M6 14h3M11 10h3M16 6h2"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div
+                        className="icon-orb icon-orb--left"
+                        aria-hidden="true"
+                      >
+                        <svg viewBox="0 0 24 24">
+                          <path
+                            d="M7 7h10M7 12h10M7 17h7"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="icon-caption">
+                      {t("media.items.dashboard")}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* MEDIA SHOWCASE */}
+        <section className="section section--tight">
+          <div className="container">
+            <div className="block-panel reveal">
+              <div className="section-head">
+                <div className="section-kicker">{t("media.kicker")}</div>
+                <h2 className="section-title">{t("media.title")}</h2>
+                <p className="section-subtitle">{t("media.subtitle")}</p>
+              </div>
+
+              <div className="image-grid">
+                <div className="image-card">
+                  <div className="image-placeholder image-placeholder--icon">
+                    <div className="icon-stack">
+                      <div className="icon-badge icon-badge--book">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            d="M5 6.5c2.4-1.2 4.8-1.2 7.2 0 2.4-1.2 4.8-1.2 7.3 0v11c-2.5-1.3-4.9-1.3-7.3 0-2.4-1.3-4.8-1.3-7.2 0v-11z"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                          />
+                          <path
+                            d="M12.2 6.5v11"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div className="icon-caption">{t("media.items.book")}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="image-card">
+                  <div className="image-placeholder image-placeholder--icon">
+                    <div className="icon-stack">
+                      <div className="icon-badge icon-badge--dashboard">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            d="M5 19V5h14v14H5z"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                          />
+                          <path
+                            d="M8 15v-3M12 15V9M16 15v-5"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div className="icon-caption">
+                        {t("media.items.dashboard")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="image-card">
+                  <div className="image-placeholder image-placeholder--icon">
+                    <div className="icon-stack">
+                      <div className="icon-badge icon-badge--mobile">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <rect
+                            x="7"
+                            y="3.5"
+                            width="10"
+                            height="17"
+                            rx="2"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                          />
+                          <path
+                            d="M11 17.5h2"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div className="icon-caption">{t("media.items.mobile")}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -429,73 +581,88 @@ const RicoMatrixLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* LAUNCH INFO */}
-        <section className="section section--tight launch-info">
+        {/* GLOBAL MAP + STATS */}
+        <section id="world" className="section section--tight">
           <div className="container">
             <div className="block-panel reveal">
-              <div className="launch-grid">
-                <div>
-                  <div className="hero-kicker">
-                    <span className="hero-kicker-pill">
-                      {t("launchInfo.launching")}
-                    </span>
-                    <span>{t("launchInfo.time")}</span>
-                  </div>
+              <div className="section-head">
+                <div className="section-kicker">{t("worldMap.kicker")}</div>
+                <h2 className="section-title">{t("worldMap.title")}</h2>
+                <p className="section-subtitle">{t("worldMap.subtitle")}</p>
+              </div>
 
-                  <div className="hero-badges">
-                    <div className="hero-badge">
-                      <span className="hero-badge-dot"></span>
-                      {t("launchInfo.badges.decentralized")}
-                    </div>
-                    <div className="hero-badge">
-                      <span className="hero-badge-dot"></span>
-                      {t("launchInfo.badges.earnings")}
-                    </div>
-                    <div className="hero-badge">
-                      <span className="hero-badge-dot"></span>
-                      {t("launchInfo.badges.royalty")}
-                    </div>
-                  </div>
-
-                  <div className="hero-meta">
-                    <div
-                      className="hero-meta-pill"
-                      dangerouslySetInnerHTML={renderHTML(
-                        t("launchInfo.recommendation")
-                      )}
-                    />
-                    <div
-                      dangerouslySetInnerHTML={renderHTML(
-                        t("launchInfo.partners")
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <CountdownDisplay />
+              <div className="map-grid">
+                <WorldMap data={mapStats} />
+                <div className="map-stats">
+                  <StatsCard
+                    label={t("worldMap.stats.readers")}
+                    value={mapTotals.uniqueVisitors.toLocaleString()}
+                    note={t("worldMap.stats.readersNote")}
+                  />
+                  <StatsCard
+                    label={t("worldMap.stats.visits")}
+                    value={mapTotals.totalVisits.toLocaleString()}
+                    note={t("worldMap.stats.visitsNote")}
+                  />
+                  <StatsCard
+                    label={t("worldMap.stats.countries")}
+                    value={mapTotals.countries.toLocaleString()}
+                    note={t("worldMap.stats.countriesNote")}
+                  />
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* X3 IMAGE */}
+        {/* X3 + X6 TRACKS */}
         <section className="section section--tight">
           <div className="container">
-            <div className="block-panel image-block reveal">
+            <div className="block-panel reveal">
               <div className="section-head">
                 <div className="section-kicker">{t("visuals.x3.kicker")}</div>
-                <h2 className="section-title">{t("visuals.x3.title")}</h2>
+                <h2 className="section-title">
+                  {t("visuals.x3.title")} · {t("visuals.x6.title")}
+                </h2>
                 <p className="section-subtitle">{t("visuals.x3.subtitle")}</p>
               </div>
-              <div className="image-frame">
-                <img
-                  src="/ricox3matrixs.png"
-                  alt="RICO MATRIX X3 matrix visual"
-                />
+              <div className="grid grid--2">
+                <article className="card reveal">
+                  <div className="card-kicker">{t("visuals.x3.kicker")}</div>
+                  <h3 className="card-title">{t("visuals.x3.title")}</h3>
+                  <p className="card-body clamp-3">{t("visuals.x3.note")}</p>
+                </article>
+                <article className="card reveal">
+                  <div className="card-kicker">{t("visuals.x6.kicker")}</div>
+                  <h3 className="card-title">{t("visuals.x6.title")}</h3>
+                  <p className="card-body clamp-3">{t("visuals.x6.note")}</p>
+                </article>
               </div>
-              <div className="image-note">{t("visuals.x3.note")}</div>
+              <div className="image-grid image-grid--compact">
+                <div className="image-card">
+                  <div className="image-placeholder image-placeholder--icon">
+                    <div className="matrix-icon matrix-icon--x3" aria-hidden="true">
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                    </div>
+                    <div className="icon-caption">{t("visuals.x3.title")}</div>
+                  </div>
+                </div>
+                <div className="image-card">
+                  <div className="image-placeholder image-placeholder--icon">
+                    <div className="matrix-icon matrix-icon--x6" aria-hidden="true">
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                      <span className="matrix-dot"></span>
+                    </div>
+                    <div className="icon-caption">{t("visuals.x6.title")}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -518,7 +685,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   <h3 className="card-title">
                     {t("whyJoin.features.spillovers.title")}
                   </h3>
-                  <p className="card-body">
+                  <p className="card-body clamp-3">
                     {t("whyJoin.features.spillovers.description")}
                   </p>
                 </article>
@@ -530,7 +697,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   <h3 className="card-title">
                     {t("whyJoin.features.ip.title")}
                   </h3>
-                  <p className="card-body">
+                  <p className="card-body clamp-3">
                     {t("whyJoin.features.ip.description")}
                   </p>
                 </article>
@@ -542,30 +709,11 @@ const RicoMatrixLandingPage: React.FC = () => {
                   <h3 className="card-title">
                     {t("whyJoin.features.royalty.title")}
                   </h3>
-                  <p className="card-body">
+                  <p className="card-body clamp-3">
                     {t("whyJoin.features.royalty.description")}
                   </p>
                 </article>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* X6 IMAGE */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel image-block reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("visuals.x6.kicker")}</div>
-                <h2 className="section-title">{t("visuals.x6.title")}</h2>
-              </div>
-              <div className="image-frame">
-                <img
-                  src="/ricox6matrix.png"
-                  alt="RICO MATRIX X6 matrix visual"
-                />
-              </div>
-              <div className="image-note">{t("visuals.x6.note")}</div>
             </div>
           </div>
         </section>
@@ -590,7 +738,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                       {t("howItWorks.steps.step1.title")}
                     </h3>
                     <p
-                      className="step-body"
+                      className="step-body clamp-3"
                       dangerouslySetInnerHTML={renderHTML(
                         t("howItWorks.steps.step1.description")
                       )}
@@ -607,7 +755,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                       {t("howItWorks.steps.step2.title")}
                     </h3>
                     <p
-                      className="step-body"
+                      className="step-body clamp-3"
                       dangerouslySetInnerHTML={renderHTML(
                         t("howItWorks.steps.step2.description")
                       )}
@@ -624,7 +772,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                       {t("howItWorks.steps.step3.title")}
                     </h3>
                     <p
-                      className="step-body"
+                      className="step-body clamp-3"
                       dangerouslySetInnerHTML={renderHTML(
                         t("howItWorks.steps.step3.description")
                       )}
@@ -651,7 +799,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   <h3 className="video-title">
                     {t("videos.tutorials.tutorial1.title")}
                   </h3>
-                  <p className="video-desc">
+                  <p className="video-desc clamp-2">
                     {t("videos.tutorials.tutorial1.description")}
                   </p>
                   <div className="video-embed">
@@ -668,7 +816,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   <h3 className="video-title">
                     {t("videos.tutorials.tutorial2.title")}
                   </h3>
-                  <p className="video-desc">
+                  <p className="video-desc clamp-2">
                     {t("videos.tutorials.tutorial2.description")}
                   </p>
                   <div className="video-embed">
@@ -685,7 +833,7 @@ const RicoMatrixLandingPage: React.FC = () => {
                   <h3 className="video-title">
                     {t("videos.tutorials.tutorial3.title")}
                   </h3>
-                  <p className="video-desc">
+                  <p className="video-desc clamp-2">
                     {t("videos.tutorials.tutorial3.description")}
                   </p>
                   <div className="video-embed">
@@ -712,65 +860,20 @@ const RicoMatrixLandingPage: React.FC = () => {
                 <p className="section-subtitle">{t("partners.subtitle")}</p>
               </div>
 
-              <div className="partners-grid">
-                <div className="partner-logo">
-                  <img
-                    src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
-                    alt="USDT Tether logo"
-                  />
-                </div>
-                <div className="partner-logo">
-                  <img
-                    src="https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=040"
-                    alt="BNB logo"
-                  />
-                </div>
-                <div className="partner-logo">
-                  <img
-                    src="https://cryptologos.cc/logos/alchemy-pay-ach-logo.svg?v=040"
-                    alt="Alchemy logo"
-                  />
-                </div>
-                <div className="partner-logo">
-                  <img
-                    src="/Trust_Core Logo_Blue.svg"
-                    alt="Trust Wallet logo"
-                  />
-                </div>
-                <div className="partner-logo">
-                  <img
-                    src="https://cryptologos.cc/logos/safepal-sfp-logo.svg?v=040"
-                    alt="SafePal logo"
-                  />
-                </div>
-                <div className="partner-logo">
-                  <img src="/remix.webp" alt="Remix logo" />
-                </div>
-                <div className="partner-logo">
-                  <img
-                    src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg"
-                    alt="MetaMask logo"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* UNILEVEL IMAGE */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel image-block reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("unilevel.kicker")}</div>
-                <h2 className="section-title">{t("unilevel.title")}</h2>
-                <p className="section-subtitle">{t("unilevel.subtitle")}</p>
-              </div>
-              <div className="image-frame">
-                <img
-                  src="/12unilevelrico.jpg"
-                  alt="12-level unilevel earning ladder"
-                />
+              <div className="pill-grid">
+                {[
+                  "USDT",
+                  "BNB Smart Chain",
+                  "Alchemy Pay",
+                  "Trust Wallet",
+                  "SafePal",
+                  "Remix",
+                  "MetaMask",
+                ].map((label) => (
+                  <div key={label} className="pill">
+                    {label}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -824,141 +927,6 @@ const RicoMatrixLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* WHY RICO DIFFERENT + EXTRA VIDEO */}
-        <section id="why" className="section section--tight">
-          <div className="container">
-            <div className="block-panel">
-              <div className="grid grid--2">
-                <div className="reveal">
-                  <div className="section-kicker">
-                    {t("whyDifferent.kicker")}
-                  </div>
-
-                  <div className="why-grid">
-                    <article className="why-card">
-                      <div className="why-tag">
-                        {t("whyDifferent.features.decentralized.tag")}
-                      </div>
-                      <h3 className="why-title">
-                        {t("whyDifferent.features.decentralized.title")}
-                      </h3>
-                      <p className="why-body">
-                        {t("whyDifferent.features.decentralized.description")}
-                      </p>
-                    </article>
-
-                    <article className="why-card">
-                      <div className="why-tag">
-                        {t("whyDifferent.features.dualTrack.tag")}
-                      </div>
-                      <h3 className="why-title">
-                        {t("whyDifferent.features.dualTrack.title")}
-                      </h3>
-                      <p className="why-body">
-                        {t("whyDifferent.features.dualTrack.description")}
-                      </p>
-                    </article>
-
-                    <article className="why-card">
-                      <div className="why-tag">
-                        {t("whyDifferent.features.royalties.tag")}
-                      </div>
-                      <h3 className="why-title">
-                        {t("whyDifferent.features.royalties.title")}
-                      </h3>
-                      <p className="why-body">
-                        {t("whyDifferent.features.royalties.description")}
-                      </p>
-                    </article>
-
-                    <article className="why-card">
-                      <div className="why-tag">
-                        {t("whyDifferent.features.unilevel.tag")}
-                      </div>
-                      <h3 className="why-title">
-                        {t("whyDifferent.features.unilevel.title")}
-                      </h3>
-                      <p className="why-body">
-                        {t("whyDifferent.features.unilevel.description")}
-                      </p>
-                    </article>
-
-                    <article className="why-card">
-                      <div className="why-tag">
-                        {t("whyDifferent.features.coin.tag")}
-                      </div>
-                      <h3 className="why-title">
-                        {t("whyDifferent.features.coin.title")}
-                      </h3>
-                      <p className="why-body">
-                        {t("whyDifferent.features.coin.description")}
-                      </p>
-                    </article>
-
-                    <article className="why-card">
-                      <div className="why-tag">
-                        {t("whyDifferent.features.ip.tag")}
-                      </div>
-                      <h3 className="why-title">
-                        {t("whyDifferent.features.ip.title")}
-                      </h3>
-                      <p className="why-body">
-                        {t("whyDifferent.features.ip.description")}
-                      </p>
-                    </article>
-                  </div>
-                </div>
-
-                <div className="reveal">
-                  <h3 style={{ margin: "0 0 6px" }}>
-                    {t("Common.watchVideo")}
-                  </h3>
-                  <p
-                    style={{
-                      margin: "0 0 10px",
-                      fontSize: "0.9rem",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    {t("Common.watchDescription")}
-                  </p>
-                  <div
-                    className="video-embed"
-                    style={{
-                      borderRadius: 18,
-                      boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
-                    }}
-                  >
-                    <iframe
-                      src="https://www.youtube.com/embed/_niJrog0TYk"
-                      allowFullScreen
-                      loading="lazy"
-                      title="RICO MATRIX overview"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* RICO COIN IMAGE */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel image-block reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("coinAirdrop.kicker")}</div>
-                <p className="section-subtitle">
-                  {t("coinAirdrop.description")}
-                </p>
-              </div>
-              <div className="image-frame">
-                <img src="/ricocoin.png" alt="RICO coin airdrop visual" />
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* FAQ */}
         <section id="faq" className="section section--tight">
           <div className="container">
@@ -981,27 +949,6 @@ const RicoMatrixLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* TELEGRAM SUPPORT STRIP */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel support-strip reveal">
-              <div>{t("support.help")}</div>
-              <div>
-                {t("support.team")}{" "}
-                <strong>
-                  <a
-                    href="https://t.me/defilordly"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t("support.telegram")}
-                  </a>
-                </strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* FINAL CTA */}
         <section id="cta" className="section">
           <div className="container">
@@ -1009,14 +956,14 @@ const RicoMatrixLandingPage: React.FC = () => {
               <h2>{t("cta.title")}</h2>
               <p>{t("cta.description")}</p>
 
-              <div className="hero-ctas mt-6 flex flex-col sm:flex-row items-center md:items-start gap-4 sm:gap-6 lg:gap-8">
-                <MemoizedMobileWalletConnector />
+              <div className="hero-ctas mt-6 flex flex-col lg:flex-row items-stretch lg:items-start gap-4 lg:gap-6">
+                <MemoizedMobileWalletConnector className="wallet-inline" />
 
                 <a
                   href="https://t.me/ricomatrixdapp"
                   target="_blank"
                   rel="noreferrer"
-                  className="btn btn-secondary flex items-center justify-center h-14 px-8 text-lg rounded-xl"
+                  className="btn btn-secondary cta-inline"
                 >
                   {t("joinTelegram")}
                 </a>
@@ -1034,42 +981,7 @@ const RicoMatrixLandingPage: React.FC = () => {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="site-footer">
-        <div className="footer-inner">
-          <div
-            dangerouslySetInnerHTML={renderHTML(
-              t("footer.copyright", { year })
-            )}
-          />{" "}
-          <div className="footer-links">
-            <a href="https://ricomatrix.com/" target="_blank" rel="noreferrer">
-              {t("footer.links.website")}
-            </a>
-            <a
-              href="https://t.me/ricomatrixdapp"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t("footer.links.telegram")}
-            </a>
-            <a
-              href="https://x.com/ricomatrixdapp"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t("footer.links.twitter")}
-            </a>
-            <a
-              href="https://www.youtube.com/@ricomatrix"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t("footer.links.youtube")}
-            </a>
-          </div>
-        </div>
-      </footer>
+      {/* Footer rendered globally */}
     </div>
   );
 };

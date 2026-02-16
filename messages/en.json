@@ -1,20 +1,20 @@
 {
   "LandingPage": {
-    "title": "The World's First Decentralized Library Matrix That Pays Royalty Passive Income.",
-    "subtitle": "Buy chapters, unlock knowledge, and earn from a dual-track X3 + X6 matrix, 12 unilevel rewards, royalty pools and free RICO coin farming — all running on a self-executing smart contract on BNB Chain.",
-    "activateLevel": "Activate Level1",
+    "title": "A premium book marketplace and education platform powered by the X3 + X6 Library Matrix.",
+    "subtitle": "Buy chapters, access curated lessons, and earn from a dual-track X3 + X6 matrix, 12-level unilevel rewards, and royalty pools — all automated by a self-executing smart contract on BNB Smart Chain.",
+    "activateLevel": "Start Chapter 1",
     "joinTelegram": "Join Telegram",
     "nav": {
       "howItWorks": "How it works",
       "videos": "Videos",
-      "levels": "Levels",
+      "levels": "Chapters",
       "faq": "FAQ"
     },
     "matrixOverview": {
-      "title": "X3 + X6 Matrix Overview",
-      "subtitle": "Chapters = levels • Levels = book chapters you own forever",
+      "title": "X3 + X6 Library Matrix",
+      "subtitle": "Chapters are books you own • Levels unlock lessons and resale rights",
       "blockchain": "BNB Smart Chain",
-      "note": "12 chapters per track · each next chapter costs 2× more and pays 2× more.",
+      "note": "12 chapters per track · each new chapter costs 2× more and pays approximately 2× more.",
       "chapters": {
         "chapter1": "Chapter 1",
         "chapter4": "Chapter 4",
@@ -24,121 +24,144 @@
         "chapter12": "Chapter 12"
       },
       "prices": {
-        "entry": "Entry",
+        "entry": "Starter",
         "teamBuilder": "Team builder",
-        "globalSpillover": "Global spillover zone",
+        "globalSpillover": "Global spillover",
         "scaling": "Scaling",
         "leaders": "Leaders",
         "whales": "Whales"
       },
       "footer": {
-        "royalty": "Royalty pool: 30% for long-term community payouts plus platform fee.",
-        "farming": "RICO coin farming: 1:1 free coins on buys, upgrades & unilevel."
+        "royalty": "Royalty pool: 30% shared with the reading community plus platform fee.",
+        "farming": "RICO rewards: 1:1 coins on purchases, upgrades & unilevel."
       }
     },
     "launchInfo": {
-      "launching": "NOW LIVE",
-      "time": "Live on BNB Smart Chain",
+      "launching": "NOW ENROLLING",
+      "time": "Library live on BNB Smart Chain",
       "badges": {
-        "decentralized": "100% decentralized — smart contract fully renounced",
+        "decentralized": "On-chain ownership of chapters",
         "earnings": "X3 direct + X6 spillover earnings",
         "royalty": "Royalty community pool & unilevel"
       },
-      "recommendation": "Recommended entry: at least Level 9 for global spillovers",
-      "partners": "Bring 3 ready partners to activate your engine from day one.",
+      "recommendation": "Suggested start: Chapter 9 for global spillovers",
+      "partners": "Bring 3 ready readers to activate your engine from day one.",
       "countdown": {
-        "label": "Contract is Live",
-        "days": "Live",
-        "hours": "",
-        "mins": "",
-        "secs": "",
-        "note": "Connect your wallet with USDT BEP-20 to start earning immediately."
+        "label": "Enrollment Open",
+        "days": "Days",
+        "hours": "Hours",
+        "mins": "Mins",
+        "secs": "Secs",
+        "note": "Connect your wallet with USDT BEP-20 to purchase your first chapter."
+      }
+    },
+    "media": {
+      "kicker": "Library Showcase",
+      "title": "Preview the experience before you publish and earn.",
+      "subtitle": "Use premium visuals to highlight the book marketplace, the reader dashboard, and your chapter ownership.",
+      "items": {
+        "book": "Chapter cover preview",
+        "dashboard": "Reader dashboard preview",
+        "mobile": "Mobile reading experience"
+      }
+    },
+    "worldMap": {
+      "kicker": "Global Library",
+      "title": "A book marketplace with readers in every region.",
+      "subtitle": "RICO MATRIX operates as a borderless education economy with on-chain chapter ownership and transparent royalty flows.",
+      "stats": {
+        "readers": "Active readers",
+        "readersNote": "Unique visitors recorded",
+        "visits": "Total visits",
+        "visitsNote": "Total recorded visits",
+        "countries": "Countries reached",
+        "countriesNote": "Unique countries with readers"
       }
     },
     "visuals": {
       "x3": {
-        "kicker": "RICO X3 VISUAL",
-        "title": "ONE LINE - 3 PLACES",
-        "subtitle": "UNLIMITED AUTOMATIC REINVESTS",
-        "note": "The X3 matrix is your direct sales engine. It's a 3-referral position matrix where you earn directly from each referral."
+        "kicker": "X3 BOOK MATRIX",
+        "title": "ONE LINE • 3 PLACES",
+        "subtitle": "DIRECT CHAPTER SALES",
+        "note": "The X3 matrix is your direct book sales engine. Each of your three placements pays you immediately when filled."
       },
       "x6": {
-        "kicker": "RICO X6 VISUAL",
-        "title": "TWO LINES - 2 + 4 PLACES",
-        "note": "The X6 matrix operates on a spillover system. It's a 6-position matrix that fills through your direct efforts, your upline's efforts, and the efforts of your downline. This creates potential for passive earning and team-based growth."
+        "kicker": "X6 LIBRARY MATRIX",
+        "title": "TWO LINES • 2 + 4 PLACES",
+        "note": "The X6 matrix grows through spillovers from your team and the wider community, creating passive earning potential as the library expands."
       }
     },
     "whyJoin": {
-      "kicker": "Why people are joining",
-      "title": "Multiple on-chain income streams from one library matrix.",
-      "subtitle": "RICO MATRIX combines matrix rewards, unilevel commissions, royalty dividends, intellectual property ownership and RICO coin farming — all encoded inside an unstoppable smart contract.",
+      "kicker": "Why readers are joining",
+      "title": "Multiple income streams from one learning marketplace.",
+      "subtitle": "RICO MATRIX blends book sales, education access, unilevel commissions, royalty dividends, intellectual property ownership, and RICO rewards — all encoded on-chain.",
       "features": {
         "spillovers": {
           "kicker": "Spillovers",
           "title": "Earn from global X6 activity",
-          "description": "The X6 matrix is built for team and community spillovers. Upline, downline and crossline activity can fill your matrix slots, giving you the chance to earn even if you are not a strong recruiter."
+          "description": "The X6 matrix is built for team and community spillovers. Upline, downline, and crossline activity can fill your matrix slots, giving you earning potential beyond direct sales."
         },
         "ip": {
           "kicker": "Intellectual property",
           "title": "Every level unlocks a real chapter",
-          "description": "Each level is a book chapter in the RICO Library. When you buy a chapter, you unlock knowledge and own that content forever — your participation is backed by long-term IP value."
+          "description": "Each level is a book chapter in the RICO Library. When you buy a chapter, you unlock the content and own the resale rights forever."
         },
         "royalty": {
           "kicker": "Royalties & unilevel",
           "title": "Royalty pool + 12-level unilevel",
-          "description": "Every buy and upgrade feeds royalty and referral pools. 70% of each chapter price flows instantly to 12 uplines on your unilevel, while global 30% royalty pools reward both active and inactive users over time plus platform fee."
+          "description": "Every purchase feeds royalties and referral pools. 70% of each chapter price flows instantly to 12 uplines, while the global 30% royalty pool rewards the community over time plus platform fee."
         }
       }
     },
     "howItWorks": {
       "kicker": "How it works",
-      "title": "Three simple steps to switch on your RICO engine.",
-      "subtitle": "RICO MATRIX is a self-executing algorithm on the Binance Smart Chain. Once the contract is live, it automatically handles registrations, matrix placements, reinvestments, unilevel payouts and royalty distributions.",
+      "title": "Three steps to start learning and earning.",
+      "subtitle": "RICO MATRIX is a self-executing library contract on the BNB Smart Chain. Once live, it automatically handles registrations, matrix placements, reinvestments, unilevel payouts and royalty distributions.",
       "steps": {
         "step1": {
           "index": "1",
-          "title": "Connect your BEP-20 wallet",
-          "description": "Use Trust Wallet, SafePal, MetaMask, TokenPocket, OKX, or any compatible BNB Smart Chain wallet. Fund it with a small amount of BNB for gas and at least $5 USDT BEP-20 for your first chapter."
+          "title": "Connect your BNB Smart Chain wallet",
+          "description": "Use Trust Wallet, SafePal, MetaMask, TokenPocket, OKX, or any compatible wallet. Fund it with a small amount of BNB for gas and at least $5 USDT BEP-20 for your first chapter."
         },
         "step2": {
           "index": "2",
-          "title": "Activate Chapter 1 in X3 & X6",
-          "description": "With $5 USDT you enter RICO X3 and RICO X6 simultaneously. X3 is your direct sales engine (3 slots), while X6 is your spillover engine (2+4 slots). All payments move wallet-to-wallet via the smart contract."
+          "title": "Purchase Chapter 1 in X3 & X6",
+          "description": "With $5 USDT you unlock Chapter 1 access and enter RICO X3 and RICO X6 simultaneously. X3 is your direct sales engine (3 slots), while X6 is your spillover engine (2+4 slots). All payments move wallet-to-wallet via the smart contract."
         },
         "step3": {
           "index": "3",
-          "title": "Upgrade, recycle & scale your chapters",
-          "description": "Chapters 2–12 are each 2× the previous price and 2× the earning potential. Auto-recycle keeps chapters reopening. Unilevel and royalty pools reward network-wide activity, while RICO coin farming drops free tokens based on your buys, upgrades and referrals."
+          "title": "Upgrade your library and scale earnings",
+          "description": "Chapters 2–12 are each 2× the previous price and 2× the earning potential. Auto-recycle keeps chapters reopening. Unilevel and royalty pools reward network-wide activity, while RICO rewards drop based on your buys, upgrades and referrals."
         }
       }
     },
     "videos": {
-      "kicker": "Video Tutorials Guide",
-      "title": "Watch these 3 short videos before you join.",
-      "subtitle": "These tutorials help new members move from zero to ready: wallet, USDT funding, and how RICO MATRIX works.",
+      "kicker": "Learning Guides",
+      "title": "Watch these 3 quick guides before you enroll.",
+      "subtitle": "Wallet setup, USDT funding, and how the RICO Library Matrix works.",
       "tutorials": {
         "tutorial1": {
-          "title": "1. How to create a SafePal wallet",
+          "title": "1. Create a SafePal wallet for library access",
           "description": "Step-by-step guide to install SafePal, create your wallet, secure your seed phrase and connect to BNB Smart Chain."
         },
         "tutorial2": {
           "title": "2. How to buy USDT on Bybit P2P",
-          "description": "Learn how to use Bybit P2P marketplace to safely convert your local currency into USDT BEP-20."
+          "description": "Learn how to use Bybit P2P to safely convert your local currency into USDT BEP-20."
         },
         "tutorial3": {
-          "title": "3. How RICO MATRIX works",
-          "description": "Overview of X3 & X6, royalty pool, unilevel and RICO coin farming so you understand the full engine."
+          "title": "3. How the RICO Library Matrix works",
+          "description": "Overview of X3 & X6, royalty pool, unilevel and RICO rewards so you understand the full engine."
         }
       }
     },
     "partners": {
       "kicker": "Strategic partners",
-      "title": "Trusted by big Web3 infrastructures.",
-      "subtitle": "RICO MATRIX interacts with well-known tools in the BNB Smart Chain ecosystem."
+      "title": "Trusted by leading Web3 infrastructure.",
+      "subtitle": "RICO MATRIX integrates with widely used tools in the BNB Smart Chain ecosystem."
     },
     "unilevel": {
-      "kicker": "12 Unilevel Earning ladder",
-      "title": "Share 70% of every chapter bought among 12 referral unilevel.",
+      "kicker": "12-Level Reader Ladder",
+      "title": "Share 70% of every chapter sold across a 12-level unilevel.",
       "subtitle": "Every chapter purchase instantly rewards your referral tree through the smart contract."
     },
     "levels": {
@@ -174,12 +197,12 @@
         "level12": "$10,240"
       },
       "descriptions": {
-        "level1": "Entry chapter — start your engine.",
+        "level1": "Entry chapter — start your library.",
         "level2": "Double your earning capacity.",
-        "level3": "Growing team, growing royalties.",
+        "level3": "Growing readership, growing royalties.",
         "level4": "More spillovers, larger cycles.",
         "level5": "Serious builders zone.",
-        "level6": "Core team leadership.",
+        "level6": "Core community leadership.",
         "level7": "Long-term royalty leverage.",
         "level8": "Momentum and duplication.",
         "level9": "Global spillover hotspot — strongly recommended.",
@@ -189,7 +212,7 @@
       }
     },
     "whyDifferent": {
-      "kicker": "Why RICO Matrix is different",
+      "kicker": "Why the RICO Library Matrix is different",
       "features": {
         "decentralized": {
           "tag": "Decentralized",
@@ -198,23 +221,23 @@
         },
         "dualTrack": {
           "tag": "Dual-track engine",
-          "title": "X3 for directs, X6 for spillovers",
-          "description": "X3 rewards your personal referrals, while X6 is built for global and team spillovers from the whole community."
+          "title": "X3 for direct sales, X6 for spillovers",
+          "description": "X3 rewards your personal chapter sales, while X6 is built for global and team spillovers from the whole community."
         },
         "royalties": {
           "tag": "Royalties",
-          "title": "Royalty passive income",
+          "title": "Royalty-based passive income",
           "description": "A global pool shares long-term royalties with both active and inactive members based on chapter activity."
         },
         "unilevel": {
           "tag": "Unilevel",
-          "title": "12-level referral program",
+          "title": "12-level reader referral program",
           "description": "70% of every chapter price is instantly distributed across 12 uplines through the smart contract."
         },
         "coin": {
-          "tag": "RICO coin",
-          "title": "Free RICO coin farming",
-          "description": "1:1 RICO drops on every buy, upgrade and unilevel payout build real on-chain token circulation."
+          "tag": "RICO rewards",
+          "title": "Free RICO coin rewards",
+          "description": "1:1 RICO drops on every purchase, upgrade and unilevel payout build real on-chain token circulation."
         },
         "ip": {
           "tag": "Chapters as IP",
@@ -224,8 +247,8 @@
       }
     },
     "coinAirdrop": {
-      "kicker": "Earn Free Airdrop",
-      "description": "Earn free RICO coins automatically into your crypto wallet based on your buy, upgrade and referral activities inside the RICO MATRIX system."
+      "kicker": "Reader Rewards Airdrop",
+      "description": "Earn free RICO coins directly to your wallet based on chapter purchases, upgrades and referral activity inside the RICO MATRIX system."
     },
     "faq": {
       "kicker": "FAQ",
@@ -233,19 +256,19 @@
       "questions": [
         {
           "question": "Is RICO MATRIX really decentralized?",
-          "answer": "Yes. RICO MATRIX runs as a self-executing smart contract on the BNB Smart Chain. All key rules — registrations, matrix placements, unilevel payouts, royalties and RICO coin farming — are encoded on-chain. Once deployed, no admin can change the logic or pause your earnings."
+          "answer": "Yes. RICO MATRIX runs as a self-executing smart contract on the BNB Smart Chain. All key rules — registrations, matrix placements, unilevel payouts, royalties and RICO rewards — are encoded on-chain. Once deployed, no admin can change the logic or pause your earnings."
         },
         {
-          "question": "How do I actually earn here?",
-          "answer": "You earn from multiple streams: X3 matrix (direct referrals), X6 matrix (spillovers from team and global activity), the 12-level unilevel referral program, royalty pools funded by every chapter, and free RICO coin farming on buys, upgrades and referrals."
+          "question": "How do I earn in the book marketplace?",
+          "answer": "You earn from multiple streams: X3 matrix (direct chapter sales), X6 matrix (spillovers from team and global activity), the 12-level unilevel program, royalty pools funded by every chapter, and RICO rewards on purchases, upgrades and referrals."
         },
         {
           "question": "Do I need referrals to earn?",
-          "answer": "Referrals speed everything up, but are not the only way to earn. The X6 spillover system can fill slots from upline and global activity. However, if you want serious results, we strongly suggest you bring at least three active partners and help them reach higher chapters with you."
+          "answer": "Referrals speed everything up, but they are not the only way to earn. The X6 spillover system can fill slots from upline and global activity. For strong results, we suggest you bring at least three active readers and help them move up chapters with you."
         },
         {
-          "question": "Why is Level 9 recommended at launch?",
-          "answer": "At launch, most leaders target mid–high chapters to position for global spillovers and unilevel volume. Starting at Level 9 (or higher) positions you in the core flow of matrix and royalty activity, instead of staying at the very bottom while higher chapters explode above you."
+          "question": "Why is Chapter 9 recommended at launch?",
+          "answer": "At launch, most leaders target mid–high chapters to position for global spillovers and unilevel volume. Starting at Chapter 9 (or higher) places you in the core flow of matrix and royalty activity instead of staying at the very bottom."
         },
         {
           "question": "Is this financial or investment advice?",
@@ -259,8 +282,8 @@
       "telegram": "@ricomatrix"
     },
     "cta": {
-      "title": "Ready to switch on your RICO Engine?",
-      "description": "Get your wallet ready with USDT BEP-20, start at Chapter 1 — or position higher up to Chapter 9 and above — and bring at least three serious partners. The RICO MATRIX smart contract will handle the rest.",
+      "title": "Ready to open your first chapter?",
+      "description": "Get your wallet ready with USDT BEP-20, start at Chapter 1 — or position higher at Chapter 9 and above — and bring at least three serious readers. The RICO MATRIX smart contract handles the rest.",
       "disclaimer": "Reminder: This is not investment advice. Always do your own research before interacting with any smart contract or DeFi system."
     },
     "footer": {
@@ -273,11 +296,10 @@
       }
     },
     "Common": {
-      "watchVideo": "Re-watch the RICO MATRIX overview.",
-      "watchDescription": "After watching the three tutorials above, this is where serious builders usually decide what chapter to start from."
+      "watchVideo": "Re-watch the RICO Library Matrix overview.",
+      "watchDescription": "After watching the three tutorials above, this is where serious readers usually decide which chapter to start from."
     }
   },
-
   "Header": {
     "logo": {
       "alt": "Rico Matrix Logo",
@@ -285,6 +307,7 @@
     },
     "navigation": {
       "dashboard": "Dashboard",
+      "authors": "Authors",
       "chapters": "Chapters",
       "matrix": "Matrix",
       "royalty": "Royalty",
@@ -473,6 +496,84 @@
         ]
       }
     },
+    "globalPanel": {
+      "title": "Global Network",
+      "subtitle": "Live on-chain overview of the library economy",
+      "live": "Live data",
+      "readers": "Total readers",
+      "readersNote": "Total unique readers on the contract",
+      "transactions": "Chapters purchased",
+      "transactionsNote": "Total ChapterPurchased events",
+      "volume": "USDT volume",
+      "volumeNote": "Total USDT value of chapter purchases",
+      "loading": "Loading..."
+    },
+    "survey": {
+      "kicker": "Community Vote",
+      "title": "Should we launch the Skill Acquisition program?",
+      "description": "Vote with RICO to signal whether the upcoming skill tracks will benefit the community.",
+      "note": "Your vote is recorded on-chain and burns RICO. One wallet can vote once.",
+      "results": {
+        "label": "Live results",
+        "yes": "Yes votes",
+        "no": "No votes",
+        "total": "Total burned",
+        "live": "Live",
+        "passed": "Passed",
+        "failed": "Failed"
+      },
+      "amount": {
+        "label": "RICO amount",
+        "placeholder": "Enter amount",
+        "minimum": "Minimum vote: {amount} RICO"
+      },
+      "status": {
+        "label": "Status",
+        "open": "Voting is open",
+        "closed": "Voting window closed",
+        "paused": "Voting is paused",
+        "finalized": "Voting finalized",
+        "disclaimer": "Once you vote, your wallet cannot vote again."
+      },
+      "buttons": {
+        "yes": "Vote Yes",
+        "no": "Vote No",
+        "processing": "Processing...",
+        "approving": "Approving...",
+        "submitting": "Submitting...",
+        "confirming": "Confirming..."
+      },
+      "errors": {
+        "invalidAmount": "Enter a valid RICO amount.",
+        "belowMinimum": "Amount must be at least {amount} RICO.",
+        "failed": "Vote failed. Please try again."
+      },
+      "footer": "Voting uses RICO coins and executes directly on the survey smart contract.",
+      "close": "Close"
+    },
+    "surveyResults": {
+      "kicker": "Skill Acquisition Vote",
+      "title": "Community voting results",
+      "subtitle": "Live on-chain results update every block.",
+      "time": {
+        "label": "Time remaining",
+        "unknown": "Unknown",
+        "ended": "Voting ended"
+      },
+      "status": {
+        "live": "Live voting",
+        "paused": "Paused",
+        "passed": "Passed",
+        "failed": "Failed"
+      },
+      "chart": {
+        "label": "RICO burned",
+        "yes": "Yes",
+        "no": "No",
+        "total": "Total",
+        "updated": "Auto-refreshing"
+      }
+    },
     "referral": {
       "title": "Referral Program",
       "benefits": {
@@ -500,7 +601,6 @@
         "unilevel": "Unilevel"
       }
     },
-
     "Registration": {
       "header": {
         "title": "Join the RicoMatrix Library (Chapter 1 Access)",
@@ -787,7 +887,6 @@
       }
     }
   },
-
   "Matrix": {
     "MatrixPage": {
       "connect": {
@@ -825,7 +924,6 @@
         }
       }
     },
-
     "track1": {
       "title": "🌐 X3 Matrix Network",
       "description": "Track your 1×3 matrix positions with direct referrals and auto-reinvestment.",
@@ -955,7 +1053,6 @@
         "totalCycles": "Total Cycles:"
       }
     },
-
     "Track2": {
       "title": "🌐 X6 Matrix Network",
       "description": "Track your 2×3 matrix positions with first line and second line referrals.",
@@ -966,13 +1063,11 @@
         "title": "Connect Wallet",
         "description": "Please connect your wallet to view your X6 matrix."
       },
-
       "loading": {
         "loading": "Loading X6 Matrix data...",
         "retrying": "Loading X6 Matrix data (retry {retryCount}/3)...",
         "takingLonger": "Taking longer than usual..."
       },
-
       "error": {
         "title": "Matrix Data Unavailable",
         "description": "The matrix visualization features are currently unavailable. You can still purchase chapters and earn rewards.",
@@ -984,44 +1079,37 @@
         "reloadAll": "Reload All Chapters",
         "afterRetries": "Unable to load matrix data after multiple attempts"
       },
-
       "notRegistered": {
         "title": "Not a Reader Yet",
         "description": "Join the library to start building your X6 matrix network and earn from 2×3 matrix structure.",
         "register": "Go to Dashboard to Register"
       },
-
       "chapterSelector": {
         "title": "Select Chapter",
         "noChapters": "No chapters unlocked yet.",
         "buyFirst": "Buy Your First Chapter",
         "loaded": "Showing {loaded} of {total} chapters loaded"
       },
-
       "matrixVisualization": {
         "title": "X6 Matrix — Chapter {chapter}",
         "refresh": "Refresh",
-
         "yourReferrer": {
           "title": "Your Referrer",
           "description": "The reader who referred you to this chapter",
           "none": "No direct referrer"
         },
-
         "firstLine": {
           "title": "First Line (Direct)",
           "position": "Direct Position {index}",
           "tag": "Direct",
           "empty": "No first line referrals yet."
         },
-
         "secondLine": {
           "title": "Second Line (Spillover)",
           "position": "Spillover Position {index}",
           "tag": "Spillover",
           "empty": "No second line referrals yet."
         },
-
         "chapterStatus": {
           "title": "Chapter Status",
           "status": "Status",
@@ -1033,7 +1121,6 @@
           "closedDescription": "Fully cycled sub-matrix"
         }
       },
-
       "matrixInfo": {
         "rules": {
           "title": "X6 Matrix Rules",
@@ -1044,7 +1131,6 @@
           "closedPart": "Closed part indicates fully cycled sub-matrix",
           "earnings": "Earnings from both lines and reinvestments"
         },
-
         "stats": {
           "title": "Current Chapter Stats",
           "totalReferrals": "Total Referrals:",
@@ -1053,7 +1139,6 @@
           "matrixProgress": "Matrix Progress",
           "progress": "{percent}%"
         },
-
         "earnings": {
           "title": "Chapter {chapter} Earnings Snapshot",
           "totalEarnings": "Total X6 Earnings:",
@@ -1063,7 +1148,6 @@
           "totalCycles": "Total X6 Cycles:",
           "totalCyclesDescription": "Total reinvestments across all X6 chapters"
         },
-
         "status": {
           "title": "Matrix Status",
           "blocked": "Blocked",
@@ -1073,27 +1157,23 @@
           "readyDesc": "All 6 positions filled! Next placement will trigger reinvestment",
           "buildingDesc": "Place more referrals to complete the matrix"
         },
-
         "quickActions": {
           "title": "Quick Actions",
           "buyChapters": "Buy Chapters",
           "viewEarnings": "View Earnings"
         }
       },
-
       "stats": {
         "totalEarnings": "Total Earnings:",
         "chaptersUnlocked": "Chapters Unlocked:",
         "totalCycles": "Total Cycles:"
       },
-
       "dataNotAvailable": {
         "title": "Data Not Available for Chapter {chapter}",
         "description": "No matrix data found for this chapter."
       }
     }
   },
-
   "RoyaltyPage": {
     "RoyaltyPool": {
       "header": {
@@ -1142,7 +1222,6 @@
       "description": "Track your share of the global royalty pool and claim your USDT rewards whenever you're ready."
     }
   },
-
   "ChaptersPage": {
     "connect": {
       "label": "Connect Required",
@@ -1159,6 +1238,27 @@
       "label": "RicoMatrix • Chapters",
       "title": "Matrix Chapters",
       "description": "Unlock and progress through the matrix chapters to maximize your earnings."
+    },
+    "skills": {
+      "kicker": "Skill Lab",
+      "title": "Exclusive skill learning tracks (Coming Soon)",
+      "subtitle": "Unlock Chapter 5 to access premium video lessons in high‑income skills.",
+      "locked": "Unlock Chapter 5 to access this section.",
+      "comingSoon": "Coming soon",
+      "status": {
+        "unlocked": "Unlocked",
+        "locked": "Locked"
+      },
+      "tracks": {
+        "marketing": {
+          "title": "Digital Marketing",
+          "note": "Video lessons coming soon on YouTube."
+        },
+        "trading": {
+          "title": "Trading",
+          "note": "Video lessons coming soon on YouTube."
+        }
+      }
     },
     "ChapterCard": {
       "track": {
@@ -1250,7 +1350,6 @@
       "description": "Track your chapters, earnings, status, and referral network inside the Ricomatrix ecosystem."
     }
   },
-
   "Documentation": {
     "title": "Business Documentation",
     "subtitle": "Learn about our business model, vision, and roadmap",

@@ -6,8 +6,8 @@ import {
   usePublicClient,
 } from "wagmi";
 import { quantuMatrixContract, usdtContract } from "../utils/contracts";
-import { useState, useCallback } from "react";
-import { formatUnits, parseUnits } from "viem";
+import { useState, useCallback, useEffect } from "react";
+import { formatUnits, parseUnits, parseAbiItem } from "viem";
 import { toast } from "sonner";
 import { TOKEN_CONTRACT_ADDRESS } from "@/utils/constants";
 
@@ -258,6 +258,94 @@ export const useQuantuMatrix = () => {
         select: safeBigInt,
       },
     });
+
+  // Read total readers
+  const { data: totalReaders, refetch: refetchTotalReaders } =
+    useReadContract({
+      ...quantuMatrixContract,
+      functionName: "getTotalReaders",
+      query: {
+        select: safeBigInt,
+      },
+    });
+
+  const [globalTransactions, setGlobalTransactions] = useState<{
+    totalChapters: number;
+    totalUsdt: string;
+    loading: boolean;
+  }>({
+    totalChapters: 0,
+    totalUsdt: "0",
+    loading: true,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchGlobalTransactions = async () => {
+      if (!publicClient || !quantuMatrixContract.address) return;
+
+      try {
+        setGlobalTransactions((prev) => ({ ...prev, loading: true }));
+
+        const latestBlock = await publicClient.getBlockNumber();
+        const chunkSize = BigInt(5000);
+        const event = parseAbiItem(
+          "event ChapterPurchased(address indexed reader, uint8 track, uint8 chapter, uint256 price)"
+        );
+
+        let totalChapters = BigInt(0);
+        let totalValue = BigInt(0);
+
+        for (
+          let fromBlock = BigInt(0);
+          fromBlock <= latestBlock;
+          fromBlock += chunkSize + BigInt(1)
+        ) {
+          const toBlock =
+            fromBlock + chunkSize > latestBlock
+              ? latestBlock
+              : fromBlock + chunkSize;
+
+          const logs = await publicClient.getLogs({
+            address: quantuMatrixContract.address,
+            event,
+            fromBlock,
+            toBlock,
+          });
+
+          console.log("chapterPurchased log", logs)
+
+          for (const log of logs) {
+            if (log.args?.chapter !== undefined) {
+              totalChapters += BigInt(log.args.chapter);
+            }
+            if (log.args?.price !== undefined) {
+              totalValue += BigInt(log.args.price);
+            }
+          }
+        }
+
+        if (!cancelled) {
+          setGlobalTransactions({
+            totalChapters: Number(totalChapters),
+            totalUsdt: formatUnits(totalValue, 18),
+            loading: false,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setGlobalTransactions((prev) => ({ ...prev, loading: false }));
+        }
+      }
+    };
+
+    fetchGlobalTransactions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [publicClient, quantuMatrixContract.address]);
 
   // Read top earners leaderboard
   const { data: topEarners, refetch: refetchTopEarners } = useReadContract({
@@ -1671,6 +1759,8 @@ export const useQuantuMatrix = () => {
     globalStats: globalStats as any,
     globalSummary: globalSummary as any,
     globalRicoFarming: globalRicoFarming as any,
+    totalReaders: totalReaders as any,
+    globalTransactions,
     topEarners: topEarners as any,
     topReferrers: topReferrers as any,
     chapterPrices: chapterPrices as string[] | undefined,

@@ -4,6 +4,8 @@ export const USDT_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_USDT_CONTRACT_ADDRESS as `0x${string}`;
 export const TOKEN_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
+export const SURVEY_CONTRACT_ADDRESS =
+  "0x3094cFbF3965B63835A80be765C91D8B06e808A1" as `0x${string}`;
 
 export const CONTRACT_ABI = [
   {
@@ -938,14 +940,14 @@ export const USDT_ABI = [
 ] as const;
 
 export const CHAPTER_NAMES = {
-  1: "Chapter 1: How to Discover your Life Purpose",
-  3: "Chapter 3: Mastering Best Crypto Security: Protect Your Digital Wealth",
-  2: "Chapter 2: Trading Without Illusions: A Simple, Data-First DYOR Guide",
-  4: "Chapter 4: Why Most People Never Build Wealth",
-  5: "Chapter 5: Why People Get Rich Doing One Thing… Then Lose It All Doing Another",
-  6: "Chapter 6: Why wise Parent buy Travel",
-  7: "Chapter 7: Holy DEFI",
-  8: "Chapter 8: Legacy",
+  1: "Chapter 1: Crypto from Zero",
+  3: "Chapter 3:Blockchain, Networks and How Value Moves ",
+  2: "Chapter 2: Wallet keys and Self-Custody",
+  4: "Chapter 4: Coins, Tokens and Tokenomics",
+  5: "Chapter 5: Centralized Finance Vs Decentralized Finance",
+  6: "Chapter 6: Smart Contract and the Age of Programmable Trust",
+  7: "Chapter 7: Defi Protocol: Risk and Defence",
+  8: "Chapter 8: Trading, Strategy & Market Intelligence",
   9: "Chapter 9: Rico Leap",
   10: "Chapter 10: Infinite Possibilities",
   11: "Chapter 11: The Matrix",
@@ -956,3 +958,91 @@ export const TRACK_NAMES = {
   1: "X3 Matrix Track",
   2: "X6 Matrix Track",
 } as const;
+
+export const SURVEY_ABI = [
+  {
+    inputs: [],
+    name: "MIN_VOTE",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "proposalTitle",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "proposalDescription",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "paused",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "finalized",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "startTime",
+    outputs: [{ internalType: "uint48", name: "", type: "uint48" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "endTime",
+    outputs: [{ internalType: "uint48", name: "", type: "uint48" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "userVotes",
+    outputs: [
+      { internalType: "uint256", name: "yes", type: "uint256" },
+      { internalType: "uint256", name: "no", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "ricoAmount", type: "uint256" }],
+    name: "voteYes",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "ricoAmount", type: "uint256" }],
+    name: "voteNo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getResults",
+    outputs: [
+      { internalType: "uint256", name: "yesBurned", type: "uint256" },
+      { internalType: "uint256", name: "noBurned", type: "uint256" },
+      { internalType: "bool", name: "isFinalized", type: "bool" },
+      { internalType: "bool", name: "didPass", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;

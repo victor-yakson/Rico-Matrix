@@ -1,7 +1,7 @@
 import "@rainbow-me/rainbowkit/styles.css";
 
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { bsc, sepolia } from "wagmi/chains";
+import { bsc } from "wagmi/chains";
 import {
   rainbowWallet,
   walletConnectWallet,
@@ -34,11 +34,9 @@ export const config = getDefaultConfig({
     },
   ],
   transports: {
-    [sepolia.id]: http(
-      "https://eth-sepolia.g.alchemy.com/v2/SumeusvlJ5wEykn9Oz8UZ"
-    ),
     [bsc.id]: http(
-      "https://bnb-mainnet.g.alchemy.com/v2/SumeusvlJ5wEykn9Oz8UZ"
+      process.env.NEXT_PUBLIC_BSC_RPC_URL ??
+        "https://bnb-mainnet.g.alchemy.com/v2/SumeusvlJ5wEykn9Oz8UZ"
     ),
   },
   ssr: true,

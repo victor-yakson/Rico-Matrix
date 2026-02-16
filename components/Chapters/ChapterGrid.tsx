@@ -65,8 +65,6 @@ export const ChapterGrid = () => {
       const priceNumber = parseFloat(formatUnits(BigInt(chapterPrice), 18));
       const allowanceNumber = parseFloat(usdtAllowance || "0");
 
-      console.log("Chapter Price:", priceNumber, "USDT");
-      console.log("User Allowance:", allowanceNumber, "USDT");
 
       return allowanceNumber < priceNumber;
     } catch (error) {
@@ -119,7 +117,6 @@ export const ChapterGrid = () => {
           {chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
             const chapterNeedsApproval = needsApproval(chapterPrice);
-            console.log("Rendering ChapterCard for Track 1, Chapter", chapter);
 
             return (
               <ChapterCard
