@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Visit } from "@/lib/models/Visit";
 import { initializeDatabase } from "@/lib/db-setup";
 import axios from "axios";
+import { Op } from "sequelize";
 
 let dbInitialized = false;
 let geoip: any = null;
