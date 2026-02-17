@@ -17,6 +17,10 @@ interface MobileWalletConnectorProps {
   onConnectionError?: (error: Error) => void;
   /** Extra class to style component differently per placement (header, page, etc.) */
   className?: string;
+  /** Extra class to style the button differently per placement (header, page, etc.) */
+  buttonClassName?: string;
+  /** Visual size variant for the button */
+  variant?: "default" | "compact";
   /** Text for the desktop button when idle (default: "Connect Wallet") */
   desktopButtonLabel?: string;
   /** Text for the mobile button when idle (default: "Connect Wallet") */
@@ -33,6 +37,8 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   onConnectionSuccess,
   onConnectionError,
   className,
+  buttonClassName,
+  variant = "default",
   desktopButtonLabel = "Connect Wallet",
   mobileButtonLabel = "Launch App",
 }) => {
@@ -390,23 +396,33 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
 
   // DESKTOP
   if (!isMobileDevice) {
+    const desktopButtonClass = [
+      styles.desktopButton,
+      variant === "compact" ? styles.compactButton : "",
+      buttonClassName ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const desktopContainerClass = [
+      styles.desktopContainer,
+      variant === "compact" ? styles.compactContainer : "",
+      className ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <div className={`${styles.desktopContainer} ${className ?? ""}`}>
+      <div className={desktopContainerClass}>
         <button
           onClick={handleDesktopConnect}
-          className={styles.desktopButton}
+          className={desktopButtonClass}
           disabled={connectionStatus !== "idle"}
         >
-          <span className={styles.desktopButtonIcon}>🦊</span>
           <span className={styles.desktopButtonText}>
             {connectionStatus === "idle" ? desktopButtonLabel : "Connecting..."}
           </span>
-          <span className={styles.desktopButtonBadge}>Desktop</span>
         </button>
-
-        <p className={styles.desktopHint}>
-          Use browser extension or scan QR code with mobile wallet
-        </p>
 
         {desktopOptions.showDesktopModal && <DesktopConnectionModal />}
 
@@ -419,8 +435,24 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
   }
 
   // MOBILE
+  const mobileButtonClass = [
+    styles.connectButton,
+    variant === "compact" ? styles.compactButton : "",
+    buttonClassName ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const mobileContainerClass = [
+    styles.container,
+    variant === "compact" ? styles.compactContainer : "",
+    className ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`${styles.container} ${className ?? ""}`}>
+    <div className={mobileContainerClass}>
       <button
         onClick={() => {
           // If already in MetaMask/Trust/etc browser, skip deeplink modal
@@ -430,13 +462,12 @@ const MobileWalletConnector: React.FC<MobileWalletConnectorProps> = ({
             setShowModal(true);
           }
         }}
-        className={styles.connectButton}
+        className={mobileButtonClass}
         disabled={connectionStatus !== "idle" && !isInAppWalletBrowser}
       >
         {connectionStatus === "idle" ? (
           <>
             <span className={styles.buttonText}>{mobileButtonLabel}</span>
-            <span className={styles.buttonBadge}>Mobile</span>
           </>
         ) : connectionStatus === "connecting" ? (
           <span>

@@ -38,10 +38,10 @@ export const Header = () => {
       icon: "📚",
     },
     {
-      name: t("navigation.matrix"),
-      href: "/matrix",
-      current: pathname === "/matrix",
-      icon: "🔗",
+      name: t("navigation.skills"),
+      href: "/skills",
+      current: pathname === "/skills",
+      icon: "🎓",
     },
     {
       name: t("navigation.royalty"),

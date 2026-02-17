@@ -50,12 +50,12 @@ export const ReferralSection = () => {
       {/* Referral Benefits */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-yellow-300 mb-3">
-          Earn 50% Referral Bonus
+          Earn 70% Referral Bonus
         </h3>
         <ul className="space-y-2 text-sm text-slate-300">
           <li className="flex items-center">
             <span className="mr-2 text-emerald-400">✓</span>
-            Get 50% of your referral&apos;s first chapter purchase.
+            Get 70% of your referral&apos;s first chapter purchase.
           </li>
           <li className="flex items-center">
             <span className="mr-2 text-emerald-400">✓</span>
@@ -140,7 +140,7 @@ export const ReferralSection = () => {
         </h4>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="rounded-2xl border border-yellow-400/60 bg-slate-950/80 p-3 shadow-[0_0_18px_rgba(250,204,21,0.4)]">
-            <div className="text-lg font-bold text-yellow-300">50%</div>
+            <div className="text-lg font-bold text-yellow-300">70%</div>
             <div className="mt-1 text-xs text-slate-400">Direct Bonus</div>
           </div>
           <div className="rounded-2xl border border-purple-400/60 bg-slate-950/80 p-3 shadow-[0_0_18px_rgba(192,132,252,0.4)]">

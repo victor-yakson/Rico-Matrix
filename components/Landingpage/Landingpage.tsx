@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, memo, useRef } from "react";
+import React, { useEffect, useMemo, useState, memo, useRef } from "react";
 import MobileWalletConnector from "../Common/MobileWalletConnector";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "../Common/LanguageSwitcher";
@@ -55,6 +55,7 @@ const RicoMatrixFaqItem: React.FC<{
 const RicoMatrixLandingPage: React.FC = () => {
   const t = useTranslations("LandingPage");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [wordIndex, setWordIndex] = useState(0);
   const [mapStats, setMapStats] = useState<CountryStat[]>([]);
   const [mapTotals, setMapTotals] = useState({
     totalVisits: 0,
@@ -62,6 +63,14 @@ const RicoMatrixLandingPage: React.FC = () => {
     countries: 0,
   });
   const heroMediaRef = useRef<HTMLDivElement | null>(null);
+  const heroWords = useMemo(
+    () => [
+      t("heroTyping.words.0"),
+      t("heroTyping.words.1"),
+      t("heroTyping.words.2"),
+    ],
+    [t]
+  );
 
   // Helper function to render HTML from translation
   const renderHTML = (html: string) => {
@@ -134,6 +143,14 @@ const RicoMatrixLandingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % heroWords.length);
+    }, 5000);
+    return () => window.clearInterval(intervalId);
+  }, [heroWords.length]);
+
+
+  useEffect(() => {
     const el = heroMediaRef.current;
     if (!el) return;
 
@@ -189,7 +206,7 @@ const RicoMatrixLandingPage: React.FC = () => {
             aria-label="Scroll to top"
           >
             <div className="logo-mark" aria-hidden="true">
-              <div className="logo-text">RICO MATRIX</div>
+              <img src="/logo.png" alt="RICO MATRIX" className="logo-img" />
             </div>
           </button>
 
@@ -215,13 +232,11 @@ const RicoMatrixLandingPage: React.FC = () => {
                 <LanguageSwitcher />
               </div>
 
-              <button
-                className="nav-cta"
-                type="button"
-                onClick={() => scrollToId("cta")}
-              >
-                <span>{t("activateLevel")}</span>
-              </button>
+              <MemoizedMobileWalletConnector
+                variant="compact"
+                desktopButtonLabel={t("activateLevel")}
+                mobileButtonLabel={t("activateLevel")}
+              />
 
               <button
                 className={`burger ${mobileNavOpen ? "burger--open" : ""}`}
@@ -272,15 +287,17 @@ const RicoMatrixLandingPage: React.FC = () => {
           <div className="container">
             <div className="hero-layout">
               <div className="hero-copy reveal">
-                <h1
-                  className="hero-title"
-                  dangerouslySetInnerHTML={renderHTML(t("title"))}
-                />
+                <h1 className="hero-title">
+                  {t("heroTyping.prefix")}{" "}
+                  <span className="hero-fade">
+                    <span className="hero-fade-word" key={wordIndex}>
+                      {heroWords[wordIndex]}
+                    </span>
+                  </span>
+                  {t("heroTyping.suffix") ? ` ${t("heroTyping.suffix")}` : ""}
+                </h1>
 
-                <p
-                  className="hero-subtitle clamp-3"
-                  dangerouslySetInnerHTML={renderHTML(t("subtitle"))}
-                />
+                <p className="hero-subtitle">{t("subtitle")}</p>
 
                 <div className="hero-minimal-meta">
                   <span>{t("launchInfo.launching")}</span>
@@ -289,7 +306,11 @@ const RicoMatrixLandingPage: React.FC = () => {
                 </div>
 
                 <div className="hero-ctas mt-6 flex flex-col lg:flex-row items-stretch lg:items-start gap-4 lg:gap-6">
-                  <MemoizedMobileWalletConnector className="wallet-inline" />
+                  <MemoizedMobileWalletConnector
+                    className="wallet-inline"
+                    desktopButtonLabel={t("activateLevel")}
+                    mobileButtonLabel={t("activateLevel")}
+                  />
 
                   <a
                     href="https://t.me/ricomatrixdapp"
@@ -957,7 +978,11 @@ const RicoMatrixLandingPage: React.FC = () => {
               <p>{t("cta.description")}</p>
 
               <div className="hero-ctas mt-6 flex flex-col lg:flex-row items-stretch lg:items-start gap-4 lg:gap-6">
-                <MemoizedMobileWalletConnector className="wallet-inline" />
+                <MemoizedMobileWalletConnector
+                  className="wallet-inline"
+                  desktopButtonLabel={t("activateLevel")}
+                  mobileButtonLabel={t("activateLevel")}
+                />
 
                 <a
                   href="https://t.me/ricomatrixdapp"

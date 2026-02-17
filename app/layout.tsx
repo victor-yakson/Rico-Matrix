@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import VisitTracker from "@/components/Common/VisitTracker";
+import WalletCookieSync from "@/components/Common/WalletCookieSync";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,6 +42,7 @@ export default async function RootLayout({
                 closeButton
               />
               <VisitTracker />
+              <WalletCookieSync />
               <PageTransition>{children}</PageTransition>
               <SiteFooter />
             </Web3Provider>

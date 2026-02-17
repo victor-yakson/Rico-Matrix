@@ -12,6 +12,7 @@ interface ProfileInfoProps {
 const ProfileInfo = ({ userData, rewardTokenAddress }: ProfileInfoProps) => {
   const { address } = useAccount();
   const t = useTranslations('Dashboard.profile');
+  const tDashboard = useTranslations('Dashboard.page');
 
   const formatAddress = (addr: string) => {
     if (!addr) return '';
@@ -120,17 +121,26 @@ const ProfileInfo = ({ userData, rewardTokenAddress }: ProfileInfoProps) => {
                   <h4 className="text-sm font-semibold text-cyan-400 flex items-center gap-2">
                     <span className="text-lg">🪙</span> {t('rico.title')}
                   </h4>
-                  {rewardTokenAddress && (
+                  <div className="flex flex-wrap items-center gap-2">
                     <a
-                      href={`https://bscscan.com/token/${rewardTokenAddress}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-cyan-500 hover:text-cyan-400"
-                      title={t('rico.viewToken')}
+                      href="/rico"
+                      className="text-xs text-cyan-200 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-700/30 border border-cyan-600/50 hover:bg-cyan-600/40 transition-all"
                     >
-                      ↗
+                      <span>{tDashboard("ricoFarmingSection.viewRico")}</span>
+                      <span>→</span>
                     </a>
-                  )}
+                    {rewardTokenAddress && (
+                      <a
+                        href={`https://bscscan.com/token/${rewardTokenAddress}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-900/30 border border-cyan-700/50 hover:bg-cyan-800/40 transition-all"
+                      >
+                        <span>{tDashboard("ricoFarmingSection.viewToken")}</span>
+                        <span>↗</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
                 
                 {/* RICO Stats Grid */}

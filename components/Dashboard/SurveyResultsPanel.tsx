@@ -21,7 +21,11 @@ const formatTimeLeft = (seconds: number) => {
   return `${mins}m`;
 };
 
-export const SurveyResultsPanel = () => {
+export const SurveyResultsPanel = ({
+  onVote,
+}: {
+  onVote?: () => void;
+}) => {
   const t = useTranslations("Dashboard.surveyResults");
   const { data: blockNumber } = useBlockNumber({ watch: true });
 
@@ -34,6 +38,12 @@ export const SurveyResultsPanel = () => {
   const { data: endTime } = useReadContract({
     ...surveyContract,
     functionName: "endTime",
+    query: { enabled: true },
+  });
+
+  const { data: startTime } = useReadContract({
+    ...surveyContract,
+    functionName: "startTime",
     query: { enabled: true },
   });
 
@@ -84,6 +94,14 @@ export const SurveyResultsPanel = () => {
     return secondsLeft > 0 ? formatTimeLeft(secondsLeft) : t("time.ended");
   }, [endTime, t, blockNumber]);
 
+  const isOpenForVoting = useMemo(() => {
+    const now = Math.floor(Date.now() / 1000);
+    const start = Number(toBigInt(startTime));
+    const end = Number(toBigInt(endTime));
+    const inWindow = (!start || now >= start) && (!end || now <= end);
+    return !paused && !finalized && inWindow;
+  }, [endTime, finalized, paused, startTime, blockNumber]);
+
   return (
     <section className="rounded-3xl border border-yellow-500/25 bg-gradient-to-br from-slate-950 via-black to-slate-900 p-6 md:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8)]">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -114,6 +132,18 @@ export const SurveyResultsPanel = () => {
               ? t("status.paused")
               : t("status.live")}
           </span>
+          <button
+            type="button"
+            onClick={onVote}
+            disabled={!isOpenForVoting}
+            className={`mt-2 inline-flex items-center justify-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.2em] transition-all ${
+              isOpenForVoting
+                ? "border border-yellow-400/60 bg-yellow-400/10 text-yellow-200 hover:bg-yellow-400/20"
+                : "border border-slate-700 bg-slate-900/70 text-slate-500 cursor-not-allowed"
+            }`}
+          >
+            {t("cta.vote")}
+          </button>
         </div>
       </div>
 

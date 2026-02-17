@@ -140,7 +140,7 @@ export const ReferralSection = () => {
         </h4>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
-            <div className="text-lg font-bold text-blue-400">50%</div>
+            <div className="text-lg font-bold text-blue-400">70%</div>
             <div className="text-xs text-slate-400">
               {t('stats.directBonus')}
             </div>

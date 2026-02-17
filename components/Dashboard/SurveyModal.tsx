@@ -18,13 +18,18 @@ const toBigInt = (value: unknown) => {
   return BigInt(0);
 };
 
-export const SurveyModal = () => {
+export const SurveyModal = ({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) => {
   const t = useTranslations("Dashboard.survey");
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
 
-  const [isOpen, setIsOpen] = useState(true);
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +37,6 @@ export const SurveyModal = () => {
   const [submitStage, setSubmitStage] = useState<
     "approving" | "submitting" | "confirming" | null
   >(null);
-
-  const { data: userVotes, refetch: refetchUserVotes } = useReadContract({
-    ...surveyContract,
-    functionName: "userVotes",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
 
   const { data: minVote } = useReadContract({
     ...surveyContract,
@@ -95,10 +93,6 @@ export const SurveyModal = () => {
     }
   }, [isConfirming]);
 
-  const yesVotes = toBigInt((userVotes as any)?.yes ?? (userVotes as any)?.[0]);
-  const noVotes = toBigInt((userVotes as any)?.no ?? (userVotes as any)?.[1]);
-  const hasVoted = yesVotes + noVotes > BigInt(0);
-
   const minVoteValue = useMemo(() => toBigInt(minVote), [minVote]);
   const minimumRequired = useMemo(() => {
     const five = parseUnits("5", 18);
@@ -134,17 +128,10 @@ export const SurveyModal = () => {
   }, [amount, minimumRequired]);
 
   useEffect(() => {
-    if (hasVoted) {
-      setIsOpen(false);
-    }
-  }, [hasVoted]);
-
-  useEffect(() => {
     if (isConfirmed) {
-      refetchUserVotes();
-      setIsOpen(false);
+      onClose();
     }
-  }, [isConfirmed, refetchUserVotes]);
+  }, [isConfirmed, onClose]);
 
   const handleVote = async (vote: "yes" | "no") => {
     setError(null);
@@ -199,15 +186,15 @@ export const SurveyModal = () => {
     }
   };
 
-  if (!isConnected || !isOpen || hasVoted) return null;
+  if (!isConnected || !open) return null;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-8">
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={() => setIsOpen(false)}
-        aria-hidden="true"
-      />
+        <div
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          onClick={onClose}
+          aria-hidden="true"
+        />
 
       <div className="relative w-full max-w-2xl rounded-3xl border border-yellow-500/25 bg-gradient-to-br from-slate-950 via-black to-slate-900 p-6 md:p-8 shadow-[0_40px_120px_rgba(0,0,0,0.8)]">
         <div className="flex items-start justify-between gap-4 mb-6">
@@ -223,7 +210,7 @@ export const SurveyModal = () => {
             </p>
           </div>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
             className="text-slate-400 hover:text-slate-200 transition"
             aria-label={t("close")}
           >

@@ -22,11 +22,49 @@ function getIP(req: NextRequest) {
   return normalizeIp(rawIp);
 }
 
+const PUBLIC_PATHS = [
+  "/",
+  "/api",
+  "/_next",
+  "/favicon.ico",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.json",
+];
+
+const PROTECTED_PREFIXES = [
+  "/authors",
+  "/chapters",
+  "/royalty",
+  "/profile",
+  "/rico",
+  "/skills",
+  "/documentation",
+];
+
+const isPublicPath = (pathname: string) =>
+  PUBLIC_PATHS.some((path) =>
+    path === "/" ? pathname === "/" : pathname.startsWith(path)
+  );
+
+const isProtectedPath = (pathname: string) =>
+  PROTECTED_PREFIXES.some((path) => pathname.startsWith(path));
+
 // Default export instead of named export
 export default function middleware(req: NextRequest) {
   const ip = getIP(req);
   const userAgent = req.headers.get("user-agent") || "";
   const path = req.nextUrl.pathname;
+
+  if (!isPublicPath(path) && isProtectedPath(path)) {
+    const isConnected = req.cookies.get("walletConnected")?.value === "1";
+    if (!isConnected) {
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = "/";
+      redirectUrl.searchParams.set("from", path);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
 
   // Skip tracking for API routes, static files, and favicon
   const skipPaths = ["/api", "/_next", "/favicon.ico", "/static"];

@@ -1,8 +1,13 @@
 {
   "LandingPage": {
-    "title": "A premium book marketplace and education platform powered by the X3 + X6 Library Matrix.",
-    "subtitle": "Buy chapters, access curated lessons, and earn from a dual-track X3 + X6 matrix, 12-level unilevel rewards, and royalty pools — all automated by a self-executing smart contract on BNB Smart Chain.",
-    "activateLevel": "Start Chapter 1",
+    "heroTyping": {
+      "prefix": "The World's Best De-Fi learn-to-earn Library for",
+      "suffix": "",
+      "words": ["Skills", "Chapters", "Books"]
+    },
+    "title": "The World's Best De-Fi learn-to-earn Library for Skills / Chapters / Books",
+    "subtitle": "Matrix That Pays Royalty Passive Income. Buy chapters, unlock lessons, and earn with the X3 + X6 library matrix.",
+    "activateLevel": "Connect Wallet",
     "joinTelegram": "Join Telegram",
     "nav": {
       "howItWorks": "How it works",
@@ -307,12 +312,12 @@
     },
     "navigation": {
       "dashboard": "Dashboard",
-      "authors": "Authors",
+      "authors": "Books",
       "chapters": "Chapters",
-      "matrix": "Matrix",
+      "skills": "Skills",
       "royalty": "Royalty",
       "profile": "Profile",
-      "documentation": "Documentation"
+      "documentation": "Docs"
     },
     "socials": {
       "followUs": "Follow Us",
@@ -512,7 +517,7 @@
       "kicker": "Community Vote",
       "title": "Should we launch the Skill Acquisition program?",
       "description": "Vote with RICO to signal whether the upcoming skill tracks will benefit the community.",
-      "note": "Your vote is recorded on-chain and burns RICO. One wallet can vote once.",
+      "note": "Your vote is recorded on-chain and burns RICO. You can vote multiple times.",
       "results": {
         "label": "Live results",
         "yes": "Yes votes",
@@ -533,7 +538,7 @@
         "closed": "Voting window closed",
         "paused": "Voting is paused",
         "finalized": "Voting finalized",
-        "disclaimer": "Once you vote, your wallet cannot vote again."
+        "disclaimer": "Each vote burns RICO and updates on-chain."
       },
       "buttons": {
         "yes": "Vote Yes",
@@ -572,14 +577,17 @@
         "no": "No",
         "total": "Total",
         "updated": "Auto-refreshing"
+      },
+      "cta": {
+        "vote": "Vote now"
       }
     },
     "referral": {
       "title": "Referral Program",
       "benefits": {
-        "title": "Earn 50% Referral Bonus",
+        "title": "Earn 70% Referral Bonus",
         "items": [
-          "50% of referral's first purchase",
+          "70% of referral's first purchase",
           "Unilevel bonuses from downline",
           "Build matrix network faster"
         ]
@@ -825,6 +833,7 @@
       "ricoFarmingSection": {
         "title": "🪙 RICO Token Farming",
         "viewToken": "View Token",
+        "viewRico": "View RICO",
         "yourBalance": "Your RICO Balance",
         "stats": {
           "totalEarned": "Total Earned",
@@ -849,10 +858,10 @@
           "description": "Explore all available book chapters and upgrade levels as you grow.",
           "button": "Browse Chapters"
         },
-        "checkMatrix": {
-          "title": "Check Matrix",
-          "description": "View your matrix network and track your downline growth.",
-          "button": "View Matrix"
+        "skillLab": {
+          "title": "Skill Lab",
+          "description": "Access premium learning tracks once you unlock Chapter 5.",
+          "button": "Open Skills"
         },
         "checkRoyalty": {
           "title": "Check Royalty",
@@ -884,6 +893,39 @@
         "button": "Claim ${amount} USDT",
         "processing": "Processing royalty claim...",
         "note": "Your royalty balance updates automatically after a successful claim."
+      }
+    }
+  },
+  "SkillsPage": {
+    "connect": {
+      "label": "Connect Required",
+      "title": "Connect Your Wallet",
+      "description": "Please connect your wallet to access the Skill Lab."
+    },
+    "header": {
+      "label": "RICO MATRIX • Skill Lab",
+      "title": "Skill Lab",
+      "description": "Unlock premium learning tracks powered by your chapter progression."
+    },
+    "locked": {
+      "title": "Unlock Chapter 5 to access Skill Lab",
+      "description": "Complete Chapter 5 in either X3 or X6 to unlock these learning tracks.",
+      "button": "Go to Chapters"
+    },
+    "status": {
+      "available": "Access unlocked",
+      "comingSoon": "Coming soon"
+    },
+    "tracks": {
+      "marketing": {
+        "title": "Digital Marketing",
+        "description": "Master audience growth, paid acquisition, funnels, and community-led sales.",
+        "note": "Video lessons will be published on YouTube."
+      },
+      "trading": {
+        "title": "AI Training",
+        "description": "Learn AI fundamentals, practical workflows, and automation systems for creators.",
+        "note": "Video lessons will be published on YouTube."
       }
     }
   },

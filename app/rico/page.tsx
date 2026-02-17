@@ -400,15 +400,15 @@ export default function RICOStatsPage() {
                     </Link>
 
                     <Link
-                      href="/matrix"
+                      href="/skills"
                       className="flex items-center gap-3 rounded-xl bg-slate-900/60 p-3 border border-slate-700/50 hover:border-blue-500/30 hover:bg-slate-800/60 transition-all"
                     >
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center">
-                        <span className="text-lg">🕸️</span>
+                        <span className="text-lg">🎓</span>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-200">Matrix View</p>
-                        <p className="text-xs text-slate-500">Check your network</p>
+                        <p className="text-sm font-medium text-slate-200">Skill Lab</p>
+                        <p className="text-xs text-slate-500">Unlock learning tracks</p>
                       </div>
                     </Link>
                   </div>

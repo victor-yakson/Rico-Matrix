@@ -9,6 +9,13 @@
   width: 100%;
 }
 
+.compactContainer {
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  width: auto;
+}
+
 /* Primary connect button (MOBILE) */
 .connectButton {
   position: relative;
@@ -106,6 +113,20 @@
   overflow: hidden;
   width: min(100%, 340px);
   justify-content: center;
+}
+
+.compactButton {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  width: auto;
+  min-width: 0;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.compactButton::after {
+  display: none;
 }
 
 .desktopButton:hover:not(:disabled) {

@@ -1,8 +1,13 @@
 {
   "LandingPage": {
-    "title": "A premium book marketplace and education platform powered by the X3 + X6 Library Matrix.",
-    "subtitle": "Buy chapters, access curated lessons, and earn from a dual-track X3 + X6 matrix, 12-level unilevel rewards, and royalty pools — all automated by a self-executing smart contract on BNB Smart Chain.",
-    "activateLevel": "Start Chapter 1",
+    "heroTyping": {
+      "prefix": "The World's Best De-Fi learn-to-earn Library for",
+      "suffix": "",
+      "words": ["Compétences", "Chapitres", "Livres"]
+    },
+    "title": "The World's Best De-Fi learn-to-earn Library for Skills / Chapters / Books",
+    "subtitle": "Matrix That Pays Royalty Passive Income. Buy chapters, unlock lessons, and earn with the X3 + X6 library matrix.",
+    "activateLevel": "Connect Wallet",
     "joinTelegram": "Join Telegram",
     "nav": {
       "howItWorks": "How it works",
@@ -307,12 +312,12 @@
     },
     "navigation": {
       "dashboard": "Tableau de bord",
-      "authors": "Authors",
+      "authors": "Livres",
       "chapters": "Chapitres",
-      "matrix": "Matrice",
+      "skills": "Compétences",
       "royalty": "Royalties",
       "profile": "Profil",
-      "documentation": "Documentation"
+      "documentation": "Docs"
     },
     "socials": {
       "followUs": "Suivez-nous",
@@ -512,7 +517,7 @@
       "kicker": "Vote Communautaire",
       "title": "Devons-nous lancer le programme Skill Acquisition ?",
       "description": "Votez avec RICO pour indiquer si les prochaines compétences seront bénéfiques à la communauté.",
-      "note": "Votre vote est enregistré on-chain et brûle du RICO. Un portefeuille ne peut voter qu'une fois.",
+      "note": "Votre vote est enregistré on-chain et brûle du RICO. Vous pouvez voter plusieurs fois.",
       "results": {
         "label": "Résultats en direct",
         "yes": "Votes Oui",
@@ -533,7 +538,7 @@
         "closed": "Fenêtre de vote fermée",
         "paused": "Vote en pause",
         "finalized": "Vote finalisé",
-        "disclaimer": "Après avoir voté, votre portefeuille ne peut plus revoter."
+        "disclaimer": "Chaque vote brûle du RICO et met à jour la chaîne."
       },
       "buttons": {
         "yes": "Voter Oui",
@@ -572,14 +577,17 @@
         "no": "Non",
         "total": "Total",
         "updated": "Actualisation automatique"
+      },
+      "cta": {
+        "vote": "Voter maintenant"
       }
     },
     "referral": {
       "title": "Programme de Parrainage",
       "benefits": {
-        "title": "Gagnez 50% de Bonus de Parrainage",
+        "title": "Gagnez 70% de Bonus de Parrainage",
         "items": [
-          "50% du premier achat du parrainé",
+          "70% du premier achat du parrainé",
           "Bonus unilevel de votre downline",
           "Construisez votre réseau matriciel plus rapidement"
         ]
@@ -826,6 +834,7 @@
       "ricoFarmingSection": {
         "title": "🪙 Farming de Tokens RICO",
         "viewToken": "Voir le Token",
+        "viewRico": "Voir RICO",
         "yourBalance": "Votre Solde RICO",
         "stats": {
           "totalEarned": "Total Gagné",
@@ -850,10 +859,10 @@
           "description": "Explorez tous les chapitres de livres disponibles et montez de niveau au fur et à mesure de votre croissance.",
           "button": "Parcourir les Chapitres"
         },
-        "checkMatrix": {
-          "title": "Vérifier la Matrice",
-          "description": "Visualisez votre réseau matriciel et suivez la croissance de votre downline.",
-          "button": "Voir la Matrice"
+        "skillLab": {
+          "title": "Skill Lab",
+          "description": "Accédez aux parcours d'apprentissage après avoir débloqué le Chapitre 5.",
+          "button": "Ouvrir les Compétences"
         },
         "checkRoyalty": {
           "title": "Vérifier les Redevances",
@@ -885,6 +894,39 @@
         "button": "Réclamer {amount} $ USDT",
         "processing": "Traitement de la réclamation de redevances...",
         "note": "Votre solde de redevances se met à jour automatiquement après une réclamation réussie."
+      }
+    }
+  },
+  "SkillsPage": {
+    "connect": {
+      "label": "Connexion Requise",
+      "title": "Connectez votre portefeuille",
+      "description": "Veuillez connecter votre portefeuille pour accéder au Skill Lab."
+    },
+    "header": {
+      "label": "RICO MATRIX • Skill Lab",
+      "title": "Skill Lab",
+      "description": "Débloquez des parcours d'apprentissage premium grâce à votre progression."
+    },
+    "locked": {
+      "title": "Débloquez le Chapitre 5 pour accéder au Skill Lab",
+      "description": "Complétez le Chapitre 5 en X3 ou X6 pour débloquer ces parcours.",
+      "button": "Aller aux Chapitres"
+    },
+    "status": {
+      "available": "Accès débloqué",
+      "comingSoon": "Bientôt disponible"
+    },
+    "tracks": {
+      "marketing": {
+        "title": "Marketing Digital",
+        "description": "Maîtrisez la croissance d'audience, l'acquisition payante, les funnels et les ventes communautaires.",
+        "note": "Les leçons vidéo seront publiées sur YouTube."
+      },
+      "trading": {
+        "title": "Formation IA",
+        "description": "Apprenez les bases de l'IA, des workflows pratiques et l'automatisation pour les créateurs.",
+        "note": "Les leçons vidéo seront publiées sur YouTube."
       }
     }
   },

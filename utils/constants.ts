@@ -5,7 +5,7 @@ export const USDT_CONTRACT_ADDRESS = process.env
 export const TOKEN_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
 export const SURVEY_CONTRACT_ADDRESS =
-  "0x3094cFbF3965B63835A80be765C91D8B06e808A1" as `0x${string}`;
+  process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS as `0x${string}`;
 
 export const CONTRACT_ABI = [
   {
