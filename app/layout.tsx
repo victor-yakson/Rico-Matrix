@@ -27,9 +27,10 @@ export default async function RootLayout({
     const messages = await getMessages();
 
     return (
-      <html lang={locale}>
+      <html lang={locale} style={{ backgroundColor: "#070707" }}>
         <body
           className={`${inter.className} min-h-screen bg-gradient-to-b from-slate-950 via-black to-black text-slate-50 relative`}
+          style={{ backgroundColor: "#070707" }}
         >
           {/* Premium gold glow */}
           <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(250,204,21,0.10),_transparent_55%)]" />

@@ -3,6 +3,7 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--bg);
 }
 /* ---------- THEME TOKENS ---------- */
 :root {
@@ -43,6 +44,7 @@ body {
   color: var(--text-main);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
   background: radial-gradient(
       1200px 800px at 12% -10%,
       rgba(241, 210, 133, 0.12),
