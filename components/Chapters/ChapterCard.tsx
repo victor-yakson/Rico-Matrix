@@ -24,6 +24,23 @@ interface ChapterCardProps {
 
 type WordSpan = { text: string; start: number; end: number };
 
+const AUDIOBOOK_LINKS_CHAPTERS: Record<number, string> = {
+  1: "https://drive.google.com/file/d/1ewDAqVpSWlRem9xT97A9HD5EN9zSc5By/preview",
+  2: "https://drive.google.com/file/d/1X0vvKni6HGCjgKQcj8nzUokDy-9NYgJo/preview",
+  3: "https://drive.google.com/file/d/1DwI4wkJLSRLCKYN_bH_QZplUzqbCktQV/preview",
+  4: "https://drive.google.com/file/d/1ioWmZpK1doKJPV91jdjtqwOlxmBlDyMf/preview",
+  5: "https://drive.google.com/file/d/1DUK4kbPbJDNH1Q-wYbs81T3DRDNeIE_-/preview",
+  6: "https://drive.google.com/file/d/1ewSBJ_Ftc2-bTH9OcuRIHl4I3nrOnwtt/preview",
+  7: "https://drive.google.com/file/d/13X_OeLelqZHPuiRZy_eiQtJX9fY-ukDq/preview",
+  8: "https://drive.google.com/file/d/16C4RiOc8bMdl0ic3hyYdlyCoMfu0Wkoz/preview",
+};
+
+const AUDIOBOOK_LINKS_SELFHELP: Record<number, string> = {
+  1: "https://drive.google.com/file/d/1-R2UPttqjtT-Hz5nzyY2IsKbHKBkHrxf/preview",
+  2: "https://drive.google.com/file/d/1puZZOqE8V91kMLtAJT39Rza6B_JAh5Oo/preview",
+  3: "https://drive.google.com/file/d/1NcLP9opI0JkQAQcXDgrawx4Djke3jTCd/preview",
+};
+
 function buildWordSpans(text: string): WordSpan[] {
   const spans: WordSpan[] = [];
   const normalized = text.replace(/\s+/g, " ").trim();
@@ -185,6 +202,11 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const pdfUrl = useMemo(() => getPdfUrl(track, chapter), [track, chapter]);
+  const audioUrl = useMemo(() => {
+    const audioMap =
+      track === 2 ? AUDIOBOOK_LINKS_SELFHELP : AUDIOBOOK_LINKS_CHAPTERS;
+    return audioMap[chapter] ?? null;
+  }, [track, chapter]);
 
   const chip = useMemo(() => {
     return track === 1
@@ -723,6 +745,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
             </button>
           </div>
         )}
+
       </div>
 
       {/* FULLSCREEN MODAL */}
@@ -774,6 +797,28 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
                   </button>
                 </div>
               </div>
+
+              {audioUrl && (
+                <div className="px-3 py-3 border-b border-white/[0.06] bg-slate-950/70">
+                  <div className="flex items-center justify-between text-xs text-slate-300 mb-2">
+                    <span>🎧 {t("audio.label")}</span>
+                    <span className="text-slate-500">
+                      {t("chapter.label")} {chapter}
+                    </span>
+                  </div>
+                  <div className="relative w-full overflow-hidden rounded-xl border border-white/[0.08] bg-black">
+                    <div className="w-full" style={{ height: 140 }}>
+                      <iframe
+                        src={audioUrl}
+                        className="w-full h-full"
+                        allow="autoplay"
+                        allowFullScreen
+                        title={`Chapter ${chapter} Audiobook`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* PDF Space */}
               <div className="flex-1 overflow-hidden">

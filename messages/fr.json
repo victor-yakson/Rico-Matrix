@@ -312,7 +312,7 @@
     },
     "navigation": {
       "dashboard": "Tableau de bord",
-      "authors": "Livres",
+      "authors": "Bibliothèque",
       "chapters": "Chapitres",
       "skills": "Compétences",
       "royalty": "Royalties",
@@ -388,6 +388,8 @@
       "rico": {
         "title": "🪙 Farming de Tokens RICO",
         "viewToken": "Voir le token sur BSCScan",
+        "claim": "Réclamer",
+        "claiming": "Réclamation...",
         "stats": {
           "totalEarned": "Total Gagné",
           "received": "Reçu",
@@ -395,7 +397,7 @@
         },
         "progress": "Progression de Distribution",
         "info": {
-          "ratio": "🔄 1 RICO = 1 USDT dépensé/gagné",
+          "ratio": "🔄 1 RICO = 5 USDT dépensé/gagné",
           "pending": "⏳ RICO en attente envoyé automatiquement"
         }
       },
@@ -511,7 +513,8 @@
       "transactionsNote": "Total ChapterPurchased events",
       "volume": "USDT volume",
       "volumeNote": "Total USDT value of chapter purchases",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "unavailable": "Indisponible"
     },
     "survey": {
       "kicker": "Vote Communautaire",
@@ -587,9 +590,8 @@
       "benefits": {
         "title": "Gagnez 70% de Bonus de Parrainage",
         "items": [
-          "70% du premier achat du parrainé",
-          "Bonus unilevel de votre downline",
-          "Construisez votre réseau matriciel plus rapidement"
+          "Recevez 50% du premier achat de chapitre de votre parrainé.",
+          "Gagnez 20% de toute sa downline via les bonus unilevel."
         ]
       },
       "link": {
@@ -894,6 +896,41 @@
         "button": "Réclamer {amount} $ USDT",
         "processing": "Traitement de la réclamation de redevances...",
         "note": "Votre solde de redevances se met à jour automatiquement après une réclamation réussie."
+      }
+    }
+  },
+  "Profile": {
+    "referral": {
+      "title": "Programme de Parrainage",
+      "benefits": {
+        "title": "Gagnez 70% de Bonus de Parrainage",
+        "items": [
+          "Recevez 50% du premier achat de chapitre de votre parrainé.",
+          "Gagnez 20% de toute sa downline via les bonus unilevel.",
+          "Accélérez votre réseau matriciel avec des spillovers intelligents.",
+          "Augmentez votre part du pool de redevances global au fil du temps."
+        ]
+      },
+      "link": {
+        "label": "Votre lien de parrainage",
+        "noWallet": "Connectez votre portefeuille pour obtenir le lien",
+        "copy": "Copier",
+        "copied": "Copié !",
+        "copiedMessage": "Lien de parrainage copié dans le presse-papier !"
+      },
+      "share": {
+        "label": "Partager sur les réseaux",
+        "twitter": "Twitter",
+        "telegram": "Telegram",
+        "twitterText": "Rejoignez-moi sur RicoMatrix - Lisez de vrais chapitres de livres et gagnez des récompenses sur la blockchain ! 🚀📚\n\nUtilisez mon lien de parrainage : {link}\n\n#RicoMatrix #Blockchain #GagnezEnLisant",
+        "telegramText": "Rejoignez-moi sur RicoMatrix - Lisez de vrais chapitres de livres et gagnez des récompenses sur la blockchain ! 🚀📚\n\nUtilisez mon lien de parrainage : {link}"
+      },
+      "stats": {
+        "title": "Points forts du parrainage",
+        "directValue": "50%",
+        "directLabel": "Bonus Direct",
+        "unilevelValue": "12 Niveaux",
+        "unilevelLabel": "Gains Unilevel"
       }
     }
   },
@@ -1357,6 +1394,9 @@
         "nextPage": "Page suivante",
         "resetZoom": "Réinitialiser le zoom",
         "shortcuts": "Utilisez les touches ← → pour naviguer, +/- pour zoomer"
+      },
+      "audio": {
+        "label": "Livre audio"
       }
     },
     "ChapterGrid": {

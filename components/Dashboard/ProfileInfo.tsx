@@ -7,9 +7,16 @@ import { useTranslations } from 'next-intl';
 interface ProfileInfoProps {
   userData: any;
   rewardTokenAddress?: string;
+  onClaimRico?: () => Promise<void> | void;
+  isClaimingRico?: boolean;
 }
 
-const ProfileInfo = ({ userData, rewardTokenAddress }: ProfileInfoProps) => {
+const ProfileInfo = ({
+  userData,
+  rewardTokenAddress,
+  onClaimRico,
+  isClaimingRico = false,
+}: ProfileInfoProps) => {
   const { address } = useAccount();
   const t = useTranslations('Dashboard.profile');
   const tDashboard = useTranslations('Dashboard.page');
@@ -43,6 +50,7 @@ const ProfileInfo = ({ userData, rewardTokenAddress }: ProfileInfoProps) => {
   const ricoReceived = userData?.ricoSent || '0';
   const ricoPending = userData?.ricoPending || '0';
   const hasRICOData = parseFloat(ricoTotal) > 0 || parseFloat(ricoPending) > 0;
+  const canClaimRico = parseFloat(ricoPending) > 0;
 
   // Calculate distribution percentage
   const ricoDistributionPercentage = parseFloat(ricoTotal) > 0 
@@ -180,6 +188,20 @@ const ProfileInfo = ({ userData, rewardTokenAddress }: ProfileInfoProps) => {
                   <p>{t('rico.info.ratio')}</p>
                   <p className="mt-1">{t('rico.info.pending')}</p>
                 </div>
+
+                {onClaimRico && (
+                  <button
+                    onClick={onClaimRico}
+                    disabled={!canClaimRico || isClaimingRico}
+                    className={`mt-4 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                      canClaimRico && !isClaimingRico
+                        ? 'bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-200 text-black shadow-[0_10px_26px_rgba(241,210,133,0.35)] hover:brightness-110'
+                        : 'bg-slate-900/60 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                    }`}
+                  >
+                    {isClaimingRico ? t('rico.claiming') : t('rico.claim')}
+                  </button>
+                )}
               </div>
             </div>
           )}

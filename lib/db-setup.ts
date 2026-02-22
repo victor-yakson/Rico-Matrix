@@ -1,7 +1,10 @@
-import { sequelize } from './db';
+import { dbStatus, sequelize } from './db';
 import { Visit } from './models/Visit';
 
 export async function initializeDatabase() {
+  if (!dbStatus.enabled || !sequelize) {
+    return { ok: false, disabled: true, missing: dbStatus.missing };
+  }
   try {
     // Test the connection
     await sequelize.authenticate();
@@ -10,9 +13,9 @@ export async function initializeDatabase() {
     // Use { force: true } only in development to recreate tables
     // Use { alter: true } to update existing tables without losing data
     await sequelize.sync({ alter: true });
-    
+    return { ok: true };
   } catch (error) {
     console.error('Unable to connect to the database:', error);
-    throw error;
+    return { ok: false, error };
   }
 }

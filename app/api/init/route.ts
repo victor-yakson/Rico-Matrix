@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase } from '@/lib/db-setup';
-import { sequelize } from '@/lib/db';
+import { dbStatus, sequelize } from '@/lib/db';
 import { Visit } from '@/lib/models/Visit';
 
 export async function POST() {
   try {
+    if (!dbStatus.enabled || !sequelize) {
+      return NextResponse.json({
+        success: false,
+        disabled: true,
+        message: 'Database not configured',
+        missing: dbStatus.missing,
+      });
+    }
     
     // Test connection first
     await sequelize.authenticate();
@@ -19,7 +27,21 @@ export async function POST() {
     
     
     // Initialize database
-    await initializeDatabase();
+    const initResult = await initializeDatabase();
+    if (!initResult?.ok) {
+      return NextResponse.json(
+        {
+          error: 'Database initialization failed',
+          disabled: true,
+          details: initResult?.error
+            ? initResult.error instanceof Error
+              ? initResult.error.message
+              : String(initResult.error)
+            : 'Unknown error',
+        },
+        { status: 500 }
+      );
+    }
     
     // Verify table structure after sync
     const [afterSync] = await sequelize.query(`

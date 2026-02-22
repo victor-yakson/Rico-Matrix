@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Visit } from "@/lib/models/Visit";
 import { initializeDatabase } from "@/lib/db-setup";
+import { dbStatus, sequelize } from "@/lib/db";
 import axios from "axios";
 import { Op } from "sequelize";
 
@@ -56,9 +57,11 @@ function isPrivateIp(ip: string): boolean {
 
 async function ensureDb() {
   if (!dbInitialized) {
-    await initializeDatabase();
-    dbInitialized = true;
+    const result = await initializeDatabase();
+    dbInitialized = Boolean(result?.ok);
+    return result;
   }
+  return { ok: true };
 }
 
 async function getGeoData(ip: string) {
@@ -123,7 +126,22 @@ async function getGeoData(ip: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    await ensureDb();
+    if (!dbStatus.enabled || !sequelize) {
+      return NextResponse.json({
+        ok: true,
+        disabled: true,
+        message: "Database not configured. Tracking disabled.",
+      });
+    }
+
+    const dbInit = await ensureDb();
+    if (!dbInit?.ok) {
+      return NextResponse.json({
+        ok: true,
+        disabled: true,
+        message: "Database unavailable. Tracking disabled.",
+      });
+    }
 
     const forwardedFor = req.headers.get("x-forwarded-for");
     const realIp = req.headers.get("x-real-ip");

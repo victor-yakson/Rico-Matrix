@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import { Visit } from "@/lib/models/Visit";
-import { sequelize } from "@/lib/db";
+import { dbStatus, sequelize } from "@/lib/db";
 
 // app/api/stats/route.ts
 export async function GET() {
   try {
+    if (!dbStatus.enabled || !sequelize) {
+      return NextResponse.json({
+        success: true,
+        disabled: true,
+        data: [],
+        totals: { total_visits: 0, unique_visitors: 0, countries: 0 },
+      });
+    }
+
     const [results] = await sequelize.query(`
       SELECT 
         country, 
@@ -36,7 +45,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching stats:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch statistics' },
+      { error: 'Failed to fetch statistics', disabled: true },
       { status: 500 }
     );
   }

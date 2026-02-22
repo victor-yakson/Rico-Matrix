@@ -27,9 +27,9 @@ export const Header = () => {
     },
     {
       name: t("navigation.authors"),
-      href: "/authors",
-      current: pathname === "/authors",
-      icon: "✍️",
+      href: "/library",
+      current: pathname?.startsWith("/library"),
+      icon: "📖",
     },
     {
       name: t("navigation.chapters"),

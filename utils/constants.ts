@@ -4,8 +4,8 @@ export const USDT_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_USDT_CONTRACT_ADDRESS as `0x${string}`;
 export const TOKEN_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
-export const SURVEY_CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS as `0x${string}`;
+export const SURVEY_CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS as `0x${string}`;
 
 export const CONTRACT_ABI = [
   {
@@ -908,7 +908,7 @@ export const CONTRACT_ABI = [
     stateMutability: "view",
     type: "function",
   },
-];  
+];
 export const USDT_ABI = [
   {
     constant: false,
@@ -953,6 +953,755 @@ export const CHAPTER_NAMES = {
   11: "Chapter 11: The Matrix",
   12: "Chapter 12: Enlightenment",
 };
+export const BOOK_NAMES = {
+  1: "selp book 1: How to Discover your life Purpose",
+  2: "selp book 1: Why most People Never Build Wealth",
+  3: "selp book 1: Why People get Rich doing one Thing and Lose at others",
+};
+
+export const LIBRARY_CONTRACT_ADDRESS =
+  "0x6a2Eafc0E355F440D875Db1BB462A0E943F4fcdf";
+
+export const LIBRARY_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "_usdt", type: "address" },
+      { internalType: "address", name: "_rico", type: "address" },
+      { internalType: "address", name: "_ricoMatrix", type: "address" },
+      { internalType: "address", name: "_treasury", type: "address" },
+      { internalType: "address", name: "_walletA", type: "address" },
+      { internalType: "address", name: "_walletB", type: "address" },
+    ],
+    stateMutability: "payable",
+    type: "constructor",
+  },
+  { inputs: [], name: "AlreadyOwned", type: "error" },
+  { inputs: [], name: "BookNotAvailable", type: "error" },
+  {
+    inputs: [
+      { internalType: "address", name: "sender", type: "address" },
+      { internalType: "uint256", name: "balance", type: "uint256" },
+      { internalType: "uint256", name: "needed", type: "uint256" },
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+    ],
+    name: "ERC1155InsufficientBalance",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "approver", type: "address" }],
+    name: "ERC1155InvalidApprover",
+    type: "error",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "idsLength", type: "uint256" },
+      { internalType: "uint256", name: "valuesLength", type: "uint256" },
+    ],
+    name: "ERC1155InvalidArrayLength",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "operator", type: "address" }],
+    name: "ERC1155InvalidOperator",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "receiver", type: "address" }],
+    name: "ERC1155InvalidReceiver",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "sender", type: "address" }],
+    name: "ERC1155InvalidSender",
+    type: "error",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "operator", type: "address" },
+      { internalType: "address", name: "owner", type: "address" },
+    ],
+    name: "ERC1155MissingApprovalForAll",
+    type: "error",
+  },
+  { inputs: [], name: "EnforcedPause", type: "error" },
+  { inputs: [], name: "ExpectedPause", type: "error" },
+  { inputs: [], name: "InvalidAddress", type: "error" },
+  { inputs: [], name: "InvalidAmount", type: "error" },
+  { inputs: [], name: "InvalidPrice", type: "error" },
+  { inputs: [], name: "MaxFeeExceeded", type: "error" },
+  { inputs: [], name: "NoPointsToClaim", type: "error" },
+  { inputs: [], name: "NotAuthor", type: "error" },
+  {
+    inputs: [{ internalType: "address", name: "owner", type: "address" }],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  { inputs: [], name: "ReentrancyGuardReentrantCall", type: "error" },
+  {
+    inputs: [{ internalType: "address", name: "token", type: "address" }],
+    name: "SafeERC20FailedOperation",
+    type: "error",
+  },
+  { inputs: [], name: "SameValue", type: "error" },
+  { inputs: [], name: "Soulbound", type: "error" },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "account", type: "address" },
+      { indexed: true, internalType: "address", name: "operator", type: "address" },
+      { indexed: false, internalType: "bool", name: "approved", type: "bool" },
+    ],
+    name: "ApprovalForAll",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "voter", type: "address" },
+      { indexed: true, internalType: "address", name: "author", type: "address" },
+      { indexed: false, internalType: "bool", name: "like", type: "bool" },
+      { indexed: false, internalType: "uint256", name: "ricoBurned", type: "uint256" },
+    ],
+    name: "AuthorVoted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "author", type: "address" },
+      { indexed: false, internalType: "string", name: "cid", type: "string" },
+      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
+    ],
+    name: "BookApplied",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      { indexed: true, internalType: "address", name: "author", type: "address" },
+      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
+    ],
+    name: "BookListed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      { indexed: true, internalType: "address", name: "payer", type: "address" },
+      { indexed: true, internalType: "address", name: "recipient", type: "address" },
+      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "ricoBurned", type: "uint256" },
+    ],
+    name: "BookPurchased",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      { indexed: false, internalType: "string", name: "status", type: "string" },
+    ],
+    name: "BookStatusChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      { indexed: false, internalType: "string", name: "updateType", type: "string" },
+      { indexed: false, internalType: "uint256", name: "newValue", type: "uint256" },
+    ],
+    name: "BookUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "totalSales", type: "uint256" },
+    ],
+    name: "LeaderboardUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "previousOwner", type: "address" },
+      { indexed: true, internalType: "address", name: "newOwner", type: "address" },
+    ],
+    name: "OwnershipTransferStarted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "previousOwner", type: "address" },
+      { indexed: true, internalType: "address", name: "newOwner", type: "address" },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: "string", name: "param", type: "string" }],
+    name: "ParamsUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: "address", name: "account", type: "address" }],
+    name: "Paused",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "user", type: "address" },
+      { indexed: false, internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "RoyaltyClaimed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: "uint256", name: "amount", type: "uint256" }],
+    name: "RoyaltyDistributed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "operator", type: "address" },
+      { indexed: true, internalType: "address", name: "from", type: "address" },
+      { indexed: true, internalType: "address", name: "to", type: "address" },
+      { indexed: false, internalType: "uint256[]", name: "ids", type: "uint256[]" },
+      { indexed: false, internalType: "uint256[]", name: "values", type: "uint256[]" },
+    ],
+    name: "TransferBatch",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "operator", type: "address" },
+      { indexed: true, internalType: "address", name: "from", type: "address" },
+      { indexed: true, internalType: "address", name: "to", type: "address" },
+      { indexed: false, internalType: "uint256", name: "id", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "value", type: "uint256" },
+    ],
+    name: "TransferSingle",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: false, internalType: "string", name: "value", type: "string" },
+      { indexed: true, internalType: "uint256", name: "id", type: "uint256" },
+    ],
+    name: "URI",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: "address", name: "account", type: "address" }],
+    name: "Unpaused",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "user", type: "address" },
+      { indexed: false, internalType: "uint256", name: "oldPoints", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "newPoints", type: "uint256" },
+    ],
+    name: "UserSynced",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "voter", type: "address" },
+      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      { indexed: false, internalType: "bool", name: "like", type: "bool" },
+      { indexed: false, internalType: "uint256", name: "ricoBurned", type: "uint256" },
+    ],
+    name: "VoteCast",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "DEAD_ADDRESS",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "accUsdtPerShare",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  { inputs: [], name: "acceptOwnership", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [],
+    name: "appFeeRico",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "appFeeUsdt",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "appealFeeUsdt",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "bookId", type: "uint256" }],
+    name: "appealStatus",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "proposedPrice", type: "uint256" },
+      { internalType: "string", name: "proposedCid", type: "string" },
+    ],
+    name: "applyToListBook",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "author", type: "address" },
+      { internalType: "uint256", name: "", type: "uint256" },
+    ],
+    name: "authorBooks",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "author", type: "address" }],
+    name: "authorStats",
+    outputs: [
+      { internalType: "uint256", name: "score", type: "uint256" },
+      { internalType: "uint256", name: "booksSold", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "account", type: "address" },
+      { internalType: "uint256", name: "id", type: "uint256" },
+    ],
+    name: "balanceOf",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address[]", name: "accounts", type: "address[]" },
+      { internalType: "uint256[]", name: "ids", type: "uint256[]" },
+    ],
+    name: "balanceOfBatch",
+    outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "bookId", type: "uint256" }],
+    name: "books",
+    outputs: [
+      { internalType: "uint256", name: "price", type: "uint256" },
+      { internalType: "address", name: "author", type: "address" },
+      { internalType: "uint32", name: "upVotes", type: "uint32" },
+      { internalType: "uint32", name: "downVotes", type: "uint32" },
+      { internalType: "bool", name: "isFrozen", type: "bool" },
+      { internalType: "bool", name: "isSuspended", type: "bool" },
+      { internalType: "bool", name: "isBlacklisted", type: "bool" },
+      { internalType: "string", name: "cid", type: "string" },
+      { internalType: "uint256", name: "totalSales", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "bookId", type: "uint256" }],
+    name: "buyBook",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "buyFeeRico",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  { inputs: [], name: "claimCommunityShare", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [{ internalType: "address", name: "author", type: "address" }],
+    name: "getAuthorBooks",
+    outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "bookId", type: "uint256" }],
+    name: "getBook",
+    outputs: [
+      {
+        components: [
+          { internalType: "uint256", name: "price", type: "uint256" },
+          { internalType: "address", name: "author", type: "address" },
+          { internalType: "uint32", name: "upVotes", type: "uint32" },
+          { internalType: "uint32", name: "downVotes", type: "uint32" },
+          { internalType: "bool", name: "isFrozen", type: "bool" },
+          { internalType: "bool", name: "isSuspended", type: "bool" },
+          { internalType: "bool", name: "isBlacklisted", type: "bool" },
+          { internalType: "string", name: "cid", type: "string" },
+          { internalType: "uint256", name: "totalSales", type: "uint256" },
+        ],
+        internalType: "struct RicoMatrixLibrary.Book",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getTopSellingBooks",
+    outputs: [
+      { internalType: "uint256[5]", name: "ids", type: "uint256[5]" },
+      { internalType: "uint256[5]", name: "sales", type: "uint256[5]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "recipient", type: "address" },
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+    ],
+    name: "giftBook",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "account", type: "address" },
+      { internalType: "address", name: "operator", type: "address" },
+    ],
+    name: "isApprovedForAll",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "author", type: "address" },
+      { internalType: "string", name: "cid", type: "string" },
+      { internalType: "uint256", name: "price", type: "uint256" },
+    ],
+    name: "listBook",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "minVoteRico",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "nextBookId",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  { inputs: [], name: "paused", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
+  { inputs: [], name: "pendingOwner", outputs: [{ internalType: "address", name: "", type: "address" }], stateMutability: "view", type: "function" },
+  {
+    inputs: [
+      { internalType: "address", name: "tokenAddress", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "recoverDust",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  { inputs: [], name: "renounceOwnership", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "uint256", name: "newPrice", type: "uint256" },
+    ],
+    name: "requestPriceUpdate",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "newWallet", type: "address" }],
+    name: "requestWalletChange",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "rico",
+    outputs: [{ internalType: "contract IERC20", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ricoMatrix",
+    outputs: [{ internalType: "contract IRicoMatrix", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "from", type: "address" },
+      { internalType: "address", name: "to", type: "address" },
+      { internalType: "uint256[]", name: "ids", type: "uint256[]" },
+      { internalType: "uint256[]", name: "values", type: "uint256[]" },
+      { internalType: "bytes", name: "data", type: "bytes" },
+    ],
+    name: "safeBatchTransferFrom",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "from", type: "address" },
+      { internalType: "address", name: "to", type: "address" },
+      { internalType: "uint256", name: "id", type: "uint256" },
+      { internalType: "uint256", name: "value", type: "uint256" },
+      { internalType: "bytes", name: "data", type: "bytes" },
+    ],
+    name: "safeTransferFrom",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "operator", type: "address" },
+      { internalType: "bool", name: "approved", type: "bool" },
+    ],
+    name: "setApprovalForAll",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "bool", name: "frozen", type: "bool" },
+      { internalType: "bool", name: "suspended", type: "bool" },
+      { internalType: "bool", name: "blacklisted", type: "bool" },
+    ],
+    name: "setBookStatus",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_appUsdt", type: "uint256" },
+      { internalType: "uint256", name: "_updateUsdt", type: "uint256" },
+      { internalType: "uint256", name: "_appealUsdt", type: "uint256" },
+    ],
+    name: "setFees",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bool", name: "_state", type: "bool" }],
+    name: "setPausable",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_appRico", type: "uint256" },
+      { internalType: "uint256", name: "_buyRico", type: "uint256" },
+      { internalType: "uint256", name: "_voteRico", type: "uint256" },
+    ],
+    name: "setRicoFees",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  { inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }], name: "supportsInterface", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
+  { inputs: [], name: "syncRicoPoints", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "topBookIds",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "treasury",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "address", name: "newAuthor", type: "address" },
+    ],
+    name: "updateBookAuthor",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "string", name: "newCid", type: "string" },
+    ],
+    name: "updateBookCid",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "uint256", name: "newPrice", type: "uint256" },
+    ],
+    name: "updateBookPrice",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "updateFeeUsdt",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "bookId", type: "uint256" }],
+    name: "uri",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "usdt",
+    outputs: [{ internalType: "contract IERC20", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "userSnapshots",
+    outputs: [
+      { internalType: "uint256", name: "storedPoints", type: "uint256" },
+      { internalType: "uint256", name: "rewardDebt", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "viewPendingShare",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "author", type: "address" },
+      { internalType: "bool", name: "like", type: "bool" },
+      { internalType: "uint256", name: "ricoAmount", type: "uint256" },
+    ],
+    name: "voteAuthor",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "bool", name: "like", type: "bool" },
+      { internalType: "uint256", name: "ricoAmount", type: "uint256" },
+    ],
+    name: "voteBook",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "walletA",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "walletB",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
 
 export const TRACK_NAMES = {
   1: "X3 Matrix Track",

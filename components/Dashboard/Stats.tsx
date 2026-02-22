@@ -319,49 +319,7 @@ export const Stats = ({
         ))}
       </div>
 
-      {/* RICO Farming Summary */}
-      {/* {userData?.exists &&
-        (parseFloat(ricoTotal) > 0 || parseFloat(ricoPending) > 0) && (
-          <div className="mt-6 p-4 rounded-xl border border-cyan-500/20 bg-cyan-950/10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-cyan-500 to-sky-600 flex items-center justify-center">
-                <span className="text-lg">🪙</span>
-              </div>
-              <h3 className="text-sm font-semibold text-cyan-300">
-                {t("ricoSummary.title")}
-              </h3>
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-xs text-slate-400 mb-1">
-                  {t("ricoSummary.totalEarned")}
-                </p>
-                <p className="text-lg font-bold text-cyan-400">
-                  {formatRICO(ricoTotal)} RICO
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 mb-1">
-                  {t("ricoSummary.received")}
-                </p>
-                <p className="text-lg font-bold text-emerald-400">
-                  {formatRICO(ricoReceived)} RICO
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 mb-1">
-                  {t("ricoSummary.pending")}
-                </p>
-                <p className="text-lg font-bold text-yellow-400">
-                  {formatRICO(ricoPending)} RICO
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-500 mt-3 text-center">
-              {t("ricoSummary.note")}
-            </p>
-          </div>
-        )} */}
+
     </div>
   );
 };

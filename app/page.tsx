@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useAccount,
-  useReadContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useAccount, useWaitForTransactionReceipt } from "wagmi";
 import { useQuantuMatrix } from "../hooks/useQuantuMatrix";
 import { Header } from "../components/Navigation/Header";
 import ProfileInfo from "../components/Dashboard/ProfileInfo";
@@ -22,9 +18,6 @@ import { Stats } from "../components/Dashboard/Stats";
 import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import MigrationStatus from "@/components/Dashboard/MigrationStatus";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
-import { SurveyModal } from "@/components/Dashboard/SurveyModal";
-import { SurveyResultsPanel } from "@/components/Dashboard/SurveyResultsPanel";
-import { surveyContract } from "@/utils/contracts";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
@@ -62,30 +55,9 @@ export default function Dashboard() {
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
     null,
   );
-  const [showSurveyModal, setShowSurveyModal] = useState(false);
-  const [surveyPrompted, setSurveyPrompted] = useState(false);
+  const [isClaimingRico, setIsClaimingRico] = useState(false);
   const searchParams = useSearchParams();
   const urlReferral = searchParams.get("ref");
-
-  const { data: surveyVotes } = useReadContract({
-    ...surveyContract,
-    functionName: "userVotes",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
-
-  const toBigInt = (value: unknown) => {
-    if (typeof value === "bigint") return value;
-    if (typeof value === "number") return BigInt(value);
-    if (typeof value === "string" && value !== "") return BigInt(value);
-    return BigInt(0);
-  };
-
-  const hasSurveyVotes =
-    surveyVotes !== undefined &&
-    toBigInt((surveyVotes as any)?.yes ?? (surveyVotes as any)?.[0]) +
-      toBigInt((surveyVotes as any)?.no ?? (surveyVotes as any)?.[1]) >
-      BigInt(0);
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -123,25 +95,6 @@ export default function Dashboard() {
   const dashboardState = getDashboardState();
 
   // Log for debugging
-
-  useEffect(() => {
-    if (
-      dashboardState === "dashboard" &&
-      isConnected &&
-      surveyVotes !== undefined &&
-      !hasSurveyVotes &&
-      !surveyPrompted
-    ) {
-      setShowSurveyModal(true);
-      setSurveyPrompted(true);
-    }
-  }, [
-    dashboardState,
-    hasSurveyVotes,
-    isConnected,
-    surveyPrompted,
-    surveyVotes,
-  ]);
 
   const handleRegistrationComplete = () => {
     refetchAllData();
@@ -242,12 +195,6 @@ export default function Dashboard() {
   return (
     <>
       <Header />
-      {dashboardState === "dashboard" && (
-        <SurveyModal
-          open={showSurveyModal}
-          onClose={() => setShowSurveyModal(false)}
-        />
-      )}
       <div className="min-h-[calc(100vh-4rem)]">
         <div className="px-4 py-8 md:py-10">
           <div className="mx-auto max-w-7xl">
@@ -345,6 +292,15 @@ export default function Dashboard() {
                       <ProfileInfo
                         userData={userData}
                         rewardTokenAddress={rewardTokenAddress}
+                        isClaimingRico={isClaimingRico}
+                        onClaimRico={async () => {
+                          try {
+                            setIsClaimingRico(true);
+                            await claimRico();
+                          } finally {
+                            setIsClaimingRico(false);
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -521,15 +477,12 @@ export default function Dashboard() {
                 />
 
                 <div className="mt-8">
-                  <SurveyResultsPanel onVote={() => setShowSurveyModal(true)} />
-                </div>
-
-                <div className="mt-8">
                   <GlobalPanel
                     totalReaders={totalReaders}
                     totalChapters={globalTransactions?.totalChapters}
                     totalTransactionsUsdt={globalTransactions?.totalUsdt}
                     isLoading={globalTransactions?.loading}
+                    isUnavailable={globalTransactions?.error}
                   />
                 </div>
               </>

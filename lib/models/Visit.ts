@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../db";
+import { dbStatus, sequelize } from "../db";
 
 // Define the attributes interface
 interface VisitAttributes {
@@ -32,58 +32,66 @@ export class Visit extends Model<VisitAttributes, VisitCreationAttributes> imple
   public timestamp!: Date;
 }
 
-Visit.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
+if (sequelize) {
+  Visit.init(
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      ip_address: {
+        type: DataTypes.STRING(45),
+        allowNull: true,
+      },
+      country: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "Unknown",
+      },
+      country_code: {
+        type: DataTypes.STRING(2),
+        allowNull: false,
+        defaultValue: "XX",
+      },
+      city: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      latitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
+      longitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
+      user_agent: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      path: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "/",
+      },
+      timestamp: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        allowNull: false,
+      },
     },
-    ip_address: {
-      type: DataTypes.STRING(45),
-      allowNull: true,
-    },
-    country: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: "Unknown",
-    },
-    country_code: {
-      type: DataTypes.STRING(2),
-      allowNull: false,
-      defaultValue: "XX",
-    },
-    city: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    latitude: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    longitude: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    user_agent: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    path: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: "/",
-    },
-    timestamp: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize,
-    modelName: "visit",
-    tableName: "visits",
-    timestamps: false,
-  }
-);
+    {
+      sequelize,
+      modelName: "visit",
+      tableName: "visits",
+      timestamps: false,
+    }
+  );
+} else if (!dbStatus.enabled) {
+  console.warn(
+    `⚠️ Database not configured. Visit model not initialized. Missing: ${dbStatus.missing.join(
+      ", "
+    )}`
+  );
+}

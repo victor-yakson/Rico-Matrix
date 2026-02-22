@@ -2,7 +2,7 @@
 
 import { useQuantuMatrix } from "../../hooks/useQuantuMatrix";
 import { ChapterCard } from "./ChapterCard";
-import { CHAPTER_NAMES } from "../../utils/constants";
+import { BOOK_NAMES, CHAPTER_NAMES } from "../../utils/constants";
 import { useState } from "react";
 import { formatUnits } from "viem";
 import { useTranslations } from "next-intl";
@@ -49,6 +49,15 @@ export const ChapterGrid = () => {
   };
 
   const chapters = Array.from({ length: 12 }, (_, i) => i + 1);
+  const getChapterTitle = (track: number, chapter: number) => {
+    if (track === 2) {
+      return (
+        BOOK_NAMES[chapter as keyof typeof BOOK_NAMES] ??
+        CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]
+      );
+    }
+    return CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES];
+  };
 
   const getChapterPrice = (chapter: number) => {
     if (!chapterPrices || chapterPrices.length === 0) return "0";
@@ -123,7 +132,7 @@ export const ChapterGrid = () => {
                 key={`track1-${chapter}`}
                 track={1}
                 chapter={chapter}
-                title={CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]}
+                title={getChapterTitle(1, chapter)}
                 price={chapterPrice}
                 isUnlocked={
                   userData?.exists && userData.track1Unlocked >= chapter
@@ -152,7 +161,7 @@ export const ChapterGrid = () => {
                 key={`track2-${chapter}`}
                 track={2}
                 chapter={chapter}
-                title={CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]}
+                title={getChapterTitle(2, chapter)}
                 price={chapterPrice}
                 isUnlocked={
                   userData?.exists && userData.track2Unlocked >= chapter

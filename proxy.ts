@@ -33,7 +33,7 @@ const PUBLIC_PATHS = [
 ];
 
 const PROTECTED_PREFIXES = [
-  "/authors",
+  "/library",
   "/chapters",
   "/royalty",
   "/profile",

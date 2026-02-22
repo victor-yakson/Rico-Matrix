@@ -36,7 +36,7 @@ export const config = getDefaultConfig({
   transports: {
     [bsc.id]: http(
       process.env.NEXT_PUBLIC_BSC_RPC_URL ??
-        "https://bnb-mainnet.g.alchemy.com/v2/SumeusvlJ5wEykn9Oz8UZ"
+        "https://bsc-mainnet.infura.io/v3/f7f365c800de4116af2875df31e7255c"
     ),
   },
   ssr: true,

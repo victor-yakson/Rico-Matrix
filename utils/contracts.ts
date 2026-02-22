@@ -5,6 +5,8 @@ import {
   USDT_ABI,
   SURVEY_CONTRACT_ADDRESS,
   SURVEY_ABI,
+  LIBRARY_CONTRACT_ADDRESS,
+  LIBRARY_ABI,
 } from "./constants";
 
 export const quantuMatrixContract = {
@@ -20,4 +22,9 @@ export const usdtContract = {
 export const surveyContract = {
   address: SURVEY_CONTRACT_ADDRESS,
   abi: SURVEY_ABI,
+} as const;
+
+export const libraryContract = {
+  address: LIBRARY_CONTRACT_ADDRESS,
+  abi: LIBRARY_ABI,
 } as const;

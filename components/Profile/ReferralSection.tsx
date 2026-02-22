@@ -2,16 +2,18 @@
 
 import { useAccount } from 'wagmi';
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 
 export const ReferralSection = () => {
   const { address } = useAccount();
   const [copied, setCopied] = useState(false);
+  const t = useTranslations('Profile.referral');
 
   const referralLink = useMemo(() => {
-    if (!address) return 'Connect your wallet to get referral link';
+    if (!address) return t('link.noWallet');
     if (typeof window === 'undefined') return '';
     return `${window.location.origin}?ref=${address}`;
-  }, [address]);
+  }, [address, t]);
 
   const copyReferralLink = async () => {
     if (address && referralLink && referralLink.startsWith('http')) {
@@ -23,7 +25,7 @@ export const ReferralSection = () => {
 
   const shareOnTwitter = () => {
     if (!address || !referralLink || !referralLink.startsWith('http')) return;
-    const text = `Join me on RicoMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: ${referralLink}\n\n#RicoMatrix #Blockchain #EarnWhileYouRead`;
+    const text = t('share.twitterText', { link: referralLink });
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
     )}`;
@@ -32,7 +34,7 @@ export const ReferralSection = () => {
 
   const shareOnTelegram = () => {
     if (!address || !referralLink || !referralLink.startsWith('http')) return;
-    const text = `Join me on RicoMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: ${referralLink}`;
+    const text = t('share.telegramText', { link: referralLink });
     const url = `https://t.me/share/url?url=${encodeURIComponent(
       referralLink
     )}&text=${encodeURIComponent(text)}`;
@@ -44,38 +46,28 @@ export const ReferralSection = () => {
   return (
     <div className="rounded-2xl border border-purple-400/40 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(88,28,135,0.6)] backdrop-blur-sm">
       <h2 className="text-2xl font-bold text-slate-50 mb-4">
-        Referral Program
+        {t('title')}
       </h2>
 
       {/* Referral Benefits */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-yellow-300 mb-3">
-          Earn 70% Referral Bonus
+          {t('benefits.title')}
         </h3>
         <ul className="space-y-2 text-sm text-slate-300">
-          <li className="flex items-center">
-            <span className="mr-2 text-emerald-400">✓</span>
-            Get 70% of your referral&apos;s first chapter purchase.
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-emerald-400">✓</span>
-            Earn from their entire downline through unilevel bonuses.
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-emerald-400">✓</span>
-            Build your matrix network faster with smart spillovers.
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-emerald-400">✓</span>
-            Increase your global royalty pool share over time.
-          </li>
+          {t.raw('benefits.items').map((item: string, index: number) => (
+            <li key={index} className="flex items-center">
+              <span className="mr-2 text-emerald-400">✓</span>
+              {item}
+            </li>
+          ))}
         </ul>
       </div>
 
       {/* Referral Link */}
       <div className="mb-6">
         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Your Referral Link
+          {t('link.label')}
         </label>
         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
           <code className="flex-1 truncate rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-sm font-mono text-slate-100">
@@ -90,12 +82,12 @@ export const ReferralSection = () => {
                 : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
             }`}
           >
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? t('link.copied') : t('link.copy')}
           </button>
         </div>
         {copied && (
           <p className="mt-1 text-xs text-emerald-300">
-            Referral link copied to clipboard!
+            {t('link.copiedMessage')}
           </p>
         )}
       </div>
@@ -103,7 +95,7 @@ export const ReferralSection = () => {
       {/* Share Buttons */}
       <div className="mb-4">
         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Share on Social Media
+          {t('share.label')}
         </label>
         <div className="flex space-x-3">
           <button
@@ -116,7 +108,7 @@ export const ReferralSection = () => {
             }`}
           >
             <span className="mr-2">🐦</span>
-            Twitter
+            {t('share.twitter')}
           </button>
           <button
             onClick={shareOnTelegram}
@@ -128,7 +120,7 @@ export const ReferralSection = () => {
             }`}
           >
             <span className="mr-2">📱</span>
-            Telegram
+            {t('share.telegram')}
           </button>
         </div>
       </div>
@@ -136,16 +128,24 @@ export const ReferralSection = () => {
       {/* Referral Stats */}
       <div className="border-t border-slate-800 pt-4">
         <h4 className="mb-2 text-sm font-semibold text-slate-100">
-          Referral Highlights
+          {t('stats.title')}
         </h4>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="rounded-2xl border border-yellow-400/60 bg-slate-950/80 p-3 shadow-[0_0_18px_rgba(250,204,21,0.4)]">
-            <div className="text-lg font-bold text-yellow-300">70%</div>
-            <div className="mt-1 text-xs text-slate-400">Direct Bonus</div>
+            <div className="text-lg font-bold text-yellow-300">
+              {t('stats.directValue')}
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              {t('stats.directLabel')}
+            </div>
           </div>
           <div className="rounded-2xl border border-purple-400/60 bg-slate-950/80 p-3 shadow-[0_0_18px_rgba(192,132,252,0.4)]">
-            <div className="text-lg font-bold text-purple-300">12 Levels</div>
-            <div className="mt-1 text-xs text-slate-400">Unilevel Earnings</div>
+            <div className="text-lg font-bold text-purple-300">
+              {t('stats.unilevelValue')}
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              {t('stats.unilevelLabel')}
+            </div>
           </div>
         </div>
       </div>

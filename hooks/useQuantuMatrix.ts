@@ -273,23 +273,38 @@ export const useQuantuMatrix = () => {
     totalChapters: number;
     totalUsdt: string;
     loading: boolean;
+    error: boolean;
   }>({
     totalChapters: 0,
     totalUsdt: "0",
     loading: true,
+    error: false,
   });
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchGlobalTransactions = async () => {
-      if (!publicClient || !quantuMatrixContract.address) return;
+      if (!publicClient || !quantuMatrixContract.address) {
+        setGlobalTransactions((prev) => ({ ...prev, loading: false, error: true }));
+        return;
+      }
 
       try {
-        setGlobalTransactions((prev) => ({ ...prev, loading: true }));
+        setGlobalTransactions((prev) => ({ ...prev, loading: true, error: false }));
 
         const latestBlock = await publicClient.getBlockNumber();
-        const chunkSize = BigInt(5000);
+        const startBlock = BigInt(72016741);
+        if (latestBlock < startBlock) {
+          setGlobalTransactions({
+            totalChapters: 0,
+            totalUsdt: "0",
+            loading: false,
+            error: false,
+          });
+          return;
+        }
+        const chunkSize = BigInt(1000);
         const event = parseAbiItem(
           "event ChapterPurchased(address indexed reader, uint8 track, uint8 chapter, uint256 price)"
         );
@@ -298,7 +313,7 @@ export const useQuantuMatrix = () => {
         let totalValue = BigInt(0);
 
         for (
-          let fromBlock = BigInt(0);
+          let fromBlock = startBlock;
           fromBlock <= latestBlock;
           fromBlock += chunkSize + BigInt(1)
         ) {
@@ -307,22 +322,54 @@ export const useQuantuMatrix = () => {
               ? latestBlock
               : fromBlock + chunkSize;
 
-          const logs = await publicClient.getLogs({
-            address: quantuMatrixContract.address,
-            event,
-            fromBlock,
-            toBlock,
+          let logs: any[] = [];
+          try {
+            logs = await publicClient.getLogs({
+              address: quantuMatrixContract.address,
+              event,
+              fromBlock,
+              toBlock,
+            });
+          } catch (error) {
+            console.warn("ChapterPurchased logs fetch failed", {
+              fromBlock: fromBlock.toString(),
+              toBlock: toBlock.toString(),
+              message:
+                error instanceof Error ? error.message : String(error ?? ""),
+            });
+            if (!cancelled) {
+              setGlobalTransactions((prev) => ({ ...prev, error: true }));
+            }
+            continue;
+          }
+
+          console.log("ChapterPurchased logs", {
+            fromBlock: fromBlock.toString(),
+            toBlock: toBlock.toString(),
+            count: logs.length,
+            logs,
           });
 
-          console.log("chapterPurchased log", logs)
-
           for (const log of logs) {
-            if (log.args?.chapter !== undefined) {
-              totalChapters += BigInt(log.args.chapter);
+            // Each ChapterPurchased event counts as 1 purchase.
+            totalChapters += BigInt(1);
+            const price = log.args?.price;
+            if (price !== undefined) {
+              totalValue += typeof price === "bigint" ? price : BigInt(price);
             }
-            if (log.args?.price !== undefined) {
-              totalValue += BigInt(log.args.price);
-            }
+            console.log("ChapterPurchased event", {
+              chapter: log.args?.chapter,
+              price: log.args?.price,
+            });
+          }
+
+          if (!cancelled && logs.length > 0) {
+            setGlobalTransactions({
+              totalChapters: Number(totalChapters),
+              totalUsdt: formatUnits(totalValue, 18),
+              loading: true,
+              error: false,
+            });
           }
         }
 
@@ -331,11 +378,12 @@ export const useQuantuMatrix = () => {
             totalChapters: Number(totalChapters),
             totalUsdt: formatUnits(totalValue, 18),
             loading: false,
+            error: false,
           });
         }
       } catch (error) {
         if (!cancelled) {
-          setGlobalTransactions((prev) => ({ ...prev, loading: false }));
+          setGlobalTransactions((prev) => ({ ...prev, loading: false, error: true }));
         }
       }
     };

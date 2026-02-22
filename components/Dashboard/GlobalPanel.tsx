@@ -7,6 +7,7 @@ interface GlobalPanelProps {
   totalChapters?: number;
   totalTransactionsUsdt?: string;
   isLoading?: boolean;
+  isUnavailable?: boolean;
 }
 
 const formatNumber = (value: string | number | undefined) => {
@@ -31,6 +32,7 @@ export const GlobalPanel = ({
   totalChapters,
   totalTransactionsUsdt,
   isLoading,
+  isUnavailable,
 }: GlobalPanelProps) => {
   const t = useTranslations("Dashboard.globalPanel");
 
@@ -63,7 +65,11 @@ export const GlobalPanel = ({
             {t("transactions")}
           </p>
           <p className="text-2xl font-semibold text-white">
-            {isLoading ? t("loading") : formatNumber(totalChapters)}
+            {isLoading
+              ? t("loading")
+              : isUnavailable
+                ? t("unavailable")
+                : formatNumber(totalChapters)}
           </p>
           <p className="text-xs text-slate-500 mt-2">
             {t("transactionsNote")}
@@ -74,7 +80,11 @@ export const GlobalPanel = ({
             {t("volume")}
           </p>
           <p className="text-2xl font-semibold text-white">
-            {isLoading ? t("loading") : `$${formatCurrency(totalTransactionsUsdt)}`}
+            {isLoading
+              ? t("loading")
+              : isUnavailable
+                ? t("unavailable")
+                : `$${formatCurrency(totalTransactionsUsdt)}`}
           </p>
           <p className="text-xs text-slate-500 mt-2">{t("volumeNote")}</p>
         </div>

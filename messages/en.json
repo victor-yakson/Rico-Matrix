@@ -312,7 +312,7 @@
     },
     "navigation": {
       "dashboard": "Dashboard",
-      "authors": "Books",
+      "authors": "Library",
       "chapters": "Chapters",
       "skills": "Skills",
       "royalty": "Royalty",
@@ -388,6 +388,8 @@
       "rico": {
         "title": "🪙 RICO Token Farming",
         "viewToken": "View token on BSCScan",
+        "claim": "Claim",
+        "claiming": "Claiming...",
         "stats": {
           "totalEarned": "Total Earned",
           "received": "Received",
@@ -395,7 +397,7 @@
         },
         "progress": "Distribution Progress",
         "info": {
-          "ratio": "🔄 1 RICO = 1 USDT spent/earned",
+          "ratio": "🔄 1 RICO = 5 USDT spent/earned",
           "pending": "⏳ Pending RICO sent automatically"
         }
       },
@@ -455,7 +457,7 @@
           "totalEarned": "Total Earned",
           "received": "Received",
           "pending": "Pending",
-          "note": "📈 You farm 1 RICO for every 1 USDT spent/earned. Pending RICO is sent automatically when available."
+          "note": "📈 You farm 1 RICO for every 5 USDT spent/earned. Pending RICO is sent automatically when available."
         },
         "metrics": [
           {
@@ -511,7 +513,8 @@
       "transactionsNote": "Total ChapterPurchased events",
       "volume": "USDT volume",
       "volumeNote": "Total USDT value of chapter purchases",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "unavailable": "Unavailable"
     },
     "survey": {
       "kicker": "Community Vote",
@@ -587,9 +590,8 @@
       "benefits": {
         "title": "Earn 70% Referral Bonus",
         "items": [
-          "70% of referral's first purchase",
-          "Unilevel bonuses from downline",
-          "Build matrix network faster"
+          "Get 50% of your referral's first chapter purchase.",
+          "Earn 20% from their entire downline through unilevel bonuses."
         ]
       },
       "link": {
@@ -893,6 +895,41 @@
         "button": "Claim ${amount} USDT",
         "processing": "Processing royalty claim...",
         "note": "Your royalty balance updates automatically after a successful claim."
+      }
+    }
+  },
+  "Profile": {
+    "referral": {
+      "title": "Referral Program",
+      "benefits": {
+        "title": "Earn 70% Referral Bonus",
+        "items": [
+          "Get 50% of your referral's first chapter purchase.",
+          "Earn 20% from their entire downline through unilevel bonuses.",
+          "Build your matrix network faster with smart spillovers.",
+          "Increase your global royalty pool share over time."
+        ]
+      },
+      "link": {
+        "label": "Your Referral Link",
+        "noWallet": "Connect your wallet to get referral link",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "copiedMessage": "Referral link copied to clipboard!"
+      },
+      "share": {
+        "label": "Share on Social Media",
+        "twitter": "Twitter",
+        "telegram": "Telegram",
+        "twitterText": "Join me on RicoMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: {link}\n\n#RicoMatrix #Blockchain #EarnWhileYouRead",
+        "telegramText": "Join me on RicoMatrix - Read real book chapters and earn rewards on blockchain! 🚀📚\n\nUse my referral link: {link}"
+      },
+      "stats": {
+        "title": "Referral Highlights",
+        "directValue": "50%",
+        "directLabel": "Direct Bonus",
+        "unilevelValue": "12 Levels",
+        "unilevelLabel": "Unilevel Earnings"
       }
     }
   },
@@ -1356,6 +1393,9 @@
         "nextPage": "Next page",
         "resetZoom": "Reset zoom",
         "shortcuts": "Use ← → keys to navigate, +/- to zoom"
+      },
+      "audio": {
+        "label": "Audiobook"
       }
     },
     "ChapterGrid": {
