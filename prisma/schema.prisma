@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookStatus {
+  pending
+  approved
+  rejected
+  listed
+}
+
+enum BookProcessStage {
+  initiated
+  validating_pdf
+  extracting_text
+  moderating
+  uploading_ipfs
+  ipfs_failed
+  ready_for_listing
+  listing_submitted
+  completed
+  rejected
+}
+
+model Book {
+  id              Int        @id @default(autoincrement())
+  authorWallet    String     @db.VarChar(64)
+  payoutWallet    String?    @db.VarChar(64)
+  title           String     @db.VarChar(255)
+  description     String     @db.Text
+  ipfsCid         String?    @db.VarChar(255)
+  priceWei        String?    @db.VarChar(100)
+  sha256Hash      String     @unique @db.VarChar(64)
+  simhash         BigInt    @db.UnsignedBigInt
+  similarityScore Float
+  status          BookStatus @default(pending)
+  processStage    BookProcessStage @default(initiated)
+  processProgress Int @default(0)
+  processMessage  String? @db.VarChar(255)
+  ipfsRetryCount  Int @default(0)
+  rejectionReason String?    @db.Text
+  txHash          String?    @db.VarChar(100)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([simhash])
+}
+
+model Visit {
+  id          Int      @id @default(autoincrement())
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  country     String   @default("Unknown") @db.VarChar(255)
+  countryCode String   @default("XX") @map("country_code") @db.VarChar(2)
+  city        String?  @db.VarChar(255)
+  latitude    Float?
+  longitude   Float?
+  userAgent   String?  @map("user_agent") @db.Text
+  path        String?  @default("/") @db.VarChar(255)
+  timestamp   DateTime @default(now()) @db.DateTime(3)
+
+  @@index([ipAddress, timestamp])
+  @@index([countryCode])
+  @@map("visits")
+}

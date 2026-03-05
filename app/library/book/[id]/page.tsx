@@ -115,14 +115,16 @@ export default function LibraryBookPage() {
   const author = book ? (book as any).author : null;
   const isOwned =
     typeof userBalance === "bigint" && userBalance > BigInt(0);
-  const needsUsdtApproval =
+  const needsUsdtApproval = Boolean(
     typeof usdtAllowance === "bigint" &&
-    book &&
-    usdtAllowance < toBigInt((book as any).price);
-  const needsRicoApproval =
+      book &&
+      usdtAllowance < toBigInt((book as any).price)
+  );
+  const needsRicoApproval = Boolean(
     typeof buyFeeRico === "bigint" &&
-    typeof ricoAllowance === "bigint" &&
-    ricoAllowance < buyFeeRico;
+      typeof ricoAllowance === "bigint" &&
+      ricoAllowance < buyFeeRico
+  );
 
   useEffect(() => {
     const uriValue = typeof bookUri === "string" ? bookUri : "";
@@ -160,12 +162,10 @@ export default function LibraryBookPage() {
       ((book as any)?.cid ? `ipfs://${(book as any).cid}` : "")
   );
   const coverUrl = toHttp(metadata?.image);
-  const downloadUrl = toHttp(
-    metadata?.file ||
-      metadata?.book ||
-      metadata?.animation_url ||
-      metadata?.external_url
-  );
+  const downloadUrl =
+    address && bookId > 0
+      ? `/api/library/book/${bookId}/read?user=${encodeURIComponent(address)}`
+      : "";
 
   const approveToken = async (tokenAddress?: string, amount?: bigint) => {
     if (!tokenAddress || !amount) return;

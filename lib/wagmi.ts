@@ -12,7 +12,13 @@ import {
   rabbyWallet,
   phantomWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-import { http } from "viem";
+import { fallback, http } from "viem";
+
+const rpcCandidates = [
+  process.env.NEXT_PUBLIC_BSC_RPC_URL,
+  "https://bsc-dataseed.binance.org",
+  "https://rpc.ankr.com/bsc",
+].filter((url): url is string => Boolean(url && url.trim()));
 
 export const config = getDefaultConfig({
   appName: "Rico Matrix",
@@ -34,10 +40,7 @@ export const config = getDefaultConfig({
     },
   ],
   transports: {
-    [bsc.id]: http(
-      process.env.NEXT_PUBLIC_BSC_RPC_URL ??
-        "https://bsc-mainnet.infura.io/v3/f7f365c800de4116af2875df31e7255c"
-    ),
+    [bsc.id]: fallback(rpcCandidates.map((url) => http(url))),
   },
   ssr: true,
 });

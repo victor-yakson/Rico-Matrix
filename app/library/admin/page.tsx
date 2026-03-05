@@ -16,7 +16,7 @@ export default function LibraryAdminPage() {
   const isAdmin =
     address?.toLowerCase() === ADMIN_WALLET.toLowerCase();
 
-  const [listAuthor, setListAuthor] = useState("");
+  const [listPayout, setListPayout] = useState("");
   const [listCid, setListCid] = useState("");
   const [listPrice, setListPrice] = useState("");
   const [updateBookId, setUpdateBookId] = useState("");
@@ -80,16 +80,20 @@ export default function LibraryAdminPage() {
 
   const handleListBook = async () => {
     guardOwner();
-    if (!listAuthor || !listCid || !listPrice) return;
+    if (!listPayout || !listCid || !listPrice) return;
     setIsSubmitting(true);
     try {
       await writeContractAsync({
         ...libraryContract,
         functionName: "listBook",
-        args: [listAuthor as `0x${string}`, listCid, parseUnits(listPrice, 18)],
+        args: [
+          listCid,
+          parseUnits(listPrice, 18),
+          listPayout as `0x${string}`,
+        ],
       });
       toast.success("Book listed");
-      setListAuthor("");
+      setListPayout("");
       setListCid("");
       setListPrice("");
     } catch (error: any) {
@@ -255,9 +259,9 @@ export default function LibraryAdminPage() {
               <div className="mt-4 space-y-3">
                 <input
                   className="w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2 text-sm text-slate-200"
-                  placeholder="Author wallet"
-                  value={listAuthor}
-                  onChange={(e) => setListAuthor(e.target.value)}
+                  placeholder="Payout wallet"
+                  value={listPayout}
+                  onChange={(e) => setListPayout(e.target.value)}
                 />
                 <input
                   className="w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2 text-sm text-slate-200"

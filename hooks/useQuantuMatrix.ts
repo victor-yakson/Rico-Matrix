@@ -1,15 +1,19 @@
 import {
   useAccount,
   useReadContract,
+  useReadContracts,
   useWriteContract,
   useWaitForTransactionReceipt,
   usePublicClient,
 } from "wagmi";
 import { quantuMatrixContract, usdtContract } from "../utils/contracts";
 import { useState, useCallback, useEffect } from "react";
-import { formatUnits, parseUnits, parseAbiItem } from "viem";
+import { formatUnits, parseUnits } from "viem";
+import type { ContractFunctionParameters } from "viem";
 import { toast } from "sonner";
-import { TOKEN_CONTRACT_ADDRESS } from "@/utils/constants";
+import { CONTRACT_ADDRESS, TOKEN_CONTRACT_ADDRESS } from "@/utils/constants";
+
+const MIN_ROYALTY_USDT = 0.5;
 
 // Helper function to safely convert BigInt to string for serialization
 const safeBigInt = (value: any): any => {
@@ -37,6 +41,25 @@ const toNumber = (value: any, fallback = 0): number => {
     return Number.isNaN(parsed) ? fallback : parsed;
   }
   return fallback;
+};
+
+const toUsdtNumber = (value: any): number => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === "number") return value;
+  if (typeof value === "bigint") {
+    return parseFloat(formatUnits(value, 18));
+  }
+  const str = String(value);
+  if (str.includes(".")) {
+    const parsed = parseFloat(str);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  try {
+    return parseFloat(formatUnits(BigInt(str), 18));
+  } catch {
+    const parsed = parseFloat(str);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
 };
 
 // Track2 Data interface
@@ -110,349 +133,231 @@ export const useQuantuMatrix = () => {
     },
   });
 
-  // Read reader totals
-  const { data: readerTotals, refetch: refetchReaderTotals } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "getReaderTotals",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address && !!userExists,
-      select: safeBigInt,
-    },
+  const userContracts = (
+    address && userExists
+      ? [
+          {
+            ...quantuMatrixContract,
+            functionName: "getReaderTotals",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getReaderSummary",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getRicoFarming",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "viewRoyalty",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "viewRoyaltyPercent",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getMigrationAndRoyaltyUI",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "viewLegacyClaimable",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "viewRoyaltyV2",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "viewRoyaltyPercentV2",
+            args: [address],
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "viewRicoPending",
+            args: [address],
+          },
+        ]
+      : []
+  ) as readonly ContractFunctionParameters[];
+
+  const { data: userReads, refetch: refetchUserReads } = useReadContracts({
+    contracts: userContracts,
+    query: { enabled: Boolean(address && userExists) },
   });
 
-  // Read reader summary (comprehensive data)
-  const { data: readerSummary, refetch: refetchReaderSummary } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "getReaderSummary",
-      args: address ? [address] : undefined,
-      query: {
-        enabled: !!address && !!userExists,
-        select: safeBigInt,
-      },
-    });
+  const userReadsList = (userReads as any[] | undefined) ?? [];
+  const getUserResult = (index: number) => {
+    const result = userReadsList[index]?.result;
+    return result !== undefined ? safeBigInt(result) : result;
+  };
 
-  // Read RICO farming for user
-  const { data: ricoFarming, refetch: refetchRicoFarming } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "getRicoFarming",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address && !!userExists,
-      select: safeBigInt,
-    },
-  });
+  const readerTotals = getUserResult(0);
+  const readerSummary = getUserResult(1);
+  const ricoFarming = getUserResult(2);
+  const royaltyAvailable = getUserResult(3);
+  const royaltyPercent = getUserResult(4);
+  const migrationAndRoyaltyUI = getUserResult(5);
+  const legacyClaimable = getUserResult(6);
+  const royaltyV2 = getUserResult(7);
+  const royaltyPercentV2 = getUserResult(8);
+  const ricoPending = getUserResult(9);
 
-  // Read royalty available (V1 style)
-  const { data: royaltyAvailable, refetch: refetchRoyalty } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "viewRoyalty",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address && !!userExists,
-    },
-  });
+  const refetchReaderTotals = () => refetchUserReads();
+  const refetchReaderSummary = () => refetchUserReads();
+  const refetchRicoFarming = () => refetchUserReads();
+  const refetchRoyalty = () => refetchUserReads();
+  const refetchRoyaltyPercent = () => refetchUserReads();
+  const refetchMigrationAndRoyaltyUI = () => refetchUserReads();
+  const refetchLegacyClaimable = () => refetchUserReads();
+  const refetchRoyaltyV2 = () => refetchUserReads();
+  const refetchRoyaltyPercentV2 = () => refetchUserReads();
+  const refetchRicoPending = () => refetchUserReads();
 
-  // Read royalty percent (V1 style)
-  const { data: royaltyPercent, refetch: refetchRoyaltyPercent } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "viewRoyaltyPercent",
-      args: address ? [address] : undefined,
-      query: {
-        enabled: !!address && !!userExists,
-      },
-    });
-
-  // Read migration status
+  // Read migration status (only after user exists)
   const { data: migrationStatusData, refetch: refetchMigrationStatus } =
     useReadContract({
       ...quantuMatrixContract,
       functionName: "migrationStatus",
       args: address ? [address] : undefined,
       query: {
-        enabled: !!address,
+        enabled: !!address && !!userExists,
       },
     });
 
-  // Read migration and royalty UI (combined function)
-  const { data: migrationAndRoyaltyUI, refetch: refetchMigrationAndRoyaltyUI } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "getMigrationAndRoyaltyUI",
-      args: address ? [address] : undefined,
-      query: {
-        enabled: !!address,
-        select: safeBigInt,
-      },
+  const preRegistrationContracts = (
+    address
+      ? [
+          {
+            ...quantuMatrixContract,
+            functionName: "getChapterPrices",
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "usdt",
+          },
+        ]
+      : []
+  ) as readonly ContractFunctionParameters[];
+
+  const { data: preRegistrationReads, refetch: refetchPreRegistrationReads } =
+    useReadContracts({
+      contracts: preRegistrationContracts,
+      query: { enabled: Boolean(address) },
     });
 
-  // Read legacy claimable
-  const { data: legacyClaimable, refetch: refetchLegacyClaimable } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "viewLegacyClaimable",
-      args: address ? [address] : undefined,
-      query: {
-        enabled: !!address,
-      },
-    });
+  const preRegistrationList =
+    (preRegistrationReads as any[] | undefined) ?? [];
+  const preRegistrationChapterPrices = preRegistrationList[0]?.result;
+  const preRegistrationUsdtAddress = preRegistrationList[1]
+    ?.result as `0x${string}` | undefined;
 
-  // Read royalty V2 (fresh V2 royalty)
-  const { data: royaltyV2, refetch: refetchRoyaltyV2 } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "viewRoyaltyV2",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-    },
+  const globalContracts = (
+    userExists
+      ? [
+          {
+            ...quantuMatrixContract,
+            functionName: "getGlobalChapterStats",
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getGlobalSummary",
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getRicoFarmingGlobal",
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getTotalReaders",
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getTopEarners",
+          },
+          {
+            ...quantuMatrixContract,
+            functionName: "getTopReferrers",
+          },
+        ]
+      : []
+  ) as readonly ContractFunctionParameters[];
+
+  const { data: globalReads, refetch: refetchGlobalReads } = useReadContracts({
+    contracts: globalContracts,
+    query: { enabled: Boolean(userExists) },
   });
 
-  // Read royalty percent V2
-  const { data: royaltyPercentV2, refetch: refetchRoyaltyPercentV2 } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "viewRoyaltyPercentV2",
-      args: address ? [address] : undefined,
-      query: {
-        enabled: !!address,
-      },
-    });
+  const globalReadsList = (globalReads as any[] | undefined) ?? [];
+  const getGlobalResult = (index: number) => {
+    const result = globalReadsList[index]?.result;
+    return result !== undefined ? safeBigInt(result) : result;
+  };
 
-  // Read RICO pending
-  const { data: ricoPending, refetch: refetchRicoPending } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "viewRicoPending",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-    },
+  const globalStats = getGlobalResult(0);
+  const globalSummary = getGlobalResult(1);
+  const globalRicoFarming = getGlobalResult(2);
+  const totalReaders = getGlobalResult(3);
+  const topEarners = getGlobalResult(4);
+  const topReferrers = getGlobalResult(5);
+
+  const chapterPricesRaw =
+    preRegistrationChapterPrices !== undefined
+      ? safeBigInt(preRegistrationChapterPrices)
+      : undefined;
+  const usdtAddress = preRegistrationUsdtAddress;
+
+  const chapterPrices = Array.isArray(chapterPricesRaw)
+    ? (chapterPricesRaw as readonly any[]).map((price) =>
+        price?.toString ? price.toString() : String(price)
+      )
+    : undefined;
+
+  const refetchGlobalStats = () => refetchGlobalReads();
+  const refetchGlobalSummary = () => refetchGlobalReads();
+  const refetchGlobalRicoFarming = () => refetchGlobalReads();
+  const refetchTotalReaders = () => refetchGlobalReads();
+  const refetchTopEarners = () => refetchGlobalReads();
+  const refetchTopReferrers = () => refetchGlobalReads();
+  const refetchChapterPrices = () => refetchPreRegistrationReads();
+
+  const walletContracts = (
+    address
+      ? [
+          {
+            ...usdtContract,
+            functionName: "allowance",
+            args: [address, quantuMatrixContract.address],
+          },
+          {
+            ...usdtContract,
+            functionName: "balanceOf",
+            args: [address],
+          },
+        ]
+      : []
+  ) as readonly ContractFunctionParameters[];
+
+  const { data: walletReads, refetch: refetchWalletReads } = useReadContracts({
+    contracts: walletContracts,
+    query: { enabled: Boolean(address) },
   });
 
-  // Read global stats
-  const { data: globalStats, refetch: refetchGlobalStats } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "getGlobalChapterStats",
-    query: {
-      select: safeBigInt,
-    },
-  });
+  const walletReadsList = (walletReads as any[] | undefined) ?? [];
+  const usdtAllowance = walletReadsList[0]?.result;
+  const usdtBalance = walletReadsList[1]?.result;
 
-  // Read global summary
-  const { data: globalSummary, refetch: refetchGlobalSummary } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "getGlobalSummary",
-      query: {
-        select: safeBigInt,
-      },
-    });
-
-  // Read global RICO farming
-  const { data: globalRicoFarming, refetch: refetchGlobalRicoFarming } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "getRicoFarmingGlobal",
-      query: {
-        select: safeBigInt,
-      },
-    });
-
-  // Read total readers
-  const { data: totalReaders, refetch: refetchTotalReaders } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "getTotalReaders",
-      query: {
-        select: safeBigInt,
-      },
-    });
-
-  const [globalTransactions, setGlobalTransactions] = useState<{
-    totalChapters: number;
-    totalUsdt: string;
-    loading: boolean;
-    error: boolean;
-  }>({
-    totalChapters: 0,
-    totalUsdt: "0",
-    loading: true,
-    error: false,
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchGlobalTransactions = async () => {
-      if (!publicClient || !quantuMatrixContract.address) {
-        setGlobalTransactions((prev) => ({ ...prev, loading: false, error: true }));
-        return;
-      }
-
-      try {
-        setGlobalTransactions((prev) => ({ ...prev, loading: true, error: false }));
-
-        const latestBlock = await publicClient.getBlockNumber();
-        const startBlock = BigInt(72016741);
-        if (latestBlock < startBlock) {
-          setGlobalTransactions({
-            totalChapters: 0,
-            totalUsdt: "0",
-            loading: false,
-            error: false,
-          });
-          return;
-        }
-        const chunkSize = BigInt(1000);
-        const event = parseAbiItem(
-          "event ChapterPurchased(address indexed reader, uint8 track, uint8 chapter, uint256 price)"
-        );
-
-        let totalChapters = BigInt(0);
-        let totalValue = BigInt(0);
-
-        for (
-          let fromBlock = startBlock;
-          fromBlock <= latestBlock;
-          fromBlock += chunkSize + BigInt(1)
-        ) {
-          const toBlock =
-            fromBlock + chunkSize > latestBlock
-              ? latestBlock
-              : fromBlock + chunkSize;
-
-          let logs: any[] = [];
-          try {
-            logs = await publicClient.getLogs({
-              address: quantuMatrixContract.address,
-              event,
-              fromBlock,
-              toBlock,
-            });
-          } catch (error) {
-            console.warn("ChapterPurchased logs fetch failed", {
-              fromBlock: fromBlock.toString(),
-              toBlock: toBlock.toString(),
-              message:
-                error instanceof Error ? error.message : String(error ?? ""),
-            });
-            if (!cancelled) {
-              setGlobalTransactions((prev) => ({ ...prev, error: true }));
-            }
-            continue;
-          }
-
-          console.log("ChapterPurchased logs", {
-            fromBlock: fromBlock.toString(),
-            toBlock: toBlock.toString(),
-            count: logs.length,
-            logs,
-          });
-
-          for (const log of logs) {
-            // Each ChapterPurchased event counts as 1 purchase.
-            totalChapters += BigInt(1);
-            const price = log.args?.price;
-            if (price !== undefined) {
-              totalValue += typeof price === "bigint" ? price : BigInt(price);
-            }
-            console.log("ChapterPurchased event", {
-              chapter: log.args?.chapter,
-              price: log.args?.price,
-            });
-          }
-
-          if (!cancelled && logs.length > 0) {
-            setGlobalTransactions({
-              totalChapters: Number(totalChapters),
-              totalUsdt: formatUnits(totalValue, 18),
-              loading: true,
-              error: false,
-            });
-          }
-        }
-
-        if (!cancelled) {
-          setGlobalTransactions({
-            totalChapters: Number(totalChapters),
-            totalUsdt: formatUnits(totalValue, 18),
-            loading: false,
-            error: false,
-          });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setGlobalTransactions((prev) => ({ ...prev, loading: false, error: true }));
-        }
-      }
-    };
-
-    fetchGlobalTransactions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [publicClient, quantuMatrixContract.address]);
-
-  // Read top earners leaderboard
-  const { data: topEarners, refetch: refetchTopEarners } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "getTopEarners",
-    query: {
-      select: safeBigInt,
-    },
-  });
-
-  // Read top referrers leaderboard
-  const { data: topReferrers, refetch: refetchTopReferrers } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "getTopReferrers",
-    query: {
-      select: safeBigInt,
-    },
-  });
-
-  // Read chapter prices
-  const { data: chapterPrices, refetch: refetchChapterPrices } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "getChapterPrices",
-      query: {
-        select: (data) => {
-          if (!data) return data;
-          const pricesArray = data as readonly bigint[];
-          return pricesArray.map((price) => price.toString());
-        },
-      },
-    });
-
-  // Read USDT allowance
-  const { data: usdtAllowance, refetch: refetchUsdtAllowance } =
-    useReadContract({
-      ...usdtContract,
-      functionName: "allowance",
-      args: address ? [address, quantuMatrixContract.address] : undefined,
-      query: {
-        enabled: !!address,
-      },
-    });
-
-  // Read USDT balance
-  const { data: usdtBalance, refetch: refetchUsdtBalance } = useReadContract({
-    ...usdtContract,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-    },
-  });
-
-  // Read token addresses
-  const { data: usdtAddress } = useReadContract({
-    ...quantuMatrixContract,
-    functionName: "usdt",
-  });
+  const refetchUsdtAllowance = () => refetchWalletReads();
+  const refetchUsdtBalance = () => refetchWalletReads();
 
   // Calculate join cost
   const joinCost =
@@ -1443,6 +1348,18 @@ export const useQuantuMatrix = () => {
       const toastId = "claim-legacy-royalty";
 
       try {
+        const minCheckAmount = amount
+          ? Number(amount)
+          : toUsdtNumber(legacyClaimable);
+        if (minCheckAmount < MIN_ROYALTY_USDT) {
+          toast.error("Claim Failed", {
+            id: toastId,
+            description: `Minimum claim is ${MIN_ROYALTY_USDT} USDT.`,
+            duration: 5000,
+          });
+          return;
+        }
+
         setLoading(true);
 
         if (!publicClient) {
@@ -1533,6 +1450,7 @@ export const useQuantuMatrix = () => {
       writeContractAsync,
       publicClient,
       migrationStatusData,
+      legacyClaimable,
       refetchMigrationAndRoyaltyUI,
       refetchUserData,
     ]
@@ -1628,6 +1546,16 @@ export const useQuantuMatrix = () => {
     const toastId = "claim-royalty-v2";
 
     try {
+      const available = toUsdtNumber(royaltyV2);
+      if (available < MIN_ROYALTY_USDT) {
+        toast.error("V2 Royalty Claim Failed", {
+          id: toastId,
+          description: `Minimum claim is ${MIN_ROYALTY_USDT} USDT.`,
+          duration: 5000,
+        });
+        return;
+      }
+
       setLoading(true);
 
       if (!publicClient) {
@@ -1702,6 +1630,7 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     publicClient,
+    royaltyV2,
     refetchRoyaltyV2,
     refetchMigrationAndRoyaltyUI,
     refetchUserData,
@@ -1712,6 +1641,16 @@ export const useQuantuMatrix = () => {
     const toastId = "claim-royalty";
 
     try {
+      const available = toUsdtNumber(royaltyAvailable);
+      if (available < MIN_ROYALTY_USDT) {
+        toast.error("Claim Failed", {
+          id: toastId,
+          description: `Minimum claim is ${MIN_ROYALTY_USDT} USDT.`,
+          duration: 5000,
+        });
+        return;
+      }
+
       setLoading(true);
 
       if (!publicClient) {
@@ -1782,7 +1721,13 @@ export const useQuantuMatrix = () => {
     } finally {
       setLoading(false);
     }
-  }, [writeContractAsync, publicClient, refetchRoyalty, refetchUserData]);
+  }, [
+    writeContractAsync,
+    publicClient,
+    royaltyAvailable,
+    refetchRoyalty,
+    refetchUserData,
+  ]);
 
   const userData: UserData = {
     ...parseUserDataFromMultipleSources(),
@@ -1808,7 +1753,6 @@ export const useQuantuMatrix = () => {
     globalSummary: globalSummary as any,
     globalRicoFarming: globalRicoFarming as any,
     totalReaders: totalReaders as any,
-    globalTransactions,
     topEarners: topEarners as any,
     topReferrers: topReferrers as any,
     chapterPrices: chapterPrices as string[] | undefined,

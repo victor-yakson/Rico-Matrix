@@ -8,7 +8,7 @@ import { ReferralSection } from "../components/Profile/ReferralSection";
 import { ProfileStats } from "../components/Dashboard/ProfileStats";
 import { RegistrationSection } from "../components/Dashboard/RegistrationSection";
 import MigrationPanel from "@/components/Dashboard/MigrationPanel";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatUnits } from "viem";
@@ -16,8 +16,8 @@ import Leaderboards from "@/components/Dashboard/Leaderboards";
 import { useTranslations } from "next-intl";
 import { Stats } from "../components/Dashboard/Stats";
 import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
-import MigrationStatus from "@/components/Dashboard/MigrationStatus";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
+import { TestimonialPromoPanel } from "@/components/Dashboard/TestimonialPromoPanel";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
@@ -29,7 +29,6 @@ export default function Dashboard() {
     globalSummary,
     globalRicoFarming,
     totalReaders,
-    globalTransactions,
     topEarners,
     topReferrers,
     rewardTokenAddress,
@@ -52,6 +51,9 @@ export default function Dashboard() {
     migrationAndRoyaltyUI,
   } = useQuantuMatrix();
 
+
+
+  console.log("user data", userData)
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
     null,
   );
@@ -97,6 +99,7 @@ export default function Dashboard() {
   // Log for debugging
 
   const handleRegistrationComplete = () => {
+    refetchUserData();
     refetchAllData();
   };
 
@@ -113,7 +116,9 @@ export default function Dashboard() {
 
     try {
       const hash = await claimRoyaltyV2();
-      setCurrentTxHash(hash);
+      if (hash) {
+        setCurrentTxHash(hash);
+      }
     } catch (error) {
       console.error("Claim failed:", error);
       setCurrentTxHash(null);
@@ -127,7 +132,9 @@ export default function Dashboard() {
 
     try {
       const hash = await claimLegacyRoyalty();
-      setCurrentTxHash(hash);
+      if (hash) {
+        setCurrentTxHash(hash);
+      }
     } catch (error) {
       console.error("Claim failed:", error);
       setCurrentTxHash(null);
@@ -140,13 +147,13 @@ export default function Dashboard() {
   const canClaimRoyaltyV2 =
     userData?.exists &&
     migrationAndRoyaltyUI?.v2Claimable &&
-    parseFloat(migrationAndRoyaltyUI.v2Claimable) > 0;
+    parseFloat(migrationAndRoyaltyUI.v2Claimable) >= 0.5;
 
   // Check if user can claim legacy royalty
   const canClaimLegacyRoyalty =
     userData?.exists &&
     migrationAndRoyaltyUI?.legacyClaimable &&
-    parseFloat(migrationAndRoyaltyUI.legacyClaimable) > 0;
+    parseFloat(migrationAndRoyaltyUI.legacyClaimable) >= 0.5;
 
   const royaltyAvailable = userData?.royaltyAvailable || "0.00";
   const legacyClaimableAmount =
@@ -307,6 +314,8 @@ export default function Dashboard() {
 
                   {/* Right Column - Stats & Content */}
                   <div className="space-y-6 lg:space-y-8 order-1 lg:order-2 h-full">
+                    <TestimonialPromoPanel defaultWallet={address ?? null} />
+
                     {/* Stats Overview + Royalty Buttons */}
                     <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
                       <Stats
@@ -479,10 +488,6 @@ export default function Dashboard() {
                 <div className="mt-8">
                   <GlobalPanel
                     totalReaders={totalReaders}
-                    totalChapters={globalTransactions?.totalChapters}
-                    totalTransactionsUsdt={globalTransactions?.totalUsdt}
-                    isLoading={globalTransactions?.loading}
-                    isUnavailable={globalTransactions?.error}
                   />
                 </div>
               </>

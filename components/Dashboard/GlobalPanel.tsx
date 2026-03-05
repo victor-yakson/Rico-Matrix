@@ -50,7 +50,7 @@ export const GlobalPanel = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="rounded-xl border border-slate-800/80 bg-black/60 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-yellow-300/80 mb-2">
             {t("readers")}
@@ -59,34 +59,6 @@ export const GlobalPanel = ({
             {isLoading ? t("loading") : formatNumber(totalReaders)}
           </p>
           <p className="text-xs text-slate-500 mt-2">{t("readersNote")}</p>
-        </div>
-        <div className="rounded-xl border border-slate-800/80 bg-black/60 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-yellow-300/80 mb-2">
-            {t("transactions")}
-          </p>
-          <p className="text-2xl font-semibold text-white">
-            {isLoading
-              ? t("loading")
-              : isUnavailable
-                ? t("unavailable")
-                : formatNumber(totalChapters)}
-          </p>
-          <p className="text-xs text-slate-500 mt-2">
-            {t("transactionsNote")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-800/80 bg-black/60 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-yellow-300/80 mb-2">
-            {t("volume")}
-          </p>
-          <p className="text-2xl font-semibold text-white">
-            {isLoading
-              ? t("loading")
-              : isUnavailable
-                ? t("unavailable")
-                : `$${formatCurrency(totalTransactionsUsdt)}`}
-          </p>
-          <p className="text-xs text-slate-500 mt-2">{t("volumeNote")}</p>
         </div>
       </div>
     </div>

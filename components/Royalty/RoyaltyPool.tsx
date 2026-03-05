@@ -45,7 +45,9 @@ export const RoyaltyPool = () => {
     
     try {
       const hash = await claimRoyaltyV2();
-      setCurrentTxHash(hash);
+      if (hash) {
+        setCurrentTxHash(hash);
+      }
     } catch (error) {
       console.error("Current Claim failed:", error);
       setCurrentTxHash(null);
@@ -59,7 +61,9 @@ export const RoyaltyPool = () => {
     
     try {
       const hash = await claimLegacyRoyalty();
-      setCurrentTxHash(hash);
+      if (hash) {
+        setCurrentTxHash(hash);
+      }
     } catch (error) {
       console.error("Legacy Claim failed:", error);
       setCurrentTxHash(null);
@@ -76,8 +80,8 @@ export const RoyaltyPool = () => {
   const migrationStatus = migrationAndRoyaltyUI?.status || 0;
 
   // Check what type of royalty is available
-  const hasLegacyRoyalty = parseFloat(legacyClaimableAmount) > 0;
-  const hasV2Royalty = parseFloat(v2ClaimableAmount) > 0;
+  const hasLegacyRoyalty = parseFloat(legacyClaimableAmount) >= 0.5;
+  const hasV2Royalty = parseFloat(v2ClaimableAmount) >= 0.5;
   const canClaimLegacy = hasLegacyRoyalty;
   const canClaimV2 = hasV2Royalty;
   const canClaim = hasLegacyRoyalty || hasV2Royalty;

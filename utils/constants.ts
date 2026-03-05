@@ -959,8 +959,18 @@ export const BOOK_NAMES = {
   3: "selp book 1: Why People get Rich doing one Thing and Lose at others",
 };
 
+const libraryContractAddressEnv =
+  process.env.NEXT_PUBLIC_LIBRARY_CONTRACT_ADDRESS ||
+  process.env.LIBRARY_CONTRACT_ADDRESS;
+
+if (!libraryContractAddressEnv) {
+  throw new Error(
+    "Missing library contract address. Set NEXT_PUBLIC_LIBRARY_CONTRACT_ADDRESS."
+  );
+}
+
 export const LIBRARY_CONTRACT_ADDRESS =
-  "0x6a2Eafc0E355F440D875Db1BB462A0E943F4fcdf";
+  libraryContractAddressEnv as `0x${string}`;
 
 export const LIBRARY_ABI = [
   {
@@ -1423,9 +1433,9 @@ export const LIBRARY_ABI = [
   },
   {
     inputs: [
-      { internalType: "address", name: "author", type: "address" },
       { internalType: "string", name: "cid", type: "string" },
       { internalType: "uint256", name: "price", type: "uint256" },
+      { internalType: "address", name: "customPayoutWallet", type: "address" },
     ],
     name: "listBook",
     outputs: [],
