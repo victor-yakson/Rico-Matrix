@@ -1,10 +1,18 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin(); // will look for src/i18n/request.ts
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  // ✅ Serve the pdf worker as JS (prevents "Failed to fetch dynamically imported module")
+  // 1. INCREASE BODY SIZE LIMIT
+  // Note: For App Router, this applies to the underlying infrastructure.
+  // In some Next.js versions, this is handled via 'experimental' or direct API config.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "15mb",
+    },
+  },
+
   async headers() {
     return [
       {
@@ -24,12 +32,8 @@ const nextConfig: NextConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-
-      // your existing aliases
       "pino-pretty": false,
       "@react-native-async-storage/async-storage": false,
-
-      // ✅ CRITICAL: stop Next from bundling the crashing pdf.mjs build
       "pdfjs-dist/build/pdf.mjs": "pdfjs-dist/legacy/build/pdf.js",
     };
 

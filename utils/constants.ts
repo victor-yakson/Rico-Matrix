@@ -965,7 +965,7 @@ const libraryContractAddressEnv =
 
 if (!libraryContractAddressEnv) {
   throw new Error(
-    "Missing library contract address. Set NEXT_PUBLIC_LIBRARY_CONTRACT_ADDRESS."
+    "Missing library contract address. Set NEXT_PUBLIC_LIBRARY_CONTRACT_ADDRESS.",
   );
 }
 
@@ -986,6 +986,9 @@ export const LIBRARY_ABI = [
     type: "constructor",
   },
   { inputs: [], name: "AlreadyOwned", type: "error" },
+  { inputs: [], name: "AppealAlreadyPending", type: "error" },
+  { inputs: [], name: "BookDoesNotExist", type: "error" },
+  { inputs: [], name: "BookIsActive", type: "error" },
   { inputs: [], name: "BookNotAvailable", type: "error" },
   {
     inputs: [
@@ -1038,8 +1041,10 @@ export const LIBRARY_ABI = [
   { inputs: [], name: "InvalidAddress", type: "error" },
   { inputs: [], name: "InvalidAmount", type: "error" },
   { inputs: [], name: "InvalidPrice", type: "error" },
+  { inputs: [], name: "InvalidSplitConfiguration", type: "error" },
   { inputs: [], name: "MaxFeeExceeded", type: "error" },
-  { inputs: [], name: "NoPointsToClaim", type: "error" },
+  { inputs: [], name: "MaxVotesReached", type: "error" },
+  { inputs: [], name: "NoAppealPending", type: "error" },
   { inputs: [], name: "NotAuthor", type: "error" },
   {
     inputs: [{ internalType: "address", name: "owner", type: "address" }],
@@ -1062,8 +1067,37 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "account", type: "address" },
-      { indexed: true, internalType: "address", name: "operator", type: "address" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "author",
+        type: "address",
+      },
+    ],
+    name: "AppealSubmitted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
       { indexed: false, internalType: "bool", name: "approved", type: "bool" },
     ],
     name: "ApprovalForAll",
@@ -1072,10 +1106,25 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "voter", type: "address" },
-      { indexed: true, internalType: "address", name: "author", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "voter",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "author",
+        type: "address",
+      },
       { indexed: false, internalType: "bool", name: "like", type: "bool" },
-      { indexed: false, internalType: "uint256", name: "ricoBurned", type: "uint256" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "ricoBurned",
+        type: "uint256",
+      },
     ],
     name: "AuthorVoted",
     type: "event",
@@ -1083,19 +1132,24 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "author", type: "address" },
-      { indexed: false, internalType: "string", name: "cid", type: "string" },
-      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
-    ],
-    name: "BookApplied",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
-      { indexed: true, internalType: "address", name: "author", type: "address" },
-      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "author",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
+      },
     ],
     name: "BookListed",
     type: "event",
@@ -1103,11 +1157,36 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
-      { indexed: true, internalType: "address", name: "payer", type: "address" },
-      { indexed: true, internalType: "address", name: "recipient", type: "address" },
-      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
-      { indexed: false, internalType: "uint256", name: "ricoBurned", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "payer",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "recipient",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "price",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "ricoBurned",
+        type: "uint256",
+      },
     ],
     name: "BookPurchased",
     type: "event",
@@ -1115,8 +1194,18 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
-      { indexed: false, internalType: "string", name: "status", type: "string" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "status",
+        type: "string",
+      },
     ],
     name: "BookStatusChanged",
     type: "event",
@@ -1124,9 +1213,24 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
-      { indexed: false, internalType: "string", name: "updateType", type: "string" },
-      { indexed: false, internalType: "uint256", name: "newValue", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "updateType",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newValue",
+        type: "uint256",
+      },
     ],
     name: "BookUpdated",
     type: "event",
@@ -1134,8 +1238,18 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
-      { indexed: false, internalType: "uint256", name: "totalSales", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "totalSales",
+        type: "uint256",
+      },
     ],
     name: "LeaderboardUpdated",
     type: "event",
@@ -1143,8 +1257,18 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "previousOwner", type: "address" },
-      { indexed: true, internalType: "address", name: "newOwner", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
     ],
     name: "OwnershipTransferStarted",
     type: "event",
@@ -1152,21 +1276,40 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "previousOwner", type: "address" },
-      { indexed: true, internalType: "address", name: "newOwner", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
     ],
     name: "OwnershipTransferred",
     type: "event",
   },
   {
     anonymous: false,
-    inputs: [{ indexed: false, internalType: "string", name: "param", type: "string" }],
+    inputs: [
+      { indexed: false, internalType: "string", name: "param", type: "string" },
+    ],
     name: "ParamsUpdated",
     type: "event",
   },
   {
     anonymous: false,
-    inputs: [{ indexed: false, internalType: "address", name: "account", type: "address" }],
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
     name: "Paused",
     type: "event",
   },
@@ -1174,25 +1317,52 @@ export const LIBRARY_ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, internalType: "address", name: "user", type: "address" },
-      { indexed: false, internalType: "uint256", name: "amount", type: "uint256" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
     ],
     name: "RoyaltyClaimed",
     type: "event",
   },
   {
     anonymous: false,
-    inputs: [{ indexed: false, internalType: "uint256", name: "amount", type: "uint256" }],
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
     name: "RoyaltyDistributed",
     type: "event",
   },
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "operator", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
       { indexed: true, internalType: "address", name: "from", type: "address" },
       { indexed: true, internalType: "address", name: "to", type: "address" },
-      { indexed: false, internalType: "uint256[]", name: "ids", type: "uint256[]" },
-      { indexed: false, internalType: "uint256[]", name: "values", type: "uint256[]" },
+      {
+        indexed: false,
+        internalType: "uint256[]",
+        name: "ids",
+        type: "uint256[]",
+      },
+      {
+        indexed: false,
+        internalType: "uint256[]",
+        name: "values",
+        type: "uint256[]",
+      },
     ],
     name: "TransferBatch",
     type: "event",
@@ -1200,11 +1370,21 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "operator", type: "address" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
       { indexed: true, internalType: "address", name: "from", type: "address" },
       { indexed: true, internalType: "address", name: "to", type: "address" },
       { indexed: false, internalType: "uint256", name: "id", type: "uint256" },
-      { indexed: false, internalType: "uint256", name: "value", type: "uint256" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
     ],
     name: "TransferSingle",
     type: "event",
@@ -1220,7 +1400,14 @@ export const LIBRARY_ABI = [
   },
   {
     anonymous: false,
-    inputs: [{ indexed: false, internalType: "address", name: "account", type: "address" }],
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
     name: "Unpaused",
     type: "event",
   },
@@ -1228,8 +1415,18 @@ export const LIBRARY_ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, internalType: "address", name: "user", type: "address" },
-      { indexed: false, internalType: "uint256", name: "oldPoints", type: "uint256" },
-      { indexed: false, internalType: "uint256", name: "newPoints", type: "uint256" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "oldPoints",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newPoints",
+        type: "uint256",
+      },
     ],
     name: "UserSynced",
     type: "event",
@@ -1237,10 +1434,25 @@ export const LIBRARY_ABI = [
   {
     anonymous: false,
     inputs: [
-      { indexed: true, internalType: "address", name: "voter", type: "address" },
-      { indexed: true, internalType: "uint256", name: "bookId", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "voter",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "bookId",
+        type: "uint256",
+      },
       { indexed: false, internalType: "bool", name: "like", type: "bool" },
-      { indexed: false, internalType: "uint256", name: "ricoBurned", type: "uint256" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "ricoBurned",
+        type: "uint256",
+      },
     ],
     name: "VoteCast",
     type: "event",
@@ -1254,12 +1466,37 @@ export const LIBRARY_ABI = [
   },
   {
     inputs: [],
+    name: "MAX_VOTES",
+    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "accUsdtPerShare",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },
-  { inputs: [], name: "acceptOwnership", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [],
+    name: "acceptOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "author", type: "address" },
+      { internalType: "address", name: "customPayoutWallet", type: "address" },
+      { internalType: "string", name: "cid", type: "string" },
+      { internalType: "uint256", name: "price", type: "uint256" },
+    ],
+    name: "adminListBook",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
   {
     inputs: [],
     name: "appFeeRico",
@@ -1290,17 +1527,7 @@ export const LIBRARY_ABI = [
   },
   {
     inputs: [
-      { internalType: "uint256", name: "proposedPrice", type: "uint256" },
-      { internalType: "string", name: "proposedCid", type: "string" },
-    ],
-    name: "applyToListBook",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "address", name: "author", type: "address" },
+      { internalType: "address", name: "", type: "address" },
       { internalType: "uint256", name: "", type: "uint256" },
     ],
     name: "authorBooks",
@@ -1309,12 +1536,22 @@ export const LIBRARY_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "author", type: "address" }],
+    inputs: [{ internalType: "address", name: "", type: "address" }],
     name: "authorStats",
     outputs: [
       { internalType: "uint256", name: "score", type: "uint256" },
       { internalType: "uint256", name: "booksSold", type: "uint256" },
     ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "", type: "address" },
+      { internalType: "address", name: "", type: "address" },
+    ],
+    name: "authorVoteCount",
+    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
     stateMutability: "view",
     type: "function",
   },
@@ -1339,16 +1576,28 @@ export const LIBRARY_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "uint256", name: "bookId", type: "uint256" }],
+    inputs: [
+      { internalType: "uint256", name: "", type: "uint256" },
+      { internalType: "address", name: "", type: "address" },
+    ],
+    name: "bookVoteCount",
+    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     name: "books",
     outputs: [
       { internalType: "uint256", name: "price", type: "uint256" },
       { internalType: "address", name: "author", type: "address" },
-      { internalType: "uint32", name: "upVotes", type: "uint32" },
-      { internalType: "uint32", name: "downVotes", type: "uint32" },
       { internalType: "bool", name: "isFrozen", type: "bool" },
       { internalType: "bool", name: "isSuspended", type: "bool" },
       { internalType: "bool", name: "isBlacklisted", type: "bool" },
+      { internalType: "bool", name: "isUnderAppeal", type: "bool" },
+      { internalType: "address", name: "payoutWallet", type: "address" },
+      { internalType: "uint32", name: "upVotes", type: "uint32" },
+      { internalType: "uint32", name: "downVotes", type: "uint32" },
       { internalType: "string", name: "cid", type: "string" },
       { internalType: "uint256", name: "totalSales", type: "uint256" },
     ],
@@ -1369,7 +1618,13 @@ export const LIBRARY_ABI = [
     stateMutability: "view",
     type: "function",
   },
-  { inputs: [], name: "claimCommunityShare", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [],
+    name: "claimCommunityShare",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
   {
     inputs: [{ internalType: "address", name: "author", type: "address" }],
     name: "getAuthorBooks",
@@ -1385,11 +1640,13 @@ export const LIBRARY_ABI = [
         components: [
           { internalType: "uint256", name: "price", type: "uint256" },
           { internalType: "address", name: "author", type: "address" },
-          { internalType: "uint32", name: "upVotes", type: "uint32" },
-          { internalType: "uint32", name: "downVotes", type: "uint32" },
           { internalType: "bool", name: "isFrozen", type: "bool" },
           { internalType: "bool", name: "isSuspended", type: "bool" },
           { internalType: "bool", name: "isBlacklisted", type: "bool" },
+          { internalType: "bool", name: "isUnderAppeal", type: "bool" },
+          { internalType: "address", name: "payoutWallet", type: "address" },
+          { internalType: "uint32", name: "upVotes", type: "uint32" },
+          { internalType: "uint32", name: "downVotes", type: "uint32" },
           { internalType: "string", name: "cid", type: "string" },
           { internalType: "uint256", name: "totalSales", type: "uint256" },
         ],
@@ -1419,6 +1676,16 @@ export const LIBRARY_ABI = [
     name: "giftBook",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "user", type: "address" },
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+    ],
+    name: "hasAccess",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -1463,8 +1730,20 @@ export const LIBRARY_ABI = [
     stateMutability: "view",
     type: "function",
   },
-  { inputs: [], name: "paused", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
-  { inputs: [], name: "pendingOwner", outputs: [{ internalType: "address", name: "", type: "address" }], stateMutability: "view", type: "function" },
+  {
+    inputs: [],
+    name: "paused",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "pendingOwner",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
   {
     inputs: [
       { internalType: "address", name: "tokenAddress", type: "address" },
@@ -1475,20 +1754,19 @@ export const LIBRARY_ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-  { inputs: [], name: "renounceOwnership", outputs: [], stateMutability: "nonpayable", type: "function" },
   {
-    inputs: [
-      { internalType: "uint256", name: "bookId", type: "uint256" },
-      { internalType: "uint256", name: "newPrice", type: "uint256" },
-    ],
-    name: "requestPriceUpdate",
+    inputs: [],
+    name: "renounceOwnership",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "newWallet", type: "address" }],
-    name: "requestWalletChange",
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "bool", name: "approved", type: "bool" },
+    ],
+    name: "resolveAppeal",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1503,7 +1781,9 @@ export const LIBRARY_ABI = [
   {
     inputs: [],
     name: "ricoMatrix",
-    outputs: [{ internalType: "contract IRicoMatrix", name: "", type: "address" }],
+    outputs: [
+      { internalType: "contract IRicoMatrix", name: "", type: "address" },
+    ],
     stateMutability: "view",
     type: "function",
   },
@@ -1575,6 +1855,18 @@ export const LIBRARY_ABI = [
   },
   {
     inputs: [
+      { internalType: "uint256", name: "_author", type: "uint256" },
+      { internalType: "uint256", name: "_pool", type: "uint256" },
+      { internalType: "uint256", name: "_walletA", type: "uint256" },
+      { internalType: "uint256", name: "_walletB", type: "uint256" },
+    ],
+    name: "setRevenueSplits",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       { internalType: "uint256", name: "_appRico", type: "uint256" },
       { internalType: "uint256", name: "_buyRico", type: "uint256" },
       { internalType: "uint256", name: "_voteRico", type: "uint256" },
@@ -1584,8 +1876,55 @@ export const LIBRARY_ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-  { inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }], name: "supportsInterface", outputs: [{ internalType: "bool", name: "", type: "bool" }], stateMutability: "view", type: "function" },
-  { inputs: [], name: "syncRicoPoints", outputs: [], stateMutability: "nonpayable", type: "function" },
+  {
+    inputs: [],
+    name: "splitAuthor",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "splitPool",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "splitWalletA",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "splitWalletB",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }],
+    name: "supportsInterface",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "syncRicoPoints",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "syncRicoPointsFor",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
   {
     inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     name: "topBookIds",
@@ -1610,26 +1949,6 @@ export const LIBRARY_ABI = [
   {
     inputs: [
       { internalType: "uint256", name: "bookId", type: "uint256" },
-      { internalType: "address", name: "newAuthor", type: "address" },
-    ],
-    name: "updateBookAuthor",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "bookId", type: "uint256" },
-      { internalType: "string", name: "newCid", type: "string" },
-    ],
-    name: "updateBookCid",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "bookId", type: "uint256" },
       { internalType: "uint256", name: "newPrice", type: "uint256" },
     ],
     name: "updateBookPrice",
@@ -1642,6 +1961,16 @@ export const LIBRARY_ABI = [
     name: "updateFeeUsdt",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "bookId", type: "uint256" },
+      { internalType: "address", name: "newWallet", type: "address" },
+    ],
+    name: "updatePayoutWallet",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -1659,7 +1988,7 @@ export const LIBRARY_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    inputs: [{ internalType: "address", name: "", type: "address" }],
     name: "userSnapshots",
     outputs: [
       { internalType: "uint256", name: "storedPoints", type: "uint256" },
@@ -1711,7 +2040,7 @@ export const LIBRARY_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as const;
+]    as const;
 
 export const TRACK_NAMES = {
   1: "X3 Matrix Track",

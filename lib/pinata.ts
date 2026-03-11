@@ -2,6 +2,8 @@ import "server-only";
 import { nanoid } from "nanoid";
 
 const PINATA_UPLOAD_URL = "https://api.pinata.cloud/pinning/pinFileToIPFS";
+const PINATA_UNPIN_URL = "https://api.pinata.cloud/pinning/unpin";
+const PINATA_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
 
 const getPinataJwt = () => {
   const jwt = process.env.PINATA_JWT;
@@ -133,5 +135,75 @@ export const uploadToIPFS = async (file: File | Buffer): Promise<string> => {
     throw new Error("Pinata response did not include a CID.");
   }
 
+  return cid;
+};
+
+export const unpinFromIPFS = async (cid: string): Promise<void> => {
+  const jwt = getPinataJwt();
+  const trimmedCid = cid.trim();
+  if (!trimmedCid) return;
+
+  const response = await fetch(`${PINATA_UNPIN_URL}/${trimmedCid}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+    },
+  });
+
+  if (!response.ok) {
+    const raw = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      payload = null;
+    }
+    const reason =
+      (payload as any)?.error?.reason ||
+      (payload as any)?.message ||
+      raw ||
+      "Pinata unpin failed.";
+    throw new Error(reason);
+  }
+};
+
+export const pinJsonToIPFS = async (
+  content: Record<string, unknown>,
+  name?: string
+): Promise<string> => {
+  const jwt = getPinataJwt();
+  const response = await fetch(PINATA_JSON_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      pinataMetadata: name ? { name } : undefined,
+      pinataContent: content,
+    }),
+  });
+
+  const raw = await response.text();
+  let payload: unknown = null;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    const reason =
+      (payload as any)?.error?.reason ||
+      (payload as any)?.message ||
+      raw ||
+      "Pinata JSON upload failed.";
+    throw new Error(reason);
+  }
+
+  const cid = extractCid(payload);
+  if (!cid) {
+    throw new Error("Pinata response did not include a CID.");
+  }
   return cid;
 };

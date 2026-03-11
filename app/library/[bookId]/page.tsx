@@ -7,7 +7,7 @@ import {
   useReadContract,
   useWriteContract,
 } from "wagmi";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Book } from "@/types/library";
 import Link from "next/link";
@@ -16,11 +16,23 @@ import { useLibraryListing } from "@/hooks/useLibraryListing";
 import { libraryContract } from "@/utils/contracts";
 import { USDT_ABI } from "@/utils/constants";
 
+const GATEWAY =
+  process.env.NEXT_PUBLIC_PINATA_GATEWAY || "https://gateway.pinata.cloud/ipfs";
+
 const statusStyles: Record<string, string> = {
   pending: "bg-yellow-500/10 text-yellow-200 border-yellow-400/30",
   approved: "bg-emerald-500/10 text-emerald-200 border-emerald-400/30",
   rejected: "bg-red-500/10 text-red-200 border-red-400/30",
+  listing_submitted: "bg-indigo-500/10 text-indigo-200 border-indigo-400/30",
   listed: "bg-sky-500/10 text-sky-200 border-sky-400/30",
+};
+
+const statusLabels: Record<Book["status"], string> = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+  listing_submitted: "Listing Submitted",
+  listed: "Listed",
 };
 
 const StatusBadge = ({ status }: { status: Book["status"] }) => (
@@ -29,7 +41,7 @@ const StatusBadge = ({ status }: { status: Book["status"] }) => (
       statusStyles[status] || statusStyles.pending
     }`}
   >
-    {status}
+    {statusLabels[status] || status}
   </span>
 );
 
@@ -40,6 +52,9 @@ const getListingBlockReason = (
   book: Book,
   wallet?: string
 ): string | null => {
+  if (book.status === "listing_submitted") {
+    return "Listing transaction already submitted. Waiting for sync.";
+  }
   if (book.status !== "approved") {
     return "Only approved books can be listed.";
   }
@@ -58,13 +73,154 @@ const getListingBlockReason = (
   return null;
 };
 
-const getApiError = async (res: Response, fallback: string) => {
-  const payload = (await res.json().catch(() => null)) as
-    | { error?: unknown; reason?: unknown }
-    | null;
-  if (payload && typeof payload.error === "string") return payload.error;
-  if (payload && typeof payload.reason === "string") return payload.reason;
-  return fallback;
+const weiToDisplay = (value?: string | null) => {
+  if (!value) return "";
+  try {
+    return formatUnits(BigInt(value), 18);
+  } catch {
+    return "";
+  }
+};
+
+const displayUsdt = (value?: string | null) => {
+  if (!value) return "--";
+  try {
+    const normalized = formatUnits(BigInt(value), 18);
+    const [intPart, fracPart = ""] = normalized.split(".");
+    const groupedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const shortFrac = fracPart.slice(0, 2).padEnd(2, "0");
+    return `${groupedInt}.${shortFrac}`;
+  } catch {
+    return "--";
+  }
+};
+
+const shortAddress = (value?: string | null, start = 6, end = 4) => {
+  if (!value) return "--";
+  if (value.length <= start + end + 3) return value;
+  return `${value.slice(0, start)}...${value.slice(-end)}`;
+};
+
+const checkToneClasses = (ok: boolean | null) => {
+  if (ok === true) return "border-emerald-400/35 bg-emerald-500/10 text-emerald-200";
+  if (ok === false) return "border-red-400/35 bg-red-500/10 text-red-200";
+  return "border-slate-600/70 bg-slate-800/60 text-slate-200";
+};
+
+type MarketplaceBookRecord = {
+  id?: number;
+  book_id: string | null;
+  author_address: string;
+  price: string | null;
+  payout_wallet?: string | null;
+  onchain_price?: string | null;
+  last_action_type?: string | null;
+  last_action_tx_hash?: string | null;
+  last_update_ipfs_cid?: string | null;
+  title?: string | null;
+  description?: string | null;
+  status?: "approved" | "listed" | "listing_submitted";
+  cid: string;
+  tx_hash?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+type ListingSyncResponse = {
+  status?: "listed" | "pending_index" | "failed" | "ok";
+  reason?: string;
+  error?: string;
+  book?: MarketplaceBookRecord;
+};
+
+type OnchainBookState = {
+  bookId: string;
+  priceWei: string;
+  payoutWallet: string;
+  isFrozen: boolean;
+  isSuspended: boolean;
+  isBlacklisted: boolean;
+  isUnderAppeal: boolean;
+  upVotes: number;
+  downVotes: number;
+  totalSales: string;
+  cid: string;
+};
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const mapMarketplaceBook = (rawBook: MarketplaceBookRecord): Book => {
+  const nowIso = new Date().toISOString();
+  const id = rawBook.id ?? Number(rawBook.book_id);
+  const normalizedStatus: Book["status"] =
+    rawBook.status === "listed"
+      ? "listed"
+      : rawBook.status === "listing_submitted"
+      ? "listing_submitted"
+      : "approved";
+
+  return {
+    id: Number.isFinite(id) ? id : 0,
+    onChainBookId: rawBook.book_id,
+    title:
+      rawBook.title?.trim() ||
+      (rawBook.book_id ? `Book #${rawBook.book_id}` : "Untitled"),
+    description:
+      rawBook.description?.trim() || "Uploaded and ready for on-chain listing.",
+    authorWallet: rawBook.author_address,
+    payoutWallet: rawBook.payout_wallet || rawBook.author_address,
+    ipfsCid: rawBook.cid,
+    priceWei: rawBook.price,
+    onchainPriceWei: rawBook.onchain_price || rawBook.price,
+    status: normalizedStatus,
+    processStage:
+      normalizedStatus === "listed"
+        ? "completed"
+        : normalizedStatus === "listing_submitted"
+        ? "listing_submitted"
+        : "ready_for_listing",
+    processProgress: normalizedStatus === "listed" ? 100 : 95,
+    processMessage:
+      normalizedStatus === "listed"
+        ? "Listed on-chain and synced."
+        : normalizedStatus === "listing_submitted"
+        ? "Listing submitted. Waiting for sync confirmation."
+        : "IPFS folder uploaded. Ready for on-chain listing.",
+    similarityScore: null,
+    rejectionReason: null,
+    txHash: rawBook.tx_hash ?? null,
+    lastActionType: rawBook.last_action_type ?? null,
+    lastActionTxHash: rawBook.last_action_tx_hash ?? null,
+    lastUpdateIpfsCid: rawBook.last_update_ipfs_cid ?? null,
+    createdAt: rawBook.created_at ?? nowIso,
+    updatedAt: rawBook.updated_at ?? rawBook.created_at ?? nowIso,
+  };
+};
+
+const parseOnchainBookState = (bookId: string, raw: unknown): OnchainBookState => {
+  const tuple = raw as any;
+  const toBigIntLike = (value: unknown) => {
+    if (typeof value === "bigint") return value;
+    if (typeof value === "number" && Number.isFinite(value)) return BigInt(value);
+    if (typeof value === "string" && /^\d+$/.test(value)) return BigInt(value);
+    return BigInt(0);
+  };
+  const toAddress = (value: unknown) =>
+    typeof value === "string" ? value : "0x0000000000000000000000000000000000000000";
+
+  return {
+    bookId,
+    priceWei: toBigIntLike(tuple?.price ?? tuple?.[0]).toString(),
+    payoutWallet: toAddress(tuple?.payoutWallet ?? tuple?.[6]),
+    isFrozen: Boolean(tuple?.isFrozen ?? tuple?.[2]),
+    isSuspended: Boolean(tuple?.isSuspended ?? tuple?.[3]),
+    isBlacklisted: Boolean(tuple?.isBlacklisted ?? tuple?.[4]),
+    isUnderAppeal: Boolean(tuple?.isUnderAppeal ?? tuple?.[5]),
+    upVotes: Number(toBigIntLike(tuple?.upVotes ?? tuple?.[7])),
+    downVotes: Number(toBigIntLike(tuple?.downVotes ?? tuple?.[8])),
+    totalSales: toBigIntLike(tuple?.totalSales ?? tuple?.[10]).toString(),
+    cid: typeof (tuple?.cid ?? tuple?.[9]) === "string" ? (tuple?.cid ?? tuple?.[9]) : "",
+  };
 };
 
 export default function BookDetailPage() {
@@ -80,43 +236,147 @@ export default function BookDetailPage() {
   const [price, setPrice] = useState("");
   const [payoutWallet, setPayoutWallet] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [listingError, setListingError] = useState<string | null>(null);
   const [approvingUsdt, setApprovingUsdt] = useState(false);
   const [approvingRico, setApprovingRico] = useState(false);
+  const listingInProgressRef = useRef(false);
+  const syncInFlightRef = useRef(false);
+  const [isSyncingListing, setIsSyncingListing] = useState(false);
+  const [lastSyncAttemptAt, setLastSyncAttemptAt] = useState<number | null>(
+    null
+  );
+  const [onchain, setOnchain] = useState<OnchainBookState | null>(null);
+  const [onchainLoading, setOnchainLoading] = useState(false);
+  const [onchainError, setOnchainError] = useState<string | null>(null);
+  const [updatePrice, setUpdatePrice] = useState("");
+  const [updatePayoutWallet, setUpdatePayoutWallet] = useState("");
+  const [updatingPrice, setUpdatingPrice] = useState(false);
+  const [updatingPayout, setUpdatingPayout] = useState(false);
+  const [appealing, setAppealing] = useState(false);
+  const [copiedField, setCopiedField] = useState<
+    "author" | "payout" | "tx" | null
+  >(null);
+  const priceTouchedRef = useRef(false);
+  const payoutTouchedRef = useRef(false);
+  const updatePriceTouchedRef = useRef(false);
+  const updatePayoutTouchedRef = useRef(false);
 
   const bookId = Number(params?.bookId ?? 0);
 
-  const fetchBook = async () => {
-    if (!Number.isFinite(bookId)) return;
-    setLoading(true);
-    setError(null);
+  const copyValue = async (
+    value: string | undefined | null,
+    field: "author" | "payout" | "tx"
+  ) => {
+    if (!value) return;
     try {
-      const res = await fetch(`/api/books/${bookId}`);
-      const payload = await res.json();
+      await navigator.clipboard.writeText(value);
+      setCopiedField(field);
+      window.setTimeout(() => setCopiedField((prev) => (prev === field ? null : prev)), 1500);
+    } catch {
+      // ignore clipboard failures silently
+    }
+  };
+
+  const fetchBook = async (options?: { silent?: boolean }): Promise<Book | null> => {
+    if (!Number.isFinite(bookId)) return null;
+    if (!options?.silent) {
+      setLoading(true);
+      setError(null);
+    }
+    try {
+      const res = await fetch(`/api/marketplace/books?recordId=${bookId}`, {
+        cache: "no-store",
+      });
+      const payload = (await res.json()) as {
+        books?: MarketplaceBookRecord[];
+        error?: string;
+      };
       if (!res.ok) throw new Error(payload?.error || "Failed to load book");
-      setBook(payload.book);
-      setPrice(
-        payload.book?.priceWei
-          ? (Number(payload.book.priceWei) / 1e18).toString()
-          : ""
-      );
-      setPayoutWallet(
-        payload.book?.payoutWallet || payload.book?.authorWallet || ""
-      );
+
+      const rawBook = payload.books?.[0];
+      if (!rawBook) {
+        throw new Error("Book not found.");
+      }
+
+      const mapped = mapMarketplaceBook(rawBook);
+
+      setBook(mapped);
+      if (!priceTouchedRef.current && !submitting) {
+        setPrice(weiToDisplay(mapped.priceWei));
+      }
+      if (!payoutTouchedRef.current && !submitting) {
+        setPayoutWallet(mapped.payoutWallet || mapped.authorWallet || "");
+      }
+      if (!updatePriceTouchedRef.current && !updatingPrice) {
+        setUpdatePrice(weiToDisplay(mapped.onchainPriceWei || mapped.priceWei));
+      }
+      if (!updatePayoutTouchedRef.current && !updatingPayout) {
+        setUpdatePayoutWallet(mapped.payoutWallet || mapped.authorWallet || "");
+      }
+      return mapped;
     } catch (err: any) {
-      setError(err?.message || "Failed to load book.");
+      if (!options?.silent) {
+        setError(err?.message || "Failed to load book.");
+      }
+      return null;
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchBook();
-    const interval = setInterval(fetchBook, 10000);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let active = true;
+
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const startPolling = () => {
+      stopPolling();
+      interval = setInterval(async () => {
+        if (!active) return;
+        if (document.visibilityState !== "visible") return;
+        if (listingInProgressRef.current) return;
+
+        const latest = await fetchBook({ silent: true });
+        if (!latest) return;
+
+        if (latest.status === "listing_submitted") {
+          await syncListingState(latest.id, latest.authorWallet, { silent: true });
+          return;
+        }
+
+        stopPolling();
+      }, 30000);
+    };
+
+    const loadAndSync = async () => {
+      const loaded = await fetchBook();
+      if (!active) return;
+      if (loaded?.status === "listing_submitted") {
+        await syncListingState(loaded.id, loaded.authorWallet, { silent: true });
+        startPolling();
+      }
+    };
+
+    loadAndSync();
+    return () => {
+      active = false;
+      stopPolling();
+    };
   }, [bookId]);
+
+  useEffect(() => {
+    if (!book?.onChainBookId) return;
+    if (book.status !== "listed" && book.status !== "listing_submitted") return;
+    void fetchOnchainBook(book);
+  }, [book?.id, book?.onChainBookId, book?.status, publicClient]);
 
   const { data: usdtTokenAddress } = useReadContract({
     ...libraryContract,
@@ -138,7 +398,7 @@ export default function BookDetailPage() {
     functionName: "appFeeRico",
   });
 
-  const { data: usdtBalance } = useReadContract({
+  const { data: usdtBalance, refetch: refetchUsdtBalance } = useReadContract({
     address: usdtTokenAddress as `0x${string}` | undefined,
     abi: USDT_ABI,
     functionName: "balanceOf",
@@ -146,7 +406,7 @@ export default function BookDetailPage() {
     query: { enabled: Boolean(address && usdtTokenAddress) },
   });
 
-  const { data: ricoBalance } = useReadContract({
+  const { data: ricoBalance, refetch: refetchRicoBalance } = useReadContract({
     address: ricoTokenAddress as `0x${string}` | undefined,
     abi: USDT_ABI,
     functionName: "balanceOf",
@@ -212,6 +472,188 @@ export default function BookDetailPage() {
       ? "RICO approval required for listing fee."
       : null;
 
+  const listingBlockReason = book ? getListingBlockReason(book, address) : null;
+  const effectiveBlockReason = listingBlockReason || tokenRequirementBlockReason;
+
+  const listingChecks = [
+    {
+      key: "status",
+      label: "Book Approved",
+      ok:
+        book?.status === "approved" ||
+        book?.status === "listing_submitted" ||
+        book?.status === "listed",
+      detail:
+        book?.status === "approved"
+          ? "Approved and ready."
+          : book?.status === "listing_submitted"
+          ? "Already submitted."
+          : book?.status === "listed"
+          ? "Already listed."
+          : "Awaiting approval.",
+    },
+    {
+      key: "package",
+      label: "IPFS Package",
+      ok: Boolean(book?.ipfsCid),
+      detail: book?.ipfsCid ? "Package available." : "CID missing.",
+    },
+    {
+      key: "wallet",
+      label: "Author Wallet Match",
+      ok: Boolean(address && book && address.toLowerCase() === book.authorWallet.toLowerCase()),
+      detail: address
+        ? address && book && address.toLowerCase() === book.authorWallet.toLowerCase()
+          ? "Connected wallet verified."
+          : "Switch to author wallet."
+        : "Connect wallet.",
+    },
+    {
+      key: "usdt_balance",
+      label: "USDT Balance",
+      ok: hasEnoughUsdt,
+      detail:
+        requiredUsdt === null
+          ? "Loading..."
+          : `Need ${formatUnits(requiredUsdt, 18)} | Have ${
+              typeof usdtBalance === "bigint" ? formatUnits(usdtBalance, 18) : "..."
+            }`,
+    },
+    {
+      key: "rico_balance",
+      label: "RICO Balance",
+      ok: hasEnoughRico,
+      detail:
+        requiredRico === null
+          ? "Loading..."
+          : `Need ${formatUnits(requiredRico, 18)} | Have ${
+              typeof ricoBalance === "bigint" ? formatUnits(ricoBalance, 18) : "..."
+            }`,
+    },
+    {
+      key: "usdt_allowance",
+      label: "USDT Allowance",
+      ok: hasEnoughUsdtAllowance,
+      detail:
+        requiredUsdt === null
+          ? "Loading..."
+          : `Approved ${
+              typeof usdtAllowance === "bigint" ? formatUnits(usdtAllowance, 18) : "..."
+            }`,
+    },
+    {
+      key: "rico_allowance",
+      label: "RICO Allowance",
+      ok: hasEnoughRicoAllowance,
+      detail:
+        requiredRico === null
+          ? "Loading..."
+          : `Approved ${
+              typeof ricoAllowance === "bigint" ? formatUnits(ricoAllowance, 18) : "..."
+            }`,
+    },
+  ] as const;
+
+  const completedChecks = listingChecks.filter((item) => item.ok === true).length;
+  const listingReadiness = Math.round((completedChecks / listingChecks.length) * 100);
+
+  const lifecycleSteps = [
+    {
+      label: "Moderation",
+      done:
+        book?.status === "approved" ||
+        book?.status === "listing_submitted" ||
+        book?.status === "listed",
+      failed: book?.status === "rejected",
+    },
+    {
+      label: "IPFS Package",
+      done: Boolean(book?.ipfsCid),
+      failed: book?.status === "pending" && book?.processStage === "ipfs_failed",
+    },
+    {
+      label: "Listing Tx",
+      done: book?.status === "listing_submitted" || book?.status === "listed",
+      failed: false,
+    },
+    {
+      label: "Marketplace Live",
+      done: book?.status === "listed",
+      failed: false,
+    },
+  ] as const;
+
+  const applyBookFromApi = (row: MarketplaceBookRecord) => {
+    const mapped = mapMarketplaceBook(row);
+    setBook(mapped);
+    if (!priceTouchedRef.current && !submitting) {
+      setPrice(weiToDisplay(mapped.priceWei));
+    }
+    if (!payoutTouchedRef.current && !submitting) {
+      setPayoutWallet(mapped.payoutWallet || mapped.authorWallet || "");
+    }
+    if (!updatePriceTouchedRef.current && !updatingPrice) {
+      setUpdatePrice(weiToDisplay(mapped.onchainPriceWei || mapped.priceWei));
+    }
+    if (!updatePayoutTouchedRef.current && !updatingPayout) {
+      setUpdatePayoutWallet(mapped.payoutWallet || mapped.authorWallet || "");
+    }
+  };
+
+  const syncListingState = async (
+    recordId: number,
+    authorWallet: string,
+    options?: { silent?: boolean; force?: boolean }
+  ): Promise<ListingSyncResponse | null> => {
+    if (!Number.isFinite(recordId) || recordId <= 0) return null;
+    if (!authorWallet) return null;
+    if (!options?.force && syncInFlightRef.current) return null;
+
+    syncInFlightRef.current = true;
+    setIsSyncingListing(true);
+    setLastSyncAttemptAt(Date.now());
+    try {
+      const res = await fetch("/api/marketplace/listing/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recordId,
+          authorWallet,
+        }),
+      });
+      const payload = (await res.json()) as ListingSyncResponse;
+
+      if (!res.ok) {
+        if (!options?.silent) {
+          setListingError(payload.error || "Failed to sync listing status.");
+        }
+        return payload;
+      }
+
+      if (payload.book) {
+        applyBookFromApi(payload.book);
+      }
+
+      if (!options?.silent && payload.reason) {
+        setListingError(payload.reason);
+      }
+
+      if (payload.status === "listed") {
+        setListingError(null);
+      }
+
+      return payload;
+    } catch (err: any) {
+      if (!options?.silent) {
+        setListingError(err?.message || "Failed to sync listing status.");
+      }
+      return null;
+    } finally {
+      syncInFlightRef.current = false;
+      setIsSyncingListing(false);
+    }
+  };
+
   const approveToken = async (
     tokenAddress: `0x${string}` | undefined,
     amount: bigint | null,
@@ -250,6 +692,183 @@ export default function BookDetailPage() {
     }
   }, [tokenRequirementBlockReason, listingError]);
 
+  const fetchOnchainBook = async (targetBook?: Book | null) => {
+    const activeBook = targetBook || book;
+    if (!publicClient || !activeBook?.onChainBookId || !/^\d+$/.test(activeBook.onChainBookId)) {
+      return;
+    }
+
+    setOnchainLoading(true);
+    setOnchainError(null);
+    try {
+      const raw = await publicClient.readContract({
+        ...libraryContract,
+        functionName: "getBook",
+        args: [BigInt(activeBook.onChainBookId)],
+      });
+      const parsed = parseOnchainBookState(activeBook.onChainBookId, raw);
+      setOnchain(parsed);
+      if (!updatePriceTouchedRef.current && !updatingPrice) {
+        setUpdatePrice(weiToDisplay(parsed.priceWei));
+      }
+      if (!updatePayoutTouchedRef.current && !updatingPayout) {
+        setUpdatePayoutWallet(parsed.payoutWallet);
+      }
+    } catch (err: any) {
+      setOnchainError(err?.shortMessage || err?.message || "Failed to fetch on-chain state.");
+    } finally {
+      setOnchainLoading(false);
+    }
+  };
+
+  const syncAuthorAction = async (params: {
+    txHash: string;
+    action: "update_price" | "update_payout" | "appeal";
+    newPriceWei?: string;
+    newPayoutWallet?: string;
+  }) => {
+    if (!book || !address) {
+      throw new Error("Wallet or book context unavailable.");
+    }
+
+    const res = await fetch("/api/marketplace/author/book-action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recordId: book.id,
+        authorWallet: address,
+        txHash: params.txHash,
+        action: params.action,
+        newPriceWei: params.newPriceWei,
+        newPayoutWallet: params.newPayoutWallet,
+      }),
+    });
+
+    const payload = (await res.json()) as {
+      error?: string;
+      book?: MarketplaceBookRecord;
+      ipfsActionCid?: string;
+    };
+    if (!res.ok) {
+      throw new Error(payload.error || "Failed to sync author action.");
+    }
+    if (payload.book) {
+      applyBookFromApi(payload.book);
+    }
+    return payload;
+  };
+
+  const handleAuthorPriceUpdate = async () => {
+    if (!book?.onChainBookId || !address || !publicClient) return;
+    if (!/^\d+(\.\d+)?$/.test(updatePrice)) {
+      setListingError("Enter a valid new price.");
+      return;
+    }
+
+    setUpdatingPrice(true);
+    setListingError(null);
+    try {
+      const newPriceWei = parseUnits(updatePrice, 18);
+      const hash = await writeContractAsync({
+        ...libraryContract,
+        functionName: "updateBookPrice",
+        args: [BigInt(book.onChainBookId), newPriceWei],
+      });
+      await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
+
+      const syncPayload = await syncAuthorAction({
+        txHash: hash,
+        action: "update_price",
+        newPriceWei: newPriceWei.toString(),
+      });
+
+      await fetchBook({ silent: true });
+      await fetchOnchainBook();
+      setListingError(
+        syncPayload.ipfsActionCid
+          ? `Price updated and synced. Action log: ${syncPayload.ipfsActionCid}`
+          : "Price updated and synced."
+      );
+      updatePriceTouchedRef.current = false;
+    } catch (err: any) {
+      setListingError(err?.shortMessage || err?.message || "Failed to update price.");
+    } finally {
+      setUpdatingPrice(false);
+    }
+  };
+
+  const handleAuthorPayoutUpdate = async () => {
+    if (!book?.onChainBookId || !address || !publicClient) return;
+    const payout = updatePayoutWallet.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(payout)) {
+      setListingError("Enter a valid payout wallet address.");
+      return;
+    }
+
+    setUpdatingPayout(true);
+    setListingError(null);
+    try {
+      const hash = await writeContractAsync({
+        ...libraryContract,
+        functionName: "updatePayoutWallet",
+        args: [BigInt(book.onChainBookId), payout as `0x${string}`],
+      });
+      await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
+
+      const syncPayload = await syncAuthorAction({
+        txHash: hash,
+        action: "update_payout",
+        newPayoutWallet: payout,
+      });
+
+      await fetchBook({ silent: true });
+      await fetchOnchainBook();
+      setListingError(
+        syncPayload.ipfsActionCid
+          ? `Payout wallet updated and synced. Action log: ${syncPayload.ipfsActionCid}`
+          : "Payout wallet updated and synced."
+      );
+      updatePayoutTouchedRef.current = false;
+    } catch (err: any) {
+      setListingError(
+        err?.shortMessage || err?.message || "Failed to update payout wallet."
+      );
+    } finally {
+      setUpdatingPayout(false);
+    }
+  };
+
+  const handleAuthorAppeal = async () => {
+    if (!book?.onChainBookId || !address || !publicClient) return;
+
+    setAppealing(true);
+    setListingError(null);
+    try {
+      const hash = await writeContractAsync({
+        ...libraryContract,
+        functionName: "appealStatus",
+        args: [BigInt(book.onChainBookId)],
+      });
+      await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
+
+      const syncPayload = await syncAuthorAction({
+        txHash: hash,
+        action: "appeal",
+      });
+
+      await fetchOnchainBook();
+      setListingError(
+        syncPayload.ipfsActionCid
+          ? `Appeal submitted and synced. Action log: ${syncPayload.ipfsActionCid}`
+          : "Appeal submitted and synced."
+      );
+    } catch (err: any) {
+      setListingError(err?.shortMessage || err?.message || "Failed to submit appeal.");
+    } finally {
+      setAppealing(false);
+    }
+  };
+
   const handleList = async () => {
     if (!book) return;
     const blockReason = getListingBlockReason(book, address);
@@ -271,6 +890,7 @@ export default function BookDetailPage() {
     }
 
     setSubmitting(true);
+    listingInProgressRef.current = true;
     setListingError(null);
     try {
       const priceWei = parseUnits(price, 18);
@@ -279,76 +899,137 @@ export default function BookDetailPage() {
         throw new Error("IPFS CID is missing. Restart from /library/upload.");
       }
 
-      const saveRes = await fetch(`/api/books/${book.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          authorWallet: address,
-          payoutWallet,
-          priceWei: priceWei.toString(),
-        }),
-      });
-      if (!saveRes.ok) {
-        throw new Error(
-          await getApiError(saveRes, "Failed to save listing details.")
-        );
-      }
-
       const txHash = await listBookOnChain({
         cid,
         priceWei,
         payoutWallet: payoutWallet as `0x${string}`,
       });
 
-      const listRes = await fetch(`/api/books/${book.id}/list`, {
+      const submitRes = await fetch("/api/marketplace/listing/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          recordId: book.id,
           authorWallet: address,
           txHash,
-          payoutWallet,
           priceWei: priceWei.toString(),
         }),
       });
-      if (!listRes.ok) {
-        throw new Error(await getApiError(listRes, "Failed to save tx hash."));
+      const submitPayload = (await submitRes.json()) as ListingSyncResponse;
+      if (!submitRes.ok) {
+        throw new Error(submitPayload.error || "Failed to save listing submission.");
+      }
+
+      if (submitPayload.book) {
+        applyBookFromApi(submitPayload.book);
+      } else {
+        setBook((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "listing_submitted",
+                txHash,
+                processStage: "listing_submitted",
+                processProgress: 95,
+                processMessage: "Listing submitted. Waiting for sync confirmation.",
+              }
+            : prev
+        );
+      }
+
+      setListingError(
+        `Transaction submitted (${txHash.slice(
+          0,
+          10
+        )}...). Syncing listing status...`
+      );
+
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const syncPayload = await syncListingState(
+          book.id,
+          address || book.authorWallet
+        );
+        if (syncPayload?.status === "listed" || syncPayload?.book?.status === "listed") {
+          await fetchBook();
+          router.push("/library/my-books");
+          return;
+        }
+        if (syncPayload?.status === "failed") {
+          await fetchBook();
+          throw new Error(syncPayload.reason || "Listing transaction failed.");
+        }
+        await wait(3000);
       }
 
       await fetchBook();
-      router.push("/library/my-books");
+      setListingError(
+        "Listing submitted. Still waiting for sync. This page keeps checking automatically."
+      );
     } catch (err: any) {
       setListingError(err?.message || "Listing failed.");
     } finally {
+      listingInProgressRef.current = false;
       setSubmitting(false);
     }
-  };
-
-  const handleUploadIpfs = async () => {
-    setListingError(
-      "This flow is single-phase. If IPFS hosting fails, restart from /library/upload."
-    );
   };
 
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-slate-950">
-        <div className="container mx-auto px-4 py-10">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
-                Book Details
-              </p>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-50">
-                {book?.title || "Loading..."}
-              </h1>
+      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.14),transparent_42%),radial-gradient(circle_at_85%_15%,rgba(56,189,248,0.12),transparent_34%),#020617]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <section className="mb-6 rounded-3xl border border-slate-700/70 bg-slate-900/60 p-4 shadow-[0_22px_55px_-40px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-400">
+                  <Link href="/library" className="transition hover:text-slate-200">
+                    Marketplace
+                  </Link>
+                  <span>/</span>
+                  <Link href="/library/my-books?mode=author" className="transition hover:text-slate-200">
+                    My Books
+                  </Link>
+                  <span>/</span>
+                  <span className="text-slate-200">Workspace</span>
+                </div>
+                <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
+                  Book Workspace
+                </p>
+                <h1 className="bg-gradient-to-r from-slate-50 via-slate-100 to-slate-300 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl md:text-4xl">
+                  {book?.title || "Loading..."}
+                </h1>
+                {book?.onChainBookId ? (
+                  <p className="mt-2 text-sm text-slate-300/85">
+                    On-chain Book ID: <span className="font-semibold text-slate-100">#{book.onChainBookId}</span>
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {book && <StatusBadge status={book.status} />}
+                <Link
+                  href="/library/my-books?mode=author"
+                  className="rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                >
+                  Back To Author Books
+                </Link>
+              </div>
             </div>
-            {book && <StatusBadge status={book.status} />}
-          </div>
+          </section>
 
           {loading && (
-            <div className="rounded-2xl border border-white/10 bg-black/60 p-6 text-slate-200">
-              Loading book...
+            <div className="grid animate-pulse gap-6 lg:grid-cols-[320px_1fr]">
+              <div className="aspect-[3/4] rounded-2xl border border-slate-700/60 bg-slate-900/60" />
+              <div className="rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6">
+                <div className="h-6 w-1/3 rounded bg-slate-700/70" />
+                <div className="mt-3 h-4 w-full rounded bg-slate-800/70" />
+                <div className="mt-2 h-4 w-5/6 rounded bg-slate-800/70" />
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="h-20 rounded-xl bg-slate-800/70" />
+                  <div className="h-20 rounded-xl bg-slate-800/70" />
+                  <div className="h-20 rounded-xl bg-slate-800/70" />
+                  <div className="h-20 rounded-xl bg-slate-800/70" />
+                </div>
+              </div>
             </div>
           )}
           {error && (
@@ -358,74 +1039,271 @@ export default function BookDetailPage() {
           )}
 
           {book && !loading && (
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-6">
-                <p className="text-sm text-slate-400 mb-4">
-                  {book.description}
-                </p>
-                <div className="text-xs text-slate-500">
-                  Created: {new Date(book.createdAt).toLocaleString()}
+            <>
+              <section className="mb-6 grid gap-6 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+                <div className="overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/60 shadow-[0_20px_50px_-38px_rgba(0,0,0,0.95)]">
+                  <div className="relative aspect-[3/4] bg-slate-900">
+                    <img
+                      src={
+                        book.ipfsCid
+                          ? `${GATEWAY}/${book.ipfsCid}/thumbnail.jpg`
+                          : "https://placehold.co/500x700/020617/e2e8f0?text=No+Thumbnail"
+                      }
+                      alt={book.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      onError={(event) => {
+                        (event.target as HTMLImageElement).src =
+                          "https://placehold.co/500x700/020617/e2e8f0?text=Thumbnail";
+                      }}
+                    />
+                    <div className="absolute left-3 top-3">
+                      <StatusBadge status={book.status} />
+                    </div>
+                    {book.onChainBookId ? (
+                      <div className="absolute bottom-3 left-3 rounded-full border border-slate-200/30 bg-black/60 px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-100">
+                        On-chain #{book.onChainBookId}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
-                {book.status === "rejected" && (
-                  <div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-                    {book.rejectionReason || "Rejected by AI moderation."}
-                  </div>
-                )}
+                <div className="rounded-3xl border border-slate-700/60 bg-slate-900/55 p-5 shadow-[0_20px_50px_-38px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-6 lg:p-7">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    Book Overview
+                  </p>
+                  <h2 className="mt-2 text-2xl font-bold text-slate-50">{book.title}</h2>
+                  <p className="mt-3 text-sm text-slate-300/90">{book.description}</p>
 
-                {book.status === "pending" && (
-                  <div className="mt-5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-                    <div className="flex items-center justify-between text-sm text-yellow-200">
-                      <span>
-                        {book.processMessage ||
-                          "Book is still being processed. Keep this flow active."}
-                      </span>
-                      <span>{book.processProgress ?? 0}%</span>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Author</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm font-semibold text-slate-100">
+                          {shortAddress(book.authorWallet)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyValue(book.authorWallet, "author")}
+                          className="rounded-md border border-slate-600 bg-slate-900/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-400 hover:text-slate-100"
+                        >
+                          {copiedField === "author" ? "Copied" : "Copy"}
+                        </button>
+                      </div>
                     </div>
-                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-yellow-900/40">
-                      <div
-                        className="h-full bg-gradient-to-r from-yellow-300 to-amber-300"
-                        style={{
-                          width: `${Math.max(
-                            0,
-                            Math.min(100, book.processProgress ?? 0)
-                          )}%`,
-                        }}
-                      />
+                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Price</p>
+                      <p className="mt-1 text-sm font-semibold text-amber-200">
+                        {displayUsdt(book.priceWei)} USDT
+                      </p>
                     </div>
-                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-yellow-100/80">
-                      Stage: {book.processStage}
+                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Stage</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-100">
+                        {book.processStage.replace(/_/g, " ")}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Updated</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-100">
+                        {new Date(book.updatedAt || book.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300"
+                      style={{
+                        width: `${Math.max(0, Math.min(100, book.processProgress ?? 0))}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+                    <span>Progress: {Math.max(0, Math.min(100, book.processProgress ?? 0))}%</span>
+                    <span>Created: {new Date(book.createdAt).toLocaleString()}</span>
+                  </div>
+
+                  <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    <Link
+                      href="/library"
+                      className="rounded-lg border border-slate-600 bg-slate-800/60 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                    >
+                      Marketplace
+                    </Link>
+                    <Link
+                      href="/library/my-books?mode=author"
+                      className="rounded-lg border border-slate-600 bg-slate-800/60 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                    >
+                      My Books
+                    </Link>
+                    {book.status === "listed" && book.onChainBookId ? (
+                      <Link
+                        href={`/library/book/${book.onChainBookId}`}
+                        className="rounded-lg border border-sky-400/40 bg-sky-500/10 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-sky-200 transition hover:-translate-y-0.5 hover:bg-sky-500/20"
+                      >
+                        Open Public Book Page
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+
+              <div className="grid gap-6 xl:grid-cols-12">
+              <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-5 shadow-[0_20px_50px_-40px_rgba(0,0,0,0.95)] md:p-6 xl:col-span-7">
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                      Flow Status
+                    </p>
+                    <p className="mt-1 text-sm text-slate-300">
+                      Live pipeline status from moderation through chain sync.
                     </p>
                   </div>
-                )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={book.status} />
+                    <button
+                      type="button"
+                      onClick={() => fetchBook({ silent: true })}
+                      className="rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
 
-                {book.status === "listed" && (
-                  <div className="mt-5 rounded-xl border border-sky-400/30 bg-sky-500/10 p-4 text-sm text-sky-200">
-                    Listed on-chain. Tx:{" "}
-                    {book.txHash ? (
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  {lifecycleSteps.map((step) => (
+                    <div
+                      key={step.label}
+                      className={`rounded-xl border px-3 py-2 text-xs ${
+                        step.failed
+                          ? "border-red-400/35 bg-red-500/10 text-red-200"
+                          : step.done
+                          ? "border-emerald-400/35 bg-emerald-500/10 text-emerald-200"
+                          : "border-slate-700/70 bg-slate-900/60 text-slate-300"
+                      }`}
+                    >
+                      <p className="font-semibold uppercase tracking-[0.16em]">{step.label}</p>
+                      <p className="mt-1 text-[11px]">
+                        {step.failed ? "Failed" : step.done ? "Done" : "Pending"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 rounded-xl border border-slate-700/60 bg-slate-900/60 p-4 shadow-inner shadow-black/20">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-100">
+                      {book.processMessage || "No active status message."}
+                    </p>
+                    <span className="text-xs text-slate-400">
+                      {Math.max(0, Math.min(100, book.processProgress ?? 0))}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300"
+                      style={{
+                        width: `${Math.max(0, Math.min(100, book.processProgress ?? 0))}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+                    <span>Stage: {book.processStage.replace(/_/g, " ")}</span>
+                    <span>
+                      Updated: {new Date(book.updatedAt || book.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {book.status === "rejected" ? (
+                    <p className="mt-3 text-sm text-red-200">
+                      {book.rejectionReason || "Rejected by AI moderation."}
+                    </p>
+                  ) : null}
+
+                  {book.txHash ? (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-1.5 text-xs text-slate-200">
                       <a
                         href={`https://bscscan.com/tx/${book.txHash}`}
                         target="_blank"
                         rel="noreferrer"
                         className="underline"
                       >
-                        {book.txHash}
+                        Tx {shortAddress(book.txHash, 10, 8)}
                       </a>
-                    ) : (
-                      "Pending"
-                    )}
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        onClick={() => copyValue(book.txHash || "", "tx")}
+                        className="rounded-md border border-slate-600 bg-slate-900/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]"
+                      >
+                        {copiedField === "tx" ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/60 p-6">
-                <h3 className="text-lg font-semibold text-slate-50 mb-4">
-                  Blockchain listing
+              <div className="rounded-3xl border border-white/10 bg-black/65 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-6 xl:col-span-5 xl:sticky xl:top-24 xl:h-fit">
+                <h3 className="mb-1 text-lg font-semibold text-slate-50">
+                  Blockchain Listing
                 </h3>
+                <p className="mb-4 text-xs text-slate-400">
+                  Finalize pricing, approve token spend, then publish this verified package on-chain.
+                </p>
 
-                {book.status !== "approved" && (
+                {book.status !== "approved" &&
+                  book.status !== "listing_submitted" && (
                   <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
                     Only approved books can be listed on-chain.
+                  </div>
+                )}
+
+                {book.status === "listing_submitted" && (
+                  <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-100">
+                    <p>
+                      Listing transaction is submitted. Sync is in progress.
+                    </p>
+                    {book.txHash && (
+                      <a
+                        href={`https://bscscan.com/tx/${book.txHash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex text-xs underline"
+                      >
+                        View transaction on BscScan ({shortAddress(book.txHash, 10, 8)})
+                      </a>
+                    )}
+                    {book.txHash ? (
+                      <button
+                        type="button"
+                        onClick={() => copyValue(book.txHash || "", "tx")}
+                        className="ml-2 mt-3 inline-flex rounded-md border border-indigo-300/40 bg-indigo-400/10 px-2 py-1 text-[10px] uppercase tracking-[0.16em]"
+                      >
+                        {copiedField === "tx" ? "Copied" : "Copy Tx"}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        syncListingState(book.id, address || book.authorWallet, {
+                          force: true,
+                        })
+                      }
+                      disabled={isSyncingListing}
+                      className="mt-3 inline-flex w-full justify-center rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-100 disabled:opacity-50 sm:w-auto"
+                    >
+                      {isSyncingListing ? "Syncing..." : "Retry Sync"}
+                    </button>
+                    <p className="mt-3 text-xs text-indigo-100/80">
+                      Last sync attempt:{" "}
+                      {lastSyncAttemptAt
+                        ? new Date(lastSyncAttemptAt).toLocaleString()
+                        : "Not attempted yet"}
+                    </p>
+                    <p className="mt-1 text-xs text-indigo-100/70">
+                      Background sync runs less frequently to avoid page jitter. Use Retry Sync anytime.
+                    </p>
                   </div>
                 )}
 
@@ -445,166 +1323,103 @@ export default function BookDetailPage() {
 
                 {book.status === "approved" && (
                   <div className="space-y-4">
-                    {(() => {
-                      const blockReason = getListingBlockReason(book, address);
-                      const effectiveBlockReason =
-                        blockReason || tokenRequirementBlockReason;
-                      return (
-                        <>
                     <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                        Listing Fee Check
-                      </p>
-                      <div className="mt-3 grid gap-2 text-sm">
-                        <div className="flex items-center justify-between text-slate-300">
-                          <span>USDT required</span>
-                          <span>
-                            {requiredUsdt === null
-                              ? "Loading..."
-                              : formatUnits(requiredUsdt, 18)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-slate-300">
-                          <span>Your USDT</span>
-                          <span>
-                            {typeof usdtBalance === "bigint"
-                              ? formatUnits(usdtBalance, 18)
-                              : "Loading..."}
-                          </span>
-                        </div>
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                          Listing Readiness
+                        </p>
+                        <span className="rounded-full border border-slate-600 bg-slate-900/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200">
+                          {listingReadiness}% Ready
+                        </span>
+                      </div>
+
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
                         <div
-                          className={`text-xs ${
-                            hasEnoughUsdt === false
-                              ? "text-red-300"
-                              : "text-emerald-300"
-                          }`}
-                        >
-                          {hasEnoughUsdt === false
-                            ? "Not enough USDT"
-                            : hasEnoughUsdt === null
-                            ? "Checking USDT balance..."
-                            : "USDT balance is sufficient"}
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-slate-300">
-                          <span>USDT allowance</span>
-                          <span>
-                            {typeof usdtAllowance === "bigint"
-                              ? formatUnits(usdtAllowance, 18)
-                              : "Loading..."}
-                          </span>
-                        </div>
-                        <div
-                          className={`text-xs ${
-                            hasEnoughUsdtAllowance === false
-                              ? "text-red-300"
-                              : "text-emerald-300"
-                          }`}
-                        >
-                          {hasEnoughUsdtAllowance === false
-                            ? "USDT approval required"
-                            : hasEnoughUsdtAllowance === null
-                            ? "Checking USDT allowance..."
-                            : "USDT allowance is sufficient"}
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-slate-300">
-                          <span>RICO required</span>
-                          <span>
-                            {requiredRico === null
-                              ? "Loading..."
-                              : formatUnits(requiredRico, 18)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-slate-300">
-                          <span>Your RICO</span>
-                          <span>
-                            {typeof ricoBalance === "bigint"
-                              ? formatUnits(ricoBalance, 18)
-                              : "Loading..."}
-                          </span>
-                        </div>
-                        <div
-                          className={`text-xs ${
-                            hasEnoughRico === false
-                              ? "text-red-300"
-                              : "text-emerald-300"
-                          }`}
-                        >
-                          {hasEnoughRico === false
-                            ? "Not enough RICO"
-                            : hasEnoughRico === null
-                            ? "Checking RICO balance..."
-                            : "RICO balance is sufficient"}
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-slate-300">
-                          <span>RICO allowance</span>
-                          <span>
-                            {typeof ricoAllowance === "bigint"
-                              ? formatUnits(ricoAllowance, 18)
-                              : "Loading..."}
-                          </span>
-                        </div>
-                        <div
-                          className={`text-xs ${
-                            hasEnoughRicoAllowance === false
-                              ? "text-red-300"
-                              : "text-emerald-300"
-                          }`}
-                        >
-                          {hasEnoughRicoAllowance === false
-                            ? "RICO approval required"
-                            : hasEnoughRicoAllowance === null
-                            ? "Checking RICO allowance..."
-                            : "RICO allowance is sufficient"}
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              approveToken(
-                                usdtTokenAddress as `0x${string}` | undefined,
-                                requiredUsdt,
-                                "USDT"
-                              )
-                            }
-                            disabled={
-                              approvingUsdt ||
-                              !requiredUsdt ||
-                              hasEnoughUsdtAllowance !== false
-                            }
-                            className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 disabled:opacity-50"
+                          className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300 transition-all"
+                          style={{ width: `${listingReadiness}%` }}
+                        />
+                      </div>
+
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {listingChecks.map((item) => (
+                          <div
+                            key={item.key}
+                            className={`rounded-lg border px-3 py-2 ${checkToneClasses(item.ok)}`}
                           >
-                            {approvingUsdt ? "Approving USDT..." : "Approve USDT"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              approveToken(
-                                ricoTokenAddress as `0x${string}` | undefined,
-                                requiredRico,
-                                "RICO"
-                              )
-                            }
-                            disabled={
-                              approvingRico ||
-                              !requiredRico ||
-                              hasEnoughRicoAllowance !== false
-                            }
-                            className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 disabled:opacity-50"
-                          >
-                            {approvingRico ? "Approving RICO..." : "Approve RICO"}
-                          </button>
-                        </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em]">
+                                {item.label}
+                              </p>
+                              <span className="text-[10px]">
+                                {item.ok === true ? "OK" : item.ok === false ? "Fix" : "..."}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[11px]">{item.detail}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => void Promise.all([
+                            refetchUsdtBalance(),
+                            refetchRicoBalance(),
+                            refetchUsdtAllowance(),
+                            refetchRicoAllowance(),
+                          ])}
+                          className="rounded-lg border border-slate-600 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-800/80 sm:w-auto"
+                        >
+                          Refresh Checks
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            approveToken(
+                              usdtTokenAddress as `0x${string}` | undefined,
+                              requiredUsdt,
+                              "USDT"
+                            )
+                          }
+                          disabled={
+                            approvingUsdt ||
+                            !requiredUsdt ||
+                            hasEnoughUsdtAllowance !== false
+                          }
+                          className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20 disabled:opacity-50 sm:w-auto"
+                        >
+                          {approvingUsdt ? "Approving USDT..." : "Approve USDT"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            approveToken(
+                              ricoTokenAddress as `0x${string}` | undefined,
+                              requiredRico,
+                              "RICO"
+                            )
+                          }
+                          disabled={
+                            approvingRico ||
+                            !requiredRico ||
+                            hasEnoughRicoAllowance !== false
+                          }
+                          className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20 disabled:opacity-50 sm:w-auto"
+                        >
+                          {approvingRico ? "Approving RICO..." : "Approve RICO"}
+                        </button>
                       </div>
                     </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                        IPFS CID
-                      </label>
-                      <input
-                        value={book.ipfsCid || "Not uploaded yet"}
-                        readOnly
-                        className="mt-2 w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2 text-sm text-slate-200"
-                      />
+
+                    <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                        Content Package
+                      </p>
+                      <p className="mt-1 text-sm text-slate-200">
+                        {book.ipfsCid
+                          ? "IPFS folder is ready and linked to this book package."
+                          : "IPFS package is missing for this record."}
+                      </p>
                     </div>
                     {!book.ipfsCid && (
                       <div>
@@ -625,26 +1440,43 @@ export default function BookDetailPage() {
                       </label>
                       <input
                         value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2 text-sm text-slate-200"
+                        onChange={(e) => {
+                          priceTouchedRef.current = true;
+                          setPrice(e.target.value);
+                        }}
+                        className="mt-2 w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2.5 text-sm text-slate-200 outline-none ring-0 transition focus:border-yellow-300/50"
                       />
                     </div>
                     <div>
                       <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
                         Payout Wallet
                       </label>
-                      <input
-                        value={payoutWallet}
-                        onChange={(e) => setPayoutWallet(e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2 text-sm text-slate-200"
-                      />
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          value={payoutWallet}
+                          onChange={(e) => {
+                            payoutTouchedRef.current = true;
+                            setPayoutWallet(e.target.value);
+                          }}
+                          className="w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-2.5 text-sm text-slate-200 outline-none ring-0 transition focus:border-yellow-300/50"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => copyValue(payoutWallet, "payout")}
+                          className="rounded-lg border border-slate-600 bg-slate-900/80 px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-400 hover:text-slate-100"
+                        >
+                          {copiedField === "payout" ? "Copied" : "Copy"}
+                        </button>
+                      </div>
                     </div>
 
                     {listingError && (
-                      <div className="text-xs text-red-300">{listingError}</div>
+                      <div className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                        {listingError}
+                      </div>
                     )}
                     {effectiveBlockReason && (
-                      <div className="text-xs text-yellow-200/90">
+                      <div className="rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-200/90">
                         Reason: {effectiveBlockReason}
                       </div>
                     )}
@@ -655,7 +1487,7 @@ export default function BookDetailPage() {
                         submitting ||
                         !!effectiveBlockReason
                       }
-                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 to-teal-300 px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"
+                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 to-teal-300 px-4 py-2.5 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50"
                     >
                       {submitting
                         ? "Listing..."
@@ -663,20 +1495,174 @@ export default function BookDetailPage() {
                         ? "Not Ready For Listing"
                         : "List On Blockchain"}
                     </button>
-                        </>
-                      );
-                    })()}
                   </div>
                 )}
 
+                {(book.status === "listed" || book.status === "listing_submitted") &&
+                  book.onChainBookId && (
+                    <div className="mt-5 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-blue-200/90">
+                          Perform Actions (List, Sync, Update, Appeal)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => void fetchOnchainBook()}
+                          disabled={onchainLoading}
+                          className="rounded-lg border border-blue-400/40 bg-blue-400/15 px-3 py-1.5 text-xs font-semibold text-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-400/20 disabled:opacity-50"
+                        >
+                          {onchainLoading ? "Refreshing..." : "Refresh On-Chain"}
+                        </button>
+                      </div>
+
+                      {onchainError ? (
+                        <p className="text-xs text-red-300">{onchainError}</p>
+                      ) : null}
+
+                      {onchain ? (
+                        <div className="mb-3 grid gap-2 text-xs md:grid-cols-3">
+                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
+                            Price: <span className="font-semibold">{displayUsdt(onchain.priceWei)} USDT</span>
+                          </div>
+                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
+                            Sales: <span className="font-semibold">{onchain.totalSales}</span>
+                          </div>
+                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
+                            Votes: <span className="font-semibold">👍 {onchain.upVotes} / 👎 {onchain.downVotes}</span>
+                          </div>
+                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200 md:col-span-2">
+                            Payout Wallet:{" "}
+                            <span className="inline-flex items-center gap-2">
+                              <span className="font-semibold" title={onchain.payoutWallet}>
+                                {shortAddress(onchain.payoutWallet)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyValue(onchain.payoutWallet, "payout")}
+                                className="rounded-md border border-slate-600 bg-slate-900/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-400 hover:text-slate-100"
+                              >
+                                {copiedField === "payout" ? "Copied" : "Copy"}
+                              </button>
+                            </span>
+                          </div>
+                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
+                            Status:{" "}
+                            <span className="font-semibold">
+                              {onchain.isFrozen ? "Frozen " : ""}
+                              {onchain.isSuspended ? "Suspended " : ""}
+                              {onchain.isBlacklisted ? "Blacklisted " : ""}
+                              {!onchain.isFrozen &&
+                                !onchain.isSuspended &&
+                                !onchain.isBlacklisted &&
+                                "Active"}
+                              {onchain.isUnderAppeal ? " | Appeal Pending" : ""}
+                            </span>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="grid gap-3 xl:grid-cols-2">
+                        <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-blue-200/80">
+                            Update Price
+                          </p>
+                          <p className="mt-1 text-[11px] text-blue-100/70">
+                            Set a new public sale price in USDT.
+                          </p>
+                          <div className="mt-2 space-y-2">
+                            <input
+                              value={updatePrice}
+                              onChange={(e) => {
+                                updatePriceTouchedRef.current = true;
+                                setUpdatePrice(e.target.value);
+                              }}
+                              placeholder="0.00"
+                              className="flex-1 rounded-lg border border-blue-400/25 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none ring-0 transition focus:border-blue-300/60"
+                            />
+                            <div className="flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => void handleAuthorPriceUpdate()}
+                                disabled={
+                                  updatingPrice ||
+                                  !address ||
+                                  address.toLowerCase() !== book.authorWallet.toLowerCase()
+                                }
+                                className="w-full rounded-lg border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-xs font-semibold text-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-400/25 disabled:opacity-50 sm:w-auto"
+                              >
+                                {updatingPrice ? "Updating..." : "Update"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-blue-200/80">
+                            Update Payout Wallet
+                          </p>
+                          <p className="mt-1 text-[11px] text-blue-100/70">
+                            Change the wallet that receives author proceeds.
+                          </p>
+                          <div className="mt-2 space-y-2">
+                            <input
+                              value={updatePayoutWallet}
+                              onChange={(e) => {
+                                updatePayoutTouchedRef.current = true;
+                                setUpdatePayoutWallet(e.target.value);
+                              }}
+                              placeholder="0x..."
+                              className="flex-1 rounded-lg border border-blue-400/25 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none ring-0 transition focus:border-blue-300/60"
+                            />
+                            <div className="flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => void handleAuthorPayoutUpdate()}
+                                disabled={
+                                  updatingPayout ||
+                                  !address ||
+                                  address.toLowerCase() !== book.authorWallet.toLowerCase()
+                                }
+                                className="w-full rounded-lg border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-xs font-semibold text-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-400/25 disabled:opacity-50 sm:w-auto"
+                              >
+                                {updatingPayout ? "Updating..." : "Update"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void handleAuthorAppeal()}
+                          disabled={
+                            appealing ||
+                            !onchain ||
+                            onchain.isUnderAppeal ||
+                            (!onchain.isFrozen && !onchain.isSuspended && !onchain.isBlacklisted) ||
+                            !address ||
+                            address.toLowerCase() !== book.authorWallet.toLowerCase()
+                          }
+                          className="rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20 disabled:opacity-50"
+                        >
+                          {appealing ? "Submitting..." : "Submit Appeal"}
+                        </button>
+                        <span className="text-xs text-blue-100/80">
+                          Appeal is available only when the book is frozen, suspended, or blacklisted.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                 <Link
-                  href="/library/my-books"
-                  className="mt-6 inline-flex items-center text-xs uppercase tracking-[0.2em] text-yellow-200"
+                  href="/library/my-books?mode=author"
+                  className="mt-6 inline-flex items-center text-xs uppercase tracking-[0.2em] text-yellow-200 transition hover:text-yellow-100"
                 >
                   Back to My Books
                 </Link>
               </div>
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>

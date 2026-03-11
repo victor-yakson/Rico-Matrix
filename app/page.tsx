@@ -314,7 +314,6 @@ export default function Dashboard() {
 
                   {/* Right Column - Stats & Content */}
                   <div className="space-y-6 lg:space-y-8 order-1 lg:order-2 h-full">
-                    <TestimonialPromoPanel defaultWallet={address ?? null} />
 
                     {/* Stats Overview + Royalty Buttons */}
                     <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">

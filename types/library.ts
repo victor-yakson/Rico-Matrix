@@ -1,4 +1,9 @@
-export type BookStatus = "pending" | "approved" | "rejected" | "listed";
+export type BookStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "listed"
+  | "listing_submitted";
 export type BookProcessStage =
   | "initiated"
   | "validating_pdf"
@@ -13,12 +18,14 @@ export type BookProcessStage =
 
 export type Book = {
   id: number;
+  onChainBookId?: string | null;
   title: string;
   description: string;
   authorWallet: string;
   payoutWallet?: string | null;
   ipfsCid?: string | null;
   priceWei?: string | null;
+  onchainPriceWei?: string | null;
   status: BookStatus;
   processStage: BookProcessStage;
   processProgress: number;
@@ -27,6 +34,9 @@ export type Book = {
   similarityScore?: number | null;
   rejectionReason?: string | null;
   txHash?: string | null;
+  lastActionType?: string | null;
+  lastActionTxHash?: string | null;
+  lastUpdateIpfsCid?: string | null;
   createdAt: string;
   updatedAt?: string;
 };
