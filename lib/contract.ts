@@ -1,13 +1,11 @@
 import "server-only";
 import {
   createPublicClient,
-  createWalletClient,
   decodeEventLog,
   decodeFunctionData,
   http,
   type Hex,
 } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 import { LIBRARY_ABI, LIBRARY_CONTRACT_ADDRESS } from "@/utils/constants";
 
 /**
@@ -16,9 +14,6 @@ import { LIBRARY_ABI, LIBRARY_CONTRACT_ADDRESS } from "@/utils/constants";
  * from crashing if an environment variable is missing or malformed.
  */
 const rpcUrl = process.env.NEXT_PUBLIC_BSC_RPC_URL || "";
-const rawKey = process.env.PRIVATE_KEY;
-
-
 if (!rpcUrl || rpcUrl === "YOUR_RPC_URL") {
   // This will now show up clearly in your console logs
   throw new Error("CRITICAL: RPC_URL is not configured in .env.local");
@@ -33,47 +28,14 @@ if (!rpcUrl) {
 }
 
 /**
- * 1. SAFE ACCOUNT INITIALIZATION
- * This prevents the "invalid private key" 500 error at the top level.
- */
-const getAccount = () => {
-  if (!rawKey) {
-    console.warn("⚠️ PRIVATE_KEY is missing from environment variables.");
-    return undefined;
-  }
-
-  // Viem requires the 0x prefix. This auto-fixes or validates the string.
-  const formattedKey = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`;
-
-  try {
-    return privateKeyToAccount(formattedKey as Hex);
-  } catch (error) {
-    console.error(
-      "❌ Failed to initialize account. Check if PRIVATE_KEY is a valid Hex:",
-      error,
-    );
-    return undefined;
-  }
-};
-
-const account = getAccount();
-
-/**
- * 2. CLIENT INITIALIZATION
+ * 1. CLIENT INITIALIZATION
  */
 export const publicClient = createPublicClient({
   transport: http(rpcUrl),
 });
 
-export const walletClient = account
-  ? createWalletClient({
-      account,
-      transport: http(rpcUrl),
-    })
-  : null;
-
 /**
- * 3. CONTRACT READ HELPER
+ * 2. CONTRACT READ HELPER
  */
 export const readContract = async <
   TFunctionName extends "hasAccess" | "getBook" | "uri" | "books" | "balanceOf",
@@ -90,45 +52,8 @@ export const readContract = async <
 };
 
 /**
- * 4. CONTRACT WRITE HELPER
+ * 3. TRANSACTION HELPERS
  */
-export const writeContract = async <
-  TFunctionName extends
-    | "listBook"
-    | "buyBook"
-    | "giftBook"
-    | "voteBook"
-    | "voteAuthor",
->(
-  functionName: TFunctionName,
-  args: readonly unknown[],
-) => {
-  // Instead of crashing the server on boot, we throw an error when the function is actually called.
-  if (!walletClient || !account) {
-    throw new Error(
-      "Wallet configuration missing. Please check PRIVATE_KEY in your .env file.",
-    );
-  }
-
-  return walletClient.writeContract({
-    account,
-    address: contractAddress,
-    abi: LIBRARY_ABI,
-    functionName,
-    args,
-  } as any);
-};
-
-/**
- * 5. TRANSACTION HELPERS
- */
-export const waitForTransactionReceipt = async (hash: Hex) => {
-  return await publicClient.waitForTransactionReceipt({
-    hash,
-    confirmations: 1,
-  });
-};
-
 export const getListBookArgsFromTx = async (hash: Hex) => {
   const tx = await publicClient.getTransaction({ hash });
   const decoded = decodeFunctionData({

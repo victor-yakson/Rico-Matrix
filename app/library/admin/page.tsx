@@ -99,11 +99,6 @@ export default function LibraryAdminPage() {
   const [inspectResult, setInspectResult] = useState<InspectBookResult | null>(null);
   const [inspectError, setInspectError] = useState<string | null>(null);
 
-  const [adminAuthor, setAdminAuthor] = useState("");
-  const [adminPayout, setAdminPayout] = useState("");
-  const [adminCid, setAdminCid] = useState("");
-  const [adminPrice, setAdminPrice] = useState("");
-
   const [statusBookId, setStatusBookId] = useState("");
   const [statusFrozen, setStatusFrozen] = useState(false);
   const [statusSuspended, setStatusSuspended] = useState(false);
@@ -274,32 +269,6 @@ export default function LibraryAdminPage() {
     } finally {
       setActiveAction(null);
     }
-  };
-
-  const handleAdminList = async () => {
-    if (!addressRegex.test(adminAuthor) || !addressRegex.test(adminPayout)) {
-      toast.error("Enter valid author and payout wallet addresses.");
-      return;
-    }
-    if (!adminCid.trim()) {
-      toast.error("CID is required.");
-      return;
-    }
-    if (!adminPrice || Number(adminPrice) <= 0) {
-      toast.error("Enter a valid price.");
-      return;
-    }
-
-    await runOwnerTx("adminList", "Admin list book", {
-      ...libraryContract,
-      functionName: "adminListBook",
-      args: [
-        adminAuthor as `0x${string}`,
-        adminPayout as `0x${string}`,
-        adminCid.trim(),
-        parseUnits(adminPrice, 18),
-      ],
-    });
   };
 
   const handleSetBookStatus = async () => {
@@ -607,26 +576,7 @@ export default function LibraryAdminPage() {
             </div>
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
-              <h2 className="text-lg font-semibold text-slate-100">Admin List Book</h2>
-              <p className="mt-1 text-sm text-slate-400">Owner-only direct listing for admin operation flow.</p>
-              <div className="mt-4 space-y-3">
-                <Field label="Author Wallet" value={adminAuthor} onChange={setAdminAuthor} placeholder="0x..." />
-                <Field label="Payout Wallet" value={adminPayout} onChange={setAdminPayout} placeholder="0x..." />
-                <Field label="Folder CID" value={adminCid} onChange={setAdminCid} placeholder="Qm..." />
-                <Field label="Price (USDT)" value={adminPrice} onChange={setAdminPrice} placeholder="100" />
-                <button
-                  type="button"
-                  onClick={() => void handleAdminList()}
-                  disabled={activeAction === "adminList" || !isOwner}
-                  className="w-full rounded-xl bg-gradient-to-r from-amber-300 to-yellow-200 px-4 py-2.5 text-sm font-semibold text-black transition hover:brightness-110 disabled:opacity-50"
-                >
-                  {activeAction === "adminList" ? "Submitting..." : "Admin List Book"}
-                </button>
-              </div>
-            </div>
-
+          <section className="grid gap-6 xl:grid-cols-1">
             <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
               <h2 className="text-lg font-semibold text-slate-100">Book Governance</h2>
               <p className="mt-1 text-sm text-slate-400">Freeze/suspend/blacklist books and resolve appeal requests.</p>
