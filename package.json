@@ -37,11 +37,12 @@
     "recharts": "^3.7.0",
     "sequelize": "^6.37.7",
     "sonner": "^2.0.7",
+    "tailwindcss": "^4",
+    "@tailwindcss/postcss": "^4.3.0",
     "viem": "^2.40.3",
     "wagmi": "^2.19.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -50,7 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "supabase": "^2.76.17",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.3.0",
     "typescript": "^5"
   }
 }
