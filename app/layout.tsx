@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "../providers/Web3Provider";
 import { PageTransition } from "@/components/Layout/PageTransition";
@@ -9,8 +8,6 @@ import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import VisitTracker from "@/components/Common/VisitTracker";
 import WalletCookieSync from "@/components/Common/WalletCookieSync";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "RicoMatrix - Read • Earn • Own",
@@ -29,11 +26,10 @@ export default async function RootLayout({
     return (
       <html lang={locale} style={{ backgroundColor: "#070707" }}>
         <body
-          className={`${inter.className} min-h-screen bg-gradient-to-b from-slate-950 via-black to-black text-slate-50 relative`}
+          className="theme-app min-h-screen text-slate-50 relative"
           style={{ backgroundColor: "#070707" }}
         >
-          {/* Premium gold glow */}
-          <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(250,204,21,0.10),_transparent_55%)]" />
+          <div className="theme-background" />
           <NextIntlClientProvider locale={locale} messages={messages}>
             <Web3Provider>
               <Toaster
@@ -45,7 +41,7 @@ export default async function RootLayout({
               <VisitTracker />
               <WalletCookieSync />
               <PageTransition>{children}</PageTransition>
-              <SiteFooter />
+              {/* <SiteFooter /> */}
             </Web3Provider>
           </NextIntlClientProvider>
         </body>

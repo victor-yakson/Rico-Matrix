@@ -132,7 +132,7 @@ export const RoyaltyPool = () => {
             <div className={`px-3 py-1.5 rounded-full border ${
               isProcessing 
                 ? "border-yellow-500/40 bg-yellow-500/10 text-yellow-300" 
-                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                : "border-yellow-400/35 bg-yellow-500/10 text-amber-300"
             }`}>
               {isProcessing ? t("status.processing") : t("status.ready")}
             </div>
@@ -149,8 +149,8 @@ export const RoyaltyPool = () => {
               </div>
             )}
             {migrationStatus === 2 && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/35 bg-yellow-500/10 px-3 py-1 text-xs text-amber-300">
+                <span className="h-2 w-2 rounded-full bg-yellow-300" />
                 {getMigrationStatusLabel()}
               </div>
             )}
@@ -166,7 +166,7 @@ export const RoyaltyPool = () => {
 
       {/* Royalty Summary */}
       {canClaim && (
-        <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-900/30 to-yellow-900/20 border border-emerald-700/30 p-5">
+        <div className="mb-8 rounded-2xl border border-yellow-500/25 bg-gradient-to-r from-yellow-900/20 to-black p-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">
@@ -177,7 +177,7 @@ export const RoyaltyPool = () => {
               </p>
             </div>
             <div className="text-center md:text-right">
-              <div className="text-3xl md:text-4xl font-bold text-emerald-400">
+              <div className="text-3xl md:text-4xl font-bold text-yellow-300">
                 ${parseFloat(totalClaimableAmount).toFixed(2)}
               </div>
               <div className="text-sm text-slate-400">
@@ -191,13 +191,13 @@ export const RoyaltyPool = () => {
       {/* Stats cards */}
       <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3">
         {/* Royalty Share */}
-        <div className="relative overflow-hidden rounded-2xl border border-purple-400/40 bg-gradient-to-br from-slate-900/80 to-purple-900/20 p-5 shadow-[0_0_22px_rgba(168,85,247,0.3)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-400" />
+        <div className="relative overflow-hidden rounded-2xl border border-yellow-400/30 bg-gradient-to-br from-slate-900/80 to-yellow-950/10 p-5 shadow-[0_0_22px_rgba(245,158,11,0.2)]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300" />
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-purple-200">
+            <h3 className="text-sm font-semibold text-yellow-200">
               {t("stats.royaltyShare")}
             </h3>
-            <div className="text-xs px-2 py-1 rounded bg-purple-900/50 text-purple-300">
+            <div className="text-xs px-2 py-1 rounded bg-yellow-900/30 text-yellow-300">
               {migrationStatus === 2 ? "Legacy+Current" : "Current"}
             </div>
           </div>
@@ -219,7 +219,7 @@ export const RoyaltyPool = () => {
               <div className="text-xs text-slate-400 mb-1">
                 {t("stats.currentShare")}
               </div>
-              <div className="text-2xl font-bold text-purple-300">
+              <div className="text-2xl font-bold text-yellow-200">
                 {v2RoyaltyPercent.toFixed(2)}%
               </div>
               <div className="text-xs text-slate-500">
@@ -230,25 +230,25 @@ export const RoyaltyPool = () => {
         </div>
 
         {/* Available Royalty */}
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-400/40 bg-gradient-to-br from-slate-900/80 to-emerald-900/20 p-5 shadow-[0_0_22px_rgba(16,185,129,0.35)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-300" />
-          <h3 className="text-sm font-semibold text-emerald-200 mb-3">
+        <div className="relative overflow-hidden rounded-2xl border border-yellow-400/30 bg-gradient-to-br from-slate-900/80 to-yellow-950/10 p-5 shadow-[0_0_22px_rgba(245,158,11,0.2)]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300" />
+          <h3 className="text-sm font-semibold text-yellow-200 mb-3">
             {t("stats.availableRoyalty")}
           </h3>
           
           <div className="space-y-4">
             {/* Current Royalty */}
             {hasV2Royalty && (
-              <div className="pb-3 border-b border-emerald-800/50">
+              <div className="pb-3 border-b border-yellow-800/30">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-slate-400">
                     {t("stats.currentRoyalty")}
                   </span>
-                  <span className="text-xs px-2 py-1 rounded bg-emerald-900/50 text-emerald-300">
+                  <span className="text-xs px-2 py-1 rounded bg-yellow-900/30 text-yellow-300">
                     {t("stats.active")}
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-emerald-300">
+                <div className="text-2xl font-bold text-yellow-300">
                   ${parseFloat(v2ClaimableAmount).toFixed(2)}
                 </div>
                 <div className="text-xs text-slate-500">
@@ -292,18 +292,18 @@ export const RoyaltyPool = () => {
         </div>
 
         {/* Total Claimed */}
-        <div className="relative overflow-hidden rounded-2xl border border-blue-400/40 bg-gradient-to-br from-slate-900/80 to-blue-900/20 p-5 shadow-[0_0_22px_rgba(59,130,246,0.35)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-sky-500 to-blue-400" />
-          <h3 className="text-sm font-semibold text-blue-200 mb-3">
+        <div className="relative overflow-hidden rounded-2xl border border-yellow-400/30 bg-gradient-to-br from-slate-900/80 to-yellow-950/10 p-5 shadow-[0_0_22px_rgba(245,158,11,0.2)]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300" />
+          <h3 className="text-sm font-semibold text-yellow-200 mb-3">
             {t("stats.totalClaimed")}
           </h3>
-          <div className="text-3xl font-bold text-blue-300 mb-2">
+          <div className="text-3xl font-bold text-yellow-300 mb-2">
             ${totalClaimed.toFixed(2)}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">{t("stats.currentClaimed")}</span>
-              <span className="text-emerald-300">
+              <span className="text-amber-300">
                 ${userData?.exists ? Number(userData.royaltiesClaimed).toFixed(2) : "0.00"}
               </span>
             </div>
@@ -379,30 +379,30 @@ export const RoyaltyPool = () => {
 
         {/* Current Royalty Claim */}
         {canClaimV2 && (
-          <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-900/30 to-green-900/20 p-5">
+          <div className="rounded-2xl border border-yellow-500/35 bg-gradient-to-r from-yellow-900/18 to-black p-5">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-emerald-200">
+                    <h4 className="font-semibold text-yellow-200">
                       {t("claims.current.title")}
                     </h4>
-                    <p className="text-sm text-emerald-300/80">
+                    <p className="text-sm text-yellow-300/80">
                       {t("claims.current.subtitle")}
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-emerald-300/70">
+                <p className="text-xs text-yellow-300/70">
                   {t("claims.current.description")}
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-emerald-300 mb-1">
+                <div className="text-2xl md:text-3xl font-bold text-yellow-300 mb-1">
                   ${parseFloat(v2ClaimableAmount).toFixed(2)}
                 </div>
                 <button
@@ -411,7 +411,7 @@ export const RoyaltyPool = () => {
                   className={`mt-3 flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-bold transition-all relative overflow-hidden group
                     ${
                       canClaimV2 && !isProcessing
-                        ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-300 text-black shadow-[0_0_22px_rgba(16,185,129,0.7)] hover:brightness-110 hover:shadow-[0_0_30px_rgba(16,185,129,0.9)] active:scale-[0.98]"
+                        ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_22px_rgba(245,158,11,0.45)] hover:brightness-110 hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] active:scale-[0.98]"
                         : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
                     }
                   `}
@@ -490,14 +490,14 @@ export const RoyaltyPool = () => {
               </ul>
             </div>
             <div className="space-y-3">
-              <h5 className="text-sm font-semibold text-emerald-300 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+              <h5 className="text-sm font-semibold text-amber-300 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-yellow-300"></span>
                 {t("info.currentSection.title")}
               </h5>
-              <ul className="space-y-2 text-sm text-emerald-100/90">
+              <ul className="space-y-2 text-sm text-amber-100/90">
                 {t.raw("info.currentSection.items").map((item: string, index: number) => (
                   <li className="flex items-start" key={index}>
-                    <span className="mr-2 mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                    <span className="mr-2 mt-1 h-1.5 w-1.5 rounded-full bg-yellow-300"></span>
                     <span>{item}</span>
                   </li>
                 ))}

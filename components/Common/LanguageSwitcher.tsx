@@ -53,7 +53,7 @@ export function LanguageSwitcher() {
         type="button"
         disabled={isPending}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex h-9 items-center gap-1 rounded-full bg-slate-900/70 border border-yellow-500/40 px-3 text-xs font-medium text-slate-100 shadow-[0_0_12px_rgba(0,0,0,0.7)] hover:border-yellow-400 hover:text-yellow-200 hover:bg-yellow-500/10 transition-colors"
+        className="flex h-10 items-center gap-2 rounded-full border border-white/8 bg-[linear-gradient(135deg,rgba(11,16,27,0.92),rgba(7,10,17,0.82))] px-3.5 text-xs font-semibold text-slate-100 shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition hover:border-[rgba(241,210,133,0.28)] hover:text-[var(--primary)]"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -75,10 +75,10 @@ export function LanguageSwitcher() {
 
       {/* Dropdown menu – now positioned under the trigger */}
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-32 rounded-xl border border-yellow-500/40 bg-black/95 shadow-[0_12px_30px_rgba(0,0,0,0.95)] backdrop-blur-lg z-50">
+        <div className="absolute right-0 top-full z-50 mt-2 w-32 rounded-2xl border border-white/8 bg-[rgba(6,9,15,0.96)] shadow-[0_22px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
           <ul
             role="listbox"
-            className="py-1 text-xs text-slate-100"
+            className="py-1.5 text-xs text-slate-100"
           >
             {locales.map((locale) => {
               const isActive = locale === activeLocale;
@@ -90,8 +90,8 @@ export function LanguageSwitcher() {
                     onClick={() => handleChange(locale)}
                     className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors ${
                       isActive
-                        ? 'bg-yellow-500/15 text-yellow-300'
-                        : 'hover:bg-yellow-500/10 hover:text-yellow-200 text-slate-200'
+                        ? 'bg-[linear-gradient(135deg,rgba(241,210,133,0.14),rgba(66,137,255,0.16))] text-[var(--primary)]'
+                        : 'text-slate-200 hover:bg-white/4 hover:text-[var(--accent)]'
                     }`}
                   >
                     <span className="flex items-center gap-1.5">
@@ -104,7 +104,7 @@ export function LanguageSwitcher() {
                     </span>
                     {isActive && (
                       <span
-                        className="w-1.5 h-1.5 rounded-full bg-yellow-300"
+                        className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]"
                         aria-hidden="true"
                       />
                     )}

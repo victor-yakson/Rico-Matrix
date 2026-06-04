@@ -41,13 +41,13 @@ export const ProfileInfo = ({ userData }: ProfileInfoProps) => {
       case 'Quantum Master':
         return 'bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-400';
       case 'Matrix Leader':
-        return 'bg-gradient-to-r from-violet-500 via-purple-600 to-fuchsia-500';
+        return 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300';
       case 'Chapter Expert':
-        return 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300';
+        return 'bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200';
       case 'Active Reader':
         return 'bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200';
       default:
-        return 'bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800';
+        return 'bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-100';
     }
   };
 
@@ -62,7 +62,7 @@ export const ProfileInfo = ({ userData }: ProfileInfoProps) => {
     : 0;
 
   return (
-    <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+    <div className="theme-panel p-6">
       <h2 className="text-2xl font-bold text-slate-50 mb-6">
         Profile Information
       </h2>
@@ -97,7 +97,7 @@ export const ProfileInfo = ({ userData }: ProfileInfoProps) => {
           </button>
         </div>
         {copied && (
-          <p className="mt-1 text-xs text-emerald-300">
+          <p className="mt-1 text-xs text-amber-300">
             Address copied to clipboard!
           </p>
         )}
@@ -111,7 +111,7 @@ export const ProfileInfo = ({ userData }: ProfileInfoProps) => {
         <div
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
             userData?.exists
-              ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/40'
+              ? 'bg-yellow-500/10 text-amber-300 border-yellow-400/35'
               : 'bg-amber-500/10 text-amber-200 border-amber-400/50'
           }`}
         >
@@ -143,7 +143,7 @@ export const ProfileInfo = ({ userData }: ProfileInfoProps) => {
           </div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-emerald-300">
+          <div className="text-2xl font-bold text-amber-300">
             {totalCycles}
           </div>
           <div className="text-xs uppercase tracking-[0.16em] text-slate-500 mt-1">

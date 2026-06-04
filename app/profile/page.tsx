@@ -30,15 +30,15 @@ export default function ProfilePage() {
     return (
       <>
         <Header />
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4">
+        <div className="theme-shell flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4">
           <div className="text-center mb-8">
-            <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
+            <p className="theme-kicker justify-center mb-2">
               {t('loading.label')}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+            <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {t('loading.title')}
             </h1>
-            <p className="text-sm md:text-base text-slate-400">
+            <p className="theme-copy text-sm md:text-base">
               {t('loading.description')}
             </p>
           </div>
@@ -53,17 +53,17 @@ export default function ProfilePage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] pb-20 md:pb-8">
-        <div className="container mx-auto px-4 py-8 md:py-10">
+      <div className="theme-shell theme-page-shell pb-20 md:pb-8">
+        <div className="theme-container px-4">
           {/* Header */}
-          <div className="text-center mb-8 md:mb-10">
-            <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
+          <div className="mx-auto mb-8 max-w-4xl text-center md:mb-10">
+            <p className="theme-kicker justify-center mb-3">
               {t('header.label')}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+            <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {t('header.title')}
             </h1>
-            <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+            <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
               {t('header.description')}
             </p>
           </div>
@@ -73,18 +73,18 @@ export default function ProfilePage() {
             {/* Left Column - Profile Info & Referral */}
             <div className="space-y-6 lg:col-span-1">
               {/* Expect these components to be themed as well; container them in dark cards if needed */}
-              <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+              <div className="theme-panel-soft p-5">
                 <ProfileInfo userData={userData} />
               </div>
 
-              <div className="rounded-2xl border border-purple-400/40 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(88,28,135,0.6)] backdrop-blur-sm">
+              <div className="theme-panel-soft p-5">
                 <ReferralSection />
               </div>
             </div>
 
             {/* Right Column - Stats */}
             <div className="lg:col-span-2">
-              <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+              <div className="theme-panel p-5 md:p-6">
                 <ProfileStats userData={userData} />
               </div>
             </div>

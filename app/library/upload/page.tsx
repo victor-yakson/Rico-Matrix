@@ -4,8 +4,15 @@ import { Header } from "@/components/Navigation/Header";
 import { useAccount } from "wagmi";
 import { useForm } from "react-hook-form";
 import { useEffect, useState, type DragEvent } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
+import {
+  canPublishLibraryBook,
+  getHighestUnlockedChapter,
+  MIN_LIBRARY_PUBLISH_CHAPTER,
+} from "@/lib/libraryEligibility";
 
 type UploadForm = {
   title: string;
@@ -22,34 +29,15 @@ type UploadStatus =
   | "rejected";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const PUBLISH_WALKTHROUGH_URL = "https://youtu.be/NM3VC81b-k8?si=syGh0nJ0PQXr5CMB";
 
 const statusStyles: Record<UploadStatus, string> = {
   idle: "bg-slate-500/10 text-slate-200 border-slate-400/30",
   processing: "bg-yellow-500/10 text-yellow-200 border-yellow-400/30",
-  approved: "bg-emerald-500/10 text-emerald-200 border-emerald-400/30",
+  approved: "bg-amber-500/10 text-amber-100 border-amber-400/30",
   rejected: "bg-red-500/10 text-red-200 border-red-400/30",
 };
 
-const statusLabels: Record<UploadStatus, string> = {
-  idle: "Idle",
-  processing: "Processing",
-  approved: "Approved",
-  rejected: "Rejected",
-};
-
-const workflowSteps = [
-  "Upload PDF & thumbnail",
-  "Fingerprint moderation",
-  "IPFS folder packaging",
-  "Ready for listing",
-];
-
-const stageFromProgress = (progress: number) => {
-  if (progress < 30) return "Uploading PDF";
-  if (progress < 72) return "Verifying content fingerprint";
-  if (progress < 96) return "Uploading folder to IPFS";
-  return "Finalizing";
-};
 
 const parseJsonSafely = async <T,>(res: Response): Promise<T | null> => {
   const text = await res.text();
@@ -61,17 +49,17 @@ const parseJsonSafely = async <T,>(res: Response): Promise<T | null> => {
   }
 };
 
-const ProgressBar = ({ progress }: { progress: number }) => {
+const ProgressBar = ({ progress, label }: { progress: number; label: string }) => {
   const width = Math.max(0, Math.min(100, progress));
   return (
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-        <span className="uppercase tracking-[0.18em] text-slate-400">Progress</span>
+        <span className="uppercase tracking-[0.18em] text-slate-400">{label}</span>
         <span className="font-semibold text-slate-100">{Math.round(progress)}%</span>
       </div>
       <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-800/80">
         <div
-          className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300 transition-all duration-500"
+          className="h-full bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 transition-all duration-500"
           style={{ width: `${width}%` }}
         />
       </div>
@@ -80,13 +68,39 @@ const ProgressBar = ({ progress }: { progress: number }) => {
 };
 
 export default function LibraryUploadPage() {
+  const locale = useLocale();
+  const tCommon = useTranslations("LibraryCommon");
+  const tPage = useTranslations("LibraryUploadPage");
+  const commonCopy = {
+    buttons: tCommon.raw("buttons") as Record<string, string>,
+    labels: tCommon.raw("labels") as Record<string, string>,
+  };
+  const copy = {
+    status: tPage.raw("status") as Record<string, string>,
+    steps: tPage.raw("steps") as string[],
+    stage: tPage.raw("stage") as Record<string, string>,
+    messages: tPage.raw("messages") as Record<string, string>,
+    hero: tPage.raw("hero") as Record<string, string>,
+    labels: tPage.raw("labels") as Record<string, string>,
+    walkthrough: tPage.raw("walkthrough") as Record<string, string>,
+    access: tPage.raw("access") as Record<string, string>,
+  };
+  const statusLabels: Record<UploadStatus, string> = copy.status;
+  const workflowSteps = copy.steps;
+  const stageFromProgress = (progress: number) => {
+    if (progress < 30) return copy.stage.uploading;
+    if (progress < 72) return copy.stage.verifying;
+    if (progress < 96) return copy.stage.ipfs;
+    return copy.stage.finalizing;
+  };
   const router = useRouter();
   const { address } = useAccount();
+  const { userData } = useQuantuMatrix();
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [message, setMessage] = useState<string>("");
   const [similarity, setSimilarity] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
-  const [stageLabel, setStageLabel] = useState("Waiting to start");
+  const [stageLabel, setStageLabel] = useState(copy.stage.waiting);
   const [pdfDragActive, setPdfDragActive] = useState(false);
   const [thumbnailDragActive, setThumbnailDragActive] = useState(false);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -114,6 +128,14 @@ export default function LibraryUploadPage() {
 
   const selectedPdf = watch("file")?.[0];
   const selectedThumb = watch("thumbnail")?.[0];
+  const highestUnlockedChapter = getHighestUnlockedChapter(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
+  const canPublishBooks = canPublishLibraryBook(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
   const currentStep =
     progress < 30 ? 0 : progress < 72 ? 1 : progress < 96 ? 2 : 3;
 
@@ -156,11 +178,21 @@ export default function LibraryUploadPage() {
   };
 
   const onSubmit = async (data: UploadForm) => {
+    if (!canPublishBooks) {
+      setStatus("rejected");
+      setMessage(
+        copy.access.description
+          .replace("{chapter}", String(MIN_LIBRARY_PUBLISH_CHAPTER))
+          .replace("{currentChapter}", String(highestUnlockedChapter))
+      );
+      return;
+    }
+
     setStatus("processing");
-    setMessage("Do not refresh or close this page during processing.");
+    setMessage(copy.messages.doNotRefresh);
     setSimilarity(null);
     setProgress(5);
-    setStageLabel("Uploading PDF");
+    setStageLabel(copy.stage.uploading);
 
     const progressTimer = setInterval(() => {
       setProgress((prev) => {
@@ -176,22 +208,22 @@ export default function LibraryUploadPage() {
       const thumbnail = data.thumbnail?.[0];
       if (!file) {
         setStatus("rejected");
-        setMessage("Please attach a PDF file.");
+        setMessage(copy.messages.attachPdf);
         return;
       }
       if (!thumbnail) {
         setStatus("rejected");
-        setMessage("Please attach a thumbnail image.");
+        setMessage(copy.messages.attachThumb);
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
         setStatus("rejected");
-        setMessage("PDF exceeds 10MB limit.");
+        setMessage(copy.messages.pdfTooLarge);
         return;
       }
       if (thumbnail.size > MAX_FILE_SIZE) {
         setStatus("rejected");
-        setMessage("Thumbnail exceeds 10MB limit.");
+        setMessage(copy.messages.thumbTooLarge);
         return;
       }
       if (
@@ -199,7 +231,7 @@ export default function LibraryUploadPage() {
         !file.name.toLowerCase().endsWith(".pdf")
       ) {
         setStatus("rejected");
-        setMessage("Only PDF files are allowed.");
+        setMessage(copy.messages.pdfOnly);
         return;
       }
       if (
@@ -207,12 +239,13 @@ export default function LibraryUploadPage() {
         !/\.(jpg|jpeg|png|webp)$/i.test(thumbnail.name)
       ) {
         setStatus("rejected");
-        setMessage("Thumbnail must be jpg, png, or webp.");
+        setMessage(copy.messages.thumbOnly);
         return;
       }
 
       const verifyData = new FormData();
       verifyData.append("file", file);
+      verifyData.append("authorWallet", data.authorWallet);
 
       const res = await fetch("/api/verify-content", {
         method: "POST",
@@ -228,7 +261,7 @@ export default function LibraryUploadPage() {
       if (!res.ok) {
         setStatus("rejected");
         setProgress(0);
-        setStageLabel("Failed");
+        setStageLabel(copy.stage.failed);
         setMessage(payload?.error || "Upload rejected.");
         return;
       }
@@ -236,13 +269,13 @@ export default function LibraryUploadPage() {
       if (!payload) {
         setStatus("rejected");
         setProgress(0);
-        setStageLabel("Failed");
-        setMessage("Server returned an empty response. Please try again.");
+        setStageLabel(copy.stage.failed);
+        setMessage(copy.messages.emptyResponse);
         return;
       }
 
       setProgress(76);
-      setStageLabel("Uploading folder to IPFS");
+      setStageLabel(copy.stage.ipfs);
       setMessage("Verification passed. Uploading metadata folder to IPFS...");
 
       const uploadData = new FormData();
@@ -266,14 +299,14 @@ export default function LibraryUploadPage() {
       if (!uploadRes.ok) {
         setStatus("rejected");
         setProgress(0);
-        setStageLabel("Failed");
+        setStageLabel(copy.stage.failed);
         setMessage(uploadPayload?.error || "IPFS upload failed.");
         return;
       }
 
       setStatus("approved");
       setProgress(100);
-      setStageLabel("Folder uploaded");
+      setStageLabel(copy.stage.finalizing);
       setMessage(
         `Book folder uploaded to IPFS successfully (${uploadPayload?.cid || "CID ready"}). Redirecting to listing setup...`
       );
@@ -303,20 +336,17 @@ export default function LibraryUploadPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.12),transparent_45%),linear-gradient(180deg,#020617_0%,#020617_100%)]">
-        <div className="container mx-auto px-4 py-10">
-          <section className="rounded-3xl border border-slate-700/60 bg-slate-900/50 p-6 md:p-8">
+      <div className="theme-shell theme-page-shell min-h-[calc(100vh-4rem)]">
+        <div className="theme-container py-10">
+          <section className="theme-panel p-6 md:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-amber-300/80">
-                  Library Upload
-                </p>
-                <h1 className="mt-2 text-3xl font-bold text-slate-50 md:text-4xl">
-                  Submit Book For Moderation
+                <p className="theme-kicker">{copy.hero.kicker}</p>
+                <h1 className="theme-title mt-2 max-w-3xl font-semibold">
+                  <span className="theme-title-accent">{copy.hero.title}</span>
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm text-slate-300/80">
-                  Upload a PDF and thumbnail for automated moderation, fingerprint verification,
-                  and IPFS packaging before listing.
+                <p className="theme-copy mt-3 max-w-2xl text-sm">
+                  {copy.hero.description}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -327,39 +357,88 @@ export default function LibraryUploadPage() {
                 </span>
                 <Link
                   href="/library"
-                  className="rounded-xl border border-slate-600 bg-slate-800/60 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:bg-slate-700/60"
+                  className="theme-button-ghost text-xs uppercase tracking-[0.18em]"
                 >
-                  Marketplace
+                  {commonCopy.labels.marketplace}
                 </Link>
                 <Link
                   href="/library/my-books"
-                  className="rounded-xl border border-slate-600 bg-slate-800/60 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:bg-slate-700/60"
+                  className="theme-button-ghost text-xs uppercase tracking-[0.18em]"
                 >
-                  My Books
+                  {commonCopy.buttons.myLibrary}
                 </Link>
               </div>
             </div>
           </section>
 
-          <section className="mt-6 rounded-2xl border border-yellow-400/30 bg-yellow-500/10 p-4 text-sm text-yellow-100">
-            Do not refresh or close this page during processing. If this flow is interrupted, you
-            may need to restart the upload.
+          <section className="theme-panel-soft mt-6 border-yellow-400/30 p-4 text-sm text-yellow-100">
+            {copy.messages.doNotRefresh} If this flow is interrupted, you may need to restart the upload.
+          </section>
+
+          {!canPublishBooks && (
+            <section className="theme-panel-soft mt-6 border-red-400/35 bg-red-500/10 p-5 text-sm text-red-100">
+              <p className="theme-kicker text-red-200">{copy.access.kicker}</p>
+              <h2 className="mt-2 text-xl font-semibold text-slate-50">
+                {copy.access.title.replace(
+                  "{chapter}",
+                  String(MIN_LIBRARY_PUBLISH_CHAPTER)
+                )}
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm text-slate-200/90">
+                {copy.access.description
+                  .replace("{chapter}", String(MIN_LIBRARY_PUBLISH_CHAPTER))
+                  .replace("{currentChapter}", String(highestUnlockedChapter))}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/chapters"
+                  className="theme-button-primary px-4 py-2 text-xs uppercase tracking-[0.18em]"
+                >
+                  {copy.access.button}
+                </Link>
+              </div>
+            </section>
+          )}
+
+          <section className="theme-panel-soft mt-6 p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="theme-kicker">{copy.walkthrough.kicker}</p>
+                <h2 className="mt-2 text-xl font-semibold text-slate-50">
+                  {copy.walkthrough.title}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-slate-300/85">
+                  {copy.walkthrough.description}
+                </p>
+              </div>
+              <a
+                href={PUBLISH_WALKTHROUGH_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="theme-button-secondary px-4 py-2 text-xs uppercase tracking-[0.18em]"
+              >
+                {copy.walkthrough.button}
+              </a>
+            </div>
           </section>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="rounded-3xl border border-slate-700/60 bg-slate-900/50 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+              className="theme-panel p-6"
             >
-              <fieldset disabled={isSubmitting} className="space-y-5 disabled:opacity-70">
+              <fieldset
+                disabled={isSubmitting || !canPublishBooks}
+                className="space-y-5 disabled:opacity-70"
+              >
                 <div>
                   <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Book Title
+                    {copy.labels.title}
                   </label>
                   <input
                     {...register("title", { required: "Title is required." })}
-                    className="mt-2 h-12 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
-                    placeholder="Enter book title"
+                    className="theme-input mt-2 text-sm"
+                    placeholder={copy.labels.title}
                   />
                   {errors.title && (
                     <p className="mt-1 text-xs text-red-300">{errors.title.message}</p>
@@ -368,15 +447,15 @@ export default function LibraryUploadPage() {
 
                 <div>
                   <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Description
+                    {copy.labels.description}
                   </label>
                   <textarea
                     {...register("description", {
                       required: "Description is required.",
                     })}
                     rows={5}
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none focus:border-amber-400/50"
-                    placeholder="Describe your book"
+                    className="theme-input mt-2 min-h-[9rem] resize-y py-3 text-sm"
+                    placeholder={copy.labels.description}
                   />
                   {errors.description && (
                     <p className="mt-1 text-xs text-red-300">{errors.description.message}</p>
@@ -385,13 +464,13 @@ export default function LibraryUploadPage() {
 
                 <div>
                   <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Author Wallet
+                    {copy.labels.authorWallet}
                   </label>
                   <input
                     {...register("authorWallet", {
                       required: "Wallet address is required.",
                     })}
-                    className="mt-2 h-12 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
+                    className="theme-input mt-2 text-sm"
                     placeholder="0x..."
                     onFocus={() => {
                       if (address) setValue("authorWallet", address);
@@ -405,7 +484,7 @@ export default function LibraryUploadPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      PDF File
+                      {copy.labels.pdf}
                     </label>
                     <label
                       htmlFor="book-file-upload"
@@ -415,10 +494,10 @@ export default function LibraryUploadPage() {
                       }}
                       onDragLeave={() => setPdfDragActive(false)}
                       onDrop={handlePdfDrop}
-                      className={`mt-2 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed bg-slate-950/80 px-4 py-4 text-center transition ${
+                      className={`theme-card-compact mt-2 flex min-h-[120px] cursor-pointer flex-col items-center justify-center border border-dashed px-4 py-4 text-center transition ${
                         pdfDragActive
                           ? "border-amber-300/70 bg-amber-400/10"
-                          : "border-slate-700 hover:border-slate-500"
+                          : "border-slate-700 hover:border-yellow-300/35"
                       }`}
                     >
                       <input
@@ -447,7 +526,7 @@ export default function LibraryUploadPage() {
 
                   <div>
                     <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Thumbnail
+                      {copy.labels.thumbnail}
                     </label>
                     <label
                       htmlFor="book-thumbnail-upload"
@@ -457,10 +536,10 @@ export default function LibraryUploadPage() {
                       }}
                       onDragLeave={() => setThumbnailDragActive(false)}
                       onDrop={handleThumbnailDrop}
-                      className={`mt-2 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed bg-slate-950/80 px-4 py-4 text-center transition ${
+                      className={`theme-card-compact mt-2 flex min-h-[120px] cursor-pointer flex-col items-center justify-center border border-dashed px-4 py-4 text-center transition ${
                         thumbnailDragActive
                           ? "border-amber-300/70 bg-amber-400/10"
-                          : "border-slate-700 hover:border-slate-500"
+                          : "border-slate-700 hover:border-yellow-300/35"
                       }`}
                     >
                       <input
@@ -501,32 +580,37 @@ export default function LibraryUploadPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-6 w-full rounded-xl bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300 px-5 py-3 text-sm font-semibold text-black shadow-[0_0_28px_rgba(251,191,36,0.28)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="theme-button-primary mt-6 w-full disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting || status === "processing"
-                  ? "Processing..."
-                  : "Start Upload & Moderation"}
+                  ? copy.labels.submitting
+                  : copy.labels.submit}
               </button>
             </form>
 
             <aside className="space-y-6">
-              <div className="rounded-3xl border border-slate-700/60 bg-slate-900/50 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
-                <h2 className="text-lg font-semibold text-slate-50">Process Tracker</h2>
-                <p className="mt-1 text-sm text-slate-400">
+              <div className="theme-panel p-6">
+                <div className="theme-section-header mb-4">
+                  <div>
+                    <p className="theme-kicker">Workflow</p>
+                    <h2 className="theme-section-title text-lg font-semibold">Process Tracker</h2>
+                  </div>
+                </div>
+                <p className="theme-section-copy mt-1 text-sm">
                   Track upload, moderation, and IPFS packaging in real time.
                 </p>
 
                 <div className="mt-4">
-                  <ProgressBar progress={progress} />
+                  <ProgressBar progress={progress} label={copy.labels.progress} />
                 </div>
 
-                <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                <div className="theme-card-compact mt-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
                     Current Stage
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-100">{stageLabel}</p>
                   <p className="mt-3 text-sm text-slate-300">
-                    {message || "Upload your PDF to begin AI scanning."}
+                    {message || copy.hero.description}
                   </p>
                   {similarity != null && (
                     <p className="mt-2 text-xs text-slate-400">
@@ -536,7 +620,7 @@ export default function LibraryUploadPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-slate-700/60 bg-slate-900/50 p-6">
+              <div className="theme-panel-soft p-6">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-100">
                   Workflow
                 </h3>
@@ -549,7 +633,7 @@ export default function LibraryUploadPage() {
                         key={step}
                         className={`rounded-xl border px-3 py-2 text-sm ${
                           done
-                            ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-100"
+                            ? "border-yellow-400/35 bg-yellow-500/10 text-yellow-100"
                             : active
                             ? "border-amber-400/40 bg-amber-500/10 text-amber-100"
                             : "border-slate-700 bg-slate-950/70 text-slate-300"

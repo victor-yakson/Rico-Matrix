@@ -36,8 +36,8 @@ const MigrationStatus: React.FC = () => {
         );
       case 2:
         return (
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-800/30 text-green-400 text-sm border border-green-700/50">
-            <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-800/30 text-amber-300 text-sm border border-yellow-700/35">
+            <span className="w-2 h-2 bg-amber-300 rounded-full mr-2"></span>
             {t("status.completed")}
           </div>
         );
@@ -71,7 +71,7 @@ const MigrationStatus: React.FC = () => {
           <div className="bg-gray-800/50 rounded-lg p-3">
             <div className="text-xs text-gray-400">{t("v2Status")}</div>
             <div className={`text-sm font-medium mt-1 ${
-              status === 2 ? "text-green-400" : "text-red-400"
+              status === 2 ? "text-amber-300" : "text-red-400"
             }`}>
               {status === 2 ? t("migrated") : t("notMigrated")}
             </div>
@@ -80,7 +80,7 @@ const MigrationStatus: React.FC = () => {
 
         {/* Royalty Information */}
         {(hasLegacyClaimable || hasV2Claimable) && (
-          <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-800/30 rounded-lg p-4">
+          <div className="bg-gradient-to-r from-yellow-900/20 to-yellow-950/10 border border-yellow-800/30 rounded-lg p-4">
             <h4 className="text-sm font-semibold text-white mb-3">
               {t("availableRoyalty")}
             </h4>
@@ -96,18 +96,18 @@ const MigrationStatus: React.FC = () => {
               {hasV2Claimable && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-300">{t("v2Fresh")}</span>
-                  <span className="text-sm font-medium text-blue-300">
+                  <span className="text-sm font-medium text-yellow-300">
                     {parseFloat(v2Claimable).toFixed(2)} USDT
                   </span>
                 </div>
               )}
               {(hasLegacyClaimable || hasV2Claimable) && (
-                <div className="pt-2 border-t border-blue-800/30">
+                <div className="pt-2 border-t border-yellow-800/30">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-white">
                       {t("totalClaimable")}
                     </span>
-                    <span className="text-sm font-bold text-green-400">
+                    <span className="text-sm font-bold text-amber-300">
                       {parseFloat(totalClaimable || "0").toFixed(2)} USDT
                     </span>
                   </div>
@@ -145,7 +145,7 @@ const MigrationStatus: React.FC = () => {
           )}
           {status === 2 && (
             <div className="text-center">
-              <p className="text-sm text-green-300 mb-2">
+              <p className="text-sm text-amber-300 mb-2">
                 {t("migrationComplete")}
               </p>
               <p className="text-xs text-gray-400">

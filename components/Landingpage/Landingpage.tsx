@@ -1,1014 +1,941 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
-import React, { useEffect, useMemo, useState, memo, useRef } from "react";
-import MobileWalletConnector from "../Common/MobileWalletConnector";
+import React, { memo, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import MobileWalletConnector from "../Common/MobileWalletConnector";
 import { LanguageSwitcher } from "../Common/LanguageSwitcher";
-import WorldMap from "../WorldMap";
-import StatsCard from "../StatsCard";
+import WorldMap, { type WorldMapCountryStat } from "../WorldMap";
+import styles from "./Landingpage.module.css";
 
-type CountryStat = {
-  country: string;
-  country_code: string;
-  total: number;
-  unique_visitors: number;
+type MapTotals = {
+  uniqueVisitors: number;
+  countries: number;
+  topCountryName: string;
+  topCountryVisitors: number;
 };
 
-// Memoized MobileWalletConnector to prevent unnecessary re-renders
 const MemoizedMobileWalletConnector = memo(MobileWalletConnector);
+const faqKeys = ["questions.0", "questions.1", "questions.2", "questions.3", "questions.4"] as const;
 
-// FAQ items with translation keys
-const faqKeys = [
-  "questions.0",
-  "questions.1",
-  "questions.2",
-  "questions.3",
-  "questions.4",
-];
+const revealMotion = {
+  hidden: { opacity: 0, y: 32 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
 
-const RicoMatrixFaqItem: React.FC<{
-  question: string;
-  answer: React.ReactNode;
-}> = ({ question, answer }) => {
+function FeatureIcon({ kind }: { kind: "skills" | "library" | "token" | "airdrop" | "staking" | "royalty" }) {
+  const common: React.SVGProps<SVGSVGElement> = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" };
+
+  switch (kind) {
+    case "skills":
+      return (
+        <svg {...common}>
+          <path d="M4 6.5 12 3l8 3.5-8 3.5L4 6.5Z" />
+          <path d="M7 9v5.5c0 1.7 2.2 3.5 5 3.5s5-1.8 5-3.5V9" />
+          <path d="M20 6.5V12" />
+        </svg>
+      );
+    case "library":
+      return (
+        <svg {...common}>
+          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
+          <path d="M8 7h7" />
+          <path d="M8 11h9" />
+          <path d="M8 15h6" />
+        </svg>
+      );
+    case "token":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M9.5 9.5c.5-1 1.4-1.5 2.7-1.5 1.9 0 3 1 3 2.4 0 1.2-.8 2-2.2 2.4l-1 .3c-.8.2-1.3.6-1.5 1.4" />
+          <path d="M12 17h.01" />
+        </svg>
+      );
+    case "airdrop":
+      return (
+        <svg {...common}>
+          <path d="M12 3v12" />
+          <path d="M7 10.5 12 15l5-4.5" />
+          <path d="M4 18.5c1.8 1.7 4.4 2.5 8 2.5s6.2-.8 8-2.5" />
+        </svg>
+      );
+    case "staking":
+      return (
+        <svg {...common}>
+          <path d="M12 3 5 7v5c0 4 2.5 6.9 7 9 4.5-2.1 7-5 7-9V7l-7-4Z" />
+          <path d="M9.5 12.5 11 14l3.5-4" />
+        </svg>
+      );
+    case "royalty":
+      return (
+        <svg {...common}>
+          <path d="M5 18 8.5 8l3.5 6 3.5-8 3.5 12" />
+          <path d="M4 20h16" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function SectionHeading({ kicker, title, subtitle, align = "center" }: { kicker: string; title: string; subtitle?: string; align?: "center" | "left" }) {
+  return (
+    <div className={`${styles.sectionHead} ${align === "left" ? styles.sectionHeadLeft : ""}`}>
+      <span className={styles.sectionKicker}>{kicker}</span>
+      <h2 className={styles.sectionTitle}>{title}</h2>
+      {subtitle ? <p className={styles.sectionSubtitle}>{subtitle}</p> : null}
+    </div>
+  );
+}
+
+function FaqItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
 
-  const handleClick = () => {
-    setOpen((prev) => !prev);
-  };
+  return (
+    <div className={`${styles.faqItem} ${open ? styles.faqItemOpen : ""}`}>
+      <button
+        type="button"
+        className={styles.faqButton}
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+      >
+        <span>{question}</span>
+        <span className={styles.faqIcon} aria-hidden="true">
+          <span className={styles.faqBarHorizontal} />
+          <span className={styles.faqBarVertical} />
+        </span>
+      </button>
+      <div className={styles.faqAnswerWrap}>
+        <div className={styles.faqAnswer}>{answer}</div>
+      </div>
+    </div>
+  );
+}
+
+function CounterChip({ value, label, delay = 0 }: { value: string; label: string; delay?: number }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    const numericMatch = value.match(/^(\d+)(\+)?$/);
+    if (!numericMatch || shouldReduceMotion) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const target = Number(numericMatch[1]);
+    const suffix = numericMatch[2] ?? "";
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting || hasAnimated) return;
+        setHasAnimated(true);
+
+        let frameId = 0;
+        const startedAt = performance.now() + delay;
+        const duration = 1200;
+
+        const tick = (now: number) => {
+          if (now < startedAt) {
+            frameId = window.requestAnimationFrame(tick);
+            return;
+          }
+
+          const progress = Math.min((now - startedAt) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = Math.round(target * eased);
+          setDisplayValue(`${current}${suffix}`);
+          if (progress < 1) frameId = window.requestAnimationFrame(tick);
+        };
+
+        frameId = window.requestAnimationFrame(tick);
+        observer.disconnect();
+
+        return () => window.cancelAnimationFrame(frameId);
+      },
+      { threshold: 0.35 }
+    );
+
+    const element = document.getElementById(`counter-${label}`);
+    if (element) observer.observe(element);
+    return () => observer.disconnect();
+  }, [delay, hasAnimated, label, shouldReduceMotion, value]);
 
   return (
-    <article
-      className={`faq-item reveal reveal--visible ${
-        open ? "faq-item--open" : ""
-      }`}
-    >
-      <div className="faq-header" onClick={handleClick}>
-        <div className="faq-question">{question}</div>
-        <div className="faq-toggle">{open ? "–" : "+"}</div>
-      </div>
-      <div className="faq-body">{answer}</div>
-    </article>
+    <div id={`counter-${label}`} className={styles.counterCell}>
+      <strong className={styles.counterValue}>{displayValue}</strong>
+      <span className={styles.counterLabel}>{label}</span>
+    </div>
   );
-};
+}
 
+function MatrixNode({ label, variant }: { label: string; variant: "you" | "direct" | "spillover" }) {
+  return (
+    <div className={`${styles.matrixNode} ${styles[`matrixNode${variant[0].toUpperCase()}${variant.slice(1)}`]}`}>
+      <span className={styles.matrixNodeCore} />
+      <span className={styles.matrixNodeLabel}>{label}</span>
+    </div>
+  );
+}
 
-const RicoMatrixLandingPage: React.FC = () => {
+export default function RicoMatrixLandingPage() {
   const t = useTranslations("LandingPage");
+  const shouldReduceMotion = useReducedMotion();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
-  const [mapStats, setMapStats] = useState<CountryStat[]>([]);
-  const [mapTotals, setMapTotals] = useState({
-    totalVisits: 0,
+  const [matrixMode, setMatrixMode] = useState<"x3" | "x6">("x3");
+  const [mapStats, setMapStats] = useState<WorldMapCountryStat[]>([]);
+  const [mapTotals, setMapTotals] = useState<MapTotals>({
     uniqueVisitors: 0,
     countries: 0,
+    topCountryName: "—",
+    topCountryVisitors: 0,
   });
-  const heroMediaRef = useRef<HTMLDivElement | null>(null);
+  const [mapState, setMapState] = useState<"loading" | "ready" | "empty" | "error">("loading");
+  const [cursor, setCursor] = useState({ x: 0, y: 0, visible: false });
+
   const heroWords = useMemo(
+    () => [t("heroTyping.words.0"), t("heroTyping.words.1"), t("heroTyping.words.2")],
+    [t]
+  );
+
+  const navLinks = useMemo(
     () => [
-      t("heroTyping.words.0"),
-      t("heroTyping.words.1"),
-      t("heroTyping.words.2"),
+      { id: "ecosystem", label: t("nav.ecosystem") },
+      { id: "skills", label: t("nav.skills") },
+      { id: "library", label: t("nav.library") },
+      { id: "staking", label: t("nav.staking") },
+      { id: "levels", label: t("nav.levels") },
+      { id: "faq", label: t("nav.faq") },
     ],
     [t]
   );
 
-  // Helper function to render HTML from translation
-  const renderHTML = (html: string) => {
-    return { __html: html };
-  };
+  const heroChips = useMemo(
+    () => [
+      { value: t("proof.stats.0.value"), label: t("proof.stats.0.label") },
+      { value: t("proof.stats.1.value"), label: t("proof.stats.1.label") },
+      { value: "X3 + X6", label: t("matrixOverview.title") },
+      { value: "RICO", label: t("matrixOverview.footer.farming") },
+    ],
+    [t]
+  );
 
-  // Scroll reveal animation
+  const counterStats = useMemo(
+    () => [
+      { value: t("proof.stats.0.value"), label: t("proof.stats.0.label") },
+      { value: t("proof.stats.1.value"), label: t("proof.stats.1.label") },
+      { value: t("proof.stats.2.value"), label: t("proof.stats.2.label") },
+      { value: t("proof.stats.3.value"), label: t("proof.stats.3.label") },
+    ],
+    [t]
+  );
+
+  const ecosystemCards = useMemo(
+    () => [
+      { kind: "skills" as const, kicker: t("ecosystem.cards.skills.kicker"), title: t("ecosystem.cards.skills.title"), description: t("ecosystem.cards.skills.description") },
+      { kind: "library" as const, kicker: t("ecosystem.cards.library.kicker"), title: t("ecosystem.cards.library.title"), description: t("ecosystem.cards.library.description") },
+      { kind: "token" as const, kicker: t("ecosystem.cards.token.kicker"), title: t("ecosystem.cards.token.title"), description: t("ecosystem.cards.token.description") },
+      { kind: "airdrop" as const, kicker: t("ecosystem.cards.airdrop.kicker"), title: t("ecosystem.cards.airdrop.title"), description: t("ecosystem.cards.airdrop.description") },
+      { kind: "staking" as const, kicker: t("ecosystem.cards.staking.kicker"), title: t("ecosystem.cards.staking.title"), description: t("ecosystem.cards.staking.description") },
+      { kind: "royalty" as const, kicker: t("ecosystem.cards.royalty.kicker"), title: t("ecosystem.cards.royalty.title"), description: t("ecosystem.cards.royalty.description") },
+    ],
+    [t]
+  );
+
+  const accessMilestones = useMemo(
+    () => [
+      { step: t("access.steps.0.step"), title: t("access.steps.0.title"), description: t("access.steps.0.description") },
+      { step: t("access.steps.1.step"), title: t("access.steps.1.title"), description: t("access.steps.1.description") },
+      { step: t("access.steps.2.step"), title: t("access.steps.2.title"), description: t("access.steps.2.description") },
+      { step: t("access.steps.3.step"), title: t("access.steps.3.title"), description: t("access.steps.3.description") },
+    ],
+    [t]
+  );
+
+  const skillsPoints = useMemo(
+    () => [t("skills.points.0"), t("skills.points.1"), t("skills.points.2"), t("skills.points.3"), t("skills.points.4")],
+    [t]
+  );
+
+  const libraryPoints = useMemo(
+    () => [t("libraryFeature.points.0"), t("libraryFeature.points.1"), t("libraryFeature.points.2"), t("libraryFeature.points.3")],
+    [t]
+  );
+
+  const tokenUtilityCards = useMemo(
+    () => [t("tokenUtility.cards.0"), t("tokenUtility.cards.1"), t("tokenUtility.cards.2"), t("tokenUtility.cards.3")],
+    [t]
+  );
+
+  const stakingCards = useMemo(
+    () => [
+      { title: t("staking.cards.0.title"), description: t("staking.cards.0.description") },
+      { title: t("staking.cards.1.title"), description: t("staking.cards.1.description") },
+      { title: t("staking.cards.2.title"), description: t("staking.cards.2.description") },
+    ],
+    [t]
+  );
+
+  const pricingCards = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, index) => {
+        const level = index + 1;
+        return {
+          level,
+          title: t(`levels.chapters.level${level}`),
+          price: t(`levels.prices.level${level}`),
+          description: t(`levels.descriptions.level${level}`),
+        };
+      }),
+    [t]
+  );
+
+  const footerLinks = useMemo(
+    () => [
+      { label: t("footer.links.website"), href: "https://ricomatrix.com/" },
+      { label: t("footer.links.whitepaper"), href: "https://rico-matrix.gitbook.io/whitepaper" },
+      { label: t("footer.links.telegram"), href: "https://t.me/ricomatrixdapp" },
+      { label: t("footer.links.twitter"), href: "https://x.com/ricomatrixdapp" },
+      { label: t("footer.links.youtube"), href: "https://www.youtube.com/@ricomatrix" },
+      { label: "Email", href: "mailto:info@ricomatrix.com" },
+    ],
+    [t]
+  );
+
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 22 }, (_, index) => ({
+        id: index,
+        left: `${(index * 11 + 7) % 100}%`,
+        top: `${(index * 17 + 13) % 100}%`,
+        delay: `${(index % 8) * 0.6}s`,
+        size: `${index % 3 === 0 ? 3 : 2}px`,
+      })),
+    []
+  );
+
   useEffect(() => {
-    if (typeof window === "undefined" || typeof document === "undefined")
-      return;
-
-    const elements = document.querySelectorAll<HTMLElement>(".reveal");
-
-    if (!("IntersectionObserver" in window)) {
-      elements.forEach((el) => el.classList.add("reveal--visible"));
+    if (typeof window === "undefined" || shouldReduceMotion) return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    if (mq.matches) {
+      setWordIndex(0);
       return;
     }
+    const id = window.setInterval(() => {
+      setWordIndex((current) => (current + 1) % heroWords.length);
+    }, 3600);
+    return () => window.clearInterval(id);
+  }, [heroWords.length, shouldReduceMotion]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("reveal--visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const loadStats = async () => {
+      try {
+        setMapState("loading");
+        const response = await fetch("/api/stats", { cache: "no-store" });
+        if (!response.ok) {
+          setMapState("error");
+          return;
+        }
+        const payload = await response.json();
+        const data: WorldMapCountryStat[] = payload?.data ?? [];
+        const totals = payload?.totals ?? {};
+        const uniqueVisitors = typeof totals.unique_visitors !== "undefined"
+          ? Number(totals.unique_visitors)
+          : data.reduce((sum, item) => sum + Number(item.unique_visitors || 0), 0);
+        const countries = typeof totals.countries !== "undefined" ? Number(totals.countries) : data.length;
+        const topCountryName = typeof totals.top_country_name === "string" && totals.top_country_name ? totals.top_country_name : data[0]?.country_name || "—";
+        const topCountryVisitors = typeof totals.top_country_visitors !== "undefined" ? Number(totals.top_country_visitors) : Number(data[0]?.unique_visitors || 0);
+        setMapStats(data);
+        setMapTotals({ uniqueVisitors, countries, topCountryName, topCountryVisitors });
+        setMapState(data.length ? "ready" : "empty");
+      } catch {
+        setMapState("error");
+      }
+    };
 
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
+    void loadStats();
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(pointer: fine)");
+    if (!mediaQuery.matches) return;
 
-    const loadStats = async () => {
-      try {
-        const res = await fetch("/api/stats");
-        if (!res.ok) return;
-        const json = await res.json();
-        const data: CountryStat[] = json?.data ?? [];
-        const totals = json?.totals ?? {};
-        const totalVisits =
-          typeof totals.total_visits !== "undefined"
-            ? Number(totals.total_visits)
-            : data.reduce((acc, cur) => acc + Number(cur.total || 0), 0);
-        const uniqueVisitors =
-          typeof totals.unique_visitors !== "undefined"
-            ? Number(totals.unique_visitors)
-            : data.reduce(
-                (acc, cur) => acc + Number(cur.unique_visitors || 0),
-                0
-              );
-        const countries =
-          typeof totals.countries !== "undefined"
-            ? Number(totals.countries)
-            : data.length;
-
-        setMapStats(data);
-        setMapTotals({ totalVisits, uniqueVisitors, countries });
-      } catch (error) {
-        // Silent fail to avoid blocking the UI
-      }
+    const handleMove = (event: MouseEvent) => {
+      setCursor({ x: event.clientX, y: event.clientY, visible: true });
     };
+    const handleLeave = () => setCursor((current) => ({ ...current, visible: false }));
 
-    loadStats();
-  }, []);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setWordIndex((prev) => (prev + 1) % heroWords.length);
-    }, 5000);
-    return () => window.clearInterval(intervalId);
-  }, [heroWords.length]);
-
-
-  useEffect(() => {
-    const el = heroMediaRef.current;
-    if (!el) return;
-
-    const handleMove = (evt: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const relX = (evt.clientX - rect.left) / rect.width - 0.5;
-      const relY = (evt.clientY - rect.top) / rect.height - 0.5;
-      const max = 14;
-      el.style.setProperty("--parallax-x", `${relX * max}px`);
-      el.style.setProperty("--parallax-y", `${relY * max}px`);
-    };
-
-    const handleLeave = () => {
-      el.style.setProperty("--parallax-x", `0px`);
-      el.style.setProperty("--parallax-y", `0px`);
-    };
-
-    el.addEventListener("mousemove", handleMove);
-    el.addEventListener("mouseleave", handleLeave);
-
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseleave", handleLeave);
     return () => {
-      el.removeEventListener("mousemove", handleMove);
-      el.removeEventListener("mouseleave", handleLeave);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseleave", handleLeave);
     };
   }, []);
 
-  const handleNavClick = (id: string) => (
-    e: React.MouseEvent<HTMLAnchorElement>
-  ) => {
-    e.preventDefault();
-    scrollToId(id);
-    setMobileNavOpen(false);
-  };
-
-  const scrollToId = (id: string) => {
-    if (typeof document === "undefined") return;
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const closeDrawer = () => setMobileNavOpen(false);
 
   return (
-    <div className="page" id="top">
-      {/* Header */}
+    <div className={styles.page} id="top">
+      <div className={styles.ambientBackdrop} aria-hidden="true" />
+      <div className={styles.gridBackdrop} aria-hidden="true" />
+      <div className={styles.orbOne} aria-hidden="true" />
+      <div className={styles.orbTwo} aria-hidden="true" />
+      <div className={styles.cursorGlow} style={{ opacity: cursor.visible ? 1 : 0, transform: `translate(${cursor.x}px, ${cursor.y}px)` }} />
+      <div className={styles.cursorDot} style={{ opacity: cursor.visible ? 1 : 0, transform: `translate(${cursor.x}px, ${cursor.y}px)` }} />
 
-      <header className="site-header">
-        <div className="site-header-inner">
+      <header className={styles.navbar}>
+        <button type="button" className={styles.logoButton} onClick={() => document.getElementById("top")?.scrollIntoView({ behavior: "smooth" })} aria-label="Rico Matrix home">
+          <span className={styles.logoHalo} aria-hidden="true" />
+          <img src="/logo.png" alt="Rico Matrix" className={styles.logoImage} />
+          {/* <span className={styles.logoText}>RicoMatrix</span> */}
+        </button>
+
+        <nav className={styles.desktopNav} aria-label="Landing page navigation">
+          {navLinks.map((link) => (
+            <a key={link.id} href={`#${link.id}`} className={styles.navLink}>
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className={styles.navActions}>
+          <div className={styles.navControl}><LanguageSwitcher /></div>
+          <MemoizedMobileWalletConnector
+            variant="compact"
+            className={styles.walletSlot}
+            buttonClassName={styles.walletButtonSkin}
+            desktopButtonLabel={t("activateLevel")}
+            mobileButtonLabel={t("activateLevel")}
+          />
           <button
             type="button"
-            className="logo"
-            onClick={() => scrollToId("top")}
-            aria-label="Scroll to top"
+            className={`${styles.navToggle} ${mobileNavOpen ? styles.navToggleOpen : ""}`}
+            onClick={() => setMobileNavOpen((current) => !current)}
+            aria-label="Toggle navigation"
+            aria-expanded={mobileNavOpen}
           >
-            <div className="logo-mark" aria-hidden="true">
-              <img src="/logo.png" alt="RICO MATRIX" className="logo-img" />
-            </div>
+            <span />
+            <span />
+            <span />
           </button>
-
-          <nav className="nav">
-            <div className="nav-links" id="nav-links-desktop">
-              <a href="#how" onClick={handleNavClick("how")}>
-                {t("nav.howItWorks")}
-              </a>
-              <a href="#videos" onClick={handleNavClick("videos")}>
-                {t("nav.videos")}
-              </a>
-              <a href="#levels" onClick={handleNavClick("levels")}>
-                {t("nav.levels")}
-              </a>
-              <a href="#faq" onClick={handleNavClick("faq")}>
-                {t("nav.faq")}
-              </a>
-            </div>
-
-            {/* ✅ Right-side group: language + CTA + burger */}
-            <div className="nav-actions">
-              <div className="language-switcher">
-                <LanguageSwitcher />
-              </div>
-
-              <MemoizedMobileWalletConnector
-                variant="compact"
-                desktopButtonLabel={t("activateLevel")}
-                mobileButtonLabel={t("activateLevel")}
-              />
-
-              <button
-                className={`burger ${mobileNavOpen ? "burger--open" : ""}`}
-                id="burger"
-                aria-label="Toggle navigation"
-                type="button"
-                onClick={() => setMobileNavOpen((prev) => !prev)}
-              >
-                <span></span>
-                <span></span>
-                <span></span>
-              </button>
-            </div>
-          </nav>
         </div>
-
-        {mobileNavOpen && (
-          <div className="nav-links nav-links--mobile">
-            <a href="#how" onClick={handleNavClick("how")}>
-              {t("nav.howItWorks")}
-            </a>
-            <a href="#videos" onClick={handleNavClick("videos")}>
-              {t("nav.videos")}
-            </a>
-            <a href="#levels" onClick={handleNavClick("levels")}>
-              {t("nav.levels")}
-            </a>
-            <a href="#faq" onClick={handleNavClick("faq")}>
-              {t("nav.faq")}
-            </a>
-            <a href="#cta" onClick={handleNavClick("cta")}>
-              {t("activateLevel")}
-            </a>
-
-            {/* 🌐 Mobile-only language switcher at bottom of menu */}
-            <div className="nav-mobile-language">
-              <div className="language-switcher language-switcher--mobile">
-                <LanguageSwitcher />
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
-      <main className="landing-main">
-        {/* HERO BLOCK */}
-        <section className="hero hero--fullscreen">
-          <div className="container">
-            <div className="hero-layout">
-              <div className="hero-copy reveal">
-                <h1 className="hero-title">
-                  {t("heroTyping.prefix")}{" "}
-                  <span className="hero-fade">
-                    <span className="hero-fade-word" key={wordIndex}>
+      <AnimatePresence>
+        {mobileNavOpen ? (
+          <>
+            <motion.button
+              type="button"
+              className={styles.drawerBackdrop}
+              onClick={closeDrawer}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              aria-label="Close navigation menu"
+            />
+            <motion.nav
+              className={styles.mobileDrawer}
+              initial={{ opacity: 0, x: 36 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 36 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              aria-label="Mobile navigation"
+            >
+              <div className={styles.mobileDrawerTop}>
+                <span className={styles.sectionKicker}>{t("heroBadge")}</span>
+                <button type="button" className={styles.drawerClose} onClick={closeDrawer} aria-label="Close menu">
+                  ×
+                </button>
+              </div>
+              <div className={styles.mobileDrawerLinks}>
+                {navLinks.map((link) => (
+                  <a key={link.id} href={`#${link.id}`} onClick={closeDrawer} className={styles.mobileLink}>
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+              <a href="https://rico-matrix.gitbook.io/whitepaper" target="_blank" rel="noreferrer" className={styles.drawerExternal}>
+                {t("footer.links.whitepaper")}
+              </a>
+            </motion.nav>
+          </>
+        ) : null}
+      </AnimatePresence>
+
+      <main className={styles.main}>
+        <section className={`${styles.section} ${styles.heroSection}`}>
+          <div className={styles.container}>
+            <div className={styles.heroGrid}>
+              <motion.div initial="hidden" animate="visible" variants={revealMotion} className={styles.heroCopy}>
+                <div className={styles.badgeRow}>
+                  <span className={styles.liveBadge}>{t("launchInfo.launching")}</span>
+                  <span className={styles.liveBadgeSecondary}>{t("launchInfo.time")}</span>
+                </div>
+                <div className={styles.glitchTag} aria-label="Read Earn Own">
+                  <span>READ • EARN • OWN</span>
+                </div>
+                <h1 className={styles.heroTitle}>{t("title")}</h1>
+                <p className={styles.heroDynamicLine}>
+                  {t("heroTyping.prefix")} {" "}
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={heroWords[wordIndex]}
+                      className={styles.heroWord}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
+                    >
                       {heroWords[wordIndex]}
-                    </span>
-                  </span>
-                  {t("heroTyping.suffix") ? ` ${t("heroTyping.suffix")}` : ""}
-                </h1>
+                    </motion.span>
+                  </AnimatePresence>
+                  {" "}{t("heroTyping.suffix")}
+                </p>
+                <p className={styles.heroSubtitle}>{t("subtitle")}</p>
 
-                <p className="hero-subtitle">{t("subtitle")}</p>
-
-                <div className="hero-minimal-meta">
-                  <span>{t("launchInfo.launching")}</span>
-                  <span className="hero-minimal-dot" aria-hidden="true"></span>
-                  <span>{t("launchInfo.time")}</span>
+                <div className={styles.heroMetaPills}>
+                  <span className={styles.heroMiniPill}>{t("launchInfo.badges.decentralized")}</span>
+                  <span className={styles.heroMiniPill}>{t("launchInfo.badges.earnings")}</span>
+                  <span className={styles.heroMiniPill}>{t("launchInfo.badges.royalty")}</span>
                 </div>
 
-                <div className="hero-ctas mt-6 flex flex-col lg:flex-row items-stretch lg:items-start gap-4 lg:gap-6">
+                <div className={styles.heroCtas}>
                   <MemoizedMobileWalletConnector
-                    className="wallet-inline"
+                    className={styles.heroWalletSlot}
+                    buttonClassName={styles.heroWalletSkin}
                     desktopButtonLabel={t("activateLevel")}
                     mobileButtonLabel={t("activateLevel")}
                   />
-
-                  <a
-                    href="https://t.me/ricomatrixdapp"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-secondary cta-inline"
-                  >
-                    {t("joinTelegram")}
+                  <a href="#ecosystem" className={styles.secondaryCta}>
+                    {t("exploreEcosystem")}
                   </a>
                 </div>
-              </div>
 
-              <div className="hero-media reveal" ref={heroMediaRef}>
-                <div className="image-placeholder image-placeholder--hero">
-                  <div className="icon-scene">
-                    <div className="icon-orbit">
-                      <div className="icon-ring" aria-hidden="true"></div>
-                      <div className="icon-core" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" role="img">
-                          <path
-                            d="M4 6.5C6.5 5 9 5 12 6.5c3-1.5 5.5-1.5 8 0v11c-2.5-1.5-5-1.5-8 0-3-1.5-5.5-1.5-8 0v-11z"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                          />
-                          <path
-                            d="M12 6.5v11"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
-                      <div className="icon-orb icon-orb--top" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <path
-                            d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </div>
-                      <div
-                        className="icon-orb icon-orb--right"
-                        aria-hidden="true"
-                      >
-                        <svg viewBox="0 0 24 24">
-                          <path
-                            d="M4 18h16M6 14h3M11 10h3M16 6h2"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
-                      <div
-                        className="icon-orb icon-orb--left"
-                        aria-hidden="true"
-                      >
-                        <svg viewBox="0 0 24 24">
-                          <path
-                            d="M7 7h10M7 12h10M7 17h7"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
+                {/* <div className={styles.heroChipRow}>
+                  {heroChips.map((chip) => (
+                    <div key={chip.label} className={styles.heroChip}>
+                      <strong>{chip.value}</strong>
+                      <span>{chip.label}</span>
                     </div>
-                    <div className="icon-caption">
-                      {t("media.items.dashboard")}
-                    </div>
+                  ))}
+                </div> */}
+              </motion.div>
+
+              <motion.div initial="hidden" animate="visible" variants={revealMotion} className={styles.heroVisual}>
+                <div className={styles.heroVisualShell}>
+                  <div className={styles.heroSceneGlow} aria-hidden="true" />
+                  <div className={styles.starField} aria-hidden="true">
+                    {stars.map((star) => (
+                      <span key={star.id} className={styles.star} style={{ left: star.left, top: star.top, animationDelay: star.delay, width: star.size, height: star.size }} />
+                    ))}
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* MEDIA SHOWCASE */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("media.kicker")}</div>
-                <h2 className="section-title">{t("media.title")}</h2>
-                <p className="section-subtitle">{t("media.subtitle")}</p>
-              </div>
-
-              <div className="image-grid">
-                <div className="image-card">
-                  <div className="image-placeholder image-placeholder--icon">
-                    <div className="icon-stack">
-                      <div className="icon-badge icon-badge--book">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path
-                            d="M5 6.5c2.4-1.2 4.8-1.2 7.2 0 2.4-1.2 4.8-1.2 7.3 0v11c-2.5-1.3-4.9-1.3-7.3 0-2.4-1.3-4.8-1.3-7.2 0v-11z"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.4"
-                          />
-                          <path
-                            d="M12.2 6.5v11"
-                            stroke="currentColor"
-                            strokeWidth="1.4"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
-                      <div className="icon-caption">{t("media.items.book")}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="image-card">
-                  <div className="image-placeholder image-placeholder--icon">
-                    <div className="icon-stack">
-                      <div className="icon-badge icon-badge--dashboard">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path
-                            d="M5 19V5h14v14H5z"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.4"
-                          />
-                          <path
-                            d="M8 15v-3M12 15V9M16 15v-5"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
-                      <div className="icon-caption">
-                        {t("media.items.dashboard")}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="image-card">
-                  <div className="image-placeholder image-placeholder--icon">
-                    <div className="icon-stack">
-                      <div className="icon-badge icon-badge--mobile">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <rect
-                            x="7"
-                            y="3.5"
-                            width="10"
-                            height="17"
-                            rx="2"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.4"
-                          />
-                          <path
-                            d="M11 17.5h2"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
-                      <div className="icon-caption">{t("media.items.mobile")}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* MATRIX OVERVIEW BLOCK */}
-        <section id="matrix-overview" className="section section--tight">
-          <div className="container">
-            <div className="hero-visual-wrapper reveal">
-              <div className="hero-card">
-                <div className="hero-card-glow"></div>
-
-                <div className="hero-card-header">
-                  <div>
-                    <div className="hero-card-title">
-                      {t("matrixOverview.title")}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      {t("matrixOverview.subtitle")}
-                    </div>
-                  </div>
-                  <div className="hero-card-chip">
-                    {t("matrixOverview.blockchain")}
-                  </div>
-                </div>
-
-                <div className="hero-card-main">
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-muted)",
-                        marginBottom: 6,
-                      }}
-                    >
-                      {t("matrixOverview.note")}
-                    </div>
-                    <div className="hero-card-matrix">
-                      <div className="hero-card-level">
-                        <div>{t("matrixOverview.chapters.chapter1")}</div>
-                        <span>$5</span>
-                        <small>{t("matrixOverview.prices.entry")}</small>
-                      </div>
-                      <div className="hero-card-level">
-                        <div>{t("matrixOverview.chapters.chapter4")}</div>
-                        <span>$40</span>
-                        <small>{t("matrixOverview.prices.teamBuilder")}</small>
-                      </div>
-                      <div className="hero-card-level hero-card-level--highlight">
-                        <div>{t("matrixOverview.chapters.chapter9")}</div>
-                        <span>$1280</span>
-                        <small>
-                          {t("matrixOverview.prices.globalSpillover")}
-                        </small>
-                      </div>
-                      <div className="hero-card-level">
-                        <div>{t("matrixOverview.chapters.chapter10")}</div>
-                        <span>$2560</span>
-                        <small>{t("matrixOverview.prices.scaling")}</small>
-                      </div>
-                      <div className="hero-card-level">
-                        <div>{t("matrixOverview.chapters.chapter11")}</div>
-                        <span>$5120</span>
-                        <small>{t("matrixOverview.prices.leaders")}</small>
-                      </div>
-                      <div className="hero-card-level">
-                        <div>{t("matrixOverview.chapters.chapter12")}</div>
-                        <span>$10240</span>
-                        <small>{t("matrixOverview.prices.whales")}</small>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.78rem",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      All active chapters work in parallel and never expire.
-                      Each auto-recycle reopens the chapter for more earnings.
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="hero-card-rocket">
-                      <div className="rocket">
-                        <div className="rocket-fin rocket-fin--left"></div>
-                        <div className="rocket-fin rocket-fin--right"></div>
-                        <div className="rocket-fire"></div>
-                        <div className="rocket-smoke"></div>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.78rem",
-                        color: "var(--text-muted)",
-                        marginTop: 8,
-                        textAlign: "center",
-                      }}
-                    >
-                      Switch on your <strong>RICO Engine</strong> once and let
-                      the smart contract work 24/7.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="hero-card-footer">
-                  <div
-                    dangerouslySetInnerHTML={renderHTML(
-                      t("matrixOverview.footer.royalty")
-                    )}
-                  />
-                  <div
-                    dangerouslySetInnerHTML={renderHTML(
-                      t("matrixOverview.footer.farming")
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* GLOBAL MAP + STATS */}
-        <section id="world" className="section section--tight">
-          <div className="container">
-            <div className="block-panel reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("worldMap.kicker")}</div>
-                <h2 className="section-title">{t("worldMap.title")}</h2>
-                <p className="section-subtitle">{t("worldMap.subtitle")}</p>
-              </div>
-
-              <div className="map-grid">
-                <WorldMap data={mapStats} />
-                <div className="map-stats">
-                  <StatsCard
-                    label={t("worldMap.stats.readers")}
-                    value={mapTotals.uniqueVisitors.toLocaleString()}
-                    note={t("worldMap.stats.readersNote")}
-                  />
-                  <StatsCard
-                    label={t("worldMap.stats.visits")}
-                    value={mapTotals.totalVisits.toLocaleString()}
-                    note={t("worldMap.stats.visitsNote")}
-                  />
-                  <StatsCard
-                    label={t("worldMap.stats.countries")}
-                    value={mapTotals.countries.toLocaleString()}
-                    note={t("worldMap.stats.countriesNote")}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* X3 + X6 TRACKS */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("visuals.x3.kicker")}</div>
-                <h2 className="section-title">
-                  {t("visuals.x3.title")} · {t("visuals.x6.title")}
-                </h2>
-                <p className="section-subtitle">{t("visuals.x3.subtitle")}</p>
-              </div>
-              <div className="grid grid--2">
-                <article className="card reveal">
-                  <div className="card-kicker">{t("visuals.x3.kicker")}</div>
-                  <h3 className="card-title">{t("visuals.x3.title")}</h3>
-                  <p className="card-body clamp-3">{t("visuals.x3.note")}</p>
-                </article>
-                <article className="card reveal">
-                  <div className="card-kicker">{t("visuals.x6.kicker")}</div>
-                  <h3 className="card-title">{t("visuals.x6.title")}</h3>
-                  <p className="card-body clamp-3">{t("visuals.x6.note")}</p>
-                </article>
-              </div>
-              <div className="image-grid image-grid--compact">
-                <div className="image-card">
-                  <div className="image-placeholder image-placeholder--icon">
-                    <div className="matrix-icon matrix-icon--x3" aria-hidden="true">
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                    </div>
-                    <div className="icon-caption">{t("visuals.x3.title")}</div>
-                  </div>
-                </div>
-                <div className="image-card">
-                  <div className="image-placeholder image-placeholder--icon">
-                    <div className="matrix-icon matrix-icon--x6" aria-hidden="true">
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                      <span className="matrix-dot"></span>
-                    </div>
-                    <div className="icon-caption">{t("visuals.x6.title")}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* WHY PEOPLE ARE JOINING */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel">
-              <div className="section-head reveal">
-                <div className="section-kicker">{t("whyJoin.kicker")}</div>
-                <h2 className="section-title">{t("whyJoin.title")}</h2>
-                <p className="section-subtitle">{t("whyJoin.subtitle")}</p>
-              </div>
-
-              <div className="grid grid--3">
-                <article className="card reveal">
-                  <div className="card-kicker">
-                    {t("whyJoin.features.spillovers.kicker")}
-                  </div>
-                  <h3 className="card-title">
-                    {t("whyJoin.features.spillovers.title")}
-                  </h3>
-                  <p className="card-body clamp-3">
-                    {t("whyJoin.features.spillovers.description")}
-                  </p>
-                </article>
-
-                <article className="card reveal">
-                  <div className="card-kicker">
-                    {t("whyJoin.features.ip.kicker")}
-                  </div>
-                  <h3 className="card-title">
-                    {t("whyJoin.features.ip.title")}
-                  </h3>
-                  <p className="card-body clamp-3">
-                    {t("whyJoin.features.ip.description")}
-                  </p>
-                </article>
-
-                <article className="card reveal">
-                  <div className="card-kicker">
-                    {t("whyJoin.features.royalty.kicker")}
-                  </div>
-                  <h3 className="card-title">
-                    {t("whyJoin.features.royalty.title")}
-                  </h3>
-                  <p className="card-body clamp-3">
-                    {t("whyJoin.features.royalty.description")}
-                  </p>
-                </article>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* HOW IT WORKS */}
-        <section id="how" className="section">
-          <div className="container">
-            <div className="block-panel">
-              <div className="section-head reveal">
-                <div className="section-kicker">{t("howItWorks.kicker")}</div>
-                <h2 className="section-title">{t("howItWorks.title")}</h2>
-                <p className="section-subtitle">{t("howItWorks.subtitle")}</p>
-              </div>
-
-              <div className="steps">
-                <article className="step reveal">
-                  <div className="step-index">
-                    {t("howItWorks.steps.step1.index")}
-                  </div>
-                  <div>
-                    <h3 className="step-title">
-                      {t("howItWorks.steps.step1.title")}
-                    </h3>
-                    <p
-                      className="step-body clamp-3"
-                      dangerouslySetInnerHTML={renderHTML(
-                        t("howItWorks.steps.step1.description")
-                      )}
-                    />
-                  </div>
-                </article>
-
-                <article className="step reveal">
-                  <div className="step-index">
-                    {t("howItWorks.steps.step2.index")}
-                  </div>
-                  <div>
-                    <h3 className="step-title">
-                      {t("howItWorks.steps.step2.title")}
-                    </h3>
-                    <p
-                      className="step-body clamp-3"
-                      dangerouslySetInnerHTML={renderHTML(
-                        t("howItWorks.steps.step2.description")
-                      )}
-                    />
-                  </div>
-                </article>
-
-                <article className="step reveal">
-                  <div className="step-index">
-                    {t("howItWorks.steps.step3.index")}
-                  </div>
-                  <div>
-                    <h3 className="step-title">
-                      {t("howItWorks.steps.step3.title")}
-                    </h3>
-                    <p
-                      className="step-body clamp-3"
-                      dangerouslySetInnerHTML={renderHTML(
-                        t("howItWorks.steps.step3.description")
-                      )}
-                    />
-                  </div>
-                </article>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* VIDEOS */}
-        <section id="videos" className="section section--tight">
-          <div className="container">
-            <div className="block-panel">
-              <div className="section-head reveal">
-                <div className="section-kicker">{t("videos.kicker")}</div>
-                <h2 className="section-title">{t("videos.title")}</h2>
-                <p className="section-subtitle">{t("videos.subtitle")}</p>
-              </div>
-
-              <div className="video-grid">
-                <article className="video-card reveal">
-                  <h3 className="video-title">
-                    {t("videos.tutorials.tutorial1.title")}
-                  </h3>
-                  <p className="video-desc clamp-2">
-                    {t("videos.tutorials.tutorial1.description")}
-                  </p>
-                  <div className="video-embed">
-                    <iframe
-                      src="https://www.youtube.com/embed/V0WrNFZlehg"
-                      allowFullScreen
-                      loading="lazy"
-                      title={t("videos.tutorials.tutorial1.title")}
-                    />
-                  </div>
-                </article>
-
-                <article className="video-card reveal">
-                  <h3 className="video-title">
-                    {t("videos.tutorials.tutorial2.title")}
-                  </h3>
-                  <p className="video-desc clamp-2">
-                    {t("videos.tutorials.tutorial2.description")}
-                  </p>
-                  <div className="video-embed">
-                    <iframe
-                      src="https://www.youtube.com/embed/gqHHsPycihI"
-                      allowFullScreen
-                      loading="lazy"
-                      title={t("videos.tutorials.tutorial2.title")}
-                    />
-                  </div>
-                </article>
-
-                <article className="video-card reveal">
-                  <h3 className="video-title">
-                    {t("videos.tutorials.tutorial3.title")}
-                  </h3>
-                  <p className="video-desc clamp-2">
-                    {t("videos.tutorials.tutorial3.description")}
-                  </p>
-                  <div className="video-embed">
-                    <iframe
-                      src="https://www.youtube.com/embed/ZhBtH28m3es"
-                      allowFullScreen
-                      loading="lazy"
-                      title={t("videos.tutorials.tutorial3.title")}
-                    />
-                  </div>
-                </article>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* STRATEGIC PARTNERS */}
-        <section className="section section--tight">
-          <div className="container">
-            <div className="block-panel reveal">
-              <div className="section-head">
-                <div className="section-kicker">{t("partners.kicker")}</div>
-                <h2 className="section-title">{t("partners.title")}</h2>
-                <p className="section-subtitle">{t("partners.subtitle")}</p>
-              </div>
-
-              <div className="pill-grid">
-                {[
-                  "USDT",
-                  "BNB Smart Chain",
-                  "Alchemy Pay",
-                  "Trust Wallet",
-                  "SafePal",
-                  "Remix",
-                  "MetaMask",
-                ].map((label) => (
-                  <div key={label} className="pill">
-                    {label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* LEVELS */}
-        <section id="levels" className="section section--tight">
-          <div className="container">
-            <div className="block-panel">
-              <div className="levels-wrap">
-                <div className="levels-content reveal">
-                  <div className="section-kicker">{t("levels.kicker")}</div>
-                  <p className="section-subtitle">{t("levels.subtitle")}</p>
-
-                  <div
-                    className="levels-grid"
-                    style={{
-                      marginTop: 18,
-                    }}
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((level) => (
-                      <div
-                        key={level}
-                        className={`level-card ${
-                          level === 9 ? "level-card--highlight" : ""
-                        }`}
-                      >
-                        <div className="level-label">
-                          {t(`levels.chapters.level${level}`)}
-                        </div>
-                        <div className="level-price">
-                          {t(`levels.prices.level${level}`)}
-                        </div>
-                        <div className="level-meta">
-                          {t(`levels.descriptions.level${level}`)}
-                        </div>
+                  <div className={styles.heroWireframe} aria-hidden="true" />
+                  <div className={styles.bookStack}>
+                    {Array.from({ length: 9 }, (_, index) => (
+                      <div key={index} className={styles.bookTile} style={{ ["--tile-index" as never]: index } as React.CSSProperties}>
+                        <span className={styles.bookTileEdge} />
+                        <span className={styles.bookTileLabel}>{index === 4 ? "RM CORE" : `NODE ${index + 1}`}</span>
                       </div>
                     ))}
                   </div>
+                  <div className={styles.heroVisualCard}>
+                    <span className={styles.visualCardKicker}>{t("matrixOverview.blockchain")}</span>
+                    <strong>{t("matrixOverview.title")}</strong>
+                    <p>{t("matrixOverview.subtitle")}</p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
 
-                  <p
-                    className="levels-note"
-                    style={{
-                      marginTop: 14,
-                    }}
-                    dangerouslySetInnerHTML={renderHTML(t("levels.note"))}
-                  />
+        <section className={styles.counterBarSection}>
+          <div className={styles.containerWide}>
+            <div className={styles.counterBar}>
+              {counterStats.map((item, index) => (
+                <CounterChip key={item.label} value={item.value} label={item.label} delay={index * 80} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <motion.section id="videos" className={`${styles.section} ${styles.sectionTight}`} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.videoPanel}>
+              <div className={styles.videoFrame}>
+                <iframe
+                  src="https://www.youtube.com/embed/yGyamkoQEBc?si=v8yKJz8yN8cIlZ3a"
+                  title={t("media.title")}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+              <div className={styles.videoCopy}>
+                <SectionHeading kicker={t("media.kicker")} title={t("media.title")} subtitle={t("media.subtitle")} align="left" />
+                <div className={styles.videoPointList}>
+                  {[t("media.items.book"), t("media.items.dashboard"), t("media.items.mobile")].map((item) => (
+                    <div key={item} className={styles.videoPoint}>
+                      <span className={styles.videoPointDot} aria-hidden="true" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* FAQ */}
-        <section id="faq" className="section section--tight">
-          <div className="container">
-            <div className="block-panel">
-              <div className="section-head reveal">
-                <div className="section-kicker">{t("faq.kicker")}</div>
-                <h2 className="section-title">{t("faq.title")}</h2>
-              </div>
+        <motion.section id="ecosystem" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("ecosystem.kicker")} title={t("ecosystem.title")} subtitle={t("ecosystem.subtitle")} />
+            <div className={styles.featureGrid}>
+              {ecosystemCards.map((card) => (
+                <div key={card.title} className={styles.featureCard}>
+                  <div className={styles.featureIconWrap}><FeatureIcon kind={card.kind} /></div>
+                  <span className={styles.featureKicker}>{card.kicker}</span>
+                  <h3 className={styles.featureTitle}>{card.title}</h3>
+                  <p className={styles.featureDescription}>{card.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
 
-              <div className="faq-list">
-                {faqKeys.map((key, index) => (
-                  <RicoMatrixFaqItem
-                    key={key}
-                    question={t(`faq.${key}.question`)}
-                    answer={t(`faq.${key}.answer`)}
-                  />
+        <motion.section id="access" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("access.kicker")} title={t("access.title")} subtitle={t("access.subtitle")} />
+            <div className={styles.pyramidWrap}>
+              <div className={styles.pyramidLine} aria-hidden="true" />
+              <div className={styles.pyramidGrid}>
+                {accessMilestones.map((item, index) => (
+                  <div key={item.step} className={`${styles.pyramidCard} ${styles[`pyramidCard${index + 1}`]}`}>
+                    <span className={styles.pyramidStep}>{item.step}</span>
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* FINAL CTA */}
-        <section id="cta" className="section">
-          <div className="container">
-            <div className="final-cta reveal">
-              <h2>{t("cta.title")}</h2>
-              <p>{t("cta.description")}</p>
-
-              <div className="hero-ctas mt-6 flex flex-col lg:flex-row items-stretch lg:items-start gap-4 lg:gap-6">
-                <MemoizedMobileWalletConnector
-                  className="wallet-inline"
-                  desktopButtonLabel={t("activateLevel")}
-                  mobileButtonLabel={t("activateLevel")}
-                />
-
-                <a
-                  href="https://t.me/ricomatrixdapp"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-secondary cta-inline"
-                >
-                  {t("joinTelegram")}
-                </a>
+        <motion.section id="skills" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.splitPanel}>
+              <div className={styles.splitPrimary}>
+                <SectionHeading kicker={t("skills.kicker")} title={t("skills.title")} subtitle={t("skills.subtitle")} align="left" />
+                <div className={styles.tagCloud}>
+                  {skillsPoints.map((point) => (
+                    <span key={point} className={styles.tagChip}>{point}</span>
+                  ))}
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                }}
-              >
-                {t("cta.disclaimer")}
+              <div className={styles.statementCard}>
+                <span className={styles.statementKicker}>{t("skills.sideCard.kicker")}</span>
+                <h3>{t("skills.sideCard.title")}</h3>
+                <p>{t("skills.sideCard.description")}</p>
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
+
+        <motion.section id="library" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.splitPanelReverse}>
+              <div className={styles.statementCardGold}>
+                <span className={styles.statementKicker}>{t("libraryFeature.kicker")}</span>
+                <h3>{t("libraryFeature.title")}</h3>
+                <p>{t("libraryFeature.subtitle")}</p>
+              </div>
+              <div className={styles.splitPrimary}>
+                <div className={styles.tagCloud}>
+                  {libraryPoints.map((point) => (
+                    <span key={point} className={styles.tagChip}>{point}</span>
+                  ))}
+                </div>
+                <p className={styles.detailNote}>{t("libraryFeature.note")}</p>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section className={`${styles.section} ${styles.sectionTight}`} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("tokenUtility.kicker")} title={t("tokenUtility.title")} subtitle={t("tokenUtility.subtitle")} />
+            <div className={styles.utilityRibbon}>
+              {tokenUtilityCards.map((item) => (
+                <div key={item} className={styles.utilityCard}>{item}</div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section id="how" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("howItWorks.kicker")} title={t("howItWorks.title")} subtitle={t("howItWorks.subtitle")} />
+            <div className={styles.stepsTrack}>
+              <div className={styles.stepsConnector} aria-hidden="true" />
+              {(["step1", "step2", "step3"] as const).map((key, index) => (
+                <div key={key} className={styles.stepCard}>
+                  <span className={styles.stepIndex}>{t(`howItWorks.steps.${key}.index`)}</span>
+                  <h3>{t(`howItWorks.steps.${key}.title`)}</h3>
+                  <p>{t(`howItWorks.steps.${key}.description`)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.matrixPanel}>
+              <div className={styles.matrixHeader}>
+                <SectionHeading
+                  kicker={matrixMode === "x3" ? t("visuals.x3.kicker") : t("visuals.x6.kicker")}
+                  title={matrixMode === "x3" ? t("visuals.x3.title") : t("visuals.x6.title")}
+                  subtitle={matrixMode === "x3" ? t("visuals.x3.note") : t("visuals.x6.note")}
+                  align="left"
+                />
+                <div className={styles.matrixToggle}>
+                  <button
+                    type="button"
+                    className={`${styles.matrixToggleButton} ${matrixMode === "x3" ? styles.matrixToggleButtonActive : ""}`}
+                    onClick={() => setMatrixMode("x3")}
+                  >
+                    X3
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.matrixToggleButton} ${matrixMode === "x6" ? styles.matrixToggleButtonActive : ""}`}
+                    onClick={() => setMatrixMode("x6")}
+                  >
+                    X6
+                  </button>
+                </div>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {matrixMode === "x3" ? (
+                  <motion.div key="x3" className={styles.matrixStage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                    <div className={styles.matrixColumn}>
+                      <MatrixNode label="You" variant="you" />
+                    </div>
+                    <div className={styles.matrixConnectorsX3} aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <div className={styles.matrixRowThree}>
+                      <MatrixNode label="Direct" variant="direct" />
+                      <MatrixNode label="Direct" variant="direct" />
+                      <MatrixNode label="Direct" variant="direct" />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div key="x6" className={styles.matrixStage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                    <div className={styles.matrixColumn}>
+                      <MatrixNode label="You" variant="you" />
+                    </div>
+                    <div className={styles.matrixConnectorsX6Top} aria-hidden="true">
+                      <span />
+                      <span />
+                    </div>
+                    <div className={styles.matrixRowTwo}>
+                      <MatrixNode label="Direct" variant="direct" />
+                      <MatrixNode label="Direct" variant="direct" />
+                    </div>
+                    <div className={styles.matrixConnectorsX6Bottom} aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <div className={styles.matrixRowFour}>
+                      <MatrixNode label="Spillover" variant="spillover" />
+                      <MatrixNode label="Spillover" variant="spillover" />
+                      <MatrixNode label="Spillover" variant="spillover" />
+                      <MatrixNode label="Spillover" variant="spillover" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section id="levels" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("levels.kicker")} title={t("matrixOverview.title")} subtitle={t("levels.subtitle")} />
+            <div className={styles.pricingGrid}>
+              {pricingCards.map((card) => (
+                <div key={card.level} className={`${styles.pricingCard} ${card.level === 9 ? styles.pricingCardFeatured : ""}`}>
+                  {card.level === 9 ? <span className={styles.recommendedBadge}>Recommended</span> : null}
+                  <span className={styles.pricingLevel}>{card.title}</span>
+                  <strong className={styles.pricingValue}>{card.price}</strong>
+                  <p className={styles.pricingDescription}>{card.description}</p>
+                </div>
+              ))}
+            </div>
+            <p className={styles.pricingNote}>{t("levels.note")}</p>
+          </div>
+        </motion.section>
+
+        <motion.section id="airdrop" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("airdropFlow.kicker")} title={t("airdropFlow.title")} subtitle={t("airdropFlow.subtitle")} />
+            <div className={styles.airdropTrack}>
+              <div className={styles.airdropConnector} aria-hidden="true" />
+              <span className={styles.airdropToken} aria-hidden="true">◈</span>
+              {[0, 1, 2, 3].map((index) => (
+                <div key={index} className={styles.airdropStep}>
+                  <span className={styles.airdropIndex}>{String(index + 1).padStart(2, "0")}</span>
+                  <h3>{t(`airdropFlow.steps.${index}.title`)}</h3>
+                  <p>{t(`airdropFlow.steps.${index}.description`)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section id="staking" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.stakingPanel}>
+              <SectionHeading kicker={t("staking.kicker")} title={t("staking.title")} subtitle={t("staking.subtitle")} />
+              <div className={styles.stakingBody}>
+                <div className={styles.stakingRingWrap}>
+                  <div className={styles.stakingRing}>
+                    <div className={styles.stakingRingInner}>
+                      <span className={styles.stakingToken}>RICO</span>
+                      <strong>APY</strong>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.stakingColumns}>
+                  {stakingCards.map((card) => (
+                    <div key={card.title} className={styles.stakingCard}>
+                      <h3>{card.title}</h3>
+                      <p>{card.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section id="world" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("worldMap.kicker")} title={t("worldMap.title")} subtitle={t("worldMap.subtitle")} />
+            <div className={styles.mapShell}>
+              <div className={styles.mapFrame}>
+                {mapState === "loading" ? <div className={styles.mapState}>{t("worldMap.loading")}</div> : null}
+                {mapState === "error" ? <div className={styles.mapState}>{t("worldMap.error")}</div> : null}
+                {mapState === "empty" ? <div className={styles.mapState}>{t("worldMap.empty")}</div> : null}
+                {mapState === "ready" ? <WorldMap data={mapStats} /> : null}
+              </div>
+              <div className={styles.mapStatsColumn}>
+                <div className={styles.mapStatCard}>
+                  <span>{t("worldMap.stats.readers")}</span>
+                  <strong>{mapTotals.uniqueVisitors.toLocaleString()}</strong>
+                  <p>{t("worldMap.stats.readersNote")}</p>
+                </div>
+                <div className={styles.mapStatCard}>
+                  <span>{t("worldMap.stats.countries")}</span>
+                  <strong>{mapTotals.countries.toLocaleString()}</strong>
+                  <p>{t("worldMap.stats.countriesNote")}</p>
+                </div>
+                <div className={styles.mapStatCard}>
+                  <span>{t("worldMap.stats.leadingCountry")}</span>
+                  <strong>{mapTotals.topCountryName}</strong>
+                  <p>{`${mapTotals.topCountryVisitors.toLocaleString()} ${t("worldMap.stats.leadingCountryNote")}`}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section id="faq" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.16 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <SectionHeading kicker={t("faq.kicker")} title={t("faq.title")} />
+            <div className={styles.faqList}>
+              {faqKeys.map((key) => (
+                <FaqItem key={key} question={t(`faq.${key}.question`)} answer={t(`faq.${key}.answer`)} />
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section id="cta" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.ctaPanel}>
+              <SectionHeading kicker={t("cta.kicker")} title={t("cta.title")} subtitle={t("cta.description")} />
+              <div className={styles.ctaActions}>
+                <MemoizedMobileWalletConnector
+                  className={styles.heroWalletSlot}
+                  buttonClassName={styles.heroWalletSkin}
+                  desktopButtonLabel={t("activateLevel")}
+                  mobileButtonLabel={t("activateLevel")}
+                />
+                <a href="https://t.me/ricomatrixdapp" target="_blank" rel="noreferrer" className={styles.secondaryCta}>
+                  {t("joinTelegram")}
+                </a>
+              </div>
+              <p className={styles.disclaimer}>{t("cta.disclaimer")}</p>
+            </div>
+          </div>
+        </motion.section>
       </main>
 
-      {/* Footer rendered globally */}
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <div className={styles.footerGrid}>
+            <div className={styles.footerBrand}>
+              <div className={styles.footerLogoRow}>
+                <img src="/logo.png" alt="Rico Matrix" className={styles.footerLogo} />
+                <div>
+                  <strong>Rico Matrix</strong>
+                  <p>{t("support.help")}</p>
+                </div>
+              </div>
+              <span className={styles.footerSupport}>{t("support.team")} {t("support.telegram")}</span>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3>{t("nav.ecosystem")}</h3>
+              <div className={styles.footerLinks}>
+                {navLinks.map((link) => (
+                  <a key={link.id} href={`#${link.id}`}>{link.label}</a>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3>{t("footer.links.website")}</h3>
+              <div className={styles.footerLinks}>
+                {footerLinks.map((item) => (
+                  <a key={item.label} href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noreferrer" : undefined}>
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.footerBar}>{t("footer.copyright", { year: new Date().getFullYear() })}</div>
+        </div>
+      </footer>
     </div>
   );
-};
-
-export default RicoMatrixLandingPage;
+}

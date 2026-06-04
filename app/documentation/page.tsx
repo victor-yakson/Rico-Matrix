@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Header } from "@/components/Navigation/Header";
@@ -9,8 +9,9 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-// ✅ Local worker (no CDN)
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
+// Local worker served from /public/pdfjs
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
+const WHITEPAPER_URL = "https://rico-matrix.gitbook.io/whitepaper";
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -22,9 +23,7 @@ export default function DocumentationPage() {
 
   // Dynamic PDF URL based on language
   const PDF_URL = useMemo(() => {
-    return locale === "fr" 
-      ? "/pdfs/rico_matrix_business_fr.pdf"
-      : "/pdfs/rico_matrix_business.pdf";
+    return `/api/documentation/pdf?lang=${locale === "fr" ? "fr" : "en"}`;
   }, [locale]);
 
   const tocItems: TocItem[] = useMemo(
@@ -59,6 +58,44 @@ export default function DocumentationPage() {
   const [docLoading, setDocLoading] = useState(true);
   const [docError, setDocError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
+  const pdfFile = useMemo(() => {
+    if (!pdfData) return null;
+    return { data: pdfData };
+  }, [pdfData]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadPdf = async () => {
+      setDocLoading(true);
+      setDocError(null);
+
+      try {
+        const res = await fetch(PDF_URL, { cache: "no-store" });
+        if (!res.ok) {
+          const payload = (await res.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(payload?.error || (t("error.loading") || "Failed to load PDF"));
+        }
+
+        const buffer = await res.arrayBuffer();
+        if (!active) return;
+
+        setPdfData(new Uint8Array(buffer));
+      } catch (error: any) {
+        if (!active) return;
+        setPdfData(null);
+        setDocLoading(false);
+        setDocError(error?.message || (t("error.loading") || "Failed to load PDF"));
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      active = false;
+    };
+  }, [PDF_URL, reloadKey, t]);
 
   const onDocumentLoadSuccess = useCallback((info: { numPages: number }) => {
     setNumPages(info.numPages);
@@ -100,7 +137,6 @@ export default function DocumentationPage() {
   }, []);
 
   const retry = useCallback(() => {
-    setDocLoading(true);
     setDocError(null);
     setReloadKey((k) => k + 1);
   }, []);
@@ -112,13 +148,13 @@ export default function DocumentationPage() {
       {/* subtle background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-yellow-500/10 blur-3xl" />
-        <div className="absolute top-24 right-[-160px] h-[420px] w-[420px] rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="absolute bottom-[-200px] left-[-160px] h-[520px] w-[520px] rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute top-24 right-[-160px] h-[420px] w-[420px] rounded-full bg-yellow-500/10 blur-3xl" />
+        <div className="absolute bottom-[-200px] left-[-160px] h-[520px] w-[520px] rounded-full bg-yellow-500/10 blur-3xl" />
       </div>
 
       <Header />
 
-      <div className="relative px-4 sm:px-6 lg:px-8 py-10">
+      <div className="relative overflow-x-clip px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           {/* Top bar */}
           <div className="mb-8 flex flex-col gap-6">
@@ -150,7 +186,7 @@ export default function DocumentationPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-stretch gap-2 sm:items-center sm:justify-end">
                 <span className="inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-xs text-yellow-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
                   {t("version") || "Version 1.0"}
@@ -158,7 +194,7 @@ export default function DocumentationPage() {
 
                 <button
                   onClick={openPdf}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-2 text-sm text-slate-100 hover:bg-slate-900/65 transition"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-2 text-sm text-slate-100 transition hover:bg-slate-900/65 sm:flex-none"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path
@@ -186,9 +222,41 @@ export default function DocumentationPage() {
                   {t("actions.openNew") || "Open PDF"}
                 </button>
 
+                <a
+                  href={WHITEPAPER_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm text-yellow-100 transition hover:bg-yellow-500/20 sm:flex-none"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M14 3h7v7"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M10 14L21 3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {t("actions.openWhitepaper") || "Open Whitepaper"}
+                </a>
+
                 <button
                   onClick={copyLink}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-2 text-sm text-slate-100 hover:bg-slate-900/65 transition"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-2 text-sm text-slate-100 transition hover:bg-slate-900/65 sm:flex-none"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path
@@ -219,11 +287,11 @@ export default function DocumentationPage() {
               </div>
               <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-4 backdrop-blur">
                 <div className="text-xs text-slate-500">{t("stats.lastUpdated") || "Last Updated"}</div>
-                <div className="mt-1 text-2xl font-semibold text-emerald-200">Dec 2024</div>
+                <div className="mt-1 text-2xl font-semibold text-amber-200">Dec 2024</div>
               </div>
               <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-4 backdrop-blur">
                 <div className="text-xs text-slate-500">{t("stats.fileType") || "File Type"}</div>
-                <div className="mt-1 text-2xl font-semibold text-blue-200">PDF</div>
+                <div className="mt-1 text-2xl font-semibold text-yellow-200">PDF</div>
               </div>
             </div>
           </div>
@@ -285,21 +353,52 @@ export default function DocumentationPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-slate-800/60">
+                  <div className="mt-4 space-y-3 border-t border-slate-800/60 pt-4">
                     <button
                       onClick={openPdf}
-                      className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-sm font-semibold text-white shadow hover:opacity-95 transition"
+                      className="w-full rounded-2xl bg-gradient-to-r from-yellow-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow hover:opacity-95 transition"
                     >
                       {t("actions.download") || "Open / Download PDF"}
                     </button>
+                    <a
+                      href={WHITEPAPER_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex w-full items-center justify-between rounded-2xl border border-yellow-500/25 bg-yellow-500/10 px-4 py-3 text-sm font-medium text-yellow-100 transition hover:bg-yellow-500/15"
+                    >
+                      <span>{t("actions.openWhitepaper") || "Open Whitepaper"}</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M14 3h7v7"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M10 14L21 3"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </a>
                   </div>
                 </div>
 
                 {/* Help / Info card */}
-                <div className="rounded-3xl border border-emerald-500/25 bg-emerald-500/10 p-5">
+                <div className="rounded-3xl border border-yellow-400/30 bg-yellow-500/10 p-5">
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-500/10">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-emerald-200">
+                    <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-yellow-400/30 bg-yellow-500/10">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-amber-200">
                         <path
                           d="M12 16h.01"
                           stroke="currentColor"
@@ -325,13 +424,13 @@ export default function DocumentationPage() {
                     </div>
 
                     <div>
-                      <div className="font-semibold text-emerald-100">{t("help.title") || "Need Help?"}</div>
-                      <div className="mt-1 text-sm text-emerald-100/80">
+                      <div className="font-semibold text-amber-100">{t("help.title") || "Need Help?"}</div>
+                      <div className="mt-1 text-sm text-amber-100/80">
                         {t("help.description") || "If the PDF doesn't load, download it directly or contact support."}
                       </div>
                       <a
                         href="mailto:support@ricomatrix.com"
-                        className="mt-2 inline-block text-sm text-emerald-200 underline hover:text-emerald-100"
+                        className="mt-2 inline-block text-sm text-amber-200 underline hover:text-amber-100"
                       >
                         {t("help.contact") || "Contact Support"}
                       </a>
@@ -399,7 +498,7 @@ export default function DocumentationPage() {
 
                     <button
                       onClick={openPdf}
-                      className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 transition"
+                      className="rounded-2xl bg-gradient-to-r from-yellow-500 to-amber-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 transition"
                     >
                       {t("actions.openPdf") || "Open PDF"}
                     </button>
@@ -459,7 +558,7 @@ export default function DocumentationPage() {
                           </button>
                           <button
                             onClick={openPdf}
-                            className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 transition"
+                            className="rounded-2xl bg-gradient-to-r from-yellow-500 to-amber-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 transition"
                           >
                             {t("actions.download") || "Open / Download PDF"}
                           </button>
@@ -472,24 +571,26 @@ export default function DocumentationPage() {
                 {/* PDF */}
                 {!docError && (
                   <div className="rounded-2xl border border-slate-800/60 bg-[#05060a] overflow-auto p-3">
-                    <Document
-                      key={reloadKey}
-                      file={PDF_URL}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      onLoadError={onDocumentLoadError}
-                      loading={null}
-                      error={null}
-                      noData={null}
-                    >
-                      <Page pageNumber={pageNumber} scale={scale} renderAnnotationLayer renderTextLayer />
-                    </Document>
+                    {pdfData ? (
+                      <Document
+                        key={reloadKey}
+                        file={pdfFile}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        onLoadError={onDocumentLoadError}
+                        loading={null}
+                        error={null}
+                        noData={null}
+                      >
+                        <Page pageNumber={pageNumber} scale={scale} renderAnnotationLayer renderTextLayer />
+                      </Document>
+                    ) : null}
                   </div>
                 )}
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                   <div>{t("viewer.footer") || "Tip: Use TOC to jump sections • Zoom for readability"}</div>
                   <div className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/90" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-yellow-300/90" />
                     {t("viewer.ready") || "Viewer Ready"}
                   </div>
                 </div>

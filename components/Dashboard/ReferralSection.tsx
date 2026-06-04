@@ -82,7 +82,7 @@ export const ReferralSection = () => {
         <ul className="text-sm text-slate-400 space-y-2">
           {t.raw('benefits.items').map((item: string, index: number) => (
             <li key={index} className="flex items-center">
-              <span className="text-green-400 mr-2">✓</span>
+              <span className="text-amber-300 mr-2">✓</span>
               {item}
             </li>
           ))}
@@ -111,7 +111,7 @@ export const ReferralSection = () => {
           </button>
         </div>
         {copied && (
-          <p className="text-green-400 text-xs mt-1 animate-pulse">
+          <p className="text-amber-300 text-xs mt-1 animate-pulse">
             {t('link.copiedMessage')}
           </p>
         )}
@@ -124,7 +124,7 @@ export const ReferralSection = () => {
           disabled={!address}
           className={`w-full flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium transition-all ${
             address 
-              ? 'bg-blue-500 hover:bg-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
+              ? 'bg-yellow-400 hover:bg-yellow-300 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]' 
               : 'bg-slate-700 text-slate-500 cursor-not-allowed'
           }`}
         >
@@ -139,14 +139,14 @@ export const ReferralSection = () => {
           {t('stats.title')}
         </h4>
         <div className="grid grid-cols-2 gap-4 text-center">
-          <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
-            <div className="text-lg font-bold text-blue-400">50%</div>
+          <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
+            <div className="text-lg font-bold text-yellow-400">50%</div>
             <div className="text-xs text-slate-400">
               {t('stats.directBonus')}
             </div>
           </div>
-          <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
-            <div className="text-lg font-bold text-purple-400">20%</div>
+          <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
+            <div className="text-lg font-bold text-yellow-400">20%</div>
             <div className="text-xs text-slate-400">
               {t('stats.unilevel')}
             </div>

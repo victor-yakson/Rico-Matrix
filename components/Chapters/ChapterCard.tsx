@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { formatUnits } from "viem";
 import { useTranslations } from "next-intl";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -15,6 +16,7 @@ interface ChapterCardProps {
   title: string;
   price: string;
   isUnlocked: boolean;
+  chapterState?: "active" | "blocked";
   onPurchase: (track: number, chapter: number) => Promise<void>;
   onApprove: (amount: string) => Promise<void>;
   disabled: boolean;
@@ -140,6 +142,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   title,
   price,
   isUnlocked,
+  chapterState = "active",
   onPurchase,
   onApprove,
   disabled,
@@ -196,7 +199,8 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   );
 
   const getPdfUrl = (trackNumber: number, index: number) => {
-    const safeIndex = Math.max(1, Math.min(index, 12));
+    const maxIndex = 12;
+    const safeIndex = Math.max(1, Math.min(index, maxIndex));
     if (trackNumber === 1) return `/pdfs/chapters/chapter${safeIndex}.pdf`;
     return `/pdfs/selfhelp/book${safeIndex}.pdf`;
   };
@@ -217,17 +221,23 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   const getTrackBadgeClass = (trackNumber: number) => {
     if (trackNumber === 1)
       return "bg-gradient-to-r from-yellow-400 to-amber-500 text-black";
-    return "bg-gradient-to-r from-emerald-500 to-cyan-500 text-black";
+    return "bg-gradient-to-r from-yellow-400 to-amber-500 text-black";
   };
 
   const getStatusText = () => {
-    if (isUnlocked) return t("status.unlocked");
+    if (isUnlocked) {
+      return chapterState === "blocked"
+        ? t("status.blocked")
+        : t("status.active");
+    }
     if (chapter > 1) return t("status.lockedPrevious");
     return t("status.available");
   };
 
   const getStatusColor = () => {
-    if (isUnlocked) return "text-emerald-400";
+    if (isUnlocked) {
+      return chapterState === "blocked" ? "text-red-300" : "text-yellow-300";
+    }
     if (chapter > 1) return "text-amber-300";
     return "text-yellow-400";
   };
@@ -243,7 +253,6 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const getButtonText = () => {
-    if (isUnlocked) return t("button.unlocked");
     if (isApproving) return t("button.approving");
     if (disabled) return t("button.processing");
     if (needsApproval) return t("button.approve");
@@ -255,7 +264,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
       return "cursor-not-allowed bg-slate-900/70 text-slate-500 ring-1 ring-slate-700";
     }
     if (needsApproval) {
-      return "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-[0_0_28px_rgba(59,130,246,0.45)] hover:shadow-[0_0_40px_rgba(59,130,246,0.7)] hover:brightness-110 active:scale-[0.99]";
+      return "bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-[0_0_28px_rgba(184,128,54,0.4)] hover:shadow-[0_0_40px_rgba(184,128,54,0.62)] hover:brightness-110 active:scale-[0.99]";
     }
     return "bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 text-black shadow-[0_0_28px_rgba(250,204,21,0.35)] hover:shadow-[0_0_40px_rgba(250,204,21,0.6)] hover:brightness-110 active:scale-[0.99]";
   };
@@ -725,21 +734,31 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
               {getStatusText()}
             </span>
           </div>
+
         </div>
 
-        <button
-          onClick={handleAction}
-          disabled={needsApproval ? isApproveButtonDisabled : isButtonDisabled}
-          className={`relative mt-4 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200 ${getButtonClass()}`}
-        >
-          {getButtonText()}
-        </button>
+        {isUnlocked ? (
+          <Link
+            href={`/matrix?track=${track}&chapter=${chapter}`}
+            className="relative mt-4 inline-flex w-full items-center justify-center rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold tracking-wide text-yellow-100 transition-all duration-200 hover:bg-yellow-500/20"
+          >
+            {t("button.viewChapterData")}
+          </Link>
+        ) : (
+          <button
+            onClick={handleAction}
+            disabled={needsApproval ? isApproveButtonDisabled : isButtonDisabled}
+            className={`relative mt-4 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200 ${getButtonClass()}`}
+          >
+            {getButtonText()}
+          </button>
+        )}
 
         {isUnlocked && (
           <div className="mt-4">
             <button
               onClick={handleReadPdf}
-              className="w-full bg-gradient-to-r from-emerald-500/25 to-cyan-500/25 hover:from-emerald-500/30 hover:to-cyan-500/30 text-slate-100 py-2.5 rounded-xl text-sm font-semibold border border-white/[0.08] transition-colors"
+              className="w-full bg-gradient-to-r from-yellow-500/20 to-amber-500/20 hover:from-yellow-500/25 hover:to-amber-500/25 text-slate-100 py-2.5 rounded-xl text-sm font-semibold border border-white/[0.08] transition-colors"
             >
               📖 Open Secure Reader
             </button>
@@ -754,16 +773,31 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
           <div className="absolute inset-0" onClick={(e) => e.stopPropagation()}>
             <div className="relative w-full h-[100dvh] bg-slate-950 flex flex-col overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between px-3 py-3 border-b border-white/[0.06] bg-gradient-to-b from-slate-900/70 to-slate-950/40">
-                <div className="text-xs text-slate-300/80 truncate">
-                  {chip.icon} {chip.label} • {title} • Page {activePage}/{numPages ?? "?"}
+              <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] bg-[rgba(4,6,10,0.92)] px-3 py-3 backdrop-blur-xl">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <button
+                    onClick={handleClosePdf}
+                    className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/12 px-3 py-2.5 text-sm font-semibold text-yellow-100 shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition-colors hover:bg-yellow-500/20"
+                  >
+                    <span aria-hidden="true">←</span>
+                    <span>{t("pdfViewer.backToChapters")}</span>
+                  </button>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-slate-50">
+                      {title}
+                    </div>
+                    <div className="truncate text-xs text-slate-400">
+                      {chip.icon} {chip.label} • Page {activePage}/{numPages ?? "?"}
+                    </div>
+                  </div>
                 </div>
 
                 <button
                   onClick={handleClosePdf}
-                  className="p-2 rounded-xl hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 transition-colors"
-                  aria-label="Close"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-slate-100 transition-colors hover:bg-white/[0.08]"
+                  aria-label={t("pdfViewer.closeButton")}
                 >
+                  <span>{t("pdfViewer.closeButton")}</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

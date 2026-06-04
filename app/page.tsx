@@ -8,7 +8,7 @@ import { ReferralSection } from "../components/Profile/ReferralSection";
 import { ProfileStats } from "../components/Dashboard/ProfileStats";
 import { RegistrationSection } from "../components/Dashboard/RegistrationSection";
 import MigrationPanel from "@/components/Dashboard/MigrationPanel";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatUnits } from "viem";
@@ -18,6 +18,7 @@ import { Stats } from "../components/Dashboard/Stats";
 import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import { TestimonialPromoPanel } from "@/components/Dashboard/TestimonialPromoPanel";
+import SiteFooter from "@/components/Layout/SiteFooter";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
@@ -43,6 +44,8 @@ export default function Dashboard() {
     claimRoyaltyV2,
     claimRico,
     claimLegacyRoyalty,
+    fetchTrack1Matrix,
+    fetchTrack2Matrix,
     refetchUserData,
     refetchAllData,
     refetchGlobalStats,
@@ -58,8 +61,42 @@ export default function Dashboard() {
     null,
   );
   const [isClaimingRico, setIsClaimingRico] = useState(false);
+  const [blockedChapters, setBlockedChapters] = useState<
+    Array<{ track: "X3" | "X6"; chapter: number }>
+  >([]);
+  const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
   const searchParams = useSearchParams();
   const urlReferral = searchParams.get("ref");
+
+  const upcomingFeatures = useMemo(
+    () => [
+      {
+        icon: "📈",
+        title: t("header.featureCarousel.items.0.title"),
+        status: t("header.featureCarousel.items.0.status"),
+        href: "https://app.ricomatrix.com",
+      },
+      {
+        icon: "⚙️",
+        title: t("header.featureCarousel.items.1.title"),
+        status: t("header.featureCarousel.items.1.status"),
+        href: "https://app.ricomatrix.com",
+      },
+      {
+        icon: "🧠",
+        title: t("header.featureCarousel.items.2.title"),
+        status: t("header.featureCarousel.items.2.status"),
+        href: "https://app.ricomatrix.com",
+      },
+      {
+        icon: "⚡",
+        title: t("header.featureCarousel.items.3.title"),
+        status: t("header.featureCarousel.items.3.status"),
+        href: "https://app.ricomatrix.com",
+      },
+    ],
+    [t],
+  );
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -77,7 +114,8 @@ export default function Dashboard() {
     const existsInV2 = userData?.exists || false;
 
     // Check migration status
-    const migrationStatus = userData?.migrationData?.status || 0;
+    const migrationStatus =
+      userData?.migrationStatus?.status ?? userData?.migrationData?.status ?? 0;
 
     if (!existsInV2) {
       // User doesn't exist in V2
@@ -165,6 +203,76 @@ export default function Dashboard() {
     return { __html: html };
   };
 
+  useEffect(() => {
+    const loadBlockedChapters = async () => {
+      if (
+        dashboardState !== "dashboard" ||
+        !address ||
+        !userData?.exists
+      ) {
+        setBlockedChapters([]);
+        return;
+      }
+
+      try {
+        const checks: Array<Promise<{ track: "X3" | "X6"; chapter: number; blocked: boolean }>> = [];
+
+        if (userData.track1Unlocked > 0) {
+          checks.push(
+            fetchTrack1Matrix(address, userData.track1Unlocked).then((data) => ({
+              track: "X3" as const,
+              chapter: userData.track1Unlocked,
+              blocked: Boolean(data?.blocked),
+            }))
+          );
+        }
+
+        if (userData.track2Unlocked > 0) {
+          checks.push(
+            fetchTrack2Matrix(address, userData.track2Unlocked).then((data) => ({
+              track: "X6" as const,
+              chapter: userData.track2Unlocked,
+              blocked: Boolean(data?.blocked),
+            }))
+          );
+        }
+
+        const results = await Promise.all(checks);
+        setBlockedChapters(
+          results
+            .filter((item) => item.blocked)
+            .map(({ track, chapter }) => ({ track, chapter }))
+        );
+      } catch (error) {
+        console.error("Failed to load blocked chapter state:", error);
+        setBlockedChapters([]);
+      }
+    };
+
+    void loadBlockedChapters();
+  }, [
+    address,
+    dashboardState,
+    fetchTrack1Matrix,
+    fetchTrack2Matrix,
+    userData?.exists,
+    userData?.track1Unlocked,
+    userData?.track2Unlocked,
+  ]);
+
+  useEffect(() => {
+    if (dashboardState !== "dashboard") {
+      setFeatureCarouselIndex(0);
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setFeatureCarouselIndex((current) => (current + 1) % upcomingFeatures.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [dashboardState, upcomingFeatures.length]);
+
   // Show landing page if not connected
   if (!isConnected) {
     return <RicoMatrixLandingPage />;
@@ -175,15 +283,15 @@ export default function Dashboard() {
     return (
       <>
         <Header />
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 bg-gradient-to-br from-slate-950 via-black to-slate-900">
+        <div className="theme-shell flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4">
           <div className="text-center mb-8">
-            <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
+            <p className="theme-kicker justify-center">
               {t("loading.subtitle")}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+            <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {t("loading.title")}
             </h1>
-            <p className="text-sm md:text-base text-slate-400">
+            <p className="theme-copy text-sm md:text-base">
               {t("loading.description")}
             </p>
           </div>
@@ -202,26 +310,25 @@ export default function Dashboard() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)]">
-        <div className="px-4 py-8 md:py-10">
-          <div className="mx-auto max-w-7xl">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4">
             {/* Header - Show for all states except landing */}
-            <div className="text-center mb-8 md:mb-10 lg:mb-12">
-              <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
+            <div className="mx-auto mb-8 max-w-4xl text-center md:mb-10 lg:mb-12">
+              <p className="theme-kicker justify-center mb-3">
                 {dashboardState === "migrate"
                   ? "ACCOUNT UPGRADE REQUIRED"
                   : dashboardState === "register"
                     ? "WELCOME TO RICO MATRIX"
                     : t("header.subtitle")}
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+              <h1 className="theme-title mb-3 text-3xl md:text-4xl">
                 {dashboardState === "migrate"
                   ? "Migration Required"
                   : dashboardState === "register"
                     ? "Join RICO Matrix"
                     : t("header.title")}
               </h1>
-              <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+              <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
                 {dashboardState === "migrate"
                   ? "Transfer your V1 account to access new V2 features and rewards"
                   : dashboardState === "register"
@@ -242,25 +349,78 @@ export default function Dashboard() {
                 parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) >
                   0 && (
                   <div className="mt-4">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-xs md:text-sm font-medium text-cyan-200 hover:bg-cyan-500/20 transition-all">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/50 bg-yellow-500/10 px-4 py-2 text-xs md:text-sm font-medium text-yellow-100 hover:bg-yellow-500/20 transition-all">
                       <span className="text-base">🪙</span>
                       <span>{t("header.ricoAnnouncement")}</span>
                     </div>
                   </div>
                 )}
 
-              {/* Telegram button in header */}
-              <div className="mt-4 flex justify-center">
-                <a
-                  href="https://t.me/ricomatrixdapp"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-xs md:text-sm font-medium text-sky-200 hover:bg-sky-500/20 transition-all"
-                >
-                  <span className="text-base">📲</span>
-                  <span>{t("header.telegram")}</span>
-                </a>
-              </div>
+              {dashboardState === "dashboard" && (
+                <div className="mx-auto mt-4 max-w-3xl">
+                  <div className="theme-panel relative overflow-hidden border border-yellow-400/20 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.12),transparent_32%),linear-gradient(180deg,rgba(24,24,32,0.96),rgba(10,10,18,0.98))] px-4 py-4 shadow-[0_0_34px_rgba(234,179,8,0.12)] sm:px-5">
+                    <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-yellow-300/70 to-transparent" />
+                    <div className="pointer-events-none absolute -right-12 top-6 h-24 w-24 rounded-full bg-yellow-300/10 blur-3xl" />
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <a
+                        href={upcomingFeatures[featureCarouselIndex]?.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-w-0 flex-1 rounded-2xl text-center transition hover:bg-white/[0.02] sm:text-left"
+                      >
+                        <p className="theme-kicker mb-2 justify-center text-[10px] sm:justify-start">
+                          {t("header.featureCarousel.kicker")}
+                        </p>
+                        <div
+                          key={featureCarouselIndex}
+                          className="dashboard-feature-carousel min-h-[128px] rounded-2xl border border-white/5 bg-white/[0.02] px-3 py-3 sm:min-h-[104px] sm:px-4"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-yellow-400/20 bg-gradient-to-br from-yellow-300/20 via-amber-400/10 to-transparent text-3xl shadow-[0_0_24px_rgba(234,179,8,0.16)]">
+                              {upcomingFeatures[featureCarouselIndex]?.icon}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-yellow-200/90">
+                                <span>{upcomingFeatures[featureCarouselIndex]?.status}</span>
+                              </div>
+                              <h2 className="mt-3 text-xl font-semibold text-slate-50 sm:text-2xl">
+                                {upcomingFeatures[featureCarouselIndex]?.title}
+                              </h2>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+
+                      <div className="flex flex-col items-center gap-3 sm:items-end">
+                        <a
+                          href={upcomingFeatures[featureCarouselIndex]?.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 px-4 py-2 text-xs font-semibold text-black shadow-[0_0_18px_rgba(184,128,54,0.42)] transition hover:brightness-110 active:scale-[0.98] md:text-sm"
+                        >
+                          <span>{t("header.featureCarousel.learnMore")}</span>
+                        </a>
+
+                        <div className="flex items-center justify-center gap-2 sm:justify-end">
+                          {upcomingFeatures.map((feature, index) => (
+                            <button
+                              key={feature.title}
+                              type="button"
+                              aria-label={feature.title}
+                              onClick={() => setFeatureCarouselIndex(index)}
+                              className={`h-2.5 rounded-full transition-all ${
+                                index === featureCarouselIndex
+                                  ? "w-8 bg-yellow-400"
+                                  : "w-2.5 bg-white/20 hover:bg-white/35"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Show Migration Panel if user needs to migrate */}
@@ -273,7 +433,7 @@ export default function Dashboard() {
             {/* Show Registration Section if new user */}
             {dashboardState === "register" && (
               <div className="mb-8 md:mb-10 lg:mb-12">
-                <div className="rounded-3xl border border-yellow-500/25 bg-gradient-to-br from-slate-950 via-slate-950/95 to-slate-900/90 p-4 sm:p-5 md:p-6 lg:p-7 shadow-[0_0_40px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+                <div className="theme-panel p-4 sm:p-5 md:p-6 lg:p-7">
                   <RegistrationSection
                     referralAddress={urlReferral}
                     onRegistrationComplete={handleRegistrationComplete}
@@ -285,17 +445,50 @@ export default function Dashboard() {
             {/* Show Full Dashboard if user exists in V2 */}
             {dashboardState === "dashboard" && (
               <>
+                {blockedChapters.length > 0 && (
+                  <section className="mb-6 rounded-2xl border border-red-500/35 bg-red-500/10 p-5 shadow-[0_0_28px_rgba(127,29,29,0.22)]">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-200">
+                          {t("blockedChapter.kicker")}
+                        </p>
+                        <h2 className="mt-2 text-xl font-semibold text-slate-50">
+                          {t("blockedChapter.title")}
+                        </h2>
+                        <p className="mt-2 max-w-3xl text-sm text-slate-300">
+                          {t("blockedChapter.description")}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {blockedChapters.map((item) => (
+                            <span
+                              key={`${item.track}-${item.chapter}`}
+                              className="inline-flex items-center rounded-full border border-red-400/35 bg-black/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-red-100"
+                            >
+                              {t("blockedChapter.item", {
+                                track: item.track,
+                                chapter: item.chapter,
+                              })}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <Link
+                        href="/chapters"
+                        className="inline-flex items-center justify-center rounded-xl bg-red-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-red-300"
+                      >
+                        {t("blockedChapter.action")}
+                      </Link>
+                    </div>
+                  </section>
+                )}
+
                 {/* Main Content Grid */}
                 <div
-                  className="
-                    grid grid-cols-1 
-                    lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)] 
-                    gap-6 lg:gap-8 xl:gap-10 mb-8 items-stretch
-                  "
+                  className="mb-8 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)] lg:gap-8 xl:gap-10"
                 >
                   {/* Left Column - Profile */}
                   <div className="space-y-6 order-2 lg:order-1 h-full">
-                    <div className="h-full rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+                    <div className="theme-panel h-full p-5">
                       <ProfileInfo
                         userData={userData}
                         rewardTokenAddress={rewardTokenAddress}
@@ -316,7 +509,7 @@ export default function Dashboard() {
                   <div className="space-y-6 lg:space-y-8 order-1 lg:order-2 h-full">
 
                     {/* Stats Overview + Royalty Buttons */}
-                    <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                    <div className="theme-panel p-5 md:p-6">
                       <Stats
                         userData={userData}
                         globalStats={globalStats}
@@ -332,7 +525,7 @@ export default function Dashboard() {
                             className={`flex w-full items-center justify-center rounded-xl px-6 py-3 text-base md:text-lg font-semibold transition-all
                               ${
                                 !isProcessingRoyalty
-                                  ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-[0_0_22px_rgba(245,158,11,0.7)] hover:brightness-110 active:scale-[0.98]"
+                                  ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-[0_0_22px_rgba(245,158,11,0.7)] hover:brightness-110 active:scale-[0.98]"
                                   : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
                               }
                             `}
@@ -358,7 +551,7 @@ export default function Dashboard() {
                             className={`flex w-full items-center justify-center rounded-xl px-6 py-3 text-base md:text-lg font-semibold transition-all
                               ${
                                 canClaimRoyaltyV2 && !isProcessingRoyalty
-                                  ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-300 text-black shadow-[0_0_22px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98]"
+                                  ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 text-black shadow-[0_0_22px_rgba(184,128,54,0.62)] hover:brightness-110 active:scale-[0.98]"
                                   : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
                               }
                             `}
@@ -382,7 +575,7 @@ export default function Dashboard() {
                             <span className="text-slate-400">
                               Total Available:
                             </span>
-                            <span className="font-bold text-green-400">
+                            <span className="font-bold text-amber-300">
                               {(
                                 parseFloat(legacyClaimableAmount) +
                                 parseFloat(v2ClaimableAmount)
@@ -404,7 +597,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Quick Links Section */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-5 lg:gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 lg:gap-6 mb-8">
                   <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 flex items-center justify-center text-xl mb-4 mx-auto">
                       📚
@@ -424,7 +617,25 @@ export default function Dashboard() {
                   </div>
 
                   <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
+                      ◉
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-50 mb-2">
+                      {t("quickLinks.viewMatrix.title")}
+                    </h3>
+                    <p className="text-sm text-slate-400 mb-4">
+                      {t("quickLinks.viewMatrix.description")}
+                    </p>
+                    <Link
+                      href="/matrix"
+                      className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+                    >
+                      {t("quickLinks.viewMatrix.button")}
+                    </Link>
+                  </div>
+
+                  <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
                       🎓
                     </div>
                     <h3 className="text-lg font-semibold text-slate-50 mb-2">
@@ -441,8 +652,8 @@ export default function Dashboard() {
                     </Link>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                  <div className="rounded-2xl border border-yellow-400/30 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
                       👑
                     </div>
                     <h3 className="text-lg font-semibold text-slate-50 mb-2">
@@ -453,14 +664,14 @@ export default function Dashboard() {
                     </p>
                     <Link
                       href="/royalty"
-                      className="inline-block rounded-xl bg-emerald-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                      className="inline-block rounded-xl bg-yellow-400/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(184,128,54,0.62)] hover:brightness-110 active:scale-[0.98] transition-all"
                     >
                       {t("quickLinks.checkRoyalty.button")}
                     </Link>
                   </div>
 
-                  <div className="rounded-2xl border border-cyan-500/30 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 flex items-center justify-center text-xl mb-4 mx-auto">
+                  <div className="rounded-2xl border border-yellow-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
                       🪙
                     </div>
                     <h3 className="text-lg font-semibold text-slate-50 mb-2">
@@ -471,7 +682,7 @@ export default function Dashboard() {
                     </p>
                     <Link
                       href="/rico"
-                      className="inline-block rounded-xl bg-cyan-500/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(34,211,238,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                      className="inline-block rounded-xl bg-yellow-400/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(245,158,11,0.45)] hover:brightness-110 active:scale-[0.98] transition-all"
                     >
                       {t("quickLinks.viewRICO.button")}
                     </Link>
@@ -492,8 +703,25 @@ export default function Dashboard() {
               </>
             )}
           </div>
-        </div>
+                        <SiteFooter />
+          
       </div>
+      <style jsx>{`
+        .dashboard-feature-carousel {
+          animation: dashboardFeatureFade 0.5s ease;
+        }
+
+        @keyframes dashboardFeatureFade {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </>
   );
 }

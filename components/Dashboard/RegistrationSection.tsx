@@ -369,7 +369,7 @@ export const RegistrationSection = ({
             </h2>
           </div>
           <div className="flex items-center gap-2 text-[0.7rem] text-slate-400">
-            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-emerald-300">
+            <span className="rounded-full bg-yellow-500/10 border border-yellow-400/35 px-3 py-1 text-amber-300">
               {t("header.stepIndicator", { stepIndex })}
             </span>
             <span className="text-xs text-slate-500">
@@ -378,7 +378,7 @@ export const RegistrationSection = ({
               })}
             </span>
             {userData?.exists && (
-              <span className="rounded-full bg-green-500/15 border border-green-500/40 px-3 py-1 text-green-300">
+              <span className="rounded-full bg-yellow-500/10 border border-yellow-400/35 px-3 py-1 text-amber-300">
                 {t("header.registeredBadge")}
               </span>
             )}
@@ -389,17 +389,17 @@ export const RegistrationSection = ({
         <div className="grid gap-5 md:gap-6 lg:gap-8 xl:gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           {/* LEFT: Info / benefits */}
           <div className="space-y-4">
-            <div className="rounded-2xl border border-blue-500/25 bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-950/95 p-4 md:p-5">
+            <div className="rounded-2xl border border-yellow-500/25 bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-950/95 p-4 md:p-5">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-blue-300 mb-1">
+                  <h3 className="text-sm font-semibold text-yellow-300 mb-1">
                     {t("benefits.title")}
                   </h3>
                   <p className="text-xs text-slate-400">
                     {t("benefits.subtitle")}
                   </p>
                 </div>
-                <span className="hidden md:inline-flex items-center rounded-full border border-blue-400/40 bg-blue-500/10 px-3 py-1 text-[0.65rem] uppercase tracking-wide text-blue-200">
+                <span className="hidden md:inline-flex items-center rounded-full border border-yellow-400/40 bg-yellow-500/10 px-3 py-1 text-[0.65rem] uppercase tracking-wide text-yellow-200">
                   {t("benefits.matrixBadge")}
                 </span>
               </div>
@@ -407,7 +407,7 @@ export const RegistrationSection = ({
               <div className="grid gap-3 md:grid-cols-2 text-xs md:text-[0.8rem]">
                 {t.raw("benefits.items").map((item: any, index: number) => (
                   <div className="flex gap-3" key={index}>
-                    <div className="mt-1 h-6 w-6 flex items-center justify-center rounded-lg bg-slate-900 border border-blue-500/40 text-[0.7rem] text-blue-300">
+                    <div className="mt-1 h-6 w-6 flex items-center justify-center rounded-lg bg-slate-900 border border-yellow-500/35 text-[0.7rem] text-yellow-300">
                       {index + 1}
                     </div>
                     <div>
@@ -437,11 +437,11 @@ export const RegistrationSection = ({
 
               <div className="space-y-3">
                 {userData?.exists ? (
-                  <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3">
+                  <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-yellow-500/14 border border-yellow-400/35 flex items-center justify-center">
                         <svg
-                          className="w-3 h-3 text-green-300"
+                          className="w-3 h-3 text-amber-300"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -455,7 +455,7 @@ export const RegistrationSection = ({
                         </svg>
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-green-300">
+                        <div className="text-xs font-semibold text-amber-300">
                           {t("referral.alreadyRegistered")}
                         </div>
                         <div className="text-[0.7rem] text-slate-100">
@@ -470,7 +470,7 @@ export const RegistrationSection = ({
                       isReferralValid &&
                       referralExists !== false &&
                       !isSelfReferral
-                        ? "border border-emerald-500/30 bg-emerald-500/10"
+                        ? "border border-yellow-400/35 bg-yellow-500/10"
                         : "border border-red-500/30 bg-red-500/10"
                     }`}
                   >
@@ -494,9 +494,9 @@ export const RegistrationSection = ({
                           </svg>
                         </div>
                       ) : isReferralValid && referralExists !== false ? (
-                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-yellow-500/14 border border-yellow-400/35 flex items-center justify-center">
                           <svg
-                            className="w-3 h-3 text-emerald-300"
+                            className="w-3 h-3 text-amber-300"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -535,7 +535,7 @@ export const RegistrationSection = ({
                               : isSelfReferral
                               ? "text-red-300"
                               : isReferralValid && referralExists !== false
-                              ? "text-emerald-300"
+                              ? "text-amber-300"
                               : "text-red-300"
                           }`}
                         >
@@ -554,7 +554,7 @@ export const RegistrationSection = ({
                           : isSelfReferral
                           ? "border-red-400/40 bg-red-500/15 text-red-200"
                           : isReferralValid && referralExists !== false
-                          ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
+                          ? "border-yellow-400/35 bg-yellow-500/10 text-amber-200"
                           : "border-red-400/40 bg-red-500/15 text-red-200"
                       }`}
                     >
@@ -754,7 +754,7 @@ export const RegistrationSection = ({
                 <span
                   className={
                     hasSufficientAllowance
-                      ? "text-emerald-300"
+                      ? "text-amber-300"
                       : "text-slate-500"
                   }
                 >
@@ -766,9 +766,9 @@ export const RegistrationSection = ({
 
               {userData?.exists ? (
                 <div className="text-center py-6">
-                  <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-yellow-500/14 border border-yellow-400/35 flex items-center justify-center mx-auto mb-4">
                     <svg
-                      className="w-8 h-8 text-green-300"
+                      className="w-8 h-8 text-amber-300"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -781,7 +781,7 @@ export const RegistrationSection = ({
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-green-300 mb-2">
+                  <h3 className="text-lg font-semibold text-amber-300 mb-2">
                     {t("referral.alreadyRegistered")}
                   </h3>
                   <p className="text-sm text-slate-400">
@@ -829,7 +829,7 @@ export const RegistrationSection = ({
                         !isSelfReferral &&
                         !showReferralWarning &&
                         effectiveReferralAddress
-                          ? "bg-gradient-to-r from-emerald-500 to-green-500 text-black shadow-[0_0_24px_rgba(16,185,129,0.7)] hover:brightness-110 active:scale-[0.98]"
+                          ? "bg-gradient-to-r from-amber-400 to-amber-400 text-black shadow-[0_0_24px_rgba(184,128,54,0.62)] hover:brightness-110 active:scale-[0.98]"
                           : "bg-slate-800 text-slate-500 cursor-not-allowed"
                       }`}
                     >
@@ -857,7 +857,7 @@ export const RegistrationSection = ({
                   <span
                     className={
                       hasSufficientAllowance
-                        ? "text-emerald-300"
+                        ? "text-amber-300"
                         : "text-slate-400"
                     }
                   >
@@ -866,7 +866,7 @@ export const RegistrationSection = ({
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-emerald-400 transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300 transition-all duration-500"
                     style={{ width: hasSufficientAllowance ? "100%" : "50%" }}
                   />
                 </div>

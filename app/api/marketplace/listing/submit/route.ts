@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getBookByRecordId, updateBookByRecordId } from "@/lib/supabase";
+import { getReaderLibraryAccess } from "@/lib/matrixAccess";
+import { MIN_LIBRARY_PUBLISH_CHAPTER } from "@/lib/libraryEligibility";
 
 export const runtime = "nodejs";
 
@@ -27,6 +29,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Invalid author wallet." },
         { status: 400 }
+      );
+    }
+    const access = await getReaderLibraryAccess(authorWallet as `0x${string}`);
+    if (!access.canPublish) {
+      return NextResponse.json(
+        {
+          error: `You must unlock at least Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} before publishing a book.`,
+        },
+        { status: 403 }
       );
     }
     if (!isTxHash(txHash)) {
@@ -64,4 +75,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

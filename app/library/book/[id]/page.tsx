@@ -11,9 +11,16 @@ import {
 } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { libraryContract } from "@/utils/contracts";
 import { USDT_ABI } from "@/utils/constants";
 import { toast } from "sonner";
+import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
+import {
+  canBuyLibraryBook,
+  getHighestUnlockedChapter,
+  MIN_LIBRARY_BUY_CHAPTER,
+} from "@/lib/libraryEligibility";
 
 const GATEWAY =
   process.env.NEXT_PUBLIC_PINATA_GATEWAY || "https://gateway.pinata.cloud/ipfs";
@@ -101,6 +108,9 @@ const formatUsdtDisplay = (raw: string) => {
 };
 
 export default function LibraryBookPage() {
+  const locale = useLocale();
+  const t = useTranslations("LibraryBookDetailPage");
+  const copy = { invalidBookId: t("invalidBookId"), loadingState: t("loadingState"), backToLibrary: t("backToLibrary"), refreshData: t("refreshData"), detail: t("detail"), metadataFallback: t("metadataFallback"), author: t("author"), loadingCover: t("loadingCover"), coverPreview: t("coverPreview"), bookCover: t("bookCover"), priceBadge: t("priceBadge"), owned: t("owned"), notOwned: t("notOwned"), openReader: t("openReader"), purchaseToUnlock: t("purchaseToUnlock"), approvalReady: t("approvalReady"), approvalRequired: t("approvalRequired"), approvalChecking: t("approvalChecking"), approvalUnavailable: t("approvalUnavailable"), approveUsdt: t("approveUsdt"), approvingUsdt: t("approvingUsdt"), approveRico: t("approveRico"), approvingRico: t("approvingRico"), usdtRequired: t("usdtRequired"), usdtAllowance: t("usdtAllowance"), ricoFee: t("ricoFee"), ricoAllowance: t("ricoAllowance"), priceSyncing: t("priceSyncing"), processing: t("processing"), buyBook: t("buyBook"), giftTo: t("giftTo"), gift: t("gift"), connectWallet: t("connectWallet"), bookMetadata: t("bookMetadata"), onChainBookId: t("onChainBookId"), authorOnChain: t("authorOnChain"), authorMetadata: t("authorMetadata"), priceUsdt: t("priceUsdt"), totalSales: t("totalSales"), onChainLikes: t("onChainLikes"), onChainDislikes: t("onChainDislikes"), reviewsTitle: t("reviewsTitle"), likes: t("likes"), dislikes: t("dislikes"), reviews: t("reviews"), reviewGate: t("reviewGate"), submitReview: t("submitReview"), like: t("like"), dislike: t("dislike"), reviewPlaceholder: t("reviewPlaceholder"), submitReviewButton: t("submitReviewButton"), submitting: t("submitting"), voteOnBook: t("voteOnBook"), voteOnAuthor: t("voteOnAuthor"), ricoAmount: t("ricoAmount"), recentReviews: t("recentReviews"), loadingReviews: t("loadingReviews"), noReviews: t("noReviews"), noWrittenComment: t("noWrittenComment"), chapterOneRequired: t.raw("chapterOneRequired") as string, unlockChapterAccess: t("unlockChapterAccess") };
   const params = useParams();
   const bookId = Number(params?.id ?? 0);
   const hasValidBookId = Number.isFinite(bookId) && bookId > 0;
@@ -108,6 +118,7 @@ export default function LibraryBookPage() {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
+  const { userData } = useQuantuMatrix();
 
   const [giftTo, setGiftTo] = useState("");
   const [voteAmount, setVoteAmount] = useState("");
@@ -272,10 +283,19 @@ export default function LibraryBookPage() {
   const canBuyNow =
     Boolean(address) &&
     !isSubmitting &&
+    canBuyLibraryBook(userData?.track1Unlocked, userData?.track2Unlocked) &&
     !needsUsdtApproval &&
     !needsRicoApproval &&
     !isOwned &&
     hasPriceData;
+  const highestUnlockedChapter = getHighestUnlockedChapter(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
+  const canBuyFromLibrary = canBuyLibraryBook(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
 
   useEffect(() => {
     if (!bookId || !Number.isFinite(bookId)) return;
@@ -320,7 +340,7 @@ export default function LibraryBookPage() {
       })
       .catch(() => {
         if (!isActive) return;
-        setMetadataError("Unable to load metadata.");
+        setMetadataError(locale === "fr" ? "Impossible de charger les metadonnees." : "Unable to load metadata.");
       })
       .finally(() => {
         if (!isActive) return;
@@ -344,11 +364,11 @@ export default function LibraryBookPage() {
         error?: string;
       };
       if (!res.ok) {
-        throw new Error(payload.error || "Failed to load reviews.");
+        throw new Error(payload.error || (locale === "fr" ? "Impossible de charger les avis." : "Failed to load reviews."));
       }
       setReviews(payload.reviews || []);
     } catch (error) {
-      toast.error(formatTxError(error, "Failed to load reviews"));
+      toast.error(formatTxError(error, locale === "fr" ? "Impossible de charger les avis" : "Failed to load reviews"));
     } finally {
       setReviewsLoading(false);
     }
@@ -368,17 +388,17 @@ export default function LibraryBookPage() {
     amount?: bigint
   ) => {
     if (!tokenAddress || !publicClient) {
-      toast.error("Token contract is not available right now.");
+      toast.error(locale === "fr" ? "Le contrat du token est indisponible pour le moment." : "Token contract is not available right now.");
       return;
     }
     if (!amount || amount <= BigInt(0)) {
-      toast.error("Unable to resolve amount for approval.");
+      toast.error(locale === "fr" ? "Impossible de determiner le montant pour l'approbation." : "Unable to resolve amount for approval.");
       return;
     }
     const toastId = token === "usdt" ? "library-book-approve-usdt" : "library-book-approve-rico";
     token === "usdt" ? setApprovingUsdt(true) : setApprovingRico(true);
     try {
-      toast.loading("Approval submitted...", { id: toastId });
+      toast.loading(locale === "fr" ? "Approbation soumise..." : "Approval submitted...", { id: toastId });
       const hash = await writeContractAsync({
         address: tokenAddress as `0x${string}`,
         abi: USDT_ABI,
@@ -387,9 +407,9 @@ export default function LibraryBookPage() {
       });
       await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
       await Promise.all([refetchUsdtAllowance(), refetchRicoAllowance()]);
-      toast.success("Approval confirmed", { id: toastId });
+      toast.success(locale === "fr" ? "Approbation confirmee" : "Approval confirmed", { id: toastId });
     } catch (error) {
-      toast.error(formatTxError(error, "Approval failed"), { id: toastId });
+      toast.error(formatTxError(error, locale === "fr" ? "Echec de l'approbation" : "Approval failed"), { id: toastId });
     } finally {
       token === "usdt" ? setApprovingUsdt(false) : setApprovingRico(false);
     }
@@ -397,6 +417,15 @@ export default function LibraryBookPage() {
 
   const handleBuy = async () => {
     if (!bookId || !publicClient) return;
+    if (!canBuyFromLibrary) {
+      toast.error(
+        copy.chapterOneRequired.replace(
+          "{currentChapter}",
+          String(highestUnlockedChapter)
+        )
+      );
+      return;
+    }
     setIsSubmitting(true);
     try {
       const hash = await writeContractAsync({
@@ -405,9 +434,9 @@ export default function LibraryBookPage() {
         args: [bookIdBigInt],
       });
       await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
-      toast.success("Book purchased");
+      toast.success(locale === "fr" ? "Livre achete" : "Book purchased");
     } catch (error) {
-      toast.error(formatTxError(error, "Purchase failed"));
+      toast.error(formatTxError(error, locale === "fr" ? "Echec de l'achat" : "Purchase failed"));
     } finally {
       setIsSubmitting(false);
       await refetchAll();
@@ -416,8 +445,17 @@ export default function LibraryBookPage() {
 
   const handleGift = async () => {
     if (!bookId || !giftTo || !publicClient) return;
+    if (!canBuyFromLibrary) {
+      toast.error(
+        copy.chapterOneRequired.replace(
+          "{currentChapter}",
+          String(highestUnlockedChapter)
+        )
+      );
+      return;
+    }
     if (!isWalletAddress(giftTo)) {
-      toast.error("Enter a valid recipient wallet address.");
+      toast.error(locale === "fr" ? "Entrez une adresse wallet destinataire valide." : "Enter a valid recipient wallet address.");
       return;
     }
     setIsSubmitting(true);
@@ -428,10 +466,10 @@ export default function LibraryBookPage() {
         args: [giftTo as `0x${string}`, bookIdBigInt],
       });
       await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
-      toast.success("Book gifted");
+      toast.success(locale === "fr" ? "Livre offert" : "Book gifted");
       setGiftTo("");
     } catch (error) {
-      toast.error(formatTxError(error, "Gift failed"));
+      toast.error(formatTxError(error, locale === "fr" ? "Echec de l'envoi" : "Gift failed"));
     } finally {
       setIsSubmitting(false);
       await refetchAll();
@@ -441,7 +479,7 @@ export default function LibraryBookPage() {
   const handleVoteBook = async (like: boolean) => {
     if (!bookId || !voteAmount) return;
     if (!address || !isOwned) {
-      toast.error("Only users who bought this book can vote.");
+      toast.error(locale === "fr" ? "Seuls les acheteurs de ce livre peuvent voter." : "Only users who bought this book can vote.");
       return;
     }
     setIsSubmitting(true);
@@ -452,10 +490,10 @@ export default function LibraryBookPage() {
         args: [bookIdBigInt, like, parseUnits(voteAmount, 18)],
       });
       await publicClient?.waitForTransactionReceipt({ hash, confirmations: 1 });
-      toast.success("Vote submitted");
+      toast.success(locale === "fr" ? "Vote soumis" : "Vote submitted");
       setVoteAmount("");
     } catch (error) {
-      toast.error(formatTxError(error, "Vote failed"));
+      toast.error(formatTxError(error, locale === "fr" ? "Echec du vote" : "Vote failed"));
     } finally {
       setIsSubmitting(false);
       await refetchAll();
@@ -465,7 +503,7 @@ export default function LibraryBookPage() {
   const handleVoteAuthor = async (like: boolean) => {
     if (!author || !voteAuthorAmount) return;
     if (!address || !isOwned) {
-      toast.error("Only users who bought this book can vote.");
+      toast.error(locale === "fr" ? "Seuls les acheteurs de ce livre peuvent voter." : "Only users who bought this book can vote.");
       return;
     }
     setIsSubmitting(true);
@@ -476,10 +514,10 @@ export default function LibraryBookPage() {
         args: [author as `0x${string}`, like, parseUnits(voteAuthorAmount, 18)],
       });
       await publicClient?.waitForTransactionReceipt({ hash, confirmations: 1 });
-      toast.success("Author vote submitted");
+      toast.success(locale === "fr" ? "Vote auteur soumis" : "Author vote submitted");
       setVoteAuthorAmount("");
     } catch (error) {
-      toast.error(formatTxError(error, "Vote failed"));
+      toast.error(formatTxError(error, locale === "fr" ? "Echec du vote" : "Vote failed"));
     } finally {
       setIsSubmitting(false);
       await refetchAll();
@@ -488,11 +526,11 @@ export default function LibraryBookPage() {
 
   const handleSubmitReview = async () => {
     if (!address) {
-      toast.error("Connect wallet to submit a review.");
+      toast.error(locale === "fr" ? "Connectez votre wallet pour soumettre un avis." : "Connect wallet to submit a review.");
       return;
     }
     if (!isOwned) {
-      toast.error("Only users who bought this book can review it.");
+      toast.error(locale === "fr" ? "Seuls les acheteurs de ce livre peuvent laisser un avis." : "Only users who bought this book can review it.");
       return;
     }
     if (!bookId) return;
@@ -514,13 +552,13 @@ export default function LibraryBookPage() {
         error?: string;
       };
       if (!res.ok) {
-        throw new Error(payload.error || "Failed to submit review.");
+        throw new Error(payload.error || (locale === "fr" ? "Impossible d'envoyer l'avis." : "Failed to submit review."));
       }
       setReviews(payload.reviews || []);
       setReviewText("");
-      toast.success("Review submitted.");
+      toast.success(locale === "fr" ? "Avis soumis." : "Review submitted.");
     } catch (error) {
-      toast.error(formatTxError(error, "Failed to submit review"));
+      toast.error(formatTxError(error, locale === "fr" ? "Impossible d'envoyer l'avis" : "Failed to submit review"));
     } finally {
       setIsSubmittingReview(false);
     }
@@ -530,9 +568,11 @@ export default function LibraryBookPage() {
     return (
       <>
         <Header />
-        <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.08),transparent_42%),#020617] px-4 py-10">
-          <div className="mx-auto max-w-4xl rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 text-rose-200">
-            Invalid book id.
+        <div className="theme-shell theme-page-shell min-h-[calc(100vh-4rem)]">
+          <div className="theme-container py-10">
+            <div className="theme-panel-soft max-w-4xl border-rose-500/30 p-6 text-rose-200">
+              {copy.invalidBookId}
+            </div>
           </div>
         </div>
       </>
@@ -543,10 +583,10 @@ export default function LibraryBookPage() {
     return (
       <>
         <Header />
-        <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.08),transparent_42%),#020617] px-4 py-10">
-          <div className="mx-auto max-w-5xl space-y-4">
+        <div className="theme-shell theme-page-shell min-h-[calc(100vh-4rem)]">
+          <div className="theme-container max-w-5xl space-y-4 py-10">
             <div className="h-6 w-40 animate-pulse rounded bg-slate-800" />
-            <div className="rounded-3xl border border-yellow-500/20 bg-slate-950/70 p-8">
+            <div className="theme-panel p-8">
               <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                 <div className="space-y-3">
                   <div className="h-10 w-3/4 animate-pulse rounded bg-slate-800" />
@@ -561,8 +601,8 @@ export default function LibraryBookPage() {
                 <div className="h-11 animate-pulse rounded-xl bg-slate-800" />
               </div>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-              Loading book data, pricing, and access permissions...
+            <div className="theme-panel-soft p-4 text-sm text-slate-300">
+              {copy.loadingState}
             </div>
           </div>
         </div>
@@ -573,57 +613,57 @@ export default function LibraryBookPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.08),transparent_42%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.08),transparent_30%),#020617] px-4 py-10">
-        <div className="mx-auto max-w-5xl space-y-6">
+      <div className="theme-shell theme-page-shell min-h-[calc(100vh-4rem)]">
+        <div className="theme-container max-w-5xl space-y-6 py-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
               href="/library"
-              className="text-sm text-yellow-300/80 hover:text-yellow-200"
+              className="theme-button-ghost text-xs uppercase tracking-[0.18em]"
             >
-              ← Back to Library
+              {copy.backToLibrary}
             </Link>
             <button
               type="button"
               onClick={async () => {
                 await Promise.all([refetchAll(), fetchReviews()]);
               }}
-              className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200 hover:bg-slate-800/70"
+              className="theme-button-ghost text-xs uppercase tracking-[0.18em]"
             >
-              Refresh Data
+              {copy.refreshData}
             </button>
           </div>
 
-          <section className="rounded-3xl border border-yellow-500/20 bg-gradient-to-br from-black via-[#0b0b0b] to-[#070707] p-8 shadow-[0_0_40px_rgba(0,0,0,0.85)]">
-            <p className="text-xs uppercase tracking-[0.32em] text-yellow-300/70">
-              Book Detail
-            </p>
+          <section className="theme-panel p-8">
+            <p className="theme-kicker">{copy.detail}</p>
             <div className="mt-4 grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-50">
-                  {metadata?.title || metadata?.name || `Book #${bookId || "--"}`}
+                <h1 className="theme-title text-3xl font-semibold md:text-4xl">
+                  <span className="theme-title-accent">
+                    {metadata?.title || metadata?.name || `Book #${bookId || "--"}`}
+                  </span>
                 </h1>
-                <p className="mt-3 text-sm md:text-base text-slate-300/80">
+                <p className="theme-copy mt-3 text-sm md:text-base">
                   {metadata?.description ||
-                    "Metadata is pulled from IPFS once the book is published."}
+                    copy.metadataFallback}
                 </p>
                 <div className="mt-4 text-xs text-slate-400">
-                  <span className="text-yellow-200/80">Author:</span>{" "}
+                  <span className="text-yellow-200/80">{copy.author}:</span>{" "}
                   {shortAddress(resolvedAuthor)}
                 </div>
               </div>
               <div className="rounded-2xl border border-yellow-400/20 bg-black/60 p-4">
                 <div className="aspect-[4/5] w-full overflow-hidden rounded-xl border border-yellow-400/20 bg-black/40 flex items-center justify-center text-xs text-slate-500">
                   {metadataLoading
-                    ? "Loading cover..."
+                    ? copy.loadingCover
                     : coverUrl
                       ? (
                         <img
                           src={coverUrl}
-                          alt={metadata?.title || metadata?.name || "Book cover"}
+                          alt={metadata?.title || metadata?.name || copy.bookCover}
                           className="h-full w-full object-cover"
                         />
                       )
-                      : "Cover preview"}
+                      : copy.coverPreview}
                 </div>
                 {metadataError && (
                   <p className="mt-3 text-xs text-rose-300">
@@ -633,27 +673,27 @@ export default function LibraryBookPage() {
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-              <button className="rounded-xl bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-200 px-5 py-3 text-sm font-semibold text-black opacity-90">
-                Price: {formattedPrice} USDT
-              </button>
-              <button className="rounded-xl border border-yellow-400/40 bg-black/40 px-5 py-3 text-sm font-semibold text-yellow-200">
-                {isOwned ? "Owned / Access Granted" : "Not owned"}
-              </button>
+              <div className="theme-button-primary px-5 py-3 text-sm">
+                {copy.priceBadge}: {formattedPrice} USDT
+              </div>
+              <div className="theme-button-secondary px-5 py-3 text-sm">
+                {isOwned ? copy.owned : copy.notOwned}
+              </div>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {isOwned ? (
                 <Link
                   href={`/library/read/${bookId}`}
-                  className="rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-200"
+                  className="theme-button-secondary px-4 py-2 text-sm"
                 >
-                  Open Reader
+                  {copy.openReader}
                 </Link>
               ) : (
                 <button
                   disabled
                   className="cursor-not-allowed rounded-xl border border-slate-700/40 bg-slate-900/40 px-4 py-2 text-sm font-semibold text-slate-500"
                 >
-                  Purchase to unlock reading
+                  {copy.purchaseToUnlock}
                 </button>
               )}
             </div>
@@ -662,7 +702,7 @@ export default function LibraryBookPage() {
                 <span
                   className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] ${
                     usdtApprovalStatus === "ready"
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                      ? "border-yellow-400/35 bg-yellow-500/10 text-yellow-200"
                       : usdtApprovalStatus === "required"
                       ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
                       : "border-yellow-500/40 bg-yellow-500/10 text-yellow-200"
@@ -670,17 +710,17 @@ export default function LibraryBookPage() {
                 >
                   USDT Approval:{" "}
                   {usdtApprovalStatus === "ready"
-                    ? "Ready"
+                    ? copy.approvalReady
                     : usdtApprovalStatus === "required"
-                    ? "Required"
+                    ? copy.approvalRequired
                     : usdtApprovalStatus === "loading"
-                    ? "Checking"
-                    : "Unavailable"}
+                    ? copy.approvalChecking
+                    : copy.approvalUnavailable}
                 </span>
                 <span
                   className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] ${
                     ricoApprovalStatus === "ready"
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                      ? "border-yellow-400/35 bg-yellow-500/10 text-yellow-200"
                       : ricoApprovalStatus === "required"
                       ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
                       : "border-yellow-500/40 bg-yellow-500/10 text-yellow-200"
@@ -688,58 +728,58 @@ export default function LibraryBookPage() {
                 >
                   RICO Approval:{" "}
                   {ricoApprovalStatus === "ready"
-                    ? "Ready"
+                    ? copy.approvalReady
                     : ricoApprovalStatus === "required"
-                    ? "Required"
+                    ? copy.approvalRequired
                     : ricoApprovalStatus === "loading"
-                    ? "Checking"
-                    : "Unavailable"}
+                    ? copy.approvalChecking
+                    : copy.approvalUnavailable}
                 </span>
               </div>
               <button
                 onClick={() => approveToken("usdt", usdtAddress as string, effectivePriceWei)}
-                disabled={!needsUsdtApproval || approvingUsdt}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+                disabled={!canBuyFromLibrary || !needsUsdtApproval || approvingUsdt}
+                className={`px-4 py-2 text-sm ${
                   needsUsdtApproval && !approvingUsdt
-                    ? "bg-slate-900/70 border border-yellow-400/40 text-yellow-200"
-                    : "bg-slate-900/40 border border-slate-700/40 text-slate-500 cursor-not-allowed"
+                    ? "theme-button-secondary"
+                    : "theme-button-ghost cursor-not-allowed text-slate-500"
                 }`}
               >
-                {approvingUsdt ? "Approving USDT..." : "Approve USDT"}
+                {approvingUsdt ? copy.approvingUsdt : copy.approveUsdt}
               </button>
               <button
                 onClick={() => approveToken("rico", ricoAddress as string, buyFeeRico as bigint)}
-                disabled={!needsRicoApproval || approvingRico}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+                disabled={!canBuyFromLibrary || !needsRicoApproval || approvingRico}
+                className={`px-4 py-2 text-sm ${
                   needsRicoApproval && !approvingRico
-                    ? "bg-slate-900/70 border border-yellow-400/40 text-yellow-200"
-                    : "bg-slate-900/40 border border-slate-700/40 text-slate-500 cursor-not-allowed"
+                    ? "theme-button-secondary"
+                    : "theme-button-ghost cursor-not-allowed text-slate-500"
                 }`}
               >
-                {approvingRico ? "Approving RICO..." : "Approve RICO"}
+                {approvingRico ? copy.approvingRico : copy.approveRico}
               </button>
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-4">
               <div className="rounded-xl border border-slate-800 bg-black/40 p-3">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">USDT Required</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{copy.usdtRequired}</p>
                 <p className="mt-1 text-sm text-slate-100">
                   {hasPriceData ? formatUsdtDisplay(formatUnits(effectivePriceWei, 18)) : "--"}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-3">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">USDT Allowance</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{copy.usdtAllowance}</p>
                 <p className="mt-1 text-sm text-slate-100">
                   {typeof usdtAllowance === "bigint" ? formatUsdtDisplay(formatUnits(usdtAllowance, 18)) : "--"}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-3">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">RICO Fee</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{copy.ricoFee}</p>
                 <p className="mt-1 text-sm text-slate-100">
                   {typeof buyFeeRico === "bigint" ? formatUsdtDisplay(formatUnits(buyFeeRico, 18)) : "--"}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-3">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">RICO Allowance</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{copy.ricoAllowance}</p>
                 <p className="mt-1 text-sm text-slate-100">
                   {typeof ricoAllowance === "bigint" ? formatUsdtDisplay(formatUnits(ricoAllowance, 18)) : "--"}
                 </p>
@@ -747,21 +787,37 @@ export default function LibraryBookPage() {
             </div>
             {!hasPriceData && (
               <p className="mt-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-200">
-                Price data is still syncing. Please refresh in a few seconds.
+                {copy.priceSyncing}
               </p>
+            )}
+            {!canBuyFromLibrary && address && (
+              <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-3 text-xs text-red-100">
+                <p>
+                  {copy.chapterOneRequired.replace(
+                    "{chapter}",
+                    String(MIN_LIBRARY_BUY_CHAPTER)
+                  ).replace("{currentChapter}", String(highestUnlockedChapter))}
+                </p>
+                <Link
+                  href="/chapters"
+                  className="mt-3 inline-flex rounded-lg border border-red-300/30 bg-black/30 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-red-100"
+                >
+                  {copy.unlockChapterAccess}
+                </Link>
+              </div>
             )}
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <button
                 onClick={handleBuy}
                 disabled={!canBuyNow}
-                className="rounded-xl bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-200 px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"
+                className="theme-button-primary disabled:opacity-50"
               >
-                {isSubmitting ? "Processing..." : isOwned ? "Owned" : "Buy book"}
+                {isSubmitting ? copy.processing : isOwned ? copy.owned : copy.buyBook}
               </button>
               <div className="flex gap-2">
                 <input
-                  className="flex-1 rounded-xl border border-slate-700 bg-black/60 px-4 py-2 text-sm text-slate-200"
-                  placeholder="Gift to address"
+                  className="theme-input flex-1 text-sm"
+                  placeholder={copy.giftTo}
                   value={giftTo}
                   onChange={(e) => setGiftTo(e.target.value)}
                 />
@@ -770,29 +826,30 @@ export default function LibraryBookPage() {
                   disabled={
                     !address ||
                     isSubmitting ||
+                    !canBuyFromLibrary ||
                     needsUsdtApproval ||
                     needsRicoApproval ||
                     !hasPriceData
                   }
-                  className="rounded-xl border border-yellow-400/40 bg-yellow-400/10 px-4 py-2.5 text-sm font-semibold text-yellow-200 disabled:opacity-50"
+                  className="theme-button-secondary disabled:opacity-50"
                 >
-                  Gift
+                  {copy.gift}
                 </button>
               </div>
             </div>
             {!address && (
               <p className="mt-3 text-xs text-yellow-200/90">
-                Connect your wallet to buy, gift, and read this book.
+                {copy.connectWallet}
               </p>
             )}
           </section>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-            <h3 className="text-lg font-semibold text-slate-50">Book Metadata</h3>
+          <section className="theme-panel-soft p-6">
+            <h3 className="text-lg font-semibold text-slate-50">{copy.bookMetadata}</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  On-chain Book ID
+                  {copy.onChainBookId}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-100">
                   #{bookId}
@@ -800,7 +857,7 @@ export default function LibraryBookPage() {
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  Author (On-chain)
+                  {copy.authorOnChain}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-100">
                   {shortAddress(resolvedAuthor)}
@@ -808,7 +865,7 @@ export default function LibraryBookPage() {
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  Author (Metadata)
+                  {copy.authorMetadata}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-100">
                   {metadata?.author
@@ -818,7 +875,7 @@ export default function LibraryBookPage() {
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  Price (USDT)
+                  {copy.priceUsdt}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-100">
                   {formattedPrice}
@@ -826,7 +883,7 @@ export default function LibraryBookPage() {
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  Total Sales
+                  {copy.totalSales}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-100">
                   {onChainTotalSales}
@@ -834,15 +891,15 @@ export default function LibraryBookPage() {
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  On-chain Likes
+                  {copy.onChainLikes}
                 </p>
-                <p className="mt-2 text-sm font-semibold text-emerald-300">
+                <p className="mt-2 text-sm font-semibold text-yellow-200">
                   {onChainUpVotes}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  On-chain Dislikes
+                  {copy.onChainDislikes}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-rose-300">
                   {onChainDownVotes}
@@ -851,27 +908,27 @@ export default function LibraryBookPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
+          <section className="theme-panel-soft p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-slate-50">
-                Community Reviews & Reactions
+                {copy.reviewsTitle}
               </h3>
               <div className="flex items-center gap-2 text-xs">
-                <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-emerald-200">
-                  {likesCount} Likes
+                <span className="rounded-full border border-yellow-400/35 bg-yellow-500/10 px-3 py-1 text-yellow-200">
+                  {likesCount} {copy.likes}
                 </span>
                 <span className="rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1 text-rose-200">
-                  {dislikesCount} Dislikes
+                  {dislikesCount} {copy.dislikes}
                 </span>
                 <span className="rounded-full border border-slate-700 px-3 py-1 text-slate-300">
-                  {reviews.length} Reviews
+                  {reviews.length} {copy.reviews}
                 </span>
               </div>
             </div>
 
             {!isOwned && (
               <div className="mt-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-200">
-                You can view all reviews and reaction totals. Buy this book to submit your own review, like, or dislike.
+                {copy.reviewGate}
               </div>
             )}
 
@@ -879,20 +936,20 @@ export default function LibraryBookPage() {
               <>
                 <div className="mt-4 rounded-xl border border-slate-800 bg-black/40 p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Submit your review
+                    {copy.submitReview}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => setReviewSentiment("like")}
                       disabled={isSubmittingReview}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                      className={`px-3 py-1.5 text-xs ${
                         reviewSentiment === "like"
-                          ? "border border-emerald-400/50 bg-emerald-500/15 text-emerald-200"
-                          : "border border-slate-700 bg-slate-900/50 text-slate-300"
+                          ? "theme-button-secondary"
+                          : "theme-button-ghost text-slate-300"
                       } disabled:opacity-50`}
                     >
-                      👍 Like
+                      👍 {copy.like}
                     </button>
                     <button
                       type="button"
@@ -904,12 +961,12 @@ export default function LibraryBookPage() {
                           : "border border-slate-700 bg-slate-900/50 text-slate-300"
                       } disabled:opacity-50`}
                     >
-                      👎 Dislike
+                      👎 {copy.dislike}
                     </button>
                   </div>
                   <textarea
                     className="mt-3 min-h-28 w-full rounded-xl border border-slate-700 bg-black/60 px-4 py-3 text-sm text-slate-200"
-                    placeholder="Write a short review (optional)..."
+                    placeholder={copy.reviewPlaceholder}
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     disabled={isSubmittingReview}
@@ -918,21 +975,21 @@ export default function LibraryBookPage() {
                     type="button"
                     onClick={handleSubmitReview}
                     disabled={isSubmittingReview}
-                    className="mt-3 rounded-xl bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-200 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+                    className="theme-button-primary mt-3 disabled:opacity-50"
                   >
-                    {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                    {isSubmittingReview ? copy.submitting : copy.submitReviewButton}
                   </button>
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      On-chain vote on book
+                      {copy.voteOnBook}
                     </p>
                     <div className="mt-2 flex gap-2">
                       <input
-                        className="flex-1 rounded-xl border border-slate-700 bg-black/60 px-3 py-2 text-sm text-slate-200"
-                        placeholder={`RICO amount (min ${minVoteRico ? formatUnits(minVoteRico as bigint, 18) : "0"})`}
+                        className="theme-input flex-1 min-h-0 px-3 py-2 text-sm"
+                        placeholder={`${copy.ricoAmount} (min ${minVoteRico ? formatUnits(minVoteRico as bigint, 18) : "0"})`}
                         value={voteAmount}
                         onChange={(e) => setVoteAmount(e.target.value)}
                         disabled={isSubmitting}
@@ -940,7 +997,7 @@ export default function LibraryBookPage() {
                       <button
                         onClick={() => handleVoteBook(true)}
                         disabled={isSubmitting}
-                        className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 disabled:opacity-50"
+                        className="theme-button-secondary px-3 py-2 text-sm disabled:opacity-50"
                       >
                         👍
                       </button>
@@ -956,12 +1013,12 @@ export default function LibraryBookPage() {
 
                   <div className="rounded-xl border border-slate-800 bg-black/40 p-4">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      On-chain vote on author
+                      {copy.voteOnAuthor}
                     </p>
                     <div className="mt-2 flex gap-2">
                       <input
-                        className="flex-1 rounded-xl border border-slate-700 bg-black/60 px-3 py-2 text-sm text-slate-200"
-                        placeholder="RICO amount"
+                        className="theme-input flex-1 min-h-0 px-3 py-2 text-sm"
+                        placeholder={copy.ricoAmount}
                         value={voteAuthorAmount}
                         onChange={(e) => setVoteAuthorAmount(e.target.value)}
                         disabled={isSubmitting}
@@ -969,7 +1026,7 @@ export default function LibraryBookPage() {
                       <button
                         onClick={() => handleVoteAuthor(true)}
                         disabled={isSubmitting || !author}
-                        className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 disabled:opacity-50"
+                        className="theme-button-secondary px-3 py-2 text-sm disabled:opacity-50"
                       >
                         👍
                       </button>
@@ -988,15 +1045,15 @@ export default function LibraryBookPage() {
 
             <div className="mt-6">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Recent reviews
+                {copy.recentReviews}
               </p>
               {reviewsLoading ? (
                 <div className="mt-3 rounded-xl border border-slate-800 bg-black/40 p-4 text-sm text-slate-400">
-                  Loading reviews...
+                  {copy.loadingReviews}
                 </div>
               ) : reviews.length === 0 ? (
                 <div className="mt-3 rounded-xl border border-slate-800 bg-black/40 p-4 text-sm text-slate-400">
-                  No reviews yet.
+                  {copy.noReviews}
                 </div>
               ) : (
                 <div className="mt-3 space-y-3">
@@ -1012,15 +1069,15 @@ export default function LibraryBookPage() {
                         <span
                           className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
                             review.sentiment === "like"
-                              ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                              ? "border border-yellow-400/35 bg-yellow-500/10 text-yellow-200"
                               : "border border-rose-500/40 bg-rose-500/10 text-rose-200"
                           }`}
                         >
-                          {review.sentiment}
+                          {review.sentiment === "like" ? copy.like : copy.dislike}
                         </span>
                       </div>
                       <p className="mt-2 text-sm text-slate-200">
-                        {review.review_text || "No written comment."}
+                        {review.review_text || copy.noWrittenComment}
                       </p>
                       {review.created_at && (
                         <p className="mt-2 text-xs text-slate-500">

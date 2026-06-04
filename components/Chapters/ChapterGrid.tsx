@@ -3,11 +3,17 @@
 import { useQuantuMatrix } from "../../hooks/useQuantuMatrix";
 import { ChapterCard } from "./ChapterCard";
 import { CHAPTER_NAMES } from "../../utils/constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { useTranslations } from "next-intl";
+import { useAccount } from "wagmi";
+
+type MatrixChapterState = {
+  blocked?: boolean;
+};
 
 export const ChapterGrid = () => {
+  const { address } = useAccount();
   const {
     userData,
     buyChapter,
@@ -16,6 +22,8 @@ export const ChapterGrid = () => {
     chapterPrices,
     usdtAllowance,
     usdtBalance,
+    fetchAllTrack1Chapters,
+    fetchAllTrack2Chapters,
   } = useQuantuMatrix();
 
   // Track which chapter is currently being approved
@@ -23,7 +31,56 @@ export const ChapterGrid = () => {
     track: number;
     chapter: number;
   } | null>(null);
+  const [track1States, setTrack1States] = useState<Record<number, "active" | "blocked">>({});
+  const [track2States, setTrack2States] = useState<Record<number, "active" | "blocked">>({});
   const t = useTranslations("ChaptersPage.ChapterGrid");
+
+  useEffect(() => {
+    const loadChapterStates = async () => {
+      if (!userData?.exists) {
+        setTrack1States({});
+        setTrack2States({});
+        return;
+      }
+
+      try {
+        const [track1Data, track2Data] = await Promise.all([
+          address && userData.track1Unlocked > 0
+            ? fetchAllTrack1Chapters(address, userData.track1Unlocked)
+            : Promise.resolve({}),
+          address && userData.track2Unlocked > 0
+            ? fetchAllTrack2Chapters(address, userData.track2Unlocked)
+            : Promise.resolve({}),
+        ]);
+
+        const nextTrack1: Record<number, "active" | "blocked"> = {};
+        Object.entries(track1Data || {}).forEach(([chapter, data]) => {
+          const chapterData = data as MatrixChapterState;
+          nextTrack1[Number(chapter)] = chapterData.blocked ? "blocked" : "active";
+        });
+
+        const nextTrack2: Record<number, "active" | "blocked"> = {};
+        Object.entries(track2Data || {}).forEach(([chapter, data]) => {
+          const chapterData = data as MatrixChapterState;
+          nextTrack2[Number(chapter)] = chapterData.blocked ? "blocked" : "active";
+        });
+
+        setTrack1States(nextTrack1);
+        setTrack2States(nextTrack2);
+      } catch (error) {
+        console.error("Failed to load chapter matrix states:", error);
+      }
+    };
+
+    void loadChapterStates();
+  }, [
+    fetchAllTrack1Chapters,
+    fetchAllTrack2Chapters,
+    address,
+    userData?.exists,
+    userData?.track1Unlocked,
+    userData?.track2Unlocked,
+  ]);
 
   const handleBuyChapter = async (track: number, chapter: number) => {
     try {
@@ -48,7 +105,8 @@ export const ChapterGrid = () => {
     }
   };
 
-  const chapters = Array.from({ length: 12 }, (_, i) => i + 1);
+  const track1Chapters = Array.from({ length: 12 }, (_, i) => i + 1);
+  const track2Chapters = Array.from({ length: 12 }, (_, i) => i + 1);
 
   const getChapterPrice = (chapter: number) => {
     if (!chapterPrices || chapterPrices.length === 0) return "0";
@@ -84,7 +142,7 @@ export const ChapterGrid = () => {
   return (
     <div className="space-y-8">
       {/* USDT Balance Info */}
-      <div className="rounded-2xl border border-blue-500/20 bg-slate-900/60 p-4">
+      <div className="theme-panel-soft rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-sm font-medium text-slate-400">
@@ -98,7 +156,7 @@ export const ChapterGrid = () => {
             <h4 className="text-sm font-medium text-slate-400">
               {t("balance.approved")}
             </h4>
-            <p className="text-lg font-bold text-emerald-400">
+            <p className="text-lg font-bold text-yellow-300">
               {Number(usdtAllowance).toFixed(2) || "0"} {t("balance.currency")}
             </p>
           </div>
@@ -114,7 +172,7 @@ export const ChapterGrid = () => {
       <div>
         <h3 className="text-2xl font-bold text-white mb-6">{t("tracks.x3")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {chapters.map((chapter) => {
+          {track1Chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
             const chapterNeedsApproval = needsApproval(chapterPrice);
 
@@ -128,6 +186,7 @@ export const ChapterGrid = () => {
                 isUnlocked={
                   userData?.exists && userData.track1Unlocked >= chapter
                 }
+                chapterState={track1States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 1, chapter)}
                 disabled={isProcessing}
@@ -143,7 +202,7 @@ export const ChapterGrid = () => {
       <div>
         <h3 className="text-2xl font-bold text-white mb-6">{t("tracks.x6")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {chapters.map((chapter) => {
+          {track2Chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
             const chapterNeedsApproval = needsApproval(chapterPrice);
 
@@ -157,6 +216,7 @@ export const ChapterGrid = () => {
                 isUnlocked={
                   userData?.exists && userData.track2Unlocked >= chapter
                 }
+                chapterState={track2States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 2, chapter)}
                 disabled={isProcessing}
@@ -170,7 +230,7 @@ export const ChapterGrid = () => {
 
       {/* Transaction Status */}
       {(isProcessing || currentlyApproving) && (
-        <div className="fixed bottom-4 right-4 bg-slate-800 border border-slate-700 rounded-lg p-4 shadow-lg">
+        <div className="fixed bottom-4 right-4 rounded-lg border border-yellow-500/20 bg-[rgba(8,8,8,0.95)] p-4 shadow-lg">
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-400 border-t-transparent"></div>
             <span className="text-sm text-slate-300">

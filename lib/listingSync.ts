@@ -9,6 +9,8 @@ import {
   SupabaseBookRow,
   updateBookByRecordId,
 } from "@/lib/supabase";
+import { getReaderLibraryAccess } from "@/lib/matrixAccess";
+import { MIN_LIBRARY_PUBLISH_CHAPTER } from "@/lib/libraryEligibility";
 
 export type ListingSyncResultStatus =
   | "listed"
@@ -39,6 +41,15 @@ export const syncSubmittedListing = async (params: {
 
   if (!row.tx_hash) {
     throw new Error("No submitted transaction hash found.");
+  }
+
+  const access = await getReaderLibraryAccess(
+    row.author_address as `0x${string}`
+  );
+  if (!access.canPublish) {
+    throw new Error(
+      `Author must unlock at least Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} before publishing a book.`
+    );
   }
 
   if (row.status === "listed" && row.book_id) {
@@ -117,6 +128,15 @@ export const recoverListingFromTxHash = async (params: {
   }
   if (row.status === "listed" && row.book_id) {
     return { status: "already_listed", book: row };
+  }
+
+  const access = await getReaderLibraryAccess(
+    row.author_address as `0x${string}`
+  );
+  if (!access.canPublish) {
+    throw new Error(
+      `Author must unlock at least Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} before publishing a book.`
+    );
   }
 
   const txCall = await getListBookCallFromTx(params.txHash);

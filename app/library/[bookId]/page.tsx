@@ -9,39 +9,38 @@ import {
 } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { Book } from "@/types/library";
 import Link from "next/link";
 import { formatUnits, parseUnits } from "viem";
 import { useLibraryListing } from "@/hooks/useLibraryListing";
 import { libraryContract } from "@/utils/contracts";
 import { USDT_ABI } from "@/utils/constants";
+import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
+import {
+  canPublishLibraryBook,
+  getHighestUnlockedChapter,
+  MIN_LIBRARY_PUBLISH_CHAPTER,
+} from "@/lib/libraryEligibility";
 
 const GATEWAY =
   process.env.NEXT_PUBLIC_PINATA_GATEWAY || "https://gateway.pinata.cloud/ipfs";
 
 const statusStyles: Record<string, string> = {
   pending: "bg-yellow-500/10 text-yellow-200 border-yellow-400/30",
-  approved: "bg-emerald-500/10 text-emerald-200 border-emerald-400/30",
+  approved: "bg-amber-500/10 text-amber-100 border-amber-400/30",
   rejected: "bg-red-500/10 text-red-200 border-red-400/30",
   listing_submitted: "bg-indigo-500/10 text-indigo-200 border-indigo-400/30",
-  listed: "bg-sky-500/10 text-sky-200 border-sky-400/30",
+  listed: "bg-yellow-500/10 text-yellow-200 border-yellow-400/30",
 };
 
-const statusLabels: Record<Book["status"], string> = {
-  pending: "Pending",
-  approved: "Approved",
-  rejected: "Rejected",
-  listing_submitted: "Listing Submitted",
-  listed: "Listed",
-};
-
-const StatusBadge = ({ status }: { status: Book["status"] }) => (
+const StatusBadge = ({ status, labels }: { status: Book["status"]; labels: Record<Book["status"], string> }) => (
   <span
     className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em] ${
       statusStyles[status] || statusStyles.pending
     }`}
   >
-    {statusLabels[status] || status}
+    {labels[status] || status}
   </span>
 );
 
@@ -50,16 +49,17 @@ const isListingReadyStage = (stage?: string) =>
 
 const getListingBlockReason = (
   book: Book,
+  messages: { listingSubmitted: string; onlyApproved: string; cidMissing: string; },
   wallet?: string
 ): string | null => {
   if (book.status === "listing_submitted") {
-    return "Listing transaction already submitted. Waiting for sync.";
+    return messages.listingSubmitted;
   }
   if (book.status !== "approved") {
-    return "Only approved books can be listed.";
+    return messages.onlyApproved;
   }
   if (!book.ipfsCid) {
-    return "IPFS CID is missing. Restart from /library/upload.";
+    return messages.cidMissing;
   }
   if (!isListingReadyStage(book.processStage)) {
     const processMessage = book.processMessage?.trim();
@@ -102,7 +102,7 @@ const shortAddress = (value?: string | null, start = 6, end = 4) => {
 };
 
 const checkToneClasses = (ok: boolean | null) => {
-  if (ok === true) return "border-emerald-400/35 bg-emerald-500/10 text-emerald-200";
+  if (ok === true) return "border-yellow-400/35 bg-yellow-500/10 text-yellow-200";
   if (ok === false) return "border-red-400/35 bg-red-500/10 text-red-200";
   return "border-slate-600/70 bg-slate-800/60 text-slate-200";
 };
@@ -149,7 +149,7 @@ type OnchainBookState = {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const mapMarketplaceBook = (rawBook: MarketplaceBookRecord): Book => {
+const mapMarketplaceBook = (rawBook: MarketplaceBookRecord, locale: string): Book => {
   const nowIso = new Date().toISOString();
   const id = rawBook.id ?? Number(rawBook.book_id);
   const normalizedStatus: Book["status"] =
@@ -166,7 +166,7 @@ const mapMarketplaceBook = (rawBook: MarketplaceBookRecord): Book => {
       rawBook.title?.trim() ||
       (rawBook.book_id ? `Book #${rawBook.book_id}` : "Untitled"),
     description:
-      rawBook.description?.trim() || "Uploaded and ready for on-chain listing.",
+      rawBook.description?.trim() || (locale === "fr" ? "Televerse et pret pour le listing on-chain." : "Uploaded and ready for on-chain listing."),
     authorWallet: rawBook.author_address,
     payoutWallet: rawBook.payout_wallet || rawBook.author_address,
     ipfsCid: rawBook.cid,
@@ -182,10 +182,10 @@ const mapMarketplaceBook = (rawBook: MarketplaceBookRecord): Book => {
     processProgress: normalizedStatus === "listed" ? 100 : 95,
     processMessage:
       normalizedStatus === "listed"
-        ? "Listed on-chain and synced."
+        ? (locale === "fr" ? "Liste on-chain et synchronise." : "Listed on-chain and synced.")
         : normalizedStatus === "listing_submitted"
-        ? "Listing submitted. Waiting for sync confirmation."
-        : "IPFS folder uploaded. Ready for on-chain listing.",
+        ? (locale === "fr" ? "Listing soumis. En attente de confirmation de sync." : "Listing submitted. Waiting for sync confirmation.")
+        : (locale === "fr" ? "Dossier IPFS televerse. Pret pour le listing on-chain." : "IPFS folder uploaded. Ready for on-chain listing."),
     similarityScore: null,
     rejectionReason: null,
     txHash: rawBook.tx_hash ?? null,
@@ -224,12 +224,24 @@ const parseOnchainBookState = (bookId: string, raw: unknown): OnchainBookState =
 };
 
 export default function BookDetailPage() {
+  const locale = useLocale();
+  const tCommon = useTranslations("LibraryCommon");
+  const tPage = useTranslations("LibraryWorkspacePage");
+  const commonCopy = {
+    status: tCommon.raw("status") as Record<Book["status"], string>,
+    buttons: tCommon.raw("buttons") as Record<string, string>,
+    labels: tCommon.raw("labels") as Record<string, string>,
+  };
+  const copy = {
+    backToAuthorBooks: tPage("backToAuthorBooks"), onChainBookId: tPage("onChainBookId"), onChainShort: tPage("onChainShort"), bookOverview: tPage("bookOverview"), author: tPage("author"), price: tPage("price"), stage: tPage("stage"), updated: tPage("updated"), progress: tPage("progress"), created: tPage("created"), flowStatus: tPage("flowStatus"), flowStatusDesc: tPage("flowStatusDesc"), refresh: tPage("refresh"), failed: tPage("failed"), done: tPage("done"), pending: tPage("pending"), noActiveStatus: tPage("noActiveStatus"), rejectedByAi: tPage("rejectedByAi"), blockchainListing: tPage("blockchainListing"), blockchainListingDesc: tPage("blockchainListingDesc"), onlyApproved: tPage("onlyApproved"), listingSubmitted: tPage("listingSubmitted"), viewTx: tPage("viewTx"), copy: tPage("copy"), copyTx: tPage("copyTx"), copied: tPage("copied"), syncing: tPage("syncing"), retrySync: tPage("retrySync"), lastSyncAttempt: tPage("lastSyncAttempt"), notAttemptedYet: tPage("notAttemptedYet"), backgroundSyncNote: tPage("backgroundSyncNote"), restartPipeline: tPage("restartPipeline"), startUploadAgain: tPage("startUploadAgain"), listingReadiness: tPage("listingReadiness"), readyPercent: tPage("readyPercent"), refreshChecks: tPage("refreshChecks"), approveUsdt: tPage("approveUsdt"), approvingUsdt: tPage("approvingUsdt"), approveRico: tPage("approveRico"), approvingRico: tPage("approvingRico"), ok: tPage("ok"), fix: tPage("fix"), contentPackage: tPage("contentPackage"), ipfsReady: tPage("ipfsReady"), ipfsMissing: tPage("ipfsMissing"), cidMissing: tPage("cidMissing"), priceInput: tPage("priceInput"), payoutWallet: tPage("payoutWallet"), listing: tPage("listing"), notReadyForListing: tPage("notReadyForListing"), listOnBlockchain: tPage("listOnBlockchain"), performActions: tPage("performActions"), refreshOnChain: tPage("refreshOnChain"), refreshingOnChain: tPage("refreshingOnChain"), sales: tPage("sales"), votes: tPage("votes"), status: tPage("status"), active: tPage("active"), frozen: tPage("frozen"), suspended: tPage("suspended"), blacklisted: tPage("blacklisted"), updatePrice: tPage("updatePrice"), updatePriceDesc: tPage("updatePriceDesc"), updatePayout: tPage("updatePayout"), updatePayoutDesc: tPage("updatePayoutDesc"), update: tPage("update"), updating: tPage("updating"), submitAppeal: tPage("submitAppeal"), submitting: tPage("submitting"), appealNote: tPage("appealNote"), openPublicBookPage: tPage("openPublicBookPage"), chapterFiveRequired: tPage.raw("chapterFiveRequired") as string
+  };
   const router = useRouter();
   const params = useParams();
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const { listBookOnChain } = useLibraryListing();
+  const { userData } = useQuantuMatrix();
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -298,7 +310,7 @@ export default function BookDetailPage() {
         throw new Error("Book not found.");
       }
 
-      const mapped = mapMarketplaceBook(rawBook);
+      const mapped = mapMarketplaceBook(rawBook, locale);
 
       setBook(mapped);
       if (!priceTouchedRef.current && !submitting) {
@@ -460,9 +472,21 @@ export default function BookDetailPage() {
     requiredRico === null || typeof ricoAllowance !== "bigint"
       ? null
       : ricoAllowance >= requiredRico;
+  const highestUnlockedChapter = getHighestUnlockedChapter(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
+  const canPublishBooks = canPublishLibraryBook(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
 
   const tokenRequirementBlockReason =
-    hasEnoughUsdt === false
+    !canPublishBooks
+      ? copy.chapterFiveRequired
+          .replace("{chapter}", String(MIN_LIBRARY_PUBLISH_CHAPTER))
+          .replace("{currentChapter}", String(highestUnlockedChapter))
+      : hasEnoughUsdt === false
       ? "Insufficient USDT for listing fee."
       : hasEnoughRico === false
       ? "Insufficient RICO for listing fee."
@@ -472,10 +496,18 @@ export default function BookDetailPage() {
       ? "RICO approval required for listing fee."
       : null;
 
-  const listingBlockReason = book ? getListingBlockReason(book, address) : null;
+  const listingBlockReason = book ? getListingBlockReason(book, copy, address) : null;
   const effectiveBlockReason = listingBlockReason || tokenRequirementBlockReason;
 
   const listingChecks = [
+    {
+      key: "chapter_access",
+      label: `Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} Access`,
+      ok: canPublishBooks,
+      detail: canPublishBooks
+        ? `Eligible to publish (current chapter ${highestUnlockedChapter}).`
+        : `Unlock Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} to publish. Current chapter: ${highestUnlockedChapter}.`,
+    },
     {
       key: "status",
       label: "Book Approved",
@@ -584,7 +616,7 @@ export default function BookDetailPage() {
   ] as const;
 
   const applyBookFromApi = (row: MarketplaceBookRecord) => {
-    const mapped = mapMarketplaceBook(row);
+    const mapped = mapMarketplaceBook(row, locale);
     setBook(mapped);
     if (!priceTouchedRef.current && !submitting) {
       setPrice(weiToDisplay(mapped.priceWei));
@@ -871,7 +903,7 @@ export default function BookDetailPage() {
 
   const handleList = async () => {
     if (!book) return;
-    const blockReason = getListingBlockReason(book, address);
+    const blockReason = getListingBlockReason(book, copy, address);
     if (blockReason) {
       setListingError(blockReason);
       return;
@@ -976,9 +1008,9 @@ export default function BookDetailPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.14),transparent_42%),radial-gradient(circle_at_85%_15%,rgba(56,189,248,0.12),transparent_34%),#020617]">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <section className="mb-6 rounded-3xl border border-slate-700/70 bg-slate-900/60 p-4 shadow-[0_22px_55px_-40px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-6">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4 sm:px-6 lg:px-8">
+          <section className="theme-panel mb-6 p-4 sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-400">
@@ -992,25 +1024,25 @@ export default function BookDetailPage() {
                   <span>/</span>
                   <span className="text-slate-200">Workspace</span>
                 </div>
-                <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-2">
+                <p className="theme-kicker mb-2">
                   Book Workspace
                 </p>
-                <h1 className="bg-gradient-to-r from-slate-50 via-slate-100 to-slate-300 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl md:text-4xl">
+                <h1 className="theme-title theme-title-accent text-2xl sm:text-3xl md:text-4xl">
                   {book?.title || "Loading..."}
                 </h1>
                 {book?.onChainBookId ? (
                   <p className="mt-2 text-sm text-slate-300/85">
-                    On-chain Book ID: <span className="font-semibold text-slate-100">#{book.onChainBookId}</span>
+                    {copy.onChainBookId}: <span className="font-semibold text-slate-100">#{book.onChainBookId}</span>
                   </p>
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {book && <StatusBadge status={book.status} />}
+                {book && <StatusBadge status={book.status} labels={commonCopy.status} />}
                 <Link
                   href="/library/my-books?mode=author"
-                  className="rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                  className="theme-button-ghost px-3 py-1.5 text-[11px] uppercase tracking-[0.16em]"
                 >
-                  Back To Author Books
+                  {copy.backToAuthorBooks}
                 </Link>
               </div>
             </div>
@@ -1018,8 +1050,8 @@ export default function BookDetailPage() {
 
           {loading && (
             <div className="grid animate-pulse gap-6 lg:grid-cols-[320px_1fr]">
-              <div className="aspect-[3/4] rounded-2xl border border-slate-700/60 bg-slate-900/60" />
-              <div className="rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6">
+              <div className="theme-panel-soft aspect-[3/4]" />
+              <div className="theme-panel-soft p-6">
                 <div className="h-6 w-1/3 rounded bg-slate-700/70" />
                 <div className="mt-3 h-4 w-full rounded bg-slate-800/70" />
                 <div className="mt-2 h-4 w-5/6 rounded bg-slate-800/70" />
@@ -1041,7 +1073,7 @@ export default function BookDetailPage() {
           {book && !loading && (
             <>
               <section className="mb-6 grid gap-6 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
-                <div className="overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/60 shadow-[0_20px_50px_-38px_rgba(0,0,0,0.95)]">
+                <div className="theme-panel overflow-hidden">
                   <div className="relative aspect-[3/4] bg-slate-900">
                     <img
                       src={
@@ -1058,26 +1090,26 @@ export default function BookDetailPage() {
                       }}
                     />
                     <div className="absolute left-3 top-3">
-                      <StatusBadge status={book.status} />
+                      <StatusBadge status={book.status} labels={commonCopy.status} />
                     </div>
                     {book.onChainBookId ? (
                       <div className="absolute bottom-3 left-3 rounded-full border border-slate-200/30 bg-black/60 px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-100">
-                        On-chain #{book.onChainBookId}
+                        {copy.onChainShort} #{book.onChainBookId}
                       </div>
                     ) : null}
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-slate-700/60 bg-slate-900/55 p-5 shadow-[0_20px_50px_-38px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-6 lg:p-7">
+                <div className="theme-panel p-5 sm:p-6 lg:p-7">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Book Overview
+                    {copy.bookOverview}
                   </p>
                   <h2 className="mt-2 text-2xl font-bold text-slate-50">{book.title}</h2>
                   <p className="mt-3 text-sm text-slate-300/90">{book.description}</p>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Author</p>
+                    <div className="theme-card-compact transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{copy.author}</p>
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-sm font-semibold text-slate-100">
                           {shortAddress(book.authorWallet)}
@@ -1087,24 +1119,24 @@ export default function BookDetailPage() {
                           onClick={() => copyValue(book.authorWallet, "author")}
                           className="rounded-md border border-slate-600 bg-slate-900/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-400 hover:text-slate-100"
                         >
-                          {copiedField === "author" ? "Copied" : "Copy"}
+                          {copiedField === "author" ? copy.copied : copy.copy}
                         </button>
                       </div>
                     </div>
-                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Price</p>
+                    <div className="theme-card-compact transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{copy.price}</p>
                       <p className="mt-1 text-sm font-semibold text-amber-200">
                         {displayUsdt(book.priceWei)} USDT
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Stage</p>
+                    <div className="theme-card-compact transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{copy.stage}</p>
                       <p className="mt-1 text-sm font-semibold text-slate-100">
                         {book.processStage.replace(/_/g, " ")}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 transition hover:border-slate-500">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Updated</p>
+                    <div className="theme-card-compact transition hover:border-slate-500">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{copy.updated}</p>
                       <p className="mt-1 text-sm font-semibold text-slate-100">
                         {new Date(book.updatedAt || book.createdAt).toLocaleDateString()}
                       </p>
@@ -1113,36 +1145,36 @@ export default function BookDetailPage() {
 
                   <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300"
+                      className="h-full bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400"
                       style={{
                         width: `${Math.max(0, Math.min(100, book.processProgress ?? 0))}%`,
                       }}
                     />
                   </div>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
-                    <span>Progress: {Math.max(0, Math.min(100, book.processProgress ?? 0))}%</span>
-                    <span>Created: {new Date(book.createdAt).toLocaleString()}</span>
+                    <span>{copy.progress}: {Math.max(0, Math.min(100, book.processProgress ?? 0))}%</span>
+                    <span>{copy.created}: {new Date(book.createdAt).toLocaleString()}</span>
                   </div>
 
                   <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     <Link
                       href="/library"
-                      className="rounded-lg border border-slate-600 bg-slate-800/60 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                      className="theme-button-ghost px-3 py-2 text-center text-xs uppercase tracking-[0.16em]"
                     >
-                      Marketplace
+                      {commonCopy.labels.marketplace}
                     </Link>
                     <Link
                       href="/library/my-books?mode=author"
-                      className="rounded-lg border border-slate-600 bg-slate-800/60 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                      className="theme-button-ghost px-3 py-2 text-center text-xs uppercase tracking-[0.16em]"
                     >
-                      My Books
+                      {commonCopy.buttons.myLibrary}
                     </Link>
                     {book.status === "listed" && book.onChainBookId ? (
                       <Link
                         href={`/library/book/${book.onChainBookId}`}
-                        className="rounded-lg border border-sky-400/40 bg-sky-500/10 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-sky-200 transition hover:-translate-y-0.5 hover:bg-sky-500/20"
+                        className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20"
                       >
-                        Open Public Book Page
+                        {copy.openPublicBookPage}
                       </Link>
                     ) : null}
                   </div>
@@ -1150,24 +1182,24 @@ export default function BookDetailPage() {
               </section>
 
               <div className="grid gap-6 xl:grid-cols-12">
-              <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-5 shadow-[0_20px_50px_-40px_rgba(0,0,0,0.95)] md:p-6 xl:col-span-7">
+              <div className="theme-panel p-5 md:p-6 xl:col-span-7">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Flow Status
+                      {copy.flowStatus}
                     </p>
                     <p className="mt-1 text-sm text-slate-300">
-                      Live pipeline status from moderation through chain sync.
+                      {copy.flowStatusDesc}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge status={book.status} />
+                    <StatusBadge status={book.status} labels={commonCopy.status} />
                     <button
                       type="button"
                       onClick={() => fetchBook({ silent: true })}
-                      className="rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-700/70"
+                      className="theme-button-ghost px-3 py-1.5 text-[10px] uppercase tracking-[0.16em]"
                     >
-                      Refresh
+                      {copy.refresh}
                     </button>
                   </div>
                 </div>
@@ -1180,13 +1212,13 @@ export default function BookDetailPage() {
                         step.failed
                           ? "border-red-400/35 bg-red-500/10 text-red-200"
                           : step.done
-                          ? "border-emerald-400/35 bg-emerald-500/10 text-emerald-200"
+                          ? "border-yellow-400/35 bg-yellow-500/10 text-yellow-200"
                           : "border-slate-700/70 bg-slate-900/60 text-slate-300"
                       }`}
                     >
                       <p className="font-semibold uppercase tracking-[0.16em]">{step.label}</p>
                       <p className="mt-1 text-[11px]">
-                        {step.failed ? "Failed" : step.done ? "Done" : "Pending"}
+                        {step.failed ? copy.failed : step.done ? copy.done : copy.pending}
                       </p>
                     </div>
                   ))}
@@ -1195,7 +1227,7 @@ export default function BookDetailPage() {
                 <div className="mt-4 rounded-xl border border-slate-700/60 bg-slate-900/60 p-4 shadow-inner shadow-black/20">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-100">
-                      {book.processMessage || "No active status message."}
+                      {book.processMessage || copy.noActiveStatus}
                     </p>
                     <span className="text-xs text-slate-400">
                       {Math.max(0, Math.min(100, book.processProgress ?? 0))}%
@@ -1203,14 +1235,14 @@ export default function BookDetailPage() {
                   </div>
                   <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300"
+                      className="h-full bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400"
                       style={{
                         width: `${Math.max(0, Math.min(100, book.processProgress ?? 0))}%`,
                       }}
                     />
                   </div>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
-                    <span>Stage: {book.processStage.replace(/_/g, " ")}</span>
+                    <span>{copy.stage}: {book.processStage.replace(/_/g, " ")}</span>
                     <span>
                       Updated: {new Date(book.updatedAt || book.createdAt).toLocaleString()}
                     </span>
@@ -1218,7 +1250,7 @@ export default function BookDetailPage() {
 
                   {book.status === "rejected" ? (
                     <p className="mt-3 text-sm text-red-200">
-                      {book.rejectionReason || "Rejected by AI moderation."}
+                      {book.rejectionReason || copy.rejectedByAi}
                     </p>
                   ) : null}
 
@@ -1237,7 +1269,7 @@ export default function BookDetailPage() {
                         onClick={() => copyValue(book.txHash || "", "tx")}
                         className="rounded-md border border-slate-600 bg-slate-900/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]"
                       >
-                        {copiedField === "tx" ? "Copied" : "Copy"}
+                        {copiedField === "tx" ? copy.copied : copy.copy}
                       </button>
                     </div>
                   ) : null}
@@ -1246,23 +1278,23 @@ export default function BookDetailPage() {
 
               <div className="rounded-3xl border border-white/10 bg-black/65 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-6 xl:col-span-5 xl:sticky xl:top-24 xl:h-fit">
                 <h3 className="mb-1 text-lg font-semibold text-slate-50">
-                  Blockchain Listing
+                  {copy.blockchainListing}
                 </h3>
                 <p className="mb-4 text-xs text-slate-400">
-                  Finalize pricing, approve token spend, then publish this verified package on-chain.
+                  {copy.blockchainListingDesc}
                 </p>
 
                 {book.status !== "approved" &&
                   book.status !== "listing_submitted" && (
                   <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
-                    Only approved books can be listed on-chain.
+                    {copy.onlyApproved}
                   </div>
                 )}
 
                 {book.status === "listing_submitted" && (
                   <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-100">
                     <p>
-                      Listing transaction is submitted. Sync is in progress.
+                      {copy.listingSubmitted}
                     </p>
                     {book.txHash && (
                       <a
@@ -1271,7 +1303,7 @@ export default function BookDetailPage() {
                         rel="noreferrer"
                         className="mt-3 inline-flex text-xs underline"
                       >
-                        View transaction on BscScan ({shortAddress(book.txHash, 10, 8)})
+                        {copy.viewTx} ({shortAddress(book.txHash, 10, 8)})
                       </a>
                     )}
                     {book.txHash ? (
@@ -1280,7 +1312,7 @@ export default function BookDetailPage() {
                         onClick={() => copyValue(book.txHash || "", "tx")}
                         className="ml-2 mt-3 inline-flex rounded-md border border-indigo-300/40 bg-indigo-400/10 px-2 py-1 text-[10px] uppercase tracking-[0.16em]"
                       >
-                        {copiedField === "tx" ? "Copied" : "Copy Tx"}
+                        {copiedField === "tx" ? copy.copied : copy.copyTx}
                       </button>
                     ) : null}
                     <button
@@ -1293,16 +1325,16 @@ export default function BookDetailPage() {
                       disabled={isSyncingListing}
                       className="mt-3 inline-flex w-full justify-center rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-100 disabled:opacity-50 sm:w-auto"
                     >
-                      {isSyncingListing ? "Syncing..." : "Retry Sync"}
+                      {isSyncingListing ? copy.syncing : copy.retrySync}
                     </button>
                     <p className="mt-3 text-xs text-indigo-100/80">
-                      Last sync attempt:{" "}
+                      {copy.lastSyncAttempt}:{" "}
                       {lastSyncAttemptAt
                         ? new Date(lastSyncAttemptAt).toLocaleString()
-                        : "Not attempted yet"}
+                        : copy.notAttemptedYet}
                     </p>
                     <p className="mt-1 text-xs text-indigo-100/70">
-                      Background sync runs less frequently to avoid page jitter. Use Retry Sync anytime.
+                      {copy.backgroundSyncNote} {copy.retrySync} anytime.
                     </p>
                   </div>
                 )}
@@ -1310,32 +1342,32 @@ export default function BookDetailPage() {
                 {book.status === "pending" && book.processStage === "ipfs_failed" && (
                   <div className="mt-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
                     <p className="text-sm text-yellow-200">
-                      Upload/moderation/IPFS is a single phase and cannot be resumed.
+                      {copy.restartPipeline}
                     </p>
                     <Link
                       href="/library/upload"
                       className="mt-3 inline-flex items-center text-xs uppercase tracking-[0.2em] text-yellow-200"
                     >
-                      Start Upload Again
+                      {copy.startUploadAgain}
                     </Link>
                   </div>
                 )}
 
                 {book.status === "approved" && (
                   <div className="space-y-4">
-                    <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
+                    <div className="theme-card p-4">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                          Listing Readiness
+                          {copy.listingReadiness}
                         </p>
-                        <span className="rounded-full border border-slate-600 bg-slate-900/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200">
-                          {listingReadiness}% Ready
+                        <span className="theme-chip px-2.5 py-1 text-[10px] tracking-[0.14em]">
+                          {listingReadiness}% {copy.readyPercent}
                         </span>
                       </div>
 
                       <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
                         <div
-                          className="h-full bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300 transition-all"
+                          className="h-full bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 transition-all"
                           style={{ width: `${listingReadiness}%` }}
                         />
                       </div>
@@ -1351,7 +1383,7 @@ export default function BookDetailPage() {
                                 {item.label}
                               </p>
                               <span className="text-[10px]">
-                                {item.ok === true ? "OK" : item.ok === false ? "Fix" : "..."}
+                                {item.ok === true ? copy.ok : item.ok === false ? copy.fix : "..."}
                               </span>
                             </div>
                             <p className="mt-1 text-[11px]">{item.detail}</p>
@@ -1368,9 +1400,9 @@ export default function BookDetailPage() {
                             refetchUsdtAllowance(),
                             refetchRicoAllowance(),
                           ])}
-                          className="rounded-lg border border-slate-600 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-800/80 sm:w-auto"
+                          className="theme-button-ghost px-3 py-1.5 text-xs uppercase tracking-[0.14em] sm:w-auto"
                         >
-                          Refresh Checks
+                          {copy.refreshChecks}
                         </button>
                         <button
                           type="button"
@@ -1386,9 +1418,9 @@ export default function BookDetailPage() {
                             !requiredUsdt ||
                             hasEnoughUsdtAllowance !== false
                           }
-                          className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20 disabled:opacity-50 sm:w-auto"
+                          className="theme-button-secondary px-3 py-1.5 text-xs sm:w-auto disabled:opacity-50"
                         >
-                          {approvingUsdt ? "Approving USDT..." : "Approve USDT"}
+                          {approvingUsdt ? copy.approvingUsdt : copy.approveUsdt}
                         </button>
                         <button
                           type="button"
@@ -1404,39 +1436,39 @@ export default function BookDetailPage() {
                             !requiredRico ||
                             hasEnoughRicoAllowance !== false
                           }
-                          className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20 disabled:opacity-50 sm:w-auto"
+                          className="theme-button-secondary px-3 py-1.5 text-xs sm:w-auto disabled:opacity-50"
                         >
-                          {approvingRico ? "Approving RICO..." : "Approve RICO"}
+                          {approvingRico ? copy.approvingRico : copy.approveRico}
                         </button>
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
+                    <div className="theme-card p-4">
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                        Content Package
+                        {copy.contentPackage}
                       </p>
                       <p className="mt-1 text-sm text-slate-200">
                         {book.ipfsCid
-                          ? "IPFS folder is ready and linked to this book package."
-                          : "IPFS package is missing for this record."}
+                          ? copy.ipfsReady
+                          : copy.ipfsMissing}
                       </p>
                     </div>
                     {!book.ipfsCid && (
                       <div>
                         <p className="text-sm text-yellow-200">
-                          CID missing for this record. Restart from upload to run the full pipeline again.
+                          {copy.cidMissing}
                         </p>
                         <Link
                           href="/library/upload"
                           className="mt-3 inline-flex items-center text-xs uppercase tracking-[0.2em] text-yellow-200"
                         >
-                          Start Upload Again
+                          {copy.startUploadAgain}
                         </Link>
                       </div>
                     )}
                     <div>
                       <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                        Price (USDT)
+                        {copy.priceInput}
                       </label>
                       <input
                         value={price}
@@ -1449,7 +1481,7 @@ export default function BookDetailPage() {
                     </div>
                     <div>
                       <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                        Payout Wallet
+                        {copy.payoutWallet}
                       </label>
                       <div className="mt-2 flex items-center gap-2">
                         <input
@@ -1465,7 +1497,7 @@ export default function BookDetailPage() {
                           onClick={() => copyValue(payoutWallet, "payout")}
                           className="rounded-lg border border-slate-600 bg-slate-900/80 px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-400 hover:text-slate-100"
                         >
-                          {copiedField === "payout" ? "Copied" : "Copy"}
+                          {copiedField === "payout" ? copy.copied : copy.copy}
                         </button>
                       </div>
                     </div>
@@ -1487,7 +1519,7 @@ export default function BookDetailPage() {
                         submitting ||
                         !!effectiveBlockReason
                       }
-                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 to-teal-300 px-4 py-2.5 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50"
+                      className="theme-button-primary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                     >
                       {submitting
                         ? "Listing..."
@@ -1500,18 +1532,18 @@ export default function BookDetailPage() {
 
                 {(book.status === "listed" || book.status === "listing_submitted") &&
                   book.onChainBookId && (
-                    <div className="mt-5 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+                    <div className="mt-5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.2em] text-blue-200/90">
-                          Perform Actions (List, Sync, Update, Appeal)
+                        <p className="text-xs uppercase tracking-[0.2em] text-yellow-200/90">
+                          {copy.performActions}
                         </p>
                         <button
                           type="button"
                           onClick={() => void fetchOnchainBook()}
                           disabled={onchainLoading}
-                          className="rounded-lg border border-blue-400/40 bg-blue-400/15 px-3 py-1.5 text-xs font-semibold text-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-400/20 disabled:opacity-50"
+                          className="theme-button-secondary px-3 py-1.5 text-xs disabled:opacity-50"
                         >
-                          {onchainLoading ? "Refreshing..." : "Refresh On-Chain"}
+                          {onchainLoading ? copy.refreshingOnChain : copy.refreshOnChain}
                         </button>
                       </div>
 
@@ -1521,16 +1553,16 @@ export default function BookDetailPage() {
 
                       {onchain ? (
                         <div className="mb-3 grid gap-2 text-xs md:grid-cols-3">
-                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
-                            Price: <span className="font-semibold">{displayUsdt(onchain.priceWei)} USDT</span>
+                          <div className="theme-card-compact p-2 text-slate-200">
+                            {copy.price}: <span className="font-semibold">{displayUsdt(onchain.priceWei)} USDT</span>
                           </div>
-                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
-                            Sales: <span className="font-semibold">{onchain.totalSales}</span>
+                          <div className="theme-card-compact p-2 text-slate-200">
+                            {copy.sales}: <span className="font-semibold">{onchain.totalSales}</span>
                           </div>
-                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
-                            Votes: <span className="font-semibold">👍 {onchain.upVotes} / 👎 {onchain.downVotes}</span>
+                          <div className="theme-card-compact p-2 text-slate-200">
+                            {copy.votes}: <span className="font-semibold">👍 {onchain.upVotes} / 👎 {onchain.downVotes}</span>
                           </div>
-                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200 md:col-span-2">
+                          <div className="theme-card-compact p-2 text-slate-200 md:col-span-2">
                             Payout Wallet:{" "}
                             <span className="inline-flex items-center gap-2">
                               <span className="font-semibold" title={onchain.payoutWallet}>
@@ -1541,12 +1573,12 @@ export default function BookDetailPage() {
                                 onClick={() => copyValue(onchain.payoutWallet, "payout")}
                                 className="rounded-md border border-slate-600 bg-slate-900/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300 transition hover:border-slate-400 hover:text-slate-100"
                               >
-                                {copiedField === "payout" ? "Copied" : "Copy"}
+                                {copiedField === "payout" ? copy.copied : copy.copy}
                               </button>
                             </span>
                           </div>
-                          <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-2 text-slate-200">
-                            Status:{" "}
+                          <div className="theme-card-compact p-2 text-slate-200">
+                            {copy.status}:{" "}
                             <span className="font-semibold">
                               {onchain.isFrozen ? "Frozen " : ""}
                               {onchain.isSuspended ? "Suspended " : ""}
@@ -1562,11 +1594,11 @@ export default function BookDetailPage() {
                       ) : null}
 
                       <div className="grid gap-3 xl:grid-cols-2">
-                        <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-3">
-                          <p className="text-xs uppercase tracking-[0.18em] text-blue-200/80">
-                            Update Price
+                        <div className="theme-card-compact p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-yellow-200/80">
+                            {copy.updatePrice}
                           </p>
-                          <p className="mt-1 text-[11px] text-blue-100/70">
+                          <p className="mt-1 text-[11px] text-slate-400">
                             Set a new public sale price in USDT.
                           </p>
                           <div className="mt-2 space-y-2">
@@ -1577,7 +1609,7 @@ export default function BookDetailPage() {
                                 setUpdatePrice(e.target.value);
                               }}
                               placeholder="0.00"
-                              className="flex-1 rounded-lg border border-blue-400/25 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none ring-0 transition focus:border-blue-300/60"
+                              className="flex-1 theme-input px-3 py-2 text-sm"
                             />
                             <div className="flex justify-end">
                               <button
@@ -1588,19 +1620,19 @@ export default function BookDetailPage() {
                                   !address ||
                                   address.toLowerCase() !== book.authorWallet.toLowerCase()
                                 }
-                                className="w-full rounded-lg border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-xs font-semibold text-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-400/25 disabled:opacity-50 sm:w-auto"
+                                className="w-full rounded-lg border border-yellow-400/40 bg-yellow-400/15 px-3 py-2 text-xs font-semibold text-yellow-100 transition hover:-translate-y-0.5 hover:bg-yellow-400/25 disabled:opacity-50 sm:w-auto"
                               >
-                                {updatingPrice ? "Updating..." : "Update"}
+                                {updatingPrice ? copy.updating : copy.update}
                               </button>
                             </div>
                           </div>
                         </div>
 
-                        <div className="rounded-lg border border-blue-400/20 bg-slate-950/70 p-3">
-                          <p className="text-xs uppercase tracking-[0.18em] text-blue-200/80">
-                            Update Payout Wallet
+                        <div className="theme-card-compact p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-yellow-200/80">
+                            {copy.updatePayout}
                           </p>
-                          <p className="mt-1 text-[11px] text-blue-100/70">
+                          <p className="mt-1 text-[11px] text-slate-400">
                             Change the wallet that receives author proceeds.
                           </p>
                           <div className="mt-2 space-y-2">
@@ -1611,7 +1643,7 @@ export default function BookDetailPage() {
                                 setUpdatePayoutWallet(e.target.value);
                               }}
                               placeholder="0x..."
-                              className="flex-1 rounded-lg border border-blue-400/25 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none ring-0 transition focus:border-blue-300/60"
+                              className="flex-1 theme-input px-3 py-2 text-sm"
                             />
                             <div className="flex justify-end">
                               <button
@@ -1622,9 +1654,9 @@ export default function BookDetailPage() {
                                   !address ||
                                   address.toLowerCase() !== book.authorWallet.toLowerCase()
                                 }
-                                className="w-full rounded-lg border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-xs font-semibold text-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-400/25 disabled:opacity-50 sm:w-auto"
+                                className="w-full rounded-lg border border-yellow-400/40 bg-yellow-400/15 px-3 py-2 text-xs font-semibold text-yellow-100 transition hover:-translate-y-0.5 hover:bg-yellow-400/25 disabled:opacity-50 sm:w-auto"
                               >
-                                {updatingPayout ? "Updating..." : "Update"}
+                                {updatingPayout ? copy.updating : copy.update}
                               </button>
                             </div>
                           </div>
@@ -1645,9 +1677,9 @@ export default function BookDetailPage() {
                           }
                           className="rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-200 transition hover:-translate-y-0.5 hover:bg-yellow-500/20 disabled:opacity-50"
                         >
-                          {appealing ? "Submitting..." : "Submit Appeal"}
+                          {appealing ? copy.submitting : copy.submitAppeal}
                         </button>
-                        <span className="text-xs text-blue-100/80">
+                        <span className="text-xs text-yellow-100/80">
                           Appeal is available only when the book is frozen, suspended, or blacklisted.
                         </span>
                       </div>

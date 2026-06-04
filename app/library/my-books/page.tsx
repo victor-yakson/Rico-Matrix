@@ -8,6 +8,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Book } from "@/types/library";
 import Link from "next/link";
 import { formatUnits, parseUnits } from "viem";
@@ -34,19 +35,12 @@ type ListingDraft = {
 
 const statusStyles: Record<Book["status"], string> = {
   pending: "bg-yellow-500/10 text-yellow-200 border-yellow-400/30",
-  approved: "bg-emerald-500/10 text-emerald-200 border-emerald-400/30",
+  approved: "bg-amber-500/10 text-amber-100 border-amber-400/30",
   rejected: "bg-red-500/10 text-red-200 border-red-400/30",
   listing_submitted: "bg-indigo-500/10 text-indigo-200 border-indigo-400/30",
-  listed: "bg-sky-500/10 text-sky-200 border-sky-400/30",
+  listed: "bg-yellow-500/10 text-yellow-200 border-yellow-400/30",
 };
 
-const statusDisplay: Record<Book["status"], string> = {
-  pending: "Pending",
-  approved: "Approved",
-  rejected: "Rejected",
-  listing_submitted: "Listing Submitted",
-  listed: "Listed",
-};
 
 const PAGE_SIZE = 6;
 const READER_PAGE_SIZE = 9;
@@ -72,13 +66,13 @@ const parsePage = (value: string | null) => {
 const isMode = (value: string | null): value is "author" | "reader" =>
   value === "author" || value === "reader";
 
-const StatusBadge = ({ status }: { status: Book["status"] }) => (
+const StatusBadge = ({ status, labels }: { status: Book["status"]; labels: Record<Book["status"], string> }) => (
   <span
     className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em] ${
       statusStyles[status]
     }`}
   >
-    {statusDisplay[status]}
+    {labels[status]}
   </span>
 );
 
@@ -129,7 +123,7 @@ const AuthorLoadingSkeleton = () => (
     {Array.from({ length: 3 }).map((_, index) => (
       <div
         key={`author-skeleton-${index}`}
-        className="rounded-2xl border border-slate-700/60 bg-slate-900/45 p-6"
+        className="theme-panel-soft p-6"
       >
         <div className="h-5 w-1/3 rounded bg-slate-700/70" />
         <div className="mt-3 h-4 w-2/3 rounded bg-slate-800/70" />
@@ -148,7 +142,7 @@ const ReaderLoadingSkeleton = () => (
     {Array.from({ length: 6 }).map((_, index) => (
       <div
         key={`reader-skeleton-${index}`}
-        className="rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5"
+        className="theme-panel-soft p-5 md:p-6"
       >
         <div className="h-5 w-2/3 rounded bg-slate-700/70" />
         <div className="mt-3 h-4 w-full rounded bg-slate-800/70" />
@@ -336,6 +330,14 @@ const parseOnchainBookState = (bookId: string, raw: unknown): OnchainBookState =
 };
 
 export default function MyBooksPage() {
+  const locale = useLocale();
+  const tCommon = useTranslations("LibraryCommon");
+  const commonCopy = {
+    status: tCommon.raw("status") as Record<Book["status"], string>,
+    buttons: tCommon.raw("buttons") as Record<string, string>,
+    labels: tCommon.raw("labels") as Record<string, string>,
+  };
+  const statusDisplay: Record<Book["status"], string> = commonCopy.status;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -350,6 +352,7 @@ export default function MyBooksPage() {
   const [drafts, setDrafts] = useState<Record<number, ListingDraft>>({});
   const [approvingUsdt, setApprovingUsdt] = useState(false);
   const [approvingRico, setApprovingRico] = useState(false);
+  const [claimingReaderRoyalty, setClaimingReaderRoyalty] = useState(false);
   const listingInProgressRef = useRef(false);
   const syncInFlightRef = useRef(new Set<number>());
   const [syncMeta, setSyncMeta] = useState<
@@ -443,6 +446,13 @@ export default function MyBooksPage() {
     query: { enabled: Boolean(address && ricoTokenAddress) },
   });
 
+  const { data: pendingReaderShare, refetch: refetchPendingReaderShare } = useReadContract({
+    ...libraryContract,
+    functionName: "viewPendingShare",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  });
+
   const hasEnoughUsdt =
     requiredUsdt === null || typeof usdtBalance !== "bigint"
       ? null
@@ -459,6 +469,12 @@ export default function MyBooksPage() {
     requiredRico === null || typeof ricoAllowance !== "bigint"
       ? null
       : ricoAllowance >= requiredRico;
+  const pendingReaderShareDisplay =
+    typeof pendingReaderShare === "bigint"
+      ? displayUsdt(formatUnits(pendingReaderShare, 18))
+      : "--";
+  const canClaimReaderRoyalty =
+    typeof pendingReaderShare === "bigint" && pendingReaderShare > BigInt(0);
 
   const tokenRequirementBlockReason =
     hasEnoughUsdt === false
@@ -1456,24 +1472,82 @@ export default function MyBooksPage() {
     }
   };
 
+  const claimReaderRoyalty = async () => {
+    if (!address || !publicClient) {
+      toast.error(
+        locale === "fr"
+          ? "Connectez votre wallet pour reclamer votre part."
+          : "Connect your wallet to claim your share."
+      );
+      return;
+    }
+
+    if (!canClaimReaderRoyalty) {
+      toast.error(
+        locale === "fr"
+          ? "Aucune part de royaute a reclamer pour le moment."
+          : "No royalty share is available to claim right now."
+      );
+      return;
+    }
+
+    setClaimingReaderRoyalty(true);
+    const toastId = "library-reader-royalty";
+
+    try {
+      toast.loading(
+        locale === "fr"
+          ? "Reclamation de la part communautaire..."
+          : "Claiming community share...",
+        { id: toastId }
+      );
+
+      const hash = await writeContractAsync({
+        ...libraryContract,
+        functionName: "claimCommunityShare",
+      });
+
+      await publicClient.waitForTransactionReceipt({ hash, confirmations: 1 });
+      await refetchPendingReaderShare();
+
+      toast.success(
+        locale === "fr"
+          ? "Part communautaire reclamee."
+          : "Community share claimed.",
+        { id: toastId }
+      );
+    } catch (error: any) {
+      toast.error(
+        error?.shortMessage ||
+          error?.message ||
+          (locale === "fr"
+            ? "Echec de la reclamation."
+            : "Claim failed."),
+        { id: toastId }
+      );
+    } finally {
+      setClaimingReaderRoyalty(false);
+    }
+  };
+
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_42%),radial-gradient(circle_at_85%_15%,rgba(56,189,248,0.1),transparent_32%),#020617]">
-        <div className="container mx-auto px-4 py-10">
-          <section className="rounded-3xl border border-slate-700/60 bg-slate-900/55 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-8">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4">
+          <section className="theme-panel p-6 md:p-8 lg:p-10">
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80">
-                  {mode === "author" ? "Author Workspace" : "Reader Workspace"}
+                <p className="theme-kicker">
+                  {mode === "author" ? (locale === "fr" ? "Espace auteur" : "Author Workspace") : (locale === "fr" ? "Espace lecteur" : "Reader Workspace")}
                 </p>
-                <h1 className="mt-2 text-3xl font-bold text-slate-50 md:text-4xl">
-                  {mode === "author" ? "My Books" : "Discover & Read"}
+                <h1 className="theme-title mt-2 text-3xl md:text-4xl">
+                  {mode === "author" ? (locale === "fr" ? "Mes livres" : "My Books") : (locale === "fr" ? "Decouvrir et lire" : "Discover & Read")}
                 </h1>
-                <p className="mt-2 text-sm text-slate-300/80">
+                <p className="theme-copy mt-3 max-w-3xl text-sm md:text-base">
                   {mode === "author"
-                    ? "Manage moderation, listing readiness, approvals, and on-chain publishing."
-                    : "View only books you have purchased and open them in the reader."}
+                    ? (locale === "fr" ? "Gerez la moderation, le listing, les approbations et la publication on-chain." : "Manage moderation, listing readiness, approvals, and on-chain publishing.")
+                    : (locale === "fr" ? "Consultez uniquement les livres que vous avez achetes et ouvrez-les dans le lecteur." : "View only books you have purchased and open them in the reader.")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1486,28 +1560,28 @@ export default function MyBooksPage() {
                       void fetchReaderBooks();
                     }
                   }}
-                  className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:bg-slate-700/70"
+                  className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-wider"
                 >
-                  Refresh
+                  {locale === "fr" ? "Actualiser" : "Refresh"}
                 </button>
                 <Link
                   href="/library"
-                  className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:bg-slate-700/70"
+                  className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-wider"
                 >
-                  Marketplace
+                  {commonCopy.labels.marketplace}
                 </Link>
                 {mode === "author" ? (
                   <Link
                     href="/library/upload"
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-200 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black shadow-[0_0_24px_rgba(250,204,21,0.35)]"
+                    className="theme-button-primary px-5 py-2.5 text-xs uppercase tracking-wider"
                   >
-                    Upload New Book
+                    {locale === "fr" ? "Televerser un livre" : "Upload New Book"}
                   </Link>
                 ) : null}
               </div>
             </div>
 
-            <div className="mb-6 inline-flex rounded-xl border border-slate-700 bg-slate-950/70 p-1">
+            <div className="mb-6 inline-flex rounded-2xl border border-white/8 bg-[rgba(7,10,17,0.7)] p-1">
               <button
                 type="button"
                 onClick={() => setMode("author")}
@@ -1517,66 +1591,66 @@ export default function MyBooksPage() {
                     : "text-slate-300 hover:bg-slate-800/80"
                 }`}
               >
-                Author
+                {locale === "fr" ? "Auteur" : "Author"}
               </button>
               <button
                 type="button"
                 onClick={() => setMode("reader")}
                 className={`rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
                   mode === "reader"
-                    ? "bg-gradient-to-r from-sky-400 to-blue-300 text-slate-950"
+                    ? "bg-gradient-to-r from-yellow-300 to-amber-300 text-slate-950"
                     : "text-slate-300 hover:bg-slate-800/80"
                 }`}
               >
-                Reader
+                {locale === "fr" ? "Lecteur" : "Reader"}
               </button>
             </div>
 
             {address && (
               mode === "author" ? (
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-                  <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                  <div className="theme-stat-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Total</p>
                     <p className="mt-2 text-2xl font-semibold text-slate-100">{summary.total}</p>
                   </div>
-                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-emerald-300/90">Approved</p>
-                    <p className="mt-2 text-2xl font-semibold text-emerald-100">{summary.approved}</p>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-amber-300/90">Approved</p>
+                    <p className="mt-2 text-2xl font-semibold text-amber-100">{summary.approved}</p>
                   </div>
-                  <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-sky-300/90">Listed</p>
-                    <p className="mt-2 text-2xl font-semibold text-sky-100">{summary.listed}</p>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-amber-300/90">Listed</p>
+                    <p className="mt-2 text-2xl font-semibold text-amber-100">{summary.listed}</p>
                   </div>
-                  <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-blue-300/90">Syncing</p>
-                    <p className="mt-2 text-2xl font-semibold text-blue-100">{summary.listing_submitted}</p>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-yellow-300/90">Syncing</p>
+                    <p className="mt-2 text-2xl font-semibold text-yellow-100">{summary.listing_submitted}</p>
                   </div>
-                  <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4">
+                  <div className="theme-stat-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-yellow-300/90">Pending</p>
                     <p className="mt-2 text-2xl font-semibold text-yellow-100">{summary.pending}</p>
                   </div>
-                  <div className="rounded-2xl border border-teal-500/30 bg-teal-500/10 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-teal-300/90">Ready To List</p>
-                    <p className="mt-2 text-2xl font-semibold text-teal-100">{summary.readyToList}</p>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-yellow-300/90">Ready To List</p>
+                    <p className="mt-2 text-2xl font-semibold text-yellow-100">{summary.readyToList}</p>
                   </div>
                 </div>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                  <div className="theme-stat-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Purchased Books</p>
                     <p className="mt-2 text-2xl font-semibold text-slate-100">{readerSummary.totalPurchased}</p>
                   </div>
-                  <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-blue-300/90">From Other Authors</p>
-                    <p className="mt-2 text-2xl font-semibold text-blue-100">{readerSummary.fromOthers}</p>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-yellow-300/90">From Other Authors</p>
+                    <p className="mt-2 text-2xl font-semibold text-yellow-100">{readerSummary.fromOthers}</p>
                   </div>
-                  <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4">
+                  <div className="theme-stat-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-yellow-300/90">Your Listed Titles</p>
                     <p className="mt-2 text-2xl font-semibold text-yellow-100">{readerSummary.fromMe}</p>
                   </div>
-                  <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-sky-300/90">Priced Books</p>
-                    <p className="mt-2 text-2xl font-semibold text-sky-100">{readerSummary.withPrice}</p>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-amber-300/90">Priced Books</p>
+                    <p className="mt-2 text-2xl font-semibold text-amber-100">{readerSummary.withPrice}</p>
                   </div>
                 </div>
               )
@@ -1585,26 +1659,26 @@ export default function MyBooksPage() {
 
           {!address && (
             <div className="mt-6 rounded-2xl border border-yellow-400/30 bg-yellow-500/10 p-6 text-yellow-200">
-              Connect your wallet to view and manage your books.
+              {locale === "fr" ? "Connectez votre wallet pour voir et gerer vos livres." : "Connect your wallet to view and manage your books."}
             </div>
           )}
 
           {address && mode === "author" && (
             <section className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-              <div className="rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5">
+              <div className="theme-panel-soft p-5 md:p-6">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                  Browse Books
+                  {locale === "fr" ? "Parcourir les livres" : "Browse Books"}
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  <input
-                    value={query}
-                    onChange={(e) => {
-                      setQuery(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    placeholder="Search title, description, stage..."
-                    className="h-11 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none ring-0 placeholder:text-slate-500 focus:border-emerald-400/50 md:col-span-2"
-                  />
+                    <input
+                      value={query}
+                      onChange={(e) => {
+                        setQuery(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      placeholder={locale === "fr" ? "Rechercher par titre, description, etape..." : "Search title, description, stage..."}
+                      className="theme-input h-11 px-3 text-sm md:col-span-2"
+                    />
                   <div className="grid grid-cols-2 gap-3">
                     <select
                       value={filterStatus}
@@ -1612,14 +1686,14 @@ export default function MyBooksPage() {
                         setFilterStatus(e.target.value as "all" | Book["status"]);
                         setCurrentPage(1);
                       }}
-                      className="h-11 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400/50"
+                      className="h-11 theme-card-compact px-3 text-sm text-slate-100 outline-none focus:border-yellow-300/50"
                     >
-                      <option value="all">All</option>
-                      <option value="pending">Pending</option>
-                      <option value="approved">Approved</option>
-                      <option value="listing_submitted">Syncing</option>
-                      <option value="listed">Listed</option>
-                      <option value="rejected">Rejected</option>
+                      <option value="all">{locale === "fr" ? "Tous" : "All"}</option>
+                      <option value="pending">{statusDisplay.pending}</option>
+                      <option value="approved">{statusDisplay.approved}</option>
+                      <option value="listing_submitted">{locale === "fr" ? "Synchronisation" : "Syncing"}</option>
+                      <option value="listed">{statusDisplay.listed}</option>
+                      <option value="rejected">{statusDisplay.rejected}</option>
                     </select>
                     <select
                       value={sortBy}
@@ -1627,11 +1701,11 @@ export default function MyBooksPage() {
                         setSortBy(e.target.value as "newest" | "oldest" | "status");
                         setCurrentPage(1);
                       }}
-                      className="h-11 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400/50"
+                      className="h-11 theme-card-compact px-3 text-sm text-slate-100 outline-none focus:border-yellow-300/50"
                     >
-                      <option value="newest">Newest</option>
-                      <option value="oldest">Oldest</option>
-                      <option value="status">Status</option>
+                      <option value="newest">{locale === "fr" ? "Plus recents" : "Newest"}</option>
+                      <option value="oldest">{locale === "fr" ? "Plus anciens" : "Oldest"}</option>
+                      <option value="status">{locale === "fr" ? "Statut" : "Status"}</option>
                     </select>
                   </div>
                 </div>
@@ -1648,9 +1722,9 @@ export default function MyBooksPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5">
+              <div className="theme-panel-soft p-5 md:p-6">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                  Listing Fee Readiness
+                  {locale === "fr" ? "Preparation des frais de listing" : "Listing Fee Readiness"}
                 </p>
                 <div className="mt-3 grid gap-2 text-sm">
                   <div className="flex items-center justify-between text-slate-300">
@@ -1689,9 +1763,9 @@ export default function MyBooksPage() {
                       )
                     }
                     disabled={approvingUsdt || !requiredUsdt || hasEnoughUsdtAllowance !== false}
-                    className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 disabled:opacity-50"
+                    className="theme-button-secondary px-3 py-1.5 text-xs disabled:opacity-50"
                   >
-                    {approvingUsdt ? "Approving USDT..." : "Approve USDT"}
+                    {approvingUsdt ? (locale === "fr" ? "Approbation USDT..." : "Approving USDT...") : (locale === "fr" ? "Approuver USDT" : "Approve USDT")}
                   </button>
                   <button
                     type="button"
@@ -1703,38 +1777,38 @@ export default function MyBooksPage() {
                       )
                     }
                     disabled={approvingRico || !requiredRico || hasEnoughRicoAllowance !== false}
-                    className="rounded-lg border border-yellow-400/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-200 disabled:opacity-50"
+                    className="theme-button-secondary px-3 py-1.5 text-xs disabled:opacity-50"
                   >
-                    {approvingRico ? "Approving RICO..." : "Approve RICO"}
+                    {approvingRico ? (locale === "fr" ? "Approbation RICO..." : "Approving RICO...") : (locale === "fr" ? "Approuver RICO" : "Approve RICO")}
                   </button>
                 </div>
                 {tokenRequirementBlockReason ? (
-                  <p className="mt-3 text-xs text-yellow-200/90">Reason: {tokenRequirementBlockReason}</p>
+                  <p className="mt-3 text-xs text-yellow-200/90">{locale === "fr" ? "Raison" : "Reason"}: {tokenRequirementBlockReason}</p>
                 ) : (
-                  <p className="mt-3 text-xs text-emerald-300">Wallet is ready for listing fees.</p>
+                  <p className="mt-3 text-xs text-yellow-200">{locale === "fr" ? "Le wallet est pret pour les frais de listing." : "Wallet is ready for listing fees."}</p>
                 )}
               </div>
             </section>
           )}
 
           {address && mode === "author" && (
-            <section className="mt-6 rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5">
+            <section className="mt-6 theme-panel-soft p-5 md:p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                  Author Actions Timeline
+                  {locale === "fr" ? "Chronologie des actions auteur" : "Author Actions Timeline"}
                 </p>
-                <span className="text-xs text-slate-500">Latest 5 actions</span>
+                <span className="text-xs text-slate-500">{locale === "fr" ? "5 dernieres actions" : "Latest 5 actions"}</span>
               </div>
               {recentAuthorActions.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-400">
-                  No synced author actions yet.
+                  {locale === "fr" ? "Aucune action auteur synchronisee pour le moment." : "No synced author actions yet."}
                 </p>
               ) : (
                 <div className="mt-3 space-y-2">
                   {recentAuthorActions.map((entry) => (
                     <div
                       key={`${entry.id}-${entry.lastActionTxHash}`}
-                      className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2"
+                      className="theme-card-compact px-3 py-2"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-slate-100">
@@ -1744,7 +1818,7 @@ export default function MyBooksPage() {
                           {new Date(entry.updatedAt || entry.createdAt).toLocaleString()}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-blue-200/90">
+                      <p className="mt-1 text-xs text-yellow-200/90">
                         Action: {entry.lastActionType}
                       </p>
                       {entry.lastActionTxHash ? (
@@ -1765,42 +1839,112 @@ export default function MyBooksPage() {
           )}
 
           {address && mode === "reader" && (
-            <section className="mt-6 rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                Reader Catalog
-              </p>
-              <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-                <input
-                  value={readerQuery}
-                  onChange={(e) => {
-                    setReaderQuery(e.target.value);
-                    setReaderPage(1);
-                  }}
-                  placeholder="Search by title, description, author address..."
-                  className="h-11 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none ring-0 placeholder:text-slate-500 focus:border-blue-400/50"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReaderQuery("");
-                    setReaderPage(1);
-                  }}
-                  className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:bg-slate-700/70"
-                >
-                  Clear
-                </button>
+            <section className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
+              <div className="theme-panel p-5 md:p-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                  {locale === "fr" ? "Part communautaire" : "Community Share"}
+                </p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-100">
+                  {locale === "fr"
+                    ? "Reclamez vos royalties lecteur"
+                    : "Claim your reader royalty"}
+                </h3>
+                <p className="mt-2 text-sm text-slate-300">
+                  {locale === "fr"
+                    ? "Les distributions des achats de livres sont miroirrees ici selon vos points RicoMatrix."
+                    : "Book purchase distributions are mirrored here based on your RicoMatrix points."}
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                      {locale === "fr" ? "Disponible" : "Available"}
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-amber-100">
+                      {pendingReaderShareDisplay} USDT
+                    </p>
+                  </div>
+                  <div className="theme-stat-panel p-4">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                      {locale === "fr" ? "Statut" : "Status"}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-yellow-100">
+                      {canClaimReaderRoyalty
+                        ? locale === "fr"
+                          ? "Pret a reclamer"
+                          : "Ready to claim"
+                        : locale === "fr"
+                        ? "Aucune distribution en attente"
+                        : "No pending distribution"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={claimReaderRoyalty}
+                    disabled={!canClaimReaderRoyalty || claimingReaderRoyalty}
+                    className="theme-button-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {claimingReaderRoyalty
+                      ? locale === "fr"
+                        ? "Reclamation..."
+                        : "Claiming..."
+                      : locale === "fr"
+                      ? "Reclamer la part"
+                      : "Claim Share"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void refetchPendingReaderShare()}
+                    className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-[0.18em]"
+                  >
+                    {locale === "fr" ? "Actualiser" : "Refresh"}
+                  </button>
+                </div>
+                <p className="mt-3 text-xs text-slate-400">
+                  {locale === "fr"
+                    ? "Le contrat execute `claimCommunityShare()` et synchronise automatiquement vos points avant paiement."
+                    : "The contract runs `claimCommunityShare()` and syncs your points before paying out."}
+                </p>
               </div>
-              <p className="mt-3 text-xs text-slate-400">
-                Showing{" "}
-                {filteredReaderBooks.length === 0
-                  ? "0"
-                  : `${(readerPage - 1) * READER_PAGE_SIZE + 1}-${Math.min(
-                      readerPage * READER_PAGE_SIZE,
-                      filteredReaderBooks.length
-                    )}`}{" "}
-                of {filteredReaderBooks.length} purchased book
-                {filteredReaderBooks.length === 1 ? "" : "s"}.
-              </p>
+
+              <div className="theme-panel-soft p-5 md:p-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                  {locale === "fr" ? "Catalogue lecteur" : "Reader Catalog"}
+                </p>
+                <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+                  <input
+                    value={readerQuery}
+                    onChange={(e) => {
+                      setReaderQuery(e.target.value);
+                      setReaderPage(1);
+                    }}
+                    placeholder={locale === "fr" ? "Rechercher par titre, description, adresse auteur..." : "Search by title, description, author address..."}
+                    className="theme-input h-11 px-3 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReaderQuery("");
+                      setReaderPage(1);
+                    }}
+                    className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-wider"
+                  >
+                    {locale === "fr" ? "Effacer" : "Clear"}
+                  </button>
+                </div>
+                <p className="mt-3 text-xs text-slate-400">
+                  Showing{" "}
+                  {filteredReaderBooks.length === 0
+                    ? "0"
+                    : `${(readerPage - 1) * READER_PAGE_SIZE + 1}-${Math.min(
+                        readerPage * READER_PAGE_SIZE,
+                        filteredReaderBooks.length
+                      )}`}{" "}
+                  of {filteredReaderBooks.length} purchased book
+                  {filteredReaderBooks.length === 1 ? "" : "s"}.
+                </p>
+              </div>
             </section>
           )}
 
@@ -1826,8 +1970,10 @@ export default function MyBooksPage() {
             !error &&
             books.length > 0 &&
             filteredBooks.length === 0 && (
-            <div className="mt-6 rounded-2xl border border-slate-700/60 bg-slate-900/40 p-6 text-slate-300">
-              No books match your current filters.
+            <div className="mt-6 theme-stat-panel p-6 text-slate-300">
+              {locale === "fr"
+                ? "Aucun livre ne correspond aux filtres actuels."
+                : "No books match the current filters."}
             </div>
           )}
 
@@ -1857,13 +2003,15 @@ export default function MyBooksPage() {
             !readerError &&
             readerBooks.length > 0 &&
             filteredReaderBooks.length === 0 && (
-              <div className="mt-6 rounded-2xl border border-slate-700/60 bg-slate-900/40 p-6 text-slate-300">
-                No purchased books match your search query.
+              <div className="mt-6 theme-stat-panel p-6 text-slate-300">
+                {locale === "fr"
+                  ? "Aucun livre achete ne correspond a votre recherche."
+                  : "No purchased books match the current search."}
               </div>
             )}
 
           {address && mode === "author" && !loading && !error && filteredBooks.length > 0 && (
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-3">
+            <div className="theme-panel-soft mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
               <p className="text-xs text-slate-300">
                 Page {currentPage} of {totalPages}
               </p>
@@ -1872,7 +2020,7 @@ export default function MyBooksPage() {
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-xs font-semibold text-slate-200 disabled:opacity-40"
+                  className="theme-button-ghost px-3 py-1.5 text-xs disabled:opacity-40"
                 >
                   Previous
                 </button>
@@ -1881,10 +2029,10 @@ export default function MyBooksPage() {
                     key={page}
                     type="button"
                     onClick={() => setCurrentPage(page)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                    className={`px-3 py-1.5 text-xs ${
                       page === currentPage
-                        ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-100"
-                        : "border-slate-600 bg-slate-800/70 text-slate-200"
+                        ? "theme-button-secondary text-yellow-100"
+                        : "theme-button-ghost text-slate-200"
                     }`}
                   >
                     {page}
@@ -1894,7 +2042,7 @@ export default function MyBooksPage() {
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-xs font-semibold text-slate-200 disabled:opacity-40"
+                  className="theme-button-ghost px-3 py-1.5 text-xs disabled:opacity-40"
                 >
                   Next
                 </button>
@@ -1927,7 +2075,7 @@ export default function MyBooksPage() {
                       onClick={() => setReaderPage(page)}
                       className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
                         page === readerPage
-                          ? "border-blue-400/50 bg-blue-500/20 text-blue-100"
+                          ? "border-yellow-400/50 bg-yellow-500/20 text-yellow-100"
                           : "border-slate-600 bg-slate-800/70 text-slate-200"
                       }`}
                     >
@@ -1958,7 +2106,7 @@ export default function MyBooksPage() {
                 return (
                   <article
                     key={book.id}
-                    className="rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35)]"
+                    className="theme-panel-soft p-5 md:p-6 shadow-[0_24px_70px_rgba(0,0,0,0.35)]"
                   >
                     <div className="grid gap-5 md:grid-cols-[140px_1fr]">
                       <div className="overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/70">
@@ -1982,25 +2130,25 @@ export default function MyBooksPage() {
                               {book.description}
                             </p>
                           </div>
-                          <StatusBadge status={book.status} />
+                          <StatusBadge status={book.status} labels={statusDisplay} />
                         </div>
 
                         <div className="mt-3 grid gap-2 text-xs md:grid-cols-2 xl:grid-cols-4">
                           <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-2 text-slate-300">
-                            Record ID: <span className="font-semibold text-slate-100">#{book.id}</span>
+                            {locale === "fr" ? "ID interne" : "Record ID"}: <span className="font-semibold text-slate-100">#{book.id}</span>
                           </div>
                           <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-2 text-slate-300">
-                            On-chain ID:{" "}
+                            {locale === "fr" ? "ID on-chain" : "On-chain ID"}:{" "}
                             <span className="font-semibold text-slate-100">{book.onChainBookId || "--"}</span>
                           </div>
                           <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-2 text-slate-300">
-                            Price:{" "}
+                            {locale === "fr" ? "Prix" : "Price"}:{" "}
                             <span className="font-semibold text-yellow-200">
                               {displayUsdt(book.onchainPriceWei || book.priceWei)} USDT
                             </span>
                           </div>
                           <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-2 text-slate-300">
-                            Stage:{" "}
+                            {locale === "fr" ? "Etape" : "Stage"}:{" "}
                             <span className="font-semibold text-slate-100">
                               {book.processStage.replace(/_/g, " ")}
                             </span>
@@ -2009,20 +2157,20 @@ export default function MyBooksPage() {
 
                         <div className="mt-3 rounded-lg border border-slate-700/70 bg-slate-950/55 p-3">
                           <div className="flex items-center justify-between text-xs text-slate-300">
-                            <span>{book.processMessage || "No status message available."}</span>
+                            <span>{book.processMessage || (locale === "fr" ? "Aucun message de statut disponible." : "No status message available.")}</span>
                             <span className="font-semibold text-slate-100">{progress}%</span>
                           </div>
                           <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-800/80">
                             <div
-                              className="h-full bg-gradient-to-r from-yellow-300 to-emerald-300"
+                              className="h-full bg-gradient-to-r from-yellow-200 to-amber-400"
                               style={{ width: `${progress}%` }}
                             />
                           </div>
                         </div>
 
                         <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                          <span>Uploaded: {new Date(book.createdAt).toLocaleString()}</span>
-                          {book.updatedAt ? <span>Updated: {new Date(book.updatedAt).toLocaleString()}</span> : null}
+                          <span>{commonCopy.labels.uploaded}: {new Date(book.createdAt).toLocaleString()}</span>
+                          {book.updatedAt ? <span>{commonCopy.labels.updated}: {new Date(book.updatedAt).toLocaleString()}</span> : null}
                           {book.txHash ? (
                             <a
                               href={`https://bscscan.com/tx/${book.txHash}`}
@@ -2042,7 +2190,7 @@ export default function MyBooksPage() {
 
                         {book.status === "rejected" && (
                           <p className="mt-3 text-sm text-red-200">
-                            {book.rejectionReason || "Rejected by AI moderation."}
+                            {book.rejectionReason || (locale === "fr" ? "Rejete par la moderation IA." : "Rejected by AI moderation.")}
                             {book.similarityScore != null
                               ? ` Similarity: ${book.similarityScore.toFixed(2)}%.`
                               : ""}
@@ -2054,10 +2202,10 @@ export default function MyBooksPage() {
                             href={`/library/${book.id}`}
                             className="rounded-xl bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-200 px-4 py-2.5 text-sm font-semibold text-black"
                           >
-                            Open Book Workspace
+                            {commonCopy.buttons.openBookWorkspace}
                           </Link>
                           <p className="text-xs text-slate-400">
-                            To perform actions (list, sync, update, appeal), open the book workspace.
+                            {locale === "fr" ? "Pour effectuer des actions (listing, sync, mise a jour, appel), ouvrez l'espace du livre." : "To perform actions (list, sync, update, appeal), open the book workspace."}
                           </p>
                         </div>
                       </div>
@@ -2078,7 +2226,7 @@ export default function MyBooksPage() {
                 return (
                   <article
                     key={`${row.id || row.book_id}-${row.cid}`}
-                    className="rounded-2xl border border-slate-700/60 bg-slate-900/45 p-5 shadow-[0_18px_56px_rgba(0,0,0,0.3)]"
+                    className="theme-panel-soft p-5 md:p-6 shadow-[0_18px_56px_rgba(0,0,0,0.3)]"
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <h3 className="line-clamp-2 text-lg font-semibold text-slate-100">
@@ -2088,28 +2236,28 @@ export default function MyBooksPage() {
                         className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] ${
                           isOwnBook
                             ? "border-yellow-500/40 bg-yellow-500/10 text-yellow-200"
-                            : "border-blue-500/40 bg-blue-500/10 text-blue-200"
+                            : "border-yellow-500/40 bg-yellow-500/10 text-yellow-200"
                         }`}
                       >
-                        {isOwnBook ? "Your Book" : "Reader"}
+                        {isOwnBook ? (locale === "fr" ? "Votre livre" : "Your Book") : (locale === "fr" ? "Lecteur" : "Reader")}
                       </span>
                     </div>
 
                     <p className="line-clamp-3 text-sm text-slate-300/80">
-                      {row.description?.trim() || "No description provided."}
+                      {row.description?.trim() || (locale === "fr" ? "Aucune description fournie." : "No description provided.")}
                     </p>
 
                     <div className="mt-4 space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-300">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-slate-400">Author</span>
-                        <AddressWithCopy value={row.author_address} label="Author address" />
+                        <span className="text-slate-400">{commonCopy.labels.author}</span>
+                        <AddressWithCopy value={row.author_address} label={locale === "fr" ? "Adresse auteur" : "Author address"} />
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-slate-400">Price</span>
+                        <span className="text-slate-400">{commonCopy.labels.price}</span>
                         <span className="font-semibold text-yellow-200">{displayUsdt(row.price)} USDT</span>
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-slate-400">Book ID</span>
+                        <span className="text-slate-400">{commonCopy.labels.bookId}</span>
                         <span className="font-medium">#{onchainBookId || "--"}</span>
                       </div>
                     </div>
@@ -2120,7 +2268,7 @@ export default function MyBooksPage() {
                           href={`/library/read/${onchainBookId}`}
                           className="flex-1 rounded-xl bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-200 px-4 py-2.5 text-center text-sm font-semibold text-black"
                         >
-                          Read Book
+                          {locale === "fr" ? "Lire le livre" : "Read Book"}
                         </Link>
                       ) : (
                         <button
@@ -2128,7 +2276,7 @@ export default function MyBooksPage() {
                           disabled
                           className="flex-1 cursor-not-allowed rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-slate-500"
                         >
-                          Syncing...
+                          {locale === "fr" ? "Synchronisation..." : "Syncing..."}
                         </button>
                       )}
                     </div>

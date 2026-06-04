@@ -29,13 +29,13 @@ export default function ChaptersPage() {
       <>
         <Header />
 
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 bg-gradient-to-br from-black via-[#0b0b0b] to-[#070707]">
+        <div className="theme-shell flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
           <div className="relative max-w-md w-full">
             {/* Glow background */}
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400/20 via-amber-300/15 to-yellow-200/10 blur-2xl opacity-50 rounded-3xl"></div>
 
             {/* Card */}
-            <div className="relative bg-black/70 backdrop-blur-xl border border-yellow-500/20 rounded-3xl p-8 md:p-10 shadow-2xl text-center">
+            <div className="theme-panel relative p-8 text-center md:p-10">
               {/* Icon */}
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-400/10 flex items-center justify-center ring-1 ring-yellow-400/30">
                 <svg
@@ -90,16 +90,16 @@ export default function ChaptersPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)]">
-        <div className="container mx-auto px-4 py-10">
-          <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4">
+          <div className="mx-auto mb-12 max-w-4xl text-center">
+            <p className="theme-kicker justify-center mb-3">
               {t("header.label")}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+            <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {t("header.title")}
             </h1>
-            <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+            <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
               {t("header.description")}
             </p>
           </div>

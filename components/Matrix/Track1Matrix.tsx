@@ -13,7 +13,15 @@ interface Track1Data {
   reinvestCount: number;
 }
 
-export const Track1Matrix = () => {
+const ALL_LEVELS = Array.from({ length: 12 }, (_, index) => index + 1);
+
+const shortAddress = (value?: string | null) => {
+  if (!value) return "—";
+  if (value.length <= 12) return value;
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+};
+
+export const Track1Matrix = ({ initialChapter = 1 }: { initialChapter?: number }) => {
   const t = useTranslations("Matrix.track1");
   const { address, isConnected } = useAccount();
   const {
@@ -55,6 +63,11 @@ export const Track1Matrix = () => {
       setSelectedChapter(unlockedChapters);
     }
   }, [unlockedChapters, selectedChapter]);
+
+  useEffect(() => {
+    const normalized = Number.isFinite(initialChapter) ? Math.max(1, Math.min(12, initialChapter)) : 1;
+    setSelectedChapter((current) => (current === normalized ? current : normalized));
+  }, [initialChapter]);
 
   // Main fetch function
   const fetchAllTrack1Data = useCallback(async () => {
@@ -179,12 +192,36 @@ export const Track1Matrix = () => {
   // Calculate totals for selected chapter
   const currentData = track1Data[selectedChapter];
   const totalReferrals = currentData ? currentData.referrals.length : 0;
+  const levelCards = useMemo(
+    () =>
+      ALL_LEVELS.map((chapter) => {
+        const unlocked = chapter <= unlockedChapters;
+        const data = track1Data[chapter];
+        const isBlocked = unlocked && Boolean(data?.blocked);
+        const isLocked = !unlocked;
+        const statusKey = isLocked
+          ? "statusLocked"
+          : isBlocked
+          ? "statusBlocked"
+          : "statusActive";
+
+        return {
+          chapter,
+          unlocked,
+          data,
+          isBlocked,
+          isLocked,
+          statusLabel: t(`levelOverview.${statusKey}`),
+        };
+      }),
+    [t, track1Data, unlockedChapters]
+  );
 
   // Show connection required
   if (!isConnected) {
     return (
       <div className="py-10">
-        <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
+        <div className="mx-auto max-w-md rounded-2xl border border-yellow-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
           <div className="text-5xl mb-4">🔗</div>
           <h3 className="mb-3 text-xl font-semibold text-slate-50">
             {t("connect.title")}
@@ -201,7 +238,7 @@ export const Track1Matrix = () => {
   if (loading || hookLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
         <p className="text-slate-400">
           {retryCount > 0
             ? t("loading.retry", { count: retryCount })
@@ -225,14 +262,14 @@ export const Track1Matrix = () => {
           <p className="mb-4 text-sm text-amber-100/90">
             {t("error.description")}
           </p>
-          <div className="rounded-xl border border-blue-500/40 bg-slate-950/80 p-4 text-left">
-            <h4 className="mb-2 text-sm font-semibold text-blue-300">
+          <div className="rounded-xl border border-yellow-500/35 bg-slate-950/80 p-4 text-left">
+            <h4 className="mb-2 text-sm font-semibold text-yellow-300">
               {t("error.stats")}
             </h4>
             <div className="space-y-2 text-sm text-slate-200">
               <div className="flex justify-between">
                 <span>{t("stats.totalEarnings")}</span>
-                <span className="font-semibold text-blue-300">
+                <span className="font-semibold text-yellow-300">
                   ${totalEarned.toFixed(2)}
                 </span>
               </div>
@@ -254,8 +291,8 @@ export const Track1Matrix = () => {
               {t("error.refresh")}
             </button>
             <Link
-              href="/dashboard"
-              className="inline-block rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
+              href="/"
+              className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
             >
               {t("error.dashboard")}
             </Link>
@@ -268,7 +305,7 @@ export const Track1Matrix = () => {
   if (!userData?.exists) {
     return (
       <div className="py-10">
-        <div className="mx-auto max-w-md rounded-2xl border border-blue-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
+        <div className="mx-auto max-w-md rounded-2xl border border-yellow-500/30 bg-slate-950/80 p-8 text-center shadow-[0_0_26px_rgba(0,0,0,0.75)]">
           <div className="text-5xl mb-4">🌐</div>
           <h3 className="mb-3 text-xl font-semibold text-slate-50">
             {t("notRegistered.title")}
@@ -277,8 +314,8 @@ export const Track1Matrix = () => {
             {t("notRegistered.description")}
           </p>
           <Link
-            href="/dashboard"
-            className="inline-block rounded-xl bg-gradient-to-r from-blue-400 to-cyan-500 px-6 py-3 text-sm font-semibold text-black shadow-[0_0_16px_rgba(59,130,246,0.7)] hover:brightness-110 transition-all"
+            href="/"
+            className="inline-block rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 px-6 py-3 text-sm font-semibold text-black shadow-[0_0_16px_rgba(245,158,11,0.45)] hover:brightness-110 transition-all"
           >
             {t("notRegistered.button")}
           </Link>
@@ -301,7 +338,7 @@ export const Track1Matrix = () => {
           <button
             onClick={handleManualRefresh}
             disabled={loading}
-            className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 disabled:opacity-50"
+            className="text-sm text-yellow-400 hover:text-yellow-300 flex items-center gap-1 disabled:opacity-50"
           >
             <svg
               className="w-4 h-4"
@@ -325,47 +362,57 @@ export const Track1Matrix = () => {
       </div>
 
       {/* Chapter Selector */}
-      <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+      <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
         <h2 className="text-lg font-semibold text-slate-50 mb-4">
           {t("chapterSelector.title")}
         </h2>
-        <div className="flex flex-wrap gap-2">
-          {unlockedChapters > 0 ? (
-            Array.from({ length: unlockedChapters }, (_, i) => i + 1).map(
-              (chapter) => (
-                <div key={chapter} className="relative">
-                  <button
-                    onClick={() => setSelectedChapter(chapter)}
-                    className={`rounded-xl px-5 py-3 text-base font-medium transition-all ${
-                      selectedChapter === chapter
-                        ? "bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-300 text-black shadow-[0_0_16px_rgba(59,130,246,0.7)]"
-                        : "border border-blue-500/20 bg-slate-950/70 text-slate-300 hover:border-blue-400/60 hover:text-blue-300"
+        {levelCards.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {levelCards.map((level) => (
+              <button
+                key={level.chapter}
+                onClick={() => level.unlocked && setSelectedChapter(level.chapter)}
+                disabled={!level.unlocked}
+                className={`rounded-2xl border p-4 text-left transition-all ${
+                  selectedChapter === level.chapter
+                    ? "border-yellow-400/40 bg-yellow-500/10 shadow-[0_0_16px_rgba(245,158,11,0.18)]"
+                    : "border-yellow-500/20 bg-slate-950/70 hover:border-yellow-400/40"
+                } ${!level.unlocked ? "cursor-not-allowed opacity-70" : ""}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                      {t("chapter", { chapter: level.chapter })}
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-slate-50">
+                      {level.unlocked ? `${level.data?.referrals.length || 0}/3` : "—"}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                      level.isLocked
+                        ? "border-slate-700 bg-slate-800/80 text-slate-300"
+                        : level.isBlocked
+                        ? "border-red-500/40 bg-red-500/10 text-red-200"
+                        : "border-yellow-400/35 bg-yellow-500/10 text-yellow-200"
                     }`}
                   >
-                    {t("chapter", { chapter })}
-                  </button>
-                  {track1Data[chapter] && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500/90 flex items-center justify-center">
-                      <span className="text-xs">✓</span>
-                    </div>
-                  )}
+                    {level.isLocked
+                      ? t("chapterSelector.lockedBadge")
+                      : level.isBlocked
+                      ? t("chapterSelector.blockedBadge")
+                      : t("chapterSelector.activeBadge")}
+                  </span>
                 </div>
-              )
-            )
-          ) : (
-            <div className="w-full text-center py-4">
-              <p className="text-slate-500">
-                {t("chapterSelector.noChapters")}
-              </p>
-              <Link
-                href="/chapters"
-                className="inline-block mt-2 rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
-              >
-                {t("chapterSelector.buyChapter")}
-              </Link>
-            </div>
-          )}
-        </div>
+                <p className="mt-3 text-xs text-slate-400">
+                  {level.unlocked
+                    ? shortAddress(level.data?.currentReferrer)
+                    : t("chapterSelector.noChapters")}
+                </p>
+              </button>
+            ))}
+          </div>
+        ) : null}
         {unlockedChapters > 0 && (
           <div className="mt-4 text-xs text-slate-500">
             {t("chapterSelector.loaded", {
@@ -374,19 +421,32 @@ export const Track1Matrix = () => {
             })}
           </div>
         )}
+        {unlockedChapters === 0 && (
+          <div className="w-full text-center py-4">
+            <p className="text-slate-500">
+              {t("chapterSelector.noChapters")}
+            </p>
+            <Link
+              href="/chapters"
+              className="inline-block mt-2 rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
+            >
+              {t("chapterSelector.buyChapter")}
+            </Link>
+          </div>
+        )}
       </div>
 
       {currentData ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Matrix Visualization */}
-          <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+          <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-50">
                 {t("matrixVisualization.title", { chapter: selectedChapter })}
               </h3>
               <button
                 onClick={() => retrySingleChapter(selectedChapter)}
-                className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                className="text-xs text-yellow-400 hover:text-yellow-300 flex items-center gap-1"
               >
                 <svg
                   className="w-3 h-3"
@@ -429,7 +489,7 @@ export const Track1Matrix = () => {
                 <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {t("matrixVisualization.directReferrals.title")}
                 </h4>
-                <span className="text-sm font-semibold text-blue-300">
+                <span className="text-sm font-semibold text-yellow-300">
                   {currentData.referrals.length}/3
                 </span>
               </div>
@@ -438,21 +498,21 @@ export const Track1Matrix = () => {
                   currentData.referrals.map((referral, index) => (
                     <div
                       key={index}
-                      className="rounded-xl border border-blue-700/50 bg-slate-900/80 p-4"
+                      className="rounded-xl border border-yellow-700/35 bg-slate-900/80 p-4"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="truncate font-mono text-sm text-blue-200">
+                          <p className="truncate font-mono text-sm text-yellow-200">
                             {referral}
                           </p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-blue-500">
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-amber-300">
                             {t("matrixVisualization.directReferrals.position", {
                               number: index + 1,
                             })}
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/40">
+                          <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/35">
                             {t("matrixVisualization.directReferrals.badge")}
                           </span>
                         </div>
@@ -483,7 +543,7 @@ export const Track1Matrix = () => {
                     className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
                       currentData.blocked
                         ? "bg-red-500/10 text-red-300 border border-red-500/40"
-                        : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40"
+                        : "bg-yellow-500/10 text-amber-300 border border-yellow-400/35"
                     }`}
                   >
                     {currentData.blocked
@@ -496,7 +556,7 @@ export const Track1Matrix = () => {
                     {t("matrixVisualization.status.reinvestCycles")}
                   </p>
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-blue-300">
+                    <span className="text-2xl font-bold text-yellow-300">
                       {currentData.reinvestCount}
                     </span>
                     <span className="ml-2 text-sm text-slate-400">
@@ -518,7 +578,7 @@ export const Track1Matrix = () => {
                 </div>
                 <div className="w-full bg-slate-800 rounded-full h-2">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                    className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full"
                     style={{ width: `${(totalReferrals / 3) * 100}%` }}
                   />
                 </div>
@@ -528,8 +588,8 @@ export const Track1Matrix = () => {
 
           {/* Matrix Info */}
           <div className="space-y-8">
-            <div className="rounded-2xl border border-blue-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-              <h3 className="mb-4 text-xl font-bold text-blue-300">
+            <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+              <h3 className="mb-4 text-xl font-bold text-yellow-300">
                 {t("matrixRules.title")}
               </h3>
               <ul className="space-y-3 text-sm text-slate-300">
@@ -537,14 +597,14 @@ export const Track1Matrix = () => {
                   .raw("matrixRules.items")
                   .map((item: string, index: number) => (
                     <li key={index} className="flex items-start">
-                      <span className="text-blue-400 mr-2">•</span>
+                      <span className="text-yellow-400 mr-2">•</span>
                       <span dangerouslySetInnerHTML={renderHTML(item)} />
                     </li>
                   ))}
               </ul>
 
-              <div className="mt-6 rounded-xl bg-blue-900/20 p-5 border border-blue-700/30">
-                <h4 className="mb-3 text-sm font-semibold text-blue-300">
+              <div className="mt-6 rounded-xl bg-yellow-900/20 p-5 border border-yellow-700/30">
+                <h4 className="mb-3 text-sm font-semibold text-yellow-300">
                   {t("matrixRules.currentStats.title")}
                 </h4>
                 <div className="space-y-3">
@@ -552,7 +612,7 @@ export const Track1Matrix = () => {
                     <span className="text-slate-400">
                       {t("matrixRules.currentStats.totalReferrals")}
                     </span>
-                    <span className="font-semibold text-blue-300">
+                    <span className="font-semibold text-yellow-300">
                       {totalReferrals}/3
                     </span>
                   </div>
@@ -560,7 +620,7 @@ export const Track1Matrix = () => {
                     <span className="text-slate-400">
                       {t("matrixRules.currentStats.matrixCompletion")}
                     </span>
-                    <span className="font-semibold text-blue-300">
+                    <span className="font-semibold text-yellow-300">
                       {Math.round((totalReferrals / 3) * 100)}%
                     </span>
                   </div>
@@ -575,7 +635,7 @@ export const Track1Matrix = () => {
                     </div>
                     <div className="w-full bg-slate-800 rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                        className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full"
                         style={{ width: `${(totalReferrals / 3) * 100}%` }}
                       />
                     </div>
@@ -584,8 +644,8 @@ export const Track1Matrix = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-emerald-500/30 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-              <h3 className="mb-4 text-xl font-bold text-emerald-300">
+            <div className="rounded-2xl border border-yellow-400/35 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+              <h3 className="mb-4 text-xl font-bold text-amber-300">
                 {t("earningsSnapshot.title", { chapter: selectedChapter })}
               </h3>
               <div className="space-y-4">
@@ -594,7 +654,7 @@ export const Track1Matrix = () => {
                     <span className="text-slate-300">
                       {t("earningsSnapshot.totalEarnings.label")}
                     </span>
-                    <span className="text-xl font-bold text-emerald-300">
+                    <span className="text-xl font-bold text-amber-300">
                       ${totalEarned.toFixed(2)}
                     </span>
                   </div>
@@ -608,7 +668,7 @@ export const Track1Matrix = () => {
                     <span className="text-slate-300">
                       {t("earningsSnapshot.currentChapterCycles.label")}
                     </span>
-                    <span className="text-xl font-bold text-blue-300">
+                    <span className="text-xl font-bold text-yellow-300">
                       {currentData.reinvestCount}
                     </span>
                   </div>
@@ -624,7 +684,7 @@ export const Track1Matrix = () => {
                     <span className="text-slate-300">
                       {t("earningsSnapshot.totalCycles.label")}
                     </span>
-                    <span className="text-xl font-bold text-cyan-300">
+                    <span className="text-xl font-bold text-yellow-300">
                       {totalCycles}
                     </span>
                   </div>
@@ -645,7 +705,7 @@ export const Track1Matrix = () => {
                         ? "text-red-300"
                         : totalReferrals >= 3
                         ? "text-amber-300"
-                        : "text-emerald-300"
+                        : "text-amber-300"
                     }`}
                   >
                     {currentData.blocked
@@ -667,30 +727,30 @@ export const Track1Matrix = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-purple-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-              <h3 className="mb-4 text-xl font-bold text-purple-300">
+            <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+              <h3 className="mb-4 text-xl font-bold text-yellow-300">
                 {t("quickActions.title")}
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <Link
                   href="/chapters"
-                  className="rounded-xl bg-purple-500/10 p-4 text-center border border-purple-500/40 hover:bg-purple-500/20 transition-all"
+                  className="rounded-xl bg-yellow-500/10 p-4 text-center border border-yellow-500/30 hover:bg-yellow-500/12 transition-all"
                 >
                   <div className="text-2xl mb-2">
                     {t("quickActions.buyChapters.icon")}
                   </div>
-                  <p className="text-sm font-semibold text-purple-300">
+                  <p className="text-sm font-semibold text-yellow-300">
                     {t("quickActions.buyChapters.title")}
                   </p>
                 </Link>
                 <Link
-                  href="/dashboard"
-                  className="rounded-xl bg-emerald-500/10 p-4 text-center border border-emerald-500/40 hover:bg-emerald-500/20 transition-all"
+                  href="/"
+                  className="rounded-xl bg-yellow-500/10 p-4 text-center border border-yellow-400/35 hover:bg-yellow-500/14 transition-all"
                 >
                   <div className="text-2xl mb-2">
                     {t("quickActions.viewEarnings.icon")}
                   </div>
-                  <p className="text-sm font-semibold text-emerald-300">
+                  <p className="text-sm font-semibold text-amber-300">
                     {t("quickActions.viewEarnings.title")}
                   </p>
                 </Link>
@@ -714,7 +774,7 @@ export const Track1Matrix = () => {
             </button>
             <button
               onClick={handleManualRefresh}
-              className="rounded-xl bg-blue-500/10 px-6 py-2 text-sm font-semibold text-blue-300 border border-blue-400/60 hover:bg-blue-500/20 transition-all"
+              className="rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
             >
               {t("noData.reloadAll")}
             </button>

@@ -1,19 +1,23 @@
 {
   "LandingPage": {
     "heroTyping": {
-      "prefix": "The World's Best De-Fi learn-to-earn Library for",
-      "suffix": "",
-      "words": ["Skills", "Chapters", "Books"]
+      "prefix": "Build real skills in",
+      "suffix": "and earn on-chain.",
+      "words": ["AI", "Marketing", "Publishing"]
     },
-    "title": "The World's Best De-Fi learn-to-earn Library for Skills / Chapters / Books",
-    "subtitle": "Matrix That Pays Royalty Passive Income. Buy chapters, unlock lessons, and earn with the X3 + X6 library matrix.",
+    "title": "Learn. Publish. Earn. On-Chain.",
+    "subtitle": "Chapter-based learning with RICO token rewards, royalties, and staking on BNB Smart Chain.",
     "activateLevel": "Connect Wallet",
     "joinTelegram": "Join Telegram",
     "nav": {
       "howItWorks": "How it works",
       "videos": "Videos",
       "levels": "Chapters",
-      "faq": "FAQ"
+      "faq": "FAQ",
+      "ecosystem": "Ecosystem",
+      "skills": "Skills",
+      "library": "Library",
+      "staking": "Staking"
     },
     "matrixOverview": {
       "title": "X3 + X6 Library Matrix",
@@ -61,13 +65,13 @@
       }
     },
     "media": {
-      "kicker": "Library Showcase",
-      "title": "Preview the experience before you publish and earn.",
-      "subtitle": "Use premium visuals to highlight the book marketplace, the reader dashboard, and your chapter ownership.",
+      "kicker": "Platform Walkthrough",
+      "title": "See what the Rico Matrix platform is all about.",
+      "subtitle": "Watch the short platform walkthrough to understand the chapter system, publishing path, rewards flow, and the reader experience before you get started.",
       "items": {
-        "book": "Chapter cover preview",
-        "dashboard": "Reader dashboard preview",
-        "mobile": "Mobile reading experience"
+        "book": "See how chapters, access, and earnings connect in one flow",
+        "dashboard": "Understand how authors, readers, and rewards fit together",
+        "mobile": "Preview the experience across wallet, library, and mobile reading"
       }
     },
     "worldMap": {
@@ -80,8 +84,13 @@
         "visits": "Total visits",
         "visitsNote": "Total recorded visits",
         "countries": "Countries reached",
-        "countriesNote": "Unique countries with readers"
-      }
+        "countriesNote": "Unique countries with readers",
+        "leadingCountry": "Leading country",
+        "leadingCountryNote": "unique visitors"
+      },
+      "loading": "Loading world activity…",
+      "error": "Visitor statistics are temporarily unavailable.",
+      "empty": "Visitor data will appear here after the first tracked countries are recorded."
     },
     "visuals": {
       "x3": {
@@ -287,6 +296,8 @@
       "telegram": "@ricomatrix"
     },
     "cta": {
+      "kicker": "Begin Your Journey",
+
       "title": "Ready to open your first chapter?",
       "description": "Get your wallet ready with USDT BEP-20, start at Chapter 1 — or position higher at Chapter 9 and above — and bring at least three serious readers. The RICO MATRIX smart contract handles the rest.",
       "disclaimer": "Reminder: This is not investment advice. Always do your own research before interacting with any smart contract or DeFi system."
@@ -297,12 +308,184 @@
         "website": "ricomatrix.com",
         "telegram": "Telegram",
         "twitter": "X (Twitter)",
-        "youtube": "YouTube Channel"
+        "youtube": "YouTube Channel",
+        "whitepaper": "Whitepaper"
       }
     },
     "Common": {
       "watchVideo": "Re-watch the RICO Library Matrix overview.",
       "watchDescription": "After watching the three tutorials above, this is where serious readers usually decide which chapter to start from."
+    },
+    "heroBadge": "Premium Web3 Learning Ecosystem",
+    "exploreEcosystem": "Explore Ecosystem",
+    "heroVisual": {
+      "caption": "Skills • Publishing • Rewards • Staking"
+    },
+    "proof": {
+      "stats": [
+        {
+          "value": "12",
+          "label": "Upgradeable chapters"
+        },
+        {
+          "value": "2",
+          "label": "Learning pillars: AI + Marketing"
+        },
+        {
+          "value": "3+",
+          "label": "Chapter level to publish books"
+        },
+        {
+          "value": "5+",
+          "label": "Chapter level to unlock skill training"
+        }
+      ]
+    },
+    "ecosystem": {
+      "kicker": "Ecosystem Overview",
+      "title": "Everything inside the Rico Matrix platform",
+      "subtitle": "More than a chapter marketplace, Rico Matrix is a learn-to-earn platform built around access, publishing, community royalties, airdrops, and staking.",
+      "cards": {
+        "skills": {
+          "kicker": "Skills Hub",
+          "title": "Marketing and AI training",
+          "description": "Users who unlock Chapter 5 gain access to premium marketing and AI training designed for practical income opportunities."
+        },
+        "library": {
+          "kicker": "Author Access",
+          "title": "Publish and list books from Chapter 3",
+          "description": "Members who unlock Chapter 3 can publish and list books inside the Rico Library, turning participation into creator visibility."
+        },
+        "token": {
+          "kicker": "Reward Layer",
+          "title": "Earn platform rewards",
+          "description": "Reward tokens are gifted when users buy chapters and stay active across the platform."
+        },
+        "airdrop": {
+          "kicker": "Airdrop Engine",
+          "title": "Claim timed airdrops",
+          "description": "Eligible users can claim airdrops at set intervals based on royalty position and platform activity."
+        },
+        "staking": {
+          "kicker": "Staking Vault",
+          "title": "Stake for passive growth",
+          "description": "Holders can stake and earn extra returns, adding another passive layer to the Rico Matrix experience."
+        },
+        "royalty": {
+          "kicker": "Royalty Layer",
+          "title": "Built for recurring participation",
+          "description": "Royalty shares, airdrops, referrals, and chapter growth work together to create a richer long-term user journey."
+        }
+      }
+    },
+    "access": {
+      "kicker": "Access by Chapter",
+      "title": "Your access grows as you unlock chapters",
+      "subtitle": "Each chapter is more than a purchase. It opens more earning power, more platform utility, and deeper ecosystem participation.",
+      "steps": [
+        {
+          "step": "1",
+          "title": "Chapter 1–2: Start your entry journey",
+          "description": "Join the ecosystem, activate chapter ownership, and begin your learning and reward journey inside the X3 and X6 system."
+        },
+        {
+          "step": "3",
+          "title": "Chapter 3+: Publish your books",
+          "description": "From Chapter 3 upward, users can publish and list books inside the Rico Library and begin building creator visibility."
+        },
+        {
+          "step": "5",
+          "title": "Chapter 5+: Unlock premium skills",
+          "description": "Users who reach Chapter 5 gain access to premium AI and marketing training within the platform."
+        },
+        {
+          "step": "6+",
+          "title": "Higher chapters: Grow rewards and reach",
+          "description": "Higher chapter positions strengthen royalty shares, token rewards, spillovers, and overall influence in the ecosystem."
+        }
+      ]
+    },
+    "skills": {
+      "kicker": "Skills Section",
+      "title": "Build real-world skills beyond the platform",
+      "subtitle": "Rico Matrix is not only about rewards. It also helps users build practical skills through premium marketing and AI training unlocked from Chapter 5 upward.",
+      "points": [
+        "Marketing foundations",
+        "AI tools for productivity",
+        "Content and audience growth",
+        "Practical automation workflows",
+        "Income-focused learning paths"
+      ],
+      "sideCard": {
+        "kicker": "Premium Access",
+        "title": "Learn with a platform that rewards action",
+        "description": "The skill section is designed to make the landing page feel like a real product ecosystem, not just a matrix entry point."
+      }
+    },
+    "libraryFeature": {
+      "kicker": "Library Publishing",
+      "title": "Turn readers into authors inside the Rico Library",
+      "subtitle": "From Chapter 3 upward, members can publish and list their books inside the ecosystem, giving the platform real creator utility.",
+      "points": [
+        "Publish books inside the library",
+        "List titles for ecosystem visibility",
+        "Expand author presence on-platform",
+        "Connect participation with creator identity"
+      ],
+      "note": "This feature gives the platform a stronger creator economy story and makes the landing page feel far richer and more premium."
+    },
+    "tokenUtility": {
+      "kicker": "Token Utility",
+      "title": "One token layer for rewards, airdrops, and staking",
+      "subtitle": "The platform token connects chapter purchases, reward distribution, claimable airdrops, and staking participation.",
+      "cards": [
+        "Earned on chapter purchases",
+        "Distributed through reward activity",
+        "Claimable through royalty-based airdrops",
+        "Used for staking and passive growth"
+      ]
+    },
+    "airdropFlow": {
+      "kicker": "Airdrop Flow",
+      "title": "How the airdrop layer works",
+      "subtitle": "The airdrop system adds another incentive layer by rewarding users based on their royalty share and timing.",
+      "steps": [
+        {
+          "title": "Buy chapters",
+          "description": "Users activate chapters and grow their position inside the platform."
+        },
+        {
+          "title": "Build royalty share",
+          "description": "Royalty participation increases as members grow and remain active."
+        },
+        {
+          "title": "Become eligible",
+          "description": "At certain claim intervals, users who meet the conditions become eligible for airdrops."
+        },
+        {
+          "title": "Claim your airdrop",
+          "description": "Eligible members claim rewards directly according to their royalty share position."
+        }
+      ]
+    },
+    "staking": {
+      "kicker": "Staking Section",
+      "title": "Stake and unlock another passive layer",
+      "subtitle": "Staking gives holders a clear way to put idle tokens to work and grow ecosystem value beyond chapter activity.",
+      "cards": [
+        {
+          "title": "Hold and grow",
+          "description": "Stake to keep participating in the ecosystem while growing your position."
+        },
+        {
+          "title": "Earn passive returns",
+          "description": "Simple plan-based staking gives users a clear passive earning path."
+        },
+        {
+          "title": "Strengthen utility",
+          "description": "Staking gives the platform stronger utility and makes the experience feel more complete."
+        }
+      ]
     }
   },
   "Header": {
@@ -313,11 +496,14 @@
     "navigation": {
       "dashboard": "Dashboard",
       "authors": "Library",
+      "rico": "Staking",
       "chapters": "Chapters",
       "skills": "Skills",
       "royalty": "Royalty",
       "profile": "Profile",
-      "documentation": "Docs"
+      "documentation": "Docs",
+      "matrix": "Matrix",
+      "whitepaper": "Whitepaper"
     },
     "socials": {
       "followUs": "Follow Us",
@@ -830,7 +1016,34 @@
         "title": "🔥📚✨ RICOMATRIX",
         "description": "READ • EARN • OWN — Manage your matrix positions, unlock chapters, and monitor royalty earnings in one place.",
         "ricoAnnouncement": "Earn RICO tokens 1:1 with all USDT activity!",
-        "telegram": "Join our Telegram for updates"
+        "telegram": "Join our Telegram for updates",
+        "featureCarousel": {
+          "kicker": "Product Preview",
+          "cta": "Join our Telegram for updates",
+          "learnMore": "Learn More",
+          "items": [
+            {
+              "title": "Advanced AI Crypto Signals",
+              "status": "Coming Soon",
+              "description": "AI-assisted signal delivery built for sharper market timing and cleaner trade preparation."
+            },
+            {
+              "title": "Quant Trading Engine",
+              "status": "Coming Soon",
+              "description": "A structured engine designed to power disciplined quantitative trading workflows on the platform."
+            },
+            {
+              "title": "AI Crypto Scanner",
+              "status": "Coming Soon",
+              "description": "A smart market scanner that helps users surface setups, momentum, and unusual crypto activity faster."
+            },
+            {
+              "title": "High Frequency Trading Bot",
+              "status": "Coming Soon",
+              "description": "A faster execution layer for advanced automated strategies when the next phase of the platform goes live."
+            }
+          ]
+        }
       },
       "ricoFarmingSection": {
         "title": "🪙 RICO Token Farming",
@@ -874,6 +1087,11 @@
           "title": "View RICO Farming",
           "description": "Track your RICO token earnings from chapter purchases and upline rewards.",
           "button": "View RICO Stats"
+        },
+        "viewMatrix": {
+          "title": "View Matrix",
+          "description": "Open the full matrix workspace and inspect all chapter placements.",
+          "button": "Open Matrix"
         }
       },
       "globalSummary": {
@@ -895,6 +1113,13 @@
         "button": "Claim ${amount} USDT",
         "processing": "Processing royalty claim...",
         "note": "Your royalty balance updates automatically after a successful claim."
+      },
+      "blockedChapter": {
+        "kicker": "Earnings blocked",
+        "title": "Your current chapter is blocked",
+        "description": "Upgrade to the next chapter to continue earning from your matrix positions.",
+        "action": "Upgrade chapter now",
+        "item": "{track} Chapter {chapter} blocked"
       }
     }
   },
@@ -976,7 +1201,9 @@
       "header": {
         "networksLabel": "Matrix Networks",
         "title": "X3 & X6 Matrix Overview",
-        "description": "Track your network growth, reinvest cycles, and earnings across both matrix tracks in one unified view."
+        "description": "Track your network growth, reinvest cycles, and earnings across both matrix tracks in one unified view.",
+        "focusTitle": "Focused Level Access",
+        "focusDescription": "You opened the matrix workspace directly from a chapter. The view is already positioned on the selected track and level."
       },
       "trackSelection": {
         "x3Track": "X3 Matrix Track",
@@ -1036,7 +1263,10 @@
         "title": "Select Chapter",
         "noChapters": "No chapters unlocked yet.",
         "buyChapter": "Buy Your First Chapter",
-        "loaded": "Showing {loaded} of {unlocked} chapters loaded"
+        "loaded": "Showing {loaded} of {unlocked} chapters loaded",
+        "blockedBadge": "Blocked",
+        "lockedBadge": "Locked",
+        "activeBadge": "Active"
       },
       "matrixVisualization": {
         "title": "X3 Matrix — Chapter {chapter}",
@@ -1130,6 +1360,19 @@
         "totalEarnings": "Total Earnings:",
         "chaptersUnlocked": "Chapters Unlocked:",
         "totalCycles": "Total Cycles:"
+      },
+      "levelOverview": {
+        "title": "Level Tree Overview",
+        "description": "Review every 3x level, its referral tree, and whether earnings are blocked pending an upgrade.",
+        "selectLevel": "Open level",
+        "upgrade": "Upgrade to continue earning",
+        "locked": "Buy level to unlock",
+        "referrer": "Referrer",
+        "directLine": "Direct line",
+        "emptySlot": "Open slot",
+        "statusActive": "Active",
+        "statusBlocked": "Blocked",
+        "statusLocked": "Locked"
       }
     },
     "Track2": {
@@ -1167,7 +1410,10 @@
         "title": "Select Chapter",
         "noChapters": "No chapters unlocked yet.",
         "buyFirst": "Buy Your First Chapter",
-        "loaded": "Showing {loaded} of {total} chapters loaded"
+        "loaded": "Showing {loaded} of {total} chapters loaded",
+        "blockedBadge": "Blocked",
+        "lockedBadge": "Locked",
+        "activeBadge": "Active"
       },
       "matrixVisualization": {
         "title": "X6 Matrix — Chapter {chapter}",
@@ -1250,6 +1496,20 @@
       "dataNotAvailable": {
         "title": "Data Not Available for Chapter {chapter}",
         "description": "No matrix data found for this chapter."
+      },
+      "levelOverview": {
+        "title": "Level Tree Overview",
+        "description": "Review every 6x level, both referral lines, and whether the level is blocked pending an upgrade.",
+        "selectLevel": "Open level",
+        "upgrade": "Upgrade to continue earning",
+        "locked": "Buy level to unlock",
+        "referrer": "Referrer",
+        "firstLine": "First line",
+        "secondLine": "Second line",
+        "emptySlot": "Open slot",
+        "statusActive": "Active",
+        "statusBlocked": "Blocked",
+        "statusLocked": "Locked"
       }
     }
   },
@@ -1356,7 +1616,10 @@
         "label": "Status",
         "unlocked": "Unlocked",
         "lockedPrevious": "Locked — Complete previous chapter",
-        "available": "Available to unlock"
+        "available": "Available to unlock",
+        "chapterState": "Chapter State",
+        "active": "Active",
+        "blocked": "Blocked"
       },
       "approval": {
         "label": "Approval",
@@ -1370,7 +1633,9 @@
         "processing": "Processing...",
         "approve": "Approve USDT",
         "unlock": "Unlock Chapter",
-        "requiresPrevious": "Complete Previous Chapter"
+        "requiresPrevious": "Complete Previous Chapter",
+        "viewMatrix": "Open Matrix View",
+        "viewChapterData": "View Chapter Data"
       },
       "pdfContent": {
         "title": "Chapter Content",
@@ -1392,7 +1657,8 @@
         "previousPage": "Previous page",
         "nextPage": "Next page",
         "resetZoom": "Reset zoom",
-        "shortcuts": "Use ← → keys to navigate, +/- to zoom"
+        "shortcuts": "Use ← → keys to navigate, +/- to zoom",
+        "backToChapters": "Back to Chapters"
       },
       "audio": {
         "label": "Audiobook"
@@ -1461,6 +1727,7 @@
       "download": "Download PDF",
       "print": "Print Document",
       "openNew": "Open in New Tab",
+      "openWhitepaper": "Open Whitepaper",
       "openPdf": "Open PDF",
       "prev": "Prev",
       "next": "Next",
@@ -1654,5 +1921,496 @@
         }
       ]
     }
+  },
+  "LibraryCommon": {
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "listing_submitted": "Listing Submitted",
+      "listed": "Listed"
+    },
+    "buttons": {
+      "launchBook": "Launch A Book",
+      "myLibrary": "My Library",
+      "authorDashboard": "Author Dashboard",
+      "adminConsole": "Admin Console",
+      "openBookWorkspace": "Open Book Workspace",
+      "viewBook": "View Book",
+      "syncPending": "Sync Pending",
+      "save": "Save",
+      "saved": "Saved",
+      "close": "Close",
+      "apply": "Apply",
+      "loadMore": "Load More",
+      "loading": "Loading..."
+    },
+    "labels": {
+      "author": "Author",
+      "price": "Price",
+      "bookId": "Book ID",
+      "uploaded": "Uploaded",
+      "updated": "Updated",
+      "wishlist": "Wishlist",
+      "marketplace": "Marketplace"
+    }
+  },
+  "LibraryPage": {
+    "heroKicker": "RICO Marketplace",
+    "heroTitle": "Discover, buy, and read verified books",
+    "heroDescription": "Every listed book has passed validation, moderation, and IPFS packaging before on-chain listing.",
+    "navLocked": "Dashboard unlocks after listing",
+    "authorProgramKicker": "Author Program",
+    "authorProgramTitle": "Become A Verified Author On RicoMatrix",
+    "authorProgramDescription": "Publish books with anti-piracy checks, decentralized IPFS packaging, and on-chain ownership.",
+    "authorProgramLocked": "Unlock Chapter {chapter} to publish books. Current chapter: {currentChapter}.",
+    "authorProgramReady": "Chapter access verified for author publishing.",
+    "walkthroughKicker": "Author Walkthrough",
+    "walkthroughTitle": "Watch the book publishing walkthrough",
+    "walkthroughDescription": "Follow the exact RicoMatrix publishing flow before you upload: moderation, IPFS packaging, and on-chain listing.",
+    "watchWalkthrough": "Watch walkthrough",
+    "steps": [
+      {
+        "title": "1. Upload",
+        "body": "Add PDF + thumbnail with your author wallet."
+      },
+      {
+        "title": "2. Verify",
+        "body": "AI moderation, duplicate checks, and IPFS packaging happen automatically."
+      },
+      {
+        "title": "3. List",
+        "body": "Set price and payout wallet, then publish on-chain."
+      }
+    ],
+    "readyNotice": "You have approved uploads ready for blockchain listing.",
+    "stats": {
+      "listedBooks": "Listed Books",
+      "activeAuthors": "Active Authors",
+      "averagePrice": "Average Price",
+      "wishlist": "Wishlist"
+    },
+    "sections": {
+      "featured": "Featured Picks",
+      "featuredSub": "Top priced books",
+      "trending": "Trending Now",
+      "trendingSub": "Newest additions",
+      "wishlist": "My Wishlist",
+      "showAllBooks": "Show All Books",
+      "showWishlistOnly": "Show Wishlist Only",
+      "topAuthors": "Top Authors",
+      "topAuthorsSub": "By listed books",
+      "listedBooksSuffix": "listed books",
+      "avg": "Avg",
+      "browseAuthor": "Browse Author"
+    },
+    "filters": {
+      "searchPlaceholder": "Search title, description, author, or book ID...",
+      "searchPlaceholderMobile": "Search books...",
+      "allAuthors": "All Authors",
+      "allPrices": "All Prices",
+      "under10": "Under 10 USDT",
+      "between10And100": "10 - 100 USDT",
+      "over100": "Above 100 USDT",
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "priceHigh": "Price High -> Low",
+      "priceLow": "Price Low -> High",
+      "title": "Title A -> Z",
+      "filters": "Filters",
+      "filterMarketplace": "Filter Marketplace",
+      "allBooks": "All Books",
+      "booksCount": "books"
+    },
+    "empty": "No books match your current filters.",
+    "noDescription": "No description available.",
+    "error": "Failed to load marketplace."
+  },
+  "LibraryUploadPage": {
+    "status": {
+      "idle": "Idle",
+      "processing": "Processing",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "steps": [
+      "Upload PDF & thumbnail",
+      "Fingerprint moderation",
+      "IPFS folder packaging",
+      "Ready for listing"
+    ],
+    "stage": {
+      "waiting": "Waiting to start",
+      "uploading": "Uploading PDF",
+      "verifying": "Verifying content fingerprint",
+      "ipfs": "Uploading folder to IPFS",
+      "finalizing": "Finalizing",
+      "failed": "Failed"
+    },
+    "messages": {
+      "doNotRefresh": "Do not refresh or close this page during processing.",
+      "attachPdf": "Please attach a PDF file.",
+      "attachThumb": "Please attach a thumbnail image.",
+      "pdfTooLarge": "PDF exceeds 10MB limit.",
+      "thumbTooLarge": "Thumbnail exceeds 10MB limit.",
+      "pdfOnly": "Only PDF files are allowed.",
+      "thumbOnly": "Thumbnail must be jpg, png, or webp.",
+      "emptyResponse": "Server returned an empty response. Please try again."
+    },
+    "hero": {
+      "kicker": "Author Pipeline",
+      "title": "Upload your book for AI verification and IPFS packaging",
+      "description": "The PDF and thumbnail are validated, moderated, and packaged into one IPFS folder in a single flow."
+    },
+    "walkthrough": {
+      "kicker": "Need a quick guide?",
+      "title": "Use the publishing walkthrough before you start",
+      "description": "This video shows the exact upload and listing sequence authors should follow on RicoMatrix.",
+      "button": "Open walkthrough"
+    },
+    "access": {
+      "kicker": "Author access locked",
+      "title": "Unlock Chapter {chapter} to publish books",
+      "description": "Your current chapter is {currentChapter}. Buy up to Chapter {chapter} first, then return here to upload and list books.",
+      "button": "Go to chapters"
+    },
+    "labels": {
+      "progress": "Progress",
+      "title": "Book Title",
+      "description": "Description",
+      "authorWallet": "Author Wallet",
+      "pdf": "Book PDF",
+      "thumbnail": "Thumbnail",
+      "submit": "Start Verification",
+      "submitting": "Processing..."
+    }
+  },
+  "LibraryAuthorRedirect": {
+    "kicker": "Author Flow Updated",
+    "title": "Use the new AI-moderation upload flow",
+    "description": "We’ve moved author submissions to the AI scanning pipeline to prevent duplicates and pirated uploads.",
+    "cta": "Go to Upload"
+  },
+  "LibraryReadPage": {
+    "invalidBookId": "Invalid book id.",
+    "backToBook": "Back to Book Details",
+    "readerMode": "Reader Mode",
+    "loadingMetadata": "Loading metadata...",
+    "secureSession": "Secure reading session for this purchased title.",
+    "connectWallet": "Connect your wallet to validate access and read this book.",
+    "checkingAccess": "Checking on-chain access...",
+    "accessDenied": "Access denied. Buy this book first to unlock the reader.",
+    "goToPurchase": "Go To Purchase"
+  },
+  "RicoPage": {
+    "hero": {
+      "kicker": "RICO Ecosystem",
+      "title": "Airdrop, Staking, Rewards, and Treasury Control",
+      "description": "Manage your RICO position from one dashboard: claim airdrops, approve and stake tokens, monitor active positions, restake or unstake, and access owner treasury controls."
+    },
+    "nav": {
+      "refresh": "Refresh",
+      "refreshing": "Refreshing...",
+      "staking": "Staking",
+      "airdrop": "Airdrop",
+      "portfolio": "Portfolio",
+      "ownerControls": "Owner Controls",
+      "tokenTools": "Token Tools"
+    },
+    "summary": {
+      "walletRico": "Wallet RICO",
+      "allowance": "Allowance",
+      "yourStaked": "Your Staked",
+      "karma": "Karma",
+      "rewardPool": "Reward Pool",
+      "accShare": "acc/share",
+      "airdrop": "Airdrop",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "sections": {
+      "portfolioTitle": "RICO Farming Snapshot",
+      "portfolioDescription": "Legacy farming visibility remains available alongside the new staking and airdrop system.",
+      "stakeTitle": "Stake RICO",
+      "stakeDescription": "Approve the staking contract once, then create stake positions with a chosen lock period.",
+      "positionsTitle": "Your Stake Positions",
+      "positionsDescription": "Monitor each position, check pending rewards, and restake or unstake per index.",
+      "airdropTitle": "Airdrop Center",
+      "airdropDescription": "Track airdrop state, supply usage, and claim eligibility from one place.",
+      "totalsTitle": "Protocol Totals",
+      "totalsDescription": "Key staking and burn metrics for the current contract state.",
+      "navigationTitle": "Navigation",
+      "navigationDescription": "Jump to the ecosystem areas that drive RICO accumulation and utility.",
+      "ownerTitle": "Owner Controls",
+      "ownerDescription": "Administrative tools for treasury operations, protocol state, and ownership management."
+    },
+    "labels": {
+      "balanceCheck": "Balance Check",
+      "sufficientBalance": "Sufficient balance",
+      "insufficientBalance": "Insufficient wallet balance",
+      "allowanceCheck": "Allowance Check",
+      "allowanceReady": "Allowance ready",
+      "approvalRequired": "Approval required",
+      "protocolRules": "Protocol Rules",
+      "minimumHolder": "Minimum Holder",
+      "paused": "Paused",
+      "yes": "Yes",
+      "no": "No",
+      "pendingReward": "Pending Reward",
+      "bonus": "Bonus",
+      "unlockStatus": "Unlock Status",
+      "progress": "Progress",
+      "active": "Active",
+      "closed": "Closed",
+      "noPositions": "No stake positions found for this wallet yet.",
+      "claimAmount": "Claim Amount",
+      "airdroppedCap": "Airdropped / Cap",
+      "cooldown": "Cooldown",
+      "totalStaked": "Total Staked",
+      "totalBurned": "Total Burned",
+      "penaltyDistributed": "Penalty Distributed",
+      "contractOwner": "Contract Owner",
+      "recoverToken": "Recover Token",
+      "ownership": "Ownership",
+      "buyChapters": "Buy Chapters",
+      "buyChaptersDesc": "Spend USDT and expand your RICO farming footprint.",
+      "dashboard": "Dashboard",
+      "dashboardDesc": "Review rewards, upline income, and account performance.",
+      "skillLab": "Skill Lab",
+      "skillLabDesc": "Continue the learning side of the ecosystem.",
+      "tokenAddress": "Token Address",
+      "tokenSymbol": "Token Symbol",
+      "tokenDecimals": "Decimals",
+      "walletSupport": "Wallet Support",
+      "manualImport": "Manual Import",
+      "airdropRequirements": "Claim Requirements",
+      "airdropRequirementHint": "No token approval is required to claim the airdrop.",
+      "requirementPaused": "Contract is live",
+      "requirementEnabled": "Airdrop is enabled",
+      "requirementSupply": "Airdrop supply remains",
+      "requirementCooldown": "10 hour cooldown completed",
+      "requirementEligibility": "Hold 5 RICO or keep an active stake",
+      "requirementFunds": "Protocol has enough liquid RICO"
+    },
+    "actions": {
+      "approveRico": "Approve RICO",
+      "approving": "Approving...",
+      "createStake": "Create Stake",
+      "staking": "Staking...",
+      "restake": "Restake",
+      "restaking": "Restaking...",
+      "unstake": "Unstake",
+      "unstaking": "Unstaking...",
+      "claimAirdrop": "Claim Airdrop",
+      "claiming": "Claiming...",
+      "fundRewardPool": "Fund Reward Pool",
+      "funding": "Funding...",
+      "enableAirdrop": "Enable Airdrop",
+      "disableAirdrop": "Disable Airdrop",
+      "pauseContract": "Pause Contract",
+      "unpauseContract": "Unpause Contract",
+      "recoverToken": "Recover Token",
+      "recovering": "Recovering...",
+      "transferOwnership": "Transfer Ownership",
+      "renounceOwnership": "Renounce Ownership",
+      "addToken": "Add RICO To Wallet",
+      "addingToken": "Adding Token...",
+      "copyTokenAddress": "Copy Token Address",
+      "readWhitepaper": "Read Whitepaper"
+    },
+    "inputs": {
+      "amountRico": "Amount (RICO)",
+      "duration": "Duration",
+      "fundRewardPool": "Fund Reward Pool",
+      "tokenAddress": "Token address",
+      "amount": "Amount",
+      "decimals": "Decimals",
+      "newOwnerAddress": "New owner address"
+    }
+  },
+  "LibraryWorkspacePage": {
+    "backToAuthorBooks": "Back To Author Books",
+    "onChainBookId": "On-chain Book ID",
+    "onChainShort": "On-chain",
+    "bookOverview": "Book Overview",
+    "author": "Author",
+    "price": "Price",
+    "stage": "Stage",
+    "updated": "Updated",
+    "progress": "Progress",
+    "created": "Created",
+    "flowStatus": "Flow Status",
+    "flowStatusDesc": "Live pipeline status from moderation through chain sync.",
+    "refresh": "Refresh",
+    "failed": "Failed",
+    "done": "Done",
+    "pending": "Pending",
+    "noActiveStatus": "No active status message.",
+    "rejectedByAi": "Rejected by AI moderation.",
+    "blockchainListing": "Blockchain Listing",
+    "blockchainListingDesc": "Finalize pricing, approve token spend, then publish this verified package on-chain.",
+    "onlyApproved": "Only approved books can be listed on-chain.",
+    "listingSubmitted": "Listing transaction is submitted. Sync is in progress.",
+    "viewTx": "View transaction on BscScan",
+    "copy": "Copy",
+    "copyTx": "Copy Tx",
+    "copied": "Copied",
+    "syncing": "Syncing...",
+    "retrySync": "Retry Sync",
+    "lastSyncAttempt": "Last sync attempt",
+    "notAttemptedYet": "Not attempted yet",
+    "backgroundSyncNote": "Background sync runs less frequently to avoid page jitter.",
+    "restartPipeline": "Upload/moderation/IPFS is a single phase and cannot be resumed.",
+    "startUploadAgain": "Start Upload Again",
+    "listingReadiness": "Listing Readiness",
+    "readyPercent": "Ready",
+    "refreshChecks": "Refresh Checks",
+    "approveUsdt": "Approve USDT",
+    "approvingUsdt": "Approving USDT...",
+    "approveRico": "Approve RICO",
+    "approvingRico": "Approving RICO...",
+    "ok": "OK",
+    "fix": "Fix",
+    "contentPackage": "Content Package",
+    "ipfsReady": "IPFS folder is ready and linked to this book package.",
+    "ipfsMissing": "IPFS package is missing for this record.",
+    "cidMissing": "CID missing for this record. Restart from upload to run the full pipeline again.",
+    "priceInput": "Price (USDT)",
+    "payoutWallet": "Payout Wallet",
+    "listing": "Listing...",
+    "notReadyForListing": "Not Ready For Listing",
+    "listOnBlockchain": "List On Blockchain",
+    "performActions": "Author Actions",
+    "refreshOnChain": "Refresh On-Chain",
+    "refreshingOnChain": "Refreshing...",
+    "sales": "Sales",
+    "votes": "Votes",
+    "status": "Status",
+    "active": "Active",
+    "frozen": "Frozen",
+    "suspended": "Suspended",
+    "blacklisted": "Blacklisted",
+    "updatePrice": "Update Price",
+    "updatePriceDesc": "Submit new pricing to the contract and keep the database in sync.",
+    "updatePayout": "Update Payout Wallet",
+    "updatePayoutDesc": "Change the wallet that receives the author share on future sales.",
+    "update": "Update",
+    "updating": "Updating...",
+    "submitAppeal": "Submit Appeal",
+    "submitting": "Submitting...",
+    "appealNote": "Available only if the book is frozen, suspended, or blacklisted.",
+    "openPublicBookPage": "Open Public Book Page",
+    "chapterFiveRequired": "Unlock Chapter {chapter} to list books. Current chapter: {currentChapter}."
+  },
+  "LibraryBookDetailPage": {
+    "invalidBookId": "Invalid book id.",
+    "loadingState": "Loading book data, pricing, and access permissions...",
+    "backToLibrary": "Back to Library",
+    "refreshData": "Refresh Data",
+    "detail": "Book Detail",
+    "metadataFallback": "Metadata is pulled from IPFS once the book is published.",
+    "author": "Author",
+    "loadingCover": "Loading cover...",
+    "coverPreview": "Cover preview",
+    "bookCover": "Book cover",
+    "priceBadge": "Price",
+    "owned": "Owned / Access Granted",
+    "notOwned": "Not owned",
+    "openReader": "Open Reader",
+    "purchaseToUnlock": "Purchase to unlock reading",
+    "approvalReady": "Ready",
+    "approvalRequired": "Required",
+    "approvalChecking": "Checking",
+    "approvalUnavailable": "Unavailable",
+    "approveUsdt": "Approve USDT",
+    "approvingUsdt": "Approving USDT...",
+    "approveRico": "Approve RICO",
+    "approvingRico": "Approving RICO...",
+    "usdtRequired": "USDT Required",
+    "usdtAllowance": "USDT Allowance",
+    "ricoFee": "RICO Fee",
+    "ricoAllowance": "RICO Allowance",
+    "priceSyncing": "Price data is still syncing. Please refresh in a few seconds.",
+    "processing": "Processing...",
+    "buyBook": "Buy book",
+    "giftTo": "Gift to address",
+    "gift": "Gift",
+    "connectWallet": "Connect your wallet to buy, gift, and read this book.",
+    "bookMetadata": "Book Metadata",
+    "onChainBookId": "On-chain Book ID",
+    "authorOnChain": "Author (On-chain)",
+    "authorMetadata": "Author (Metadata)",
+    "priceUsdt": "Price (USDT)",
+    "totalSales": "Total Sales",
+    "onChainLikes": "On-chain Likes",
+    "onChainDislikes": "On-chain Dislikes",
+    "reviewsTitle": "Community Reviews & Reactions",
+    "likes": "Likes",
+    "dislikes": "Dislikes",
+    "reviews": "Reviews",
+    "reviewGate": "You can view all reviews and reaction totals. Buy this book to submit your own review, like, or dislike.",
+    "submitReview": "Submit your review",
+    "like": "Like",
+    "dislike": "Dislike",
+    "reviewPlaceholder": "Write a short review (optional)...",
+    "submitReviewButton": "Submit Review",
+    "submitting": "Submitting...",
+    "voteOnBook": "On-chain vote on book",
+    "voteOnAuthor": "On-chain vote on author",
+    "ricoAmount": "RICO amount",
+    "recentReviews": "Recent reviews",
+    "loadingReviews": "Loading reviews...",
+    "noReviews": "No reviews yet.",
+    "noWrittenComment": "No written comment.",
+    "chapterOneRequired": "You must unlock at least Chapter {chapter} before buying books. Current chapter: {currentChapter}.",
+    "unlockChapterAccess": "Unlock chapter access"
+  },
+  "PageAccessHub": {
+    "title": "Explore the platform",
+    "subtitle": "Access the core pages from one structured hub: marketplace, token actions, learning, chapters, royalties, and documentation.",
+    "items": {
+      "dashboard": {
+        "label": "Dashboard",
+        "description": "Track account performance, earnings, and reader activity.",
+        "badge": "Overview"
+      },
+      "library": {
+        "label": "Library",
+        "description": "Browse the marketplace, manage books, and access reader tools.",
+        "badge": "Marketplace"
+      },
+      "rico": {
+        "label": "Staking",
+        "description": "Stake RICO, claim airdrops, and manage token access.",
+        "badge": "Token"
+      },
+      "chapters": {
+        "label": "Chapters",
+        "description": "Unlock matrix levels and access secure chapter reading.",
+        "badge": "Access"
+      },
+      "skills": {
+        "label": "Skills",
+        "description": "Enter the training hub and continue the education flow.",
+        "badge": "Learning"
+      },
+      "royalty": {
+        "label": "Royalty",
+        "description": "Review royalty mechanics, claims, and distribution details.",
+        "badge": "Rewards"
+      },
+      "documentation": {
+        "label": "Documentation",
+        "description": "Open the business documentation and roadmap files.",
+        "badge": "Docs"
+      },
+      "matrix": {
+        "label": "Matrix",
+        "description": "Inspect chapter-by-chapter 3x and 6x matrix positioning, referrals, and blocked levels.",
+        "badge": "Matrix"
+      }
+    },
+    "open": "Open",
+    "current": "Current page"
   }
 }

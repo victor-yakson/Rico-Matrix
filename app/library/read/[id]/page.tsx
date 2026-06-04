@@ -4,6 +4,7 @@ import { Header } from "@/components/Navigation/Header";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useAccount, useReadContract } from "wagmi";
 import { libraryContract } from "@/utils/contracts";
 
@@ -31,6 +32,18 @@ type Metadata = {
 export default function LibraryReaderPage() {
   const params = useParams();
   const { address } = useAccount();
+  const t = useTranslations("LibraryReadPage");
+  const copy = {
+    invalidBookId: t("invalidBookId"),
+    backToBook: t("backToBook"),
+    readerMode: t("readerMode"),
+    loadingMetadata: t("loadingMetadata"),
+    secureSession: t("secureSession"),
+    connectWallet: t("connectWallet"),
+    checkingAccess: t("checkingAccess"),
+    accessDenied: t("accessDenied"),
+    goToPurchase: t("goToPurchase"),
+  };
 
   const rawId = Number(params?.id ?? 0);
   const hasValidBookId = Number.isFinite(rawId) && rawId > 0;
@@ -98,9 +111,11 @@ export default function LibraryReaderPage() {
     return (
       <>
         <Header />
-        <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.08),transparent_42%),#020617] px-4 py-10">
-          <div className="mx-auto max-w-4xl rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
-            Invalid book id.
+        <div className="theme-shell theme-page-shell min-h-[calc(100vh-4rem)]">
+          <div className="theme-container py-10">
+            <div className="theme-panel-soft max-w-4xl border-red-500/30 p-6 text-red-200">
+            {copy.invalidBookId}
+            </div>
           </div>
         </div>
       </>
@@ -110,60 +125,60 @@ export default function LibraryReaderPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.08),transparent_42%),radial-gradient(circle_at_80%_10%,rgba(56,189,248,0.1),transparent_30%),#020617] px-4 py-10">
-        <div className="mx-auto max-w-6xl space-y-5">
+      <div className="theme-shell theme-page-shell min-h-[calc(100vh-4rem)]">
+        <div className="theme-container max-w-6xl space-y-5 py-10">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Link
               href={`/library/book/${bookId}`}
-              className="text-sm text-yellow-300/80 hover:text-yellow-200"
+              className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-[0.18em]"
             >
-              ← Back to Book Details
+              {copy.backToBook}
             </Link>
           </div>
 
-          <section className="rounded-3xl border border-yellow-500/20 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-8">
+          <section className="theme-panel p-6 md:p-8">
             <div className="mb-4">
-              <p className="text-xs uppercase tracking-[0.28em] text-yellow-300/70">
-                Reader Mode
+              <p className="theme-kicker">
+                {copy.readerMode}
               </p>
-              <h1 className="mt-2 text-3xl font-bold text-slate-50 md:text-4xl">
+              <h1 className="theme-title mt-2 text-3xl font-semibold md:text-4xl">
                 {title}
               </h1>
-              <p className="mt-2 text-sm text-slate-300/80">
+              <p className="theme-copy mt-2 text-sm">
                 {metadataLoading
-                  ? "Loading metadata..."
-                  : metadata?.description || "Secure reading session for this purchased title."}
+                  ? copy.loadingMetadata
+                  : metadata?.description || copy.secureSession}
               </p>
             </div>
 
             {!address && (
               <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
-                Connect your wallet to validate access and read this book.
+                {copy.connectWallet}
               </div>
             )}
 
             {address && accessLoading && (
               <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4 text-sm text-slate-200">
-                Checking on-chain access...
+                {copy.checkingAccess}
               </div>
             )}
 
             {address && !accessLoading && hasAccess !== true && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-                Access denied. Buy this book first to unlock the reader.
+              <div className="theme-panel-soft border-red-500/30 p-4 text-sm text-red-200">
+                {copy.accessDenied}
                 <div className="mt-3">
                   <Link
                     href={`/library/book/${bookId}`}
-                    className="inline-flex rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-yellow-200"
+                    className="theme-button-secondary text-xs uppercase tracking-[0.18em]"
                   >
-                    Go To Purchase
+                    {copy.goToPurchase}
                   </Link>
                 </div>
               </div>
             )}
 
             {address && hasAccess === true && readerUrl && (
-              <div className="overflow-hidden rounded-2xl border border-sky-500/30 bg-black/60">
+              <div className="overflow-hidden rounded-2xl border border-yellow-500/20 bg-black/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 <iframe
                   src={readerUrl}
                   className="h-[78vh] w-full"

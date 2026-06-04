@@ -269,7 +269,7 @@ export const SurveyModal = ({
             disabled={!isOpenForVoting || isConfirming || isSubmitting}
             className={`flex-1 rounded-xl px-5 py-3 text-sm md:text-base font-semibold transition-all ${
               isOpenForVoting && !isConfirming && !isSubmitting
-                ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-300 text-black shadow-[0_0_18px_rgba(16,185,129,0.7)] hover:brightness-110"
+                ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 text-black shadow-[0_0_18px_rgba(184,128,54,0.62)] hover:brightness-110"
                 : "cursor-not-allowed border border-slate-700 bg-slate-900/70 text-slate-500"
             }`}
           >

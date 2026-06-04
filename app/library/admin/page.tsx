@@ -84,7 +84,7 @@ const Field = ({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       type={type}
-      className="mt-1.5 w-full rounded-xl border border-slate-700 bg-black/60 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-amber-300/50"
+      className="theme-input mt-1.5 min-h-0 px-3 py-2 text-sm"
     />
   </label>
 );
@@ -498,28 +498,28 @@ export default function LibraryAdminPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.12),transparent_42%),radial-gradient(circle_at_85%_15%,rgba(56,189,248,0.10),transparent_36%),#020617] px-4 py-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <section className="rounded-3xl border border-yellow-500/25 bg-slate-950/75 p-6 shadow-[0_26px_65px_-45px_rgba(0,0,0,1)] backdrop-blur-sm">
+      <div className="theme-shell theme-page-shell px-4">
+        <div className="theme-container space-y-6">
+          <section className="theme-panel p-6 md:p-8 lg:p-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80">Library Admin</p>
-                <h1 className="mt-2 text-3xl font-bold text-slate-50">RicoMatrix Contract Control Panel</h1>
-                <p className="mt-2 max-w-3xl text-sm text-slate-300/85">
+                <p className="theme-kicker">Library Admin</p>
+                <h1 className="theme-title mt-2 text-3xl md:text-4xl">RicoMatrix Contract Control Panel</h1>
+                <p className="theme-copy mt-3 max-w-3xl text-sm md:text-base">
                   Owner controls for governance, listing operations, fee tuning, emergency actions, and on-chain inspection.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
                   href="/library"
-                  className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:bg-slate-700/70"
+                  className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-[0.16em]"
                 >
                   Back To Library
                 </Link>
                 <button
                   type="button"
                   onClick={() => void refetchAdminReads()}
-                  className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-500/20"
+                  className="theme-button-secondary px-4 py-2 text-xs uppercase tracking-[0.16em]"
                 >
                   Refresh State
                 </button>
@@ -528,29 +528,29 @@ export default function LibraryAdminPage() {
           </section>
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-4">
+            <div className="theme-stat-panel p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Connected Wallet</p>
               <p className="mt-2 text-sm font-semibold text-slate-100">{shortAddress(address)}</p>
             </div>
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-4">
+            <div className="theme-stat-panel p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Owner</p>
               <p className="mt-2 text-sm font-semibold text-slate-100">{shortAddress(String(owner || ""))}</p>
-              <p className={`mt-2 text-xs ${isOwner ? "text-emerald-300" : "text-yellow-300"}`}>
+              <p className={`mt-2 text-xs ${isOwner ? "text-yellow-200" : "text-yellow-300"}`}>
                 {isOwner ? "Owner privileges enabled" : "Owner-only actions disabled"}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-4">
+            <div className="theme-stat-panel p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Pending Owner</p>
               <p className="mt-2 text-sm font-semibold text-slate-100">
                 {pendingOwner && String(pendingOwner) !== "0x0000000000000000000000000000000000000000"
                   ? shortAddress(String(pendingOwner))
                   : "--"}
               </p>
-              <p className={`mt-2 text-xs ${isPendingOwner ? "text-emerald-300" : "text-slate-400"}`}>
+              <p className={`mt-2 text-xs ${isPendingOwner ? "text-yellow-200" : "text-slate-400"}`}>
                 {isPendingOwner ? "Connected wallet can accept ownership" : "No pending owner access"}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-4">
+            <div className="theme-stat-panel p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Contract State</p>
               <p className="mt-2 text-sm font-semibold text-slate-100">
                 {paused ? "Paused" : "Live"} • Next Book ID {typeof nextBookId === "bigint" ? nextBookId.toString() : "--"}
@@ -568,7 +568,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleSetPaused(false)}
                   disabled={activeAction === "unpause" || !isOwner || paused === false}
-                  className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 disabled:opacity-50"
+                  className="rounded-lg border border-yellow-400/35 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-yellow-100 disabled:opacity-50"
                 >
                   {activeAction === "unpause" ? "Unpausing..." : "Unpause"}
                 </button>
@@ -577,17 +577,17 @@ export default function LibraryAdminPage() {
           </section>
 
           <section className="grid gap-6 xl:grid-cols-1">
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
+            <div className="theme-panel p-5 md:p-6">
               <h2 className="text-lg font-semibold text-slate-100">Book Governance</h2>
               <p className="mt-1 text-sm text-slate-400">Freeze/suspend/blacklist books and resolve appeal requests.</p>
               <div className="mt-4 space-y-3">
                 <Field label="Book ID" value={statusBookId} onChange={setStatusBookId} placeholder="1" />
                 <div className="grid gap-2 sm:grid-cols-3">
-                  <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+                  <label className="flex items-center gap-2 theme-card-compact px-3 py-2 text-sm text-slate-200">
                     <input type="checkbox" checked={statusFrozen} onChange={(e) => setStatusFrozen(e.target.checked)} />
                     Frozen
                   </label>
-                  <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+                  <label className="flex items-center gap-2 theme-card-compact px-3 py-2 text-sm text-slate-200">
                     <input
                       type="checkbox"
                       checked={statusSuspended}
@@ -595,7 +595,7 @@ export default function LibraryAdminPage() {
                     />
                     Suspended
                   </label>
-                  <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+                  <label className="flex items-center gap-2 theme-card-compact px-3 py-2 text-sm text-slate-200">
                     <input
                       type="checkbox"
                       checked={statusBlacklisted}
@@ -608,7 +608,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleSetBookStatus()}
                   disabled={activeAction === "setStatus" || !isOwner}
-                  className="w-full rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "setStatus" ? "Submitting..." : "Apply Status"}
                 </button>
@@ -628,7 +628,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleResolveAppeal()}
                   disabled={activeAction === "resolveAppeal" || !isOwner}
-                  className="w-full rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "resolveAppeal" ? "Submitting..." : "Resolve Appeal"}
                 </button>
@@ -637,11 +637,11 @@ export default function LibraryAdminPage() {
           </section>
 
           <section className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
+            <div className="theme-panel p-5 md:p-6">
               <h2 className="text-lg font-semibold text-slate-100">Fee Configuration</h2>
               <p className="mt-1 text-sm text-slate-400">Adjust USDT and RICO fee parameters.</p>
 
-              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="mt-4 theme-card p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Current USDT Fees</p>
                 <p className="mt-2 text-sm text-slate-200">
                   App: {formatToken(appFeeUsdt)} • Update: {formatToken(updateFeeUsdt)} • Appeal:{" "}
@@ -667,13 +667,13 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleSetFees()}
                   disabled={activeAction === "setFees" || !isOwner}
-                  className="w-full rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "setFees" ? "Submitting..." : "Update USDT Fees"}
                 </button>
               </div>
 
-              <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="mt-6 theme-card p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Current RICO Fees</p>
                 <p className="mt-2 text-sm text-slate-200">
                   App: {formatToken(appFeeRico)} • Buy: {formatToken(buyFeeRico)} • Min Vote:{" "}
@@ -689,20 +689,20 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleSetRicoFees()}
                   disabled={activeAction === "setRicoFees" || !isOwner}
-                  className="w-full rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "setRicoFees" ? "Submitting..." : "Update RICO Fees"}
                 </button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
+            <div className="theme-panel p-5 md:p-6">
               <h2 className="text-lg font-semibold text-slate-100">Revenue, Treasury & Ownership</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Manage split configuration, recover non-USDT tokens, and control ownership transfer.
               </p>
 
-              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="mt-4 theme-card p-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Current Revenue Split (BPS)</p>
                 <p className="mt-2 text-sm text-slate-200">
                   Author {typeof currentSplitAuthor === "bigint" ? currentSplitAuthor.toString() : "--"} • Pool{" "}
@@ -722,14 +722,14 @@ export default function LibraryAdminPage() {
                 <Field label="WalletA BPS" value={splitWalletA} onChange={setSplitWalletA} placeholder="500" />
                 <Field label="WalletB BPS" value={splitWalletB} onChange={setSplitWalletB} placeholder="1500" />
               </div>
-              <p className={`mt-2 text-xs ${splitTotal === 10000 ? "text-emerald-300" : "text-red-300"}`}>
+              <p className={`mt-2 text-xs ${splitTotal === 10000 ? "text-yellow-200" : "text-red-300"}`}>
                 Split total: {splitTotal} / 10000
               </p>
               <button
                 type="button"
                 onClick={() => void handleSetSplits()}
                 disabled={activeAction === "setSplits" || !isOwner}
-                className="mt-3 w-full rounded-xl border border-sky-400/40 bg-sky-500/10 px-4 py-2.5 text-sm font-semibold text-sky-100 transition hover:bg-sky-500/20 disabled:opacity-50"
+                className="mt-3 theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
               >
                 {activeAction === "setSplits" ? "Submitting..." : "Update Revenue Splits"}
               </button>
@@ -750,7 +750,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleRecoverDust()}
                   disabled={activeAction === "recoverDust" || !isOwner}
-                  className="w-full rounded-xl border border-yellow-500/40 bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-200 transition hover:bg-yellow-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "recoverDust" ? "Submitting..." : "Recover Dust"}
                 </button>
@@ -762,7 +762,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleTransferOwnership()}
                   disabled={activeAction === "transferOwnership" || !isOwner}
-                  className="w-full rounded-xl border border-violet-400/40 bg-violet-500/10 px-4 py-2.5 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "transferOwnership" ? "Submitting..." : "Start Ownership Transfer"}
                 </button>
@@ -770,7 +770,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleAcceptOwnership()}
                   disabled={activeAction === "acceptOwnership" || !isPendingOwner}
-                  className="w-full rounded-xl border border-violet-400/40 bg-violet-500/10 px-4 py-2.5 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "acceptOwnership" ? "Submitting..." : "Accept Ownership"}
                 </button>
@@ -779,7 +779,7 @@ export default function LibraryAdminPage() {
           </section>
 
           <section className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
+            <div className="theme-panel p-5 md:p-6">
               <h2 className="text-lg font-semibold text-slate-100">Royalty Sync Utility</h2>
               <p className="mt-1 text-sm text-slate-400">Trigger `syncRicoPointsFor` for any user address.</p>
               <div className="mt-4 space-y-3">
@@ -793,14 +793,14 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleSyncPointsFor()}
                   disabled={activeAction === "syncPoints"}
-                  className="w-full rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {activeAction === "syncPoints" ? "Submitting..." : "Sync User Points"}
                 </button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-5">
+            <div className="theme-panel p-5 md:p-6">
               <h2 className="text-lg font-semibold text-slate-100">Book Inspector</h2>
               <p className="mt-1 text-sm text-slate-400">Read on-chain book details and optional access check for a wallet.</p>
               <div className="mt-4 space-y-3">
@@ -815,7 +815,7 @@ export default function LibraryAdminPage() {
                   type="button"
                   onClick={() => void handleInspectBook()}
                   disabled={inspectLoading}
-                  className="w-full rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:opacity-50"
+                  className="theme-button-secondary w-full px-4 py-2.5 text-sm disabled:opacity-50"
                 >
                   {inspectLoading ? "Inspecting..." : "Inspect Book"}
                 </button>
@@ -828,7 +828,7 @@ export default function LibraryAdminPage() {
               ) : null}
 
               {inspectResult ? (
-                <div className="mt-4 grid gap-2 rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm">
+                <div className="mt-4 grid gap-2 theme-card p-4 text-sm">
                   <p className="text-slate-200">
                     Book #{inspectResult.bookId} • Price {formatUnits(BigInt(inspectResult.priceWei), 18)} USDT
                   </p>
@@ -852,7 +852,7 @@ export default function LibraryAdminPage() {
                       : ""}
                   </p>
                   {inspectResult.hasAccess !== null ? (
-                    <p className={inspectResult.hasAccess ? "text-emerald-300" : "text-yellow-300"}>
+                    <p className={inspectResult.hasAccess ? "text-yellow-200" : "text-yellow-300"}>
                       Access Check: {inspectResult.hasAccess ? "Has Access" : "No Access"}
                     </p>
                   ) : null}

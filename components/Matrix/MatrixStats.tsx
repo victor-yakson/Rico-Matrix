@@ -27,9 +27,9 @@ export const MatrixStats = ({ userData }: MatrixStatsProps) => {
         ? `$${Number(userData.track2TotalEarned || 0).toFixed(2)}`
         : '$0.00',
       description: t('stats.x6Earnings.description'),
-      accent: 'from-violet-500 via-purple-500 to-fuchsia-400',
-      dot: 'bg-purple-300',
-      border: 'border-purple-400/60',
+      accent: 'from-yellow-400 via-amber-500 to-yellow-300',
+      dot: 'bg-yellow-300',
+      border: 'border-yellow-400/60',
       glow: 'shadow-[0_0_24px_rgba(192,132,252,0.45)]',
     },
     {
@@ -38,10 +38,10 @@ export const MatrixStats = ({ userData }: MatrixStatsProps) => {
         ? String(userData.track1TotalCycles || 0)
         : '0',
       description: t('stats.x3Cycles.description'),
-      accent: 'from-emerald-500 via-emerald-400 to-teal-300',
-      dot: 'bg-emerald-300',
-      border: 'border-emerald-400/60',
-      glow: 'shadow-[0_0_24px_rgba(52,211,153,0.45)]',
+      accent: 'from-amber-400 via-yellow-300 to-amber-200',
+      dot: 'bg-amber-300',
+      border: 'border-yellow-400/55',
+      glow: 'shadow-[0_0_24px_rgba(184,128,54,0.42)]',
     },
     {
       name: t('stats.x6Cycles.name'),
@@ -49,10 +49,10 @@ export const MatrixStats = ({ userData }: MatrixStatsProps) => {
         ? String(userData.track2TotalCycles || 0)
         : '0',
       description: t('stats.x6Cycles.description'),
-      accent: 'from-sky-500 via-cyan-400 to-blue-400',
-      dot: 'bg-sky-300',
-      border: 'border-sky-400/60',
-      glow: 'shadow-[0_0_24px_rgba(56,189,248,0.45)]',
+      accent: 'from-yellow-300 via-amber-400 to-yellow-500',
+      dot: 'bg-yellow-300',
+      border: 'border-yellow-400/45',
+      glow: 'shadow-[0_0_24px_rgba(184,128,54,0.42)]',
     },
   ];
 

@@ -41,20 +41,20 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
       earnings: userData?.track1TotalEarned || '0',
       cycles: userData?.track1TotalCycles || 0,
       chapters: userData?.track1Unlocked || 0,
-      color: 'bg-blue-500',
-      borderColor: 'border-blue-500/30',
-      textColor: 'text-blue-400',
-      gradient: 'from-blue-500 to-cyan-500'
+      color: 'bg-yellow-400',
+      borderColor: 'border-yellow-500/30',
+      textColor: 'text-yellow-300',
+      gradient: 'from-yellow-400 to-amber-500'
     },
     {
       track: t('trackPerformance.x6'),
       earnings: userData?.track2TotalEarned || '0',
       cycles: userData?.track2TotalCycles || 0,
       chapters: userData?.track2Unlocked || 0,
-      color: 'bg-purple-500',
-      borderColor: 'border-purple-500/30',
-      textColor: 'text-purple-400',
-      gradient: 'from-purple-500 to-pink-500'
+      color: 'bg-yellow-300',
+      borderColor: 'border-yellow-500/30',
+      textColor: 'text-yellow-300',
+      gradient: 'from-yellow-400 to-amber-500'
     }
   ];
 
@@ -113,7 +113,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
             >
               <div className="flex items-center justify-between mb-3">
                 <h4 className={`font-semibold ${track.textColor}`}>{track.track}</h4>
-                <div className={`w-3 h-3 rounded-full ${track.color} shadow-[0_0_8px_rgba(59,130,246,0.5)]`}></div>
+                <div className={`w-3 h-3 rounded-full ${track.color} shadow-[0_0_8px_rgba(184,128,54,0.45)]`}></div>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">

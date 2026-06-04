@@ -49,18 +49,18 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
         : '0.00'}`,
       description: 'Available royalty to claim',
       icon: '👑',
-      accent: 'from-emerald-400 via-emerald-500 to-teal-300',
-      border: 'border-emerald-400/60',
-      text: 'text-emerald-300',
+      accent: 'from-yellow-300 via-amber-400 to-yellow-200',
+      border: 'border-yellow-400/60',
+      text: 'text-yellow-200',
     },
     {
       title: 'Royalty Share',
       value: userData?.exists ? `${userData.royaltyPercent}%` : '0%',
       description: 'Your share of the royalty pool',
       icon: '📊',
-      accent: 'from-sky-400 via-cyan-400 to-blue-400',
-      border: 'border-sky-400/60',
-      text: 'text-sky-300',
+      accent: 'from-yellow-300 via-amber-400 to-yellow-200',
+      border: 'border-yellow-400/60',
+      text: 'text-yellow-200',
     },
     {
       title: 'Total Claimed',
@@ -69,9 +69,9 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
         : '0.00'}`,
       description: 'Lifetime royalty earnings',
       icon: '🏆',
-      accent: 'from-violet-500 via-purple-500 to-fuchsia-400',
-      border: 'border-purple-400/60',
-      text: 'text-purple-300',
+      accent: 'from-yellow-400 via-amber-500 to-yellow-300',
+      border: 'border-yellow-400/60',
+      text: 'text-yellow-300',
     },
   ];
 
@@ -89,8 +89,8 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
       earnings: userData?.track2TotalEarned || '0',
       cycles: userData?.track2TotalCycles || 0,
       chapters: userData?.track2Unlocked || 0,
-      border: 'border-purple-400/60',
-      dot: 'bg-purple-300',
+      border: 'border-yellow-400/50',
+      dot: 'bg-yellow-300',
     },
   ];
 
@@ -108,7 +108,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
   return (
     <div className="space-y-6">
       {/* Progress Overview */}
-      <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+      <div className="theme-panel p-6">
         <h3 className="mb-4 text-xl font-bold text-slate-50">
           Progress Overview
         </h3>
@@ -123,7 +123,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
             <div
-              className="h-3 rounded-full bg-gradient-to-r from-yellow-400 via-amber-500 to-purple-500 transition-all duration-500"
+              className="h-3 rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 transition-all duration-500"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -140,7 +140,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
             </div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-emerald-300">
+            <div className="text-2xl font-bold text-amber-300">
               {totalCycles}
             </div>
             <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
@@ -191,7 +191,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
       </div>
 
       {/* Track Performance */}
-      <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+      <div className="theme-panel p-6">
         <h3 className="mb-4 text-xl font-bold text-slate-50">
           Track Performance
         </h3>
@@ -224,7 +224,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Chapters:</span>
-                  <span className="font-semibold text-emerald-300">
+                  <span className="font-semibold text-amber-300">
                     {track.chapters}/12
                   </span>
                 </div>
@@ -235,7 +235,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
       </div>
 
       {/* Achievement Badges */}
-      <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+      <div className="theme-panel p-6">
         <h3 className="mb-4 text-xl font-bold text-slate-50">
           Achievements
         </h3>
@@ -245,7 +245,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
               key={index}
               className={`rounded-2xl border p-3 text-center transition-all ${
                 achievement.earned
-                  ? 'border-emerald-400/70 bg-emerald-500/10 shadow-[0_0_18px_rgba(16,185,129,0.6)]'
+                  ? 'border-yellow-400/70 bg-yellow-500/10 shadow-[0_0_18px_rgba(250,204,21,0.35)]'
                   : 'border-slate-800 bg-slate-950/80 opacity-60'
               }`}
             >
@@ -259,7 +259,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
               </div>
               <div
                 className={`text-xs ${
-                  achievement.earned ? 'text-emerald-300' : 'text-slate-500'
+                  achievement.earned ? 'text-amber-300' : 'text-slate-500'
                 }`}
               >
                 {achievement.earned ? 'Earned' : 'Locked'}

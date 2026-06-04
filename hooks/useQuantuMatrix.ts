@@ -161,6 +161,13 @@ export const useQuantuMatrix = () => {
             functionName: "viewRoyaltyPercent",
             args: [address],
           },
+        ]
+      : []
+  ) as readonly ContractFunctionParameters[];
+
+  const migrationContracts = (
+    address
+      ? [
           {
             ...quantuMatrixContract,
             functionName: "getMigrationAndRoyaltyUI",
@@ -206,31 +213,43 @@ export const useQuantuMatrix = () => {
   const ricoFarming = getUserResult(2);
   const royaltyAvailable = getUserResult(3);
   const royaltyPercent = getUserResult(4);
-  const migrationAndRoyaltyUI = getUserResult(5);
-  const legacyClaimable = getUserResult(6);
-  const royaltyV2 = getUserResult(7);
-  const royaltyPercentV2 = getUserResult(8);
-  const ricoPending = getUserResult(9);
+
+  const { data: migrationReads, refetch: refetchMigrationReads } = useReadContracts({
+    contracts: migrationContracts,
+    query: { enabled: Boolean(address) },
+  });
+
+  const migrationReadsList = (migrationReads as any[] | undefined) ?? [];
+  const getMigrationResult = (index: number) => {
+    const result = migrationReadsList[index]?.result;
+    return result !== undefined ? safeBigInt(result) : result;
+  };
+
+  const migrationAndRoyaltyUI = getMigrationResult(0);
+  const legacyClaimable = getMigrationResult(1);
+  const royaltyV2 = getMigrationResult(2);
+  const royaltyPercentV2 = getMigrationResult(3);
+  const ricoPending = getMigrationResult(4);
 
   const refetchReaderTotals = () => refetchUserReads();
   const refetchReaderSummary = () => refetchUserReads();
   const refetchRicoFarming = () => refetchUserReads();
   const refetchRoyalty = () => refetchUserReads();
   const refetchRoyaltyPercent = () => refetchUserReads();
-  const refetchMigrationAndRoyaltyUI = () => refetchUserReads();
-  const refetchLegacyClaimable = () => refetchUserReads();
-  const refetchRoyaltyV2 = () => refetchUserReads();
-  const refetchRoyaltyPercentV2 = () => refetchUserReads();
-  const refetchRicoPending = () => refetchUserReads();
+  const refetchMigrationAndRoyaltyUI = () => refetchMigrationReads();
+  const refetchLegacyClaimable = () => refetchMigrationReads();
+  const refetchRoyaltyV2 = () => refetchMigrationReads();
+  const refetchRoyaltyPercentV2 = () => refetchMigrationReads();
+  const refetchRicoPending = () => refetchMigrationReads();
 
-  // Read migration status (only after user exists)
+  // Read migration status for any connected address so legacy-only users can be detected
   const { data: migrationStatusData, refetch: refetchMigrationStatus } =
     useReadContract({
       ...quantuMatrixContract,
       functionName: "migrationStatus",
       args: address ? [address] : undefined,
       query: {
-        enabled: !!address && !!userExists,
+        enabled: !!address,
       },
     });
 
@@ -892,36 +911,47 @@ export const useQuantuMatrix = () => {
   };
 
   // Refetch all user data
-  const refetchUserData = useCallback(() => {
-    toast.info("Refreshing user data...", {
-      duration: 2000,
-    });
+  const refetchUserData = useCallback(async (options?: { showToast?: boolean }) => {
+    const showToast = options?.showToast ?? true;
+    if (showToast) {
+      toast.info("Refreshing user data...", {
+        duration: 2000,
+      });
+    }
 
-    refetchUserExists();
-    refetchUsdtAllowance();
-    refetchUsdtBalance();
-    refetchMigrationStatus();
-    refetchMigrationAndRoyaltyUI();
-    refetchLegacyClaimable();
-    refetchRoyaltyV2();
-    refetchRoyaltyPercentV2();
-    refetchRicoPending();
+    const refetches: Promise<unknown>[] = [
+      refetchUserExists(),
+      refetchUsdtAllowance(),
+      refetchUsdtBalance(),
+      refetchMigrationStatus(),
+      refetchMigrationAndRoyaltyUI(),
+      refetchLegacyClaimable(),
+      refetchRoyaltyV2(),
+      refetchRoyaltyPercentV2(),
+      refetchRicoPending(),
+    ];
 
     if (userExists) {
-      refetchReaderTotals();
-      refetchReaderSummary();
-      refetchRicoFarming();
-      refetchRoyalty();
-      refetchRoyaltyPercent();
+      refetches.push(
+        refetchReaderTotals(),
+        refetchReaderSummary(),
+        refetchRicoFarming(),
+        refetchRoyalty(),
+        refetchRoyaltyPercent()
+      );
     }
 
     if (address) {
       clearMatrixCache(address);
     }
 
-    toast.success("User data refreshed!", {
-      duration: 2000,
-    });
+    await Promise.all(refetches);
+
+    if (showToast) {
+      toast.success("User data refreshed!", {
+        duration: 2000,
+      });
+    }
   }, [
     refetchUserExists,
     refetchReaderTotals,
@@ -943,22 +973,29 @@ export const useQuantuMatrix = () => {
   ]);
 
   // Refetch all global data
-  const refetchAllData = useCallback(() => {
-    toast.info("Refreshing all data...", {
-      duration: 2000,
-    });
+  const refetchAllData = useCallback(async (options?: { showToast?: boolean }) => {
+    const showToast = options?.showToast ?? true;
+    if (showToast) {
+      toast.info("Refreshing all data...", {
+        duration: 2000,
+      });
+    }
 
-    refetchUserData();
-    refetchGlobalStats();
-    refetchGlobalSummary();
-    refetchGlobalRicoFarming();
-    refetchTopEarners();
-    refetchTopReferrers();
-    refetchChapterPrices();
+    await Promise.all([
+      refetchUserData({ showToast: false }),
+      refetchGlobalStats(),
+      refetchGlobalSummary(),
+      refetchGlobalRicoFarming(),
+      refetchTopEarners(),
+      refetchTopReferrers(),
+      refetchChapterPrices(),
+    ]);
 
-    toast.success("All data refreshed!", {
-      duration: 2000,
-    });
+    if (showToast) {
+      toast.success("All data refreshed!", {
+        duration: 2000,
+      });
+    }
   }, [
     refetchUserData,
     refetchGlobalStats,
@@ -1296,11 +1333,11 @@ export const useQuantuMatrix = () => {
           duration: 5000,
         });
 
-        setTimeout(() => {
-          refetchAllData();
-          refetchMigrationStatus();
-          refetchMigrationAndRoyaltyUI();
-        }, 2000);
+        await refetchAllData({ showToast: false });
+        await Promise.all([
+          refetchMigrationStatus(),
+          refetchMigrationAndRoyaltyUI(),
+        ]);
       } else {
         throw new Error("Migration transaction failed on-chain");
       }
@@ -1729,10 +1766,20 @@ export const useQuantuMatrix = () => {
     refetchUserData,
   ]);
 
+  const resolvedMigrationStatus = processMigrationStatus(migrationStatusData);
+  const resolvedMigrationUI = processMigrationAndRoyaltyUI(migrationAndRoyaltyUI);
+  const resolvedMigrationData: MigrationData = {
+    ...resolvedMigrationUI,
+    status: resolvedMigrationStatus.status,
+    shouldMigrate: resolvedMigrationStatus.status === 1,
+    canClaimLegacy: parseFloat(resolvedMigrationUI.legacyClaimable) > 0,
+    hasV1: resolvedMigrationStatus.status === 1 || resolvedMigrationStatus.status === 2,
+  };
+
   const userData: UserData = {
     ...parseUserDataFromMultipleSources(),
-    migrationStatus: processMigrationStatus(migrationStatusData),
-    migrationData: processMigrationData(migrationAndRoyaltyUI),
+    migrationStatus: resolvedMigrationStatus,
+    migrationData: resolvedMigrationData,
   };
 
   const formattedUsdtBalance = usdtBalance
@@ -1758,7 +1805,7 @@ export const useQuantuMatrix = () => {
     chapterPrices: chapterPrices as string[] | undefined,
 
     // Migration and royalty UI data
-    migrationAndRoyaltyUI: processMigrationData(migrationAndRoyaltyUI),
+    migrationAndRoyaltyUI: resolvedMigrationData,
 
     // Individual data points
     legacyClaimable: legacyClaimable

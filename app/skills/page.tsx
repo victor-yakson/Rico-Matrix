@@ -198,22 +198,22 @@ export default function SkillsPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)]">
-        <div className="container mx-auto px-4 py-10">
-          <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4">
+          <div className="mx-auto mb-12 max-w-4xl text-center">
+            <p className="theme-kicker justify-center mb-3">
               {t("header.label")}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+            <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {t("header.title")}
             </h1>
-            <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+            <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
               {t("header.description")}
             </p>
           </div>
 
           {!hasAccess && (
-            <div className="mx-auto max-w-2xl rounded-3xl border border-yellow-500/20 bg-slate-950/80 p-8 text-center shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+            <div className="theme-panel mx-auto max-w-2xl p-8 text-center">
               <div className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
                 {t("status.comingSoon")}
               </div>
@@ -225,7 +225,7 @@ export default function SkillsPage() {
               </p>
               <Link
                 href="/chapters"
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 text-sm md:text-base font-semibold text-black shadow-[0_0_24px_rgba(245,158,11,0.5)] hover:brightness-110 active:scale-[0.98] transition-all"
+                className="theme-button-primary px-6 py-3 text-sm md:text-base"
               >
                 {t("locked.button")}
               </Link>
@@ -233,14 +233,14 @@ export default function SkillsPage() {
           )}
 
           {hasAccess && (
-            <div className="space-y-8">
+            <div className="space-y-10">
               <div className="grid gap-6 md:grid-cols-2">
-                <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)]">
+                <article className="theme-panel-soft p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-xs uppercase tracking-[0.25em] text-yellow-300/80">
                       Track 01
                     </div>
-                    <span className="text-[0.7rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-200 bg-emerald-400/10">
+                    <span className="text-[0.7rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-yellow-400/35 text-amber-200 bg-yellow-500/10">
                       Live
                     </span>
                   </div>
@@ -255,7 +255,7 @@ export default function SkillsPage() {
                   </div>
                 </article>
 
-                <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(0,0,0,0.8)]">
+                <article className="theme-panel-soft p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-xs uppercase tracking-[0.25em] text-yellow-300/80">
                       Track 02
@@ -287,10 +287,10 @@ export default function SkillsPage() {
                     </h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className="text-[0.7rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-200 bg-emerald-400/10">
+                    <span className="text-[0.7rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-yellow-400/35 text-amber-200 bg-yellow-500/10">
                       Live • {DIGITAL_MARKETING_MODULES.length} modules
                     </span>
-                    <span className="text-[0.7rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-cyan-400/40 text-cyan-200 bg-cyan-400/10">
+                    <span className="text-[0.7rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-yellow-400/40 text-yellow-200 bg-yellow-400/10">
                       {totalLessons} total lessons
                     </span>
                   </div>
@@ -331,7 +331,7 @@ export default function SkillsPage() {
                         <span
                           className={`text-[0.65rem] uppercase tracking-[0.2em] px-3 py-1 rounded-full border ${
                             module.status === "live"
-                              ? "border-emerald-400/40 text-emerald-200 bg-emerald-400/10"
+                              ? "border-yellow-400/35 text-amber-200 bg-yellow-500/10"
                               : "border-yellow-400/40 text-yellow-200 bg-yellow-400/10"
                           }`}
                         >
@@ -372,7 +372,7 @@ export default function SkillsPage() {
                                     href={getYoutubeWatchUrl(lesson.videoUrl)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100 hover:bg-cyan-400/20"
+                                    className="inline-flex items-center justify-center rounded-lg border border-yellow-400/40 bg-yellow-400/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-yellow-100 hover:bg-yellow-400/20"
                                   >
                                     Watch
                                   </a>

@@ -5,11 +5,20 @@ import Link from "next/link";
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { libraryContract } from "@/utils/contracts";
+import { useQuantuMatrix } from "@/hooks/useQuantuMatrix";
+import {
+  canPublishLibraryBook,
+  getHighestUnlockedChapter,
+  MIN_LIBRARY_PUBLISH_CHAPTER,
+} from "@/lib/libraryEligibility";
 
 const GATEWAY =
   process.env.NEXT_PUBLIC_PINATA_GATEWAY || "https://gateway.pinata.cloud/ipfs";
 const PAGE_SIZE = 24;
+const PUBLISH_WALKTHROUGH_URL = "https://youtu.be/NM3VC81b-k8?si=syGh0nJ0PQXr5CMB";
+const PUBLISH_WALKTHROUGH_EMBED_URL = "https://www.youtube.com/embed/NM3VC81b-k8";
 
 type MarketBook = {
   id?: number;
@@ -103,10 +112,14 @@ const WishlistButton = ({
   saved,
   onClick,
   className,
+  saveLabel,
+  savedLabel,
 }: {
   saved: boolean;
   onClick: () => void;
   className?: string;
+  saveLabel: string;
+  savedLabel: string;
 }) => (
   <button
     type="button"
@@ -116,7 +129,7 @@ const WishlistButton = ({
       "inline-flex items-center justify-center rounded-lg border border-slate-600 bg-black/50 px-2 py-1 text-[11px] font-semibold text-slate-200 hover:border-amber-400/40"
     }
   >
-    {saved ? "Saved" : "Save"}
+    {saved ? savedLabel : saveLabel}
   </button>
 );
 
@@ -124,10 +137,12 @@ const BookRailCard = ({
   book,
   saved,
   onToggleSave,
+  commonCopy,
 }: {
   book: DecoratedBook;
   saved: boolean;
   onToggleSave: () => void;
+  commonCopy: { buttons: Record<string, string> };
 }) => (
   <article className="min-w-[220px] max-w-[220px] overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/60">
     <div className="relative aspect-[3/4] bg-slate-800">
@@ -142,7 +157,12 @@ const BookRailCard = ({
         }}
       />
       <div className="absolute right-2 top-2">
-        <WishlistButton saved={saved} onClick={onToggleSave} />
+        <WishlistButton
+          saved={saved}
+          onClick={onToggleSave}
+          saveLabel={commonCopy.buttons.save}
+          savedLabel={commonCopy.buttons.saved}
+        />
       </div>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-2">
         <p className="line-clamp-2 text-xs font-semibold text-slate-100">
@@ -160,7 +180,7 @@ const BookRailCard = ({
           href={`/library/book/${book.book_id}`}
           className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-amber-400/40 bg-amber-400/15 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-amber-100 hover:bg-amber-400/25"
         >
-          View Book
+          {commonCopy.buttons.viewBook}
         </Link>
       ) : (
         <button
@@ -168,7 +188,7 @@ const BookRailCard = ({
           disabled
           className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-slate-700/70 bg-slate-900/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500"
         >
-          Sync Pending
+          {commonCopy.buttons.syncPending}
         </button>
       )}
     </div>
@@ -176,7 +196,39 @@ const BookRailCard = ({
 );
 
 export default function LibraryPage() {
+  const locale = useLocale();
+  const tPage = useTranslations("LibraryPage");
+  const tCommon = useTranslations("LibraryCommon");
+  const copy = {
+    heroKicker: tPage("heroKicker"),
+    heroTitle: tPage("heroTitle"),
+    heroDescription: tPage("heroDescription"),
+    navLocked: tPage("navLocked"),
+    authorProgramKicker: tPage("authorProgramKicker"),
+    authorProgramTitle: tPage("authorProgramTitle"),
+    authorProgramDescription: tPage("authorProgramDescription"),
+    authorProgramLocked: tPage.raw("authorProgramLocked") as string,
+    authorProgramReady: tPage("authorProgramReady"),
+    walkthroughKicker: tPage("walkthroughKicker"),
+    walkthroughTitle: tPage("walkthroughTitle"),
+    walkthroughDescription: tPage("walkthroughDescription"),
+    watchWalkthrough: tPage("watchWalkthrough"),
+    steps: tPage.raw("steps") as Array<{ title: string; body: string }>,
+    readyNotice: tPage("readyNotice"),
+    stats: tPage.raw("stats") as Record<string, string>,
+    sections: tPage.raw("sections") as Record<string, string>,
+    filters: tPage.raw("filters") as Record<string, string>,
+    empty: tPage("empty"),
+    noDescription: tPage("noDescription"),
+    error: tPage("error"),
+  };
+  const commonCopy = {
+    status: tCommon.raw("status") as Record<string, string>,
+    buttons: tCommon.raw("buttons") as Record<string, string>,
+    labels: tCommon.raw("labels") as Record<string, string>,
+  };
   const { address } = useAccount();
+  const { userData } = useQuantuMatrix();
   const { data: owner } = useReadContract({
     ...libraryContract,
     functionName: "owner",
@@ -195,6 +247,16 @@ export default function LibraryPage() {
       typeof pendingOwner === "string" ? pendingOwner.toLowerCase() : "";
     return connected === ownerAddress || connected === pendingOwnerAddress;
   }, [address, owner, pendingOwner]);
+
+  const highestUnlockedChapter = getHighestUnlockedChapter(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
+  const canPublishBooks = canPublishLibraryBook(
+    userData?.track1Unlocked,
+    userData?.track2Unlocked
+  );
+  const launchBookHref = canPublishBooks ? "/library/upload" : "/chapters";
 
   const [books, setBooks] = useState<MarketBook[]>([]);
   const [loading, setLoading] = useState(true);
@@ -263,7 +325,7 @@ export default function LibraryPage() {
       );
       const payload = (await res.json()) as { books?: MarketBook[]; error?: string };
       if (!res.ok) {
-        throw new Error(payload.error || "Failed to load marketplace.");
+        throw new Error(payload.error || copy.error);
       }
 
       const incoming = payload.books || [];
@@ -278,7 +340,7 @@ export default function LibraryPage() {
       setOffset(nextOffset);
     } catch (err: any) {
       if (err?.name === "AbortError") return;
-      setError(err?.message || "Failed to load marketplace.");
+      setError(err?.message || copy.error);
     } finally {
       setLoading(false);
       setIsLoadingMore(false);
@@ -350,7 +412,7 @@ export default function LibraryPage() {
         key: getBookKey(book, index),
         persistentId: getPersistentBookId(book),
         normalizedTitle: normalize(book.title) || `Book #${book.book_id || index + 1}`,
-        normalizedDescription: normalize(book.description) || "No description available.",
+        normalizedDescription: normalize(book.description) || copy.noDescription,
         priceUsdt: weiToUsdtNumber(book.price),
         category: detectCategory(book),
         createdAtMs: new Date(book.created_at || 0).getTime() || 0,
@@ -498,161 +560,211 @@ export default function LibraryPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.14),transparent_45%),linear-gradient(180deg,#020617_0%,#020617_100%)]">
-        <div className="container mx-auto px-4 py-10">
-          <section className="rounded-3xl border border-slate-700/60 bg-slate-900/50 p-6 md:p-8">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4">
+          <section className="theme-panel p-6 md:p-8 lg:p-10">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-amber-300/80">
-                  RICO Marketplace
+                <p className="theme-kicker">
+                  {copy.heroKicker}
                 </p>
-                <h1 className="mt-2 text-3xl font-bold text-slate-50 md:text-4xl">
-                  Discover, buy, and read verified books
+                <h1 className="theme-title mt-2 max-w-4xl">
+                  {copy.heroTitle}
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm text-slate-300/80">
-                  Every listed book has passed validation, moderation, and IPFS packaging before
-                  on-chain listing.
+                <p className="theme-copy mt-3 max-w-2xl text-sm md:text-base">
+                  {copy.heroDescription}
                 </p>
               </div>
-              <nav className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-950/60 p-2 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
+              <nav className="flex flex-wrap items-center gap-2 rounded-[22px] border border-white/8 bg-[rgba(7,10,17,0.72)] p-2 shadow-[0_18px_34px_rgba(0,0,0,0.25)]">
                 <Link
                   href="/library"
-                  className="rounded-xl border border-amber-400/40 bg-amber-400/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-100"
+                  className="theme-button-secondary px-4 py-2 text-xs uppercase tracking-[0.18em]"
                 >
-                  Marketplace
+                  {commonCopy.labels.marketplace}
                 </Link>
                 <Link
-                  href="/library/upload"
-                  className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-100 hover:bg-slate-700/80"
+                  href={launchBookHref}
+                  className="theme-button-primary px-4 py-2 text-xs uppercase tracking-[0.18em]"
                 >
-                  Launch A Book
+                  {commonCopy.buttons.launchBook}
                 </Link>
                 <Link
-                  href="/library/my-books?mode=author"
-                  className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-100 hover:bg-slate-700/80"
+                  href="/library/my-books?mode=reader"
+                  className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-[0.18em]"
                 >
-                  My Library
+                  {commonCopy.buttons.myLibrary}
                 </Link>
                 {hasListedBook ? (
                   <Link
                     href="/library/my-books?mode=author"
-                    className="rounded-xl border border-emerald-400/40 bg-emerald-400/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100 hover:bg-emerald-400/25"
+                    className="theme-button-secondary px-4 py-2 text-xs uppercase tracking-[0.18em]"
                   >
-                    Author Dashboard
+                    {commonCopy.buttons.authorDashboard}
                   </Link>
                 ) : (
-                  <span className="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Dashboard unlocks after listing
+                  <span className="theme-chip">
+                    {copy.navLocked}
                   </span>
                 )}
                 {canAccessAdmin ? (
                   <Link
                     href="/library/admin"
-                    className="rounded-xl border border-sky-400/40 bg-sky-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-100 hover:bg-sky-500/20"
+                    className="theme-button-ghost px-4 py-2 text-xs uppercase tracking-[0.18em]"
                   >
-                    Admin Console
+                    {commonCopy.buttons.adminConsole}
                   </Link>
                 ) : null}
               </nav>
             </div>
           </section>
 
-          <section className="mt-6 rounded-2xl border border-amber-400/25 bg-[linear-gradient(120deg,rgba(245,158,11,0.08),rgba(14,116,144,0.08))] p-5">
+          <section className="theme-panel-soft theme-section p-5 md:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-200/90">
-                  Author Program
+                  {copy.authorProgramKicker}
                 </p>
                 <h2 className="mt-1 text-xl font-semibold text-slate-100">
-                  Become A Verified Author On RicoMatrix
+                  {copy.authorProgramTitle}
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm text-slate-300/85">
-                  Publish books with anti-piracy checks, decentralized IPFS packaging, and on-chain ownership. Build your reader base and monetize directly.
+                  {copy.authorProgramDescription}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
-                  href="/library/upload"
+                  href={launchBookHref}
                   className="rounded-xl border border-amber-400/40 bg-amber-400/15 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-100 hover:bg-amber-400/25"
                 >
-                  Launch A Book
+                  {commonCopy.buttons.launchBook}
                 </Link>
                 {hasListedBook ? (
                   <Link
                     href="/library/my-books?mode=author"
                     className="rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-100 hover:bg-slate-700/70"
                   >
-                    Author Dashboard
+                    {commonCopy.buttons.authorDashboard}
                   </Link>
                 ) : (
                   <span className="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    List your first book to access dashboard
+                    {canPublishBooks
+                      ? copy.authorProgramReady
+                      : copy.authorProgramLocked.replace(
+                          "{chapter}",
+                          String(MIN_LIBRARY_PUBLISH_CHAPTER)
+                        ).replace(
+                          "{currentChapter}",
+                          String(highestUnlockedChapter)
+                        )}
                   </span>
                 )}
               </div>
             </div>
 
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-slate-700/70 bg-slate-900/60 p-3">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">1. Upload</p>
+              <div className="rounded-xl border border-white/8 bg-white/4 p-3">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{copy.steps[0].title}</p>
                 <p className="mt-1 text-sm text-slate-100">
-                  Add PDF + thumbnail with your author wallet.
+                  {copy.steps[0].body}
                 </p>
               </div>
-              <div className="rounded-xl border border-slate-700/70 bg-slate-900/60 p-3">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">2. Verify</p>
+              <div className="rounded-xl border border-white/8 bg-white/4 p-3">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{copy.steps[1].title}</p>
                 <p className="mt-1 text-sm text-slate-100">
-                  AI moderation, duplicate checks, and IPFS packaging happen automatically.
+                  {copy.steps[1].body}
                 </p>
               </div>
-              <div className="rounded-xl border border-slate-700/70 bg-slate-900/60 p-3">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">3. List</p>
+              <div className="rounded-xl border border-white/8 bg-white/4 p-3">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{copy.steps[2].title}</p>
                 <p className="mt-1 text-sm text-slate-100">
-                  Set price and payout wallet, then publish on-chain.
+                  {copy.steps[2].body}
                 </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="theme-panel theme-section p-5 md:p-6">
+            <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+              <div>
+                <p className="theme-kicker">{copy.walkthroughKicker}</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-50">
+                  {copy.walkthroughTitle}
+                </h2>
+                <p className="mt-3 max-w-xl text-sm text-slate-300/85">
+                  {copy.walkthroughDescription}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link
+                    href={launchBookHref}
+                    className="theme-button-primary px-4 py-2 text-xs uppercase tracking-[0.18em]"
+                  >
+                    {commonCopy.buttons.launchBook}
+                  </Link>
+                  <a
+                    href={PUBLISH_WALKTHROUGH_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="theme-button-secondary px-4 py-2 text-xs uppercase tracking-[0.18em]"
+                  >
+                    {copy.watchWalkthrough}
+                  </a>
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-[24px] border border-yellow-500/20 bg-black/50 shadow-[0_18px_44px_rgba(0,0,0,0.32)]">
+                <div className="aspect-video">
+                  <iframe
+                    src={PUBLISH_WALKTHROUGH_EMBED_URL}
+                    title={copy.walkthroughTitle}
+                    className="h-full w-full"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
               </div>
             </div>
           </section>
 
           {hasReadyBook && (
-            <section className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 md:flex md:items-center md:justify-between">
-              <p className="text-sm text-emerald-100">
-                You have approved uploads ready for blockchain listing.
+            <section className="mt-4 rounded-2xl border border-[rgba(70,210,159,0.26)] bg-[linear-gradient(135deg,rgba(70,210,159,0.08),rgba(66,137,255,0.08))] p-4 md:flex md:items-center md:justify-between">
+              <p className="text-sm text-amber-100">
+                {copy.readyNotice}
               </p>
               <div className="mt-3 flex flex-wrap gap-2 md:mt-0">
                 <Link
                   href={readyWorkspaceHref || "/library/my-books?mode=author"}
-                  className="inline-flex rounded-lg border border-emerald-300/40 bg-emerald-400/15 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-emerald-100"
+                  className="inline-flex rounded-lg border border-amber-300/40 bg-yellow-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-100"
                 >
-                  Open Book Workspace
+                  {commonCopy.buttons.openBookWorkspace}
                 </Link>
               </div>
             </section>
           )}
 
-          <section className="mt-6 grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Listed Books</p>
+          <section className="theme-section grid gap-4 md:grid-cols-4">
+            <div className="theme-stat-panel p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400">{copy.stats.listedBooks}</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">{stats.total}</p>
             </div>
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Active Authors</p>
+            <div className="theme-stat-panel p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400">{copy.stats.activeAuthors}</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">{stats.authors}</p>
             </div>
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Average Price</p>
+            <div className="theme-stat-panel p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400">{copy.stats.averagePrice}</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">{stats.avgPrice} USDT</p>
             </div>
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Wishlist</p>
+            <div className="theme-stat-panel p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400">{copy.stats.wishlist}</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">{stats.wishlist}</p>
             </div>
           </section>
 
-          <section className="mt-8">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-100">Featured Picks</h2>
-              <span className="text-xs uppercase tracking-wider text-slate-400">Top priced books</span>
+          <section className="theme-section">
+            <div className="theme-section-header">
+              <h2 className="theme-section-title">{copy.sections.featured}</h2>
+              <span className="text-xs uppercase tracking-wider text-slate-400">{copy.sections.featuredSub}</span>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2">
               {featuredBooks.map((book) => (
@@ -661,15 +773,16 @@ export default function LibraryPage() {
                   book={book}
                   saved={wishlistSet.has(book.persistentId)}
                   onToggleSave={() => toggleWishlist(book.persistentId)}
+                  commonCopy={commonCopy}
                 />
               ))}
             </div>
           </section>
 
-          <section className="mt-8">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-100">Trending Now</h2>
-              <span className="text-xs uppercase tracking-wider text-slate-400">Newest additions</span>
+          <section className="theme-section">
+            <div className="theme-section-header">
+              <h2 className="theme-section-title">{copy.sections.trending}</h2>
+              <span className="text-xs uppercase tracking-wider text-slate-400">{copy.sections.trendingSub}</span>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2">
               {trendingBooks.map((book) => (
@@ -678,21 +791,22 @@ export default function LibraryPage() {
                   book={book}
                   saved={wishlistSet.has(book.persistentId)}
                   onToggleSave={() => toggleWishlist(book.persistentId)}
+                  commonCopy={commonCopy}
                 />
               ))}
             </div>
           </section>
 
           {wishlistBooks.length > 0 && (
-            <section className="mt-8">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-100">My Wishlist</h2>
+            <section className="theme-section">
+              <div className="theme-section-header">
+                <h2 className="theme-section-title">{copy.sections.wishlist}</h2>
                 <button
                   type="button"
                   onClick={() => setShowWishlistOnly((prev) => !prev)}
                   className="rounded-lg border border-slate-600 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-100"
                 >
-                  {showWishlistOnly ? "Show All Books" : "Show Wishlist Only"}
+                  {showWishlistOnly ? copy.sections.showAllBooks : copy.sections.showWishlistOnly}
                 </button>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2">
@@ -702,6 +816,7 @@ export default function LibraryPage() {
                     book={book}
                     saved={wishlistSet.has(book.persistentId)}
                     onToggleSave={() => toggleWishlist(book.persistentId)}
+                    commonCopy={commonCopy}
                   />
                 ))}
               </div>
@@ -710,9 +825,9 @@ export default function LibraryPage() {
 
           <section className="mt-8 rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-100">Top Authors</h2>
+              <h2 className="text-lg font-semibold text-slate-100">{copy.sections.topAuthors}</h2>
               <span className="text-xs uppercase tracking-wider text-slate-400">
-                By listed books
+                {copy.sections.topAuthorsSub}
               </span>
             </div>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -725,17 +840,17 @@ export default function LibraryPage() {
                     {shortAddress(author.author)}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    {author.booksCount} listed books
+                    {author.booksCount} {copy.sections.listedBooksSuffix}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Avg: {formatUsdtNumber(author.avgPriceUsdt)} USDT
+                    {copy.sections.avg}: {formatUsdtNumber(author.avgPriceUsdt)} USDT
                   </p>
                   <button
                     type="button"
                     onClick={() => setSelectedAuthor(author.author)}
                     className="mt-3 rounded-lg border border-amber-400/40 bg-amber-400/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-100"
                   >
-                    Browse Author
+                    {copy.sections.browseAuthor}
                   </button>
                 </div>
               ))}
@@ -747,7 +862,7 @@ export default function LibraryPage() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search title, description, author, or book ID..."
+                placeholder={copy.filters.searchPlaceholder}
                 className="h-11 rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
               />
               <select
@@ -766,7 +881,7 @@ export default function LibraryPage() {
                 onChange={(event) => setSelectedAuthor(event.target.value)}
                 className="h-11 rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
               >
-                <option value="all">All Authors</option>
+                <option value="all">{copy.filters.allAuthors}</option>
                 {authorOptions.map((author) => (
                   <option key={author} value={author}>
                     {shortAddress(author)}
@@ -778,38 +893,38 @@ export default function LibraryPage() {
                 onChange={(event) => setPriceFilter(event.target.value as PriceFilter)}
                 className="h-11 rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
               >
-                <option value="all">All Prices</option>
-                <option value="under_10">Under 10 USDT</option>
-                <option value="10_100">10 - 100 USDT</option>
-                <option value="over_100">Above 100 USDT</option>
+                <option value="all">{copy.filters.allPrices}</option>
+                <option value="under_10">{copy.filters.under10}</option>
+                <option value="10_100">{copy.filters.between10And100}</option>
+                <option value="over_100">{copy.filters.over100}</option>
               </select>
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value as SortKey)}
                 className="h-11 rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
               >
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="price_high">Price High → Low</option>
-                <option value="price_low">Price Low → High</option>
-                <option value="title">Title A → Z</option>
+                <option value="newest">{copy.filters.newest}</option>
+                <option value="oldest">{copy.filters.oldest}</option>
+                <option value="price_high">{copy.filters.priceHigh}</option>
+                <option value="price_low">{copy.filters.priceLow}</option>
+                <option value="title">{copy.filters.title}</option>
               </select>
               <button
                 type="button"
                 onClick={() => setShowWishlistOnly((prev) => !prev)}
                 className="h-11 rounded-xl border border-slate-600 bg-slate-900/70 px-4 text-xs font-semibold uppercase tracking-wider text-slate-100 hover:bg-slate-800"
               >
-                {showWishlistOnly ? "All Books" : "Wishlist Only"}
+                {showWishlistOnly ? copy.filters.allBooks : copy.sections.showWishlistOnly}
               </button>
             </div>
             <div className="flex items-center justify-between md:hidden">
-              <div className="text-sm text-slate-200">{filteredBooks.length} books</div>
+              <div className="text-sm text-slate-200">{filteredBooks.length} {copy.filters.booksCount}</div>
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(true)}
                 className="rounded-lg border border-slate-600 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-100"
               >
-                Filters
+                {copy.filters.filters}
               </button>
             </div>
           </section>
@@ -819,21 +934,21 @@ export default function LibraryPage() {
               <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto border-l border-slate-700 bg-slate-950 p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-100">
-                    Filter Marketplace
+                    {copy.filters.filterMarketplace}
                   </h3>
                   <button
                     type="button"
                     onClick={() => setMobileFiltersOpen(false)}
                     className="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300"
                   >
-                    Close
+                    {commonCopy.buttons.close}
                   </button>
                 </div>
                 <div className="space-y-3">
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search books..."
+                    placeholder={copy.filters.searchPlaceholderMobile}
                     className="h-11 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 text-sm text-slate-100 outline-none focus:border-amber-400/50"
                   />
                   <select
@@ -852,7 +967,7 @@ export default function LibraryPage() {
                     onChange={(event) => setSelectedAuthor(event.target.value)}
                     className="h-11 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 text-sm text-slate-100"
                   >
-                    <option value="all">All Authors</option>
+                    <option value="all">{copy.filters.allAuthors}</option>
                     {authorOptions.map((author) => (
                       <option key={author} value={author}>
                         {shortAddress(author)}
@@ -864,35 +979,35 @@ export default function LibraryPage() {
                     onChange={(event) => setPriceFilter(event.target.value as PriceFilter)}
                     className="h-11 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 text-sm text-slate-100"
                   >
-                    <option value="all">All Prices</option>
-                    <option value="under_10">Under 10 USDT</option>
-                    <option value="10_100">10 - 100 USDT</option>
-                    <option value="over_100">Above 100 USDT</option>
+                    <option value="all">{copy.filters.allPrices}</option>
+                    <option value="under_10">{copy.filters.under10}</option>
+                    <option value="10_100">{copy.filters.between10And100}</option>
+                    <option value="over_100">{copy.filters.over100}</option>
                   </select>
                   <select
                     value={sortBy}
                     onChange={(event) => setSortBy(event.target.value as SortKey)}
                     className="h-11 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 text-sm text-slate-100"
                   >
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="price_high">Price High → Low</option>
-                    <option value="price_low">Price Low → High</option>
-                    <option value="title">Title A → Z</option>
+                    <option value="newest">{copy.filters.newest}</option>
+                    <option value="oldest">{copy.filters.oldest}</option>
+                    <option value="price_high">{copy.filters.priceHigh}</option>
+                    <option value="price_low">{copy.filters.priceLow}</option>
+                    <option value="title">{copy.filters.title}</option>
                   </select>
                   <button
                     type="button"
                     onClick={() => setShowWishlistOnly((prev) => !prev)}
                     className="w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-100"
                   >
-                    {showWishlistOnly ? "Show All Books" : "Wishlist Only"}
+                    {showWishlistOnly ? copy.sections.showAllBooks : copy.sections.showWishlistOnly}
                   </button>
                   <button
                     type="button"
                     onClick={() => setMobileFiltersOpen(false)}
                     className="mt-2 w-full rounded-xl border border-amber-400/40 bg-amber-400/15 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-100"
                   >
-                    Apply
+                    {commonCopy.buttons.apply}
                   </button>
                 </div>
               </div>
@@ -920,7 +1035,7 @@ export default function LibraryPage() {
             </section>
           ) : filteredBooks.length === 0 ? (
             <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/30 p-10 text-center">
-              <p className="text-sm text-slate-300">No books match your current filters.</p>
+              <p className="text-sm text-slate-300">{copy.empty}</p>
             </section>
           ) : (
             <section className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -947,6 +1062,8 @@ export default function LibraryPage() {
                       <WishlistButton
                         saved={wishlistSet.has(book.persistentId)}
                         onClick={() => toggleWishlist(book.persistentId)}
+                        saveLabel={commonCopy.buttons.save}
+                        savedLabel={commonCopy.buttons.saved}
                       />
                     </div>
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3">
@@ -975,7 +1092,7 @@ export default function LibraryPage() {
                         href={`/library/book/${book.book_id}`}
                         className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-amber-400/40 bg-amber-400/15 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-amber-100 hover:bg-amber-400/25"
                       >
-                        View Book
+                        {commonCopy.buttons.viewBook}
                       </Link>
                     ) : (
                       <button
@@ -983,7 +1100,7 @@ export default function LibraryPage() {
                         disabled
                         className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-slate-700/70 bg-slate-900/40 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500"
                       >
-                        Sync Pending
+                        {commonCopy.buttons.syncPending}
                       </button>
                     )}
                   </div>
@@ -1000,7 +1117,7 @@ export default function LibraryPage() {
                 disabled={isLoadingMore}
                 className="rounded-xl border border-slate-600 bg-slate-900/70 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:bg-slate-800 disabled:opacity-50"
               >
-                {isLoadingMore ? "Loading..." : "Load More"}
+                {isLoadingMore ? commonCopy.buttons.loading : commonCopy.buttons.loadMore}
               </button>
             </div>
           )}

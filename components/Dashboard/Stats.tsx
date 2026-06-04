@@ -84,7 +84,7 @@ export const Stats = ({
       }`,
       description: metrics[1].description,
       icon: metrics[1].icon,
-      gradient: "from-purple-400 to-pink-500",
+      gradient: "from-yellow-300 to-amber-400",
       priority: 1,
     },
     {
@@ -96,7 +96,7 @@ export const Stats = ({
         : "0/24",
       description: metrics[2].description,
       icon: metrics[2].icon,
-      gradient: "from-blue-400 to-cyan-500",
+      gradient: "from-yellow-300 to-amber-400",
       priority: 1,
     },
     {
@@ -109,7 +109,7 @@ export const Stats = ({
         : "0",
       description: metrics[3].description,
       icon: metrics[3].icon,
-      gradient: "from-green-400 to-emerald-500",
+      gradient: "from-amber-300 to-amber-400",
       priority: 1,
     },
     // RICO Stats
@@ -118,7 +118,7 @@ export const Stats = ({
       value: userData?.exists ? `${formatRICO(ricoTotal)}` : "0",
       description: metrics[4].description,
       icon: metrics[4].icon,
-      gradient: "from-cyan-400 to-sky-500",
+      gradient: "from-yellow-300 to-amber-400",
       priority: userData?.exists && parseFloat(ricoTotal) > 0 ? 1 : 2,
     },
     {
@@ -135,7 +135,7 @@ export const Stats = ({
       value: `${formatRICO(globalRicoSent)}`,
       description: metrics[6].description,
       icon: metrics[6].icon,
-      gradient: "from-violet-400 to-purple-500",
+      gradient: "from-yellow-300 to-amber-400",
       priority: 3,
       isGlobal: true,
     },
@@ -178,8 +178,8 @@ export const Stats = ({
         <h2 className="text-2xl font-bold text-slate-50">{t("title")}</h2>
         {userData?.exists &&
           (parseFloat(ricoTotal) > 0 || parseFloat(ricoPending) > 0) && (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-900/30 border border-cyan-700/50">
-              <span className="text-sm text-cyan-400">{t("ricoActive")}</span>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-900/20 border border-yellow-700/40">
+              <span className="text-sm text-yellow-400">{t("ricoActive")}</span>
             </div>
           )}
       </div>
@@ -191,7 +191,7 @@ export const Stats = ({
               relative rounded-xl p-4 hover:scale-[1.02] transition-all duration-300
               ${
                 stat.isGlobal
-                  ? "border border-violet-500/30 bg-violet-950/20"
+                  ? "border border-yellow-500/30 bg-yellow-950/10"
                   : "border border-slate-700/50 bg-slate-800/30"
               }
               hover:border-slate-600/50 hover:shadow-lg hover:shadow-slate-900/30
@@ -204,7 +204,7 @@ export const Stats = ({
           >
             {stat.isGlobal && (
               <div className="absolute -top-2 -right-2">
-                <span className="text-xs px-2 py-1 rounded-full bg-violet-900/80 text-violet-200">
+                <span className="text-xs px-2 py-1 rounded-full bg-yellow-900/30 text-yellow-100">
                   {t("global")}
                 </span>
               </div>
@@ -225,7 +225,7 @@ export const Stats = ({
                     className={`text-xs px-2 py-1 rounded-full ${
                       stat.name.includes("Pending")
                         ? "bg-orange-900/40 text-orange-300 border border-orange-700/40"
-                        : "bg-cyan-900/40 text-cyan-300 border border-cyan-700/40"
+                        : "bg-yellow-900/20 text-yellow-300 border border-yellow-700/40"
                     }`}
                   >
                     {stat.name.includes("Pending") ? t("pending") : t("farmed")}
@@ -239,16 +239,16 @@ export const Stats = ({
             <dd
               className={`
               text-xl font-bold mb-1
-              ${stat.name.includes("RICO") ? "text-cyan-300" : "text-slate-50"}
-              ${stat.isGlobal ? "text-violet-300" : ""}
+              ${stat.name.includes("RICO") ? "text-yellow-300" : "text-slate-50"}
+              ${stat.isGlobal ? "text-yellow-300" : ""}
             `}
             >
               {stat.value}
               {stat.name.includes("RICO") && !stat.name.includes("Global") && (
-                <span className="text-xs ml-1 text-cyan-400">RICO</span>
+                <span className="text-xs ml-1 text-yellow-400">RICO</span>
               )}
               {stat.name.includes("Global RICO") && (
-                <span className="text-xs ml-1 text-violet-400">RICO</span>
+                <span className="text-xs ml-1 text-yellow-400">RICO</span>
               )}
             </dd>
             <p className="text-xs text-slate-500 leading-tight">
@@ -272,7 +272,7 @@ export const Stats = ({
                   </div>
                   <div className="w-full bg-slate-700/50 rounded-full h-1.5">
                     <div
-                      className="bg-gradient-to-r from-cyan-500 to-sky-600 h-1.5 rounded-full"
+                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-1.5 rounded-full"
                       style={{
                         width: `${Math.min(
                           (parseFloat(ricoReceived) / parseFloat(ricoTotal)) *
@@ -302,7 +302,7 @@ export const Stats = ({
                   </div>
                   <div className="w-full bg-slate-700/50 rounded-full h-1.5">
                     <div
-                      className="bg-gradient-to-r from-violet-500 to-purple-600 h-1.5 rounded-full"
+                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-1.5 rounded-full"
                       style={{
                         width: `${Math.min(
                           (parseFloat(globalRicoSent) /

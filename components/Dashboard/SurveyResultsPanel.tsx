@@ -154,7 +154,7 @@ export const SurveyResultsPanel = ({
         </div>
         <div className="relative h-3 rounded-full bg-slate-800 overflow-hidden">
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-emerald-300"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-300 to-amber-300"
             style={{ width: `${yesPct}%` }}
           />
           <div
@@ -163,14 +163,14 @@ export const SurveyResultsPanel = ({
           />
         </div>
         <div className="grid gap-3 md:grid-cols-3 mt-5">
-          <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-200/80">
+          <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-200/80">
               {t("chart.yes")}
             </p>
-            <p className="text-lg font-semibold text-emerald-100">
+            <p className="text-lg font-semibold text-amber-100">
               {yesDisplay} RICO
             </p>
-            <p className="text-xs text-emerald-200/70 mt-1">
+            <p className="text-xs text-amber-200/70 mt-1">
               {yesPct.toFixed(1)}%
             </p>
           </div>

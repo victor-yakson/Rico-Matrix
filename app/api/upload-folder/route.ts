@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { unpinFromIPFS, uploadBookFolder } from "@/lib/pinata";
 import { generateFingerprint } from "@/lib/fingerprint";
 import { createUploadedBook, findBookByFingerprint } from "@/lib/supabase";
+import { getReaderLibraryAccess } from "@/lib/matrixAccess";
+import { MIN_LIBRARY_PUBLISH_CHAPTER } from "@/lib/libraryEligibility";
 
 export const runtime = "nodejs";
 // This ensures Next.js doesn't try to parse the body automatically if it's too large
@@ -66,6 +68,18 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Invalid wallet address." },
         { status: 400 },
+      );
+    }
+
+    const access = await getReaderLibraryAccess(
+      authorWalletRaw.trim() as `0x${string}`
+    );
+    if (!access.canPublish) {
+      return NextResponse.json(
+        {
+          error: `You must unlock at least Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} before publishing a book.`,
+        },
+        { status: 403 }
       );
     }
 

@@ -63,7 +63,7 @@ const ProfileInfo = ({
         <h3 className="text-xl font-bold text-slate-50">{t('title')}</h3>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${
           userData?.exists 
-            ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700/40' 
+            ? 'bg-yellow-900/20 text-amber-300 border border-yellow-700/35' 
             : 'bg-slate-800/60 text-slate-400 border border-slate-700/40'
         }`}>
           {userData?.exists ? t('status.active') : t('status.inactive')}
@@ -105,15 +105,15 @@ const ProfileInfo = ({
 
           {/* Partners Count */}
           <div className="mb-6">
-            <div className="rounded-xl bg-gradient-to-r from-purple-900/30 to-slate-900/50 p-4 border border-purple-500/30">
+            <div className="rounded-xl bg-gradient-to-r from-yellow-900/20 to-slate-900/50 p-4 border border-yellow-500/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-300 mb-1">{t('partners.title')}</p>
+                  <p className="text-sm text-yellow-300 mb-1">{t('partners.title')}</p>
                   <p className="text-2xl font-bold text-slate-50">
                     {userData.partnersCount || 0}
                   </p>
                 </div>
-                <div className="text-3xl text-purple-400/50">👥</div>
+                <div className="text-3xl text-yellow-400/50">👥</div>
               </div>
               <p className="text-xs text-slate-500 mt-2">
                 {t('partners.description')}
@@ -124,15 +124,15 @@ const ProfileInfo = ({
           {/* RICO Farming Section - Only show if user has RICO data */}
           {hasRICOData && (
             <div className="mb-6">
-              <div className="rounded-xl bg-gradient-to-r from-cyan-900/30 to-slate-900/50 p-4 border border-cyan-500/30 mb-4">
+              <div className="rounded-xl bg-gradient-to-r from-yellow-900/20 to-slate-900/50 p-4 border border-yellow-500/30 mb-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-cyan-400 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-yellow-400 flex items-center gap-2">
                     <span className="text-lg">🪙</span> {t('rico.title')}
                   </h4>
                   <div className="flex flex-wrap items-center gap-2">
                     <a
                       href="/rico"
-                      className="text-xs text-cyan-200 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-700/30 border border-cyan-600/50 hover:bg-cyan-600/40 transition-all"
+                      className="text-xs text-yellow-100 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-700/20 border border-yellow-600/40 hover:bg-yellow-600/20 transition-all"
                     >
                       <span>{tDashboard("ricoFarmingSection.viewRico")}</span>
                       <span>→</span>
@@ -142,7 +142,7 @@ const ProfileInfo = ({
                         href={`https://bscscan.com/token/${rewardTokenAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-900/30 border border-cyan-700/50 hover:bg-cyan-800/40 transition-all"
+                        className="text-xs text-yellow-400 hover:text-yellow-300 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-900/20 border border-yellow-700/40 hover:bg-yellow-800/20 transition-all"
                       >
                         <span>{tDashboard("ricoFarmingSection.viewToken")}</span>
                         <span>↗</span>
@@ -155,12 +155,12 @@ const ProfileInfo = ({
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-400">{t('rico.stats.totalEarned')}</span>
-                    <span className="text-lg font-bold text-cyan-300">{formatRICO(ricoTotal)} RICO</span>
+                    <span className="text-lg font-bold text-yellow-300">{formatRICO(ricoTotal)} RICO</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-400">{t('rico.stats.received')}</span>
-                    <span className="text-lg font-bold text-emerald-300">{formatRICO(ricoReceived)} RICO</span>
+                    <span className="text-lg font-bold text-amber-300">{formatRICO(ricoReceived)} RICO</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -177,7 +177,7 @@ const ProfileInfo = ({
                   </div>
                   <div className="w-full bg-slate-800 rounded-full h-2">
                     <div 
-                      className="bg-gradient-to-r from-cyan-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${ricoDistributionPercentage}%` }}
                     />
                   </div>
@@ -208,12 +208,12 @@ const ProfileInfo = ({
 
           {/* Royalty Section */}
           <div className="mb-6">
-            <div className="rounded-xl bg-gradient-to-r from-emerald-900/30 to-slate-900/50 p-4 border border-emerald-500/30">
+            <div className="rounded-xl bg-gradient-to-r from-yellow-900/20 to-slate-900/50 p-4 border border-yellow-400/35">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-yellow-300 flex items-center gap-2">
                   <span className="text-lg">👑</span> {t('royalty.title')}
                 </h4>
-                <span className="text-xs px-2 py-1 rounded-full bg-emerald-900/40 text-emerald-300">
+                <span className="text-xs px-2 py-1 rounded-full bg-yellow-900/20 text-amber-300">
                   {userData.royaltyPercent || 0}%
                 </span>
               </div>
@@ -221,7 +221,7 @@ const ProfileInfo = ({
               <div className="space-y-2 mb-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-400">{t('royalty.available')}</span>
-                  <span className="text-lg font-bold text-emerald-300">
+                  <span className="text-lg font-bold text-amber-300">
                     ${formatCurrency(userData.royaltyAvailable || 0)}
                   </span>
                 </div>
@@ -250,7 +250,7 @@ const ProfileInfo = ({
             </div>
             <div className="rounded-xl bg-slate-900/50 p-3 border border-slate-700/40">
               <p className="text-xs text-slate-400 mb-1">{t('tracks.track2')}</p>
-              <p className="text-lg font-bold text-blue-300">
+              <p className="text-lg font-bold text-yellow-300">
                 {userData.track2Unlocked || 0}/12
               </p>
             </div>
@@ -273,7 +273,7 @@ const ProfileInfo = ({
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-400">{t('earnings.track2')}</span>
-                <span className="text-lg font-bold text-blue-300">
+                <span className="text-lg font-bold text-yellow-300">
                   ${formatCurrency(userData.track2TotalEarned || 0)}
                 </span>
               </div>

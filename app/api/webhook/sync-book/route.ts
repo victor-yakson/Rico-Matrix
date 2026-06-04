@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { generateFingerprint } from "@/lib/fingerprint";
 import { upsertBook } from "@/lib/supabase";
 import { getListBookArgsFromTx } from "@/lib/contract";
+import { getReaderLibraryAccess } from "@/lib/matrixAccess";
+import { MIN_LIBRARY_PUBLISH_CHAPTER } from "@/lib/libraryEligibility";
 
 export const runtime = "nodejs";
 
@@ -90,6 +92,16 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Invalid BookListed payload." },
         { status: 400 }
+      );
+    }
+
+    const access = await getReaderLibraryAccess(authorAddress as `0x${string}`);
+    if (!access.canPublish) {
+      return NextResponse.json(
+        {
+          error: `Author must unlock at least Chapter ${MIN_LIBRARY_PUBLISH_CHAPTER} before publishing a book.`,
+        },
+        { status: 403 }
       );
     }
 

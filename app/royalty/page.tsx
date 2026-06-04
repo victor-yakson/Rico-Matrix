@@ -10,16 +10,16 @@ export default function RoyaltyPage() {
   return (
     <>
       <Header />
-      <div className="min-h-[calc(100vh-4rem)]">
-        <div className="container mx-auto px-4 py-8 md:py-10">
-          <div className="text-center mb-10 md:mb-12">
-            <p className="text-xs uppercase tracking-[0.25em] text-yellow-300/80 mb-3">
+      <div className="theme-shell theme-page-shell">
+        <div className="theme-container px-4">
+          <div className="mx-auto mb-10 max-w-4xl text-center md:mb-12">
+            <p className="theme-kicker justify-center mb-3">
               {t("dashboard.label")}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-3">
+            <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {t("dashboard.title")}
             </h1>
-            <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+            <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
               {t("dashboard.description")}
             </p>
           </div>

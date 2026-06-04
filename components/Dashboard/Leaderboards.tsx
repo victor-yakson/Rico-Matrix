@@ -137,7 +137,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                       key={index}
                       className={`flex items-center justify-between p-3 rounded-lg transition-all ${
                         isCurrentUser
-                          ? "bg-gradient-to-r from-cyan-900/40 to-slate-900/60 border border-cyan-500/30"
+                          ? "bg-gradient-to-r from-yellow-900/20 to-slate-900/60 border border-yellow-500/30"
                           : "bg-slate-900/60"
                       }`}
                     >
@@ -161,7 +161,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                             {formatAddress(leaderAddress)}
                           </p>
                           {isCurrentUser && (
-                            <span className="text-xs text-cyan-400 font-semibold">
+                            <span className="text-xs text-yellow-400 font-semibold">
                               {t("topEarners.yourBadge")}
                             </span>
                           )}
@@ -211,8 +211,8 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
         </div>
 
         {/* Top Referrers Leaderboard */}
-        <div className="rounded-2xl border border-purple-500/40 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
-          <h3 className="text-xl font-bold text-purple-300 mb-4 flex items-center gap-2">
+        <div className="rounded-2xl border border-yellow-500/30 bg-gradient-to-br from-slate-950 to-slate-900/90 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+          <h3 className="text-xl font-bold text-yellow-300 mb-4 flex items-center gap-2">
             <span className="text-2xl">👥</span> {t("topReferrers.title")}
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
@@ -235,7 +235,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                       key={index}
                       className={`flex items-center justify-between p-3 rounded-lg transition-all ${
                         isCurrentUser
-                          ? "bg-gradient-to-r from-cyan-900/40 to-slate-900/60 border border-cyan-500/30"
+                          ? "bg-gradient-to-r from-yellow-900/20 to-slate-900/60 border border-yellow-500/30"
                           : "bg-slate-900/60"
                       }`}
                     >
@@ -244,11 +244,11 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
                         ${
                           index === 0
-                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                            ? "bg-yellow-500/12 text-yellow-300 border border-yellow-500/30"
                             : index === 1
                             ? "bg-slate-600/20 text-slate-300 border border-slate-600/30"
                             : index === 2
-                            ? "bg-purple-700/20 text-purple-300 border border-purple-700/30"
+                            ? "bg-yellow-700/20 text-yellow-300 border border-yellow-700/30"
                             : "bg-slate-800/20 text-slate-400 border border-slate-700/30"
                         }`}
                         >
@@ -259,19 +259,19 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
                             {formatAddress(referrerAddress)}
                           </p>
                           {isCurrentUser && (
-                            <span className="text-xs text-cyan-400 font-semibold">
+                            <span className="text-xs text-yellow-400 font-semibold">
                               {t("topReferrers.yourBadge")}
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-purple-300">
+                        <p className="text-lg font-bold text-yellow-300">
                           {parseInt(partnerCount.toString()).toLocaleString()}{" "}
                           {t("topReferrers.partners")}
                         </p>
                         {index === 0 && hasTopReferrers && (
-                          <p className="text-xs text-purple-500/70 mt-1">
+                          <p className="text-xs text-yellow-500/70 mt-1">
                             {t("topReferrers.topReferrerBadge")}
                           </p>
                         )}
@@ -297,7 +297,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
             <div className="mt-4 pt-4 border-t border-slate-800/50">
               <div className="flex justify-between text-sm text-slate-500">
                 <span>{t("topReferrers.total")}</span>
-                <span className="text-purple-300 font-semibold">
+                <span className="text-yellow-300 font-semibold">
                   {parseInt(totalTop10Referrals.toString()).toLocaleString()}
                 </span>
               </div>
@@ -322,7 +322,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
             <span>{t("legend.thirdPlace")}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-cyan-500/20 border border-cyan-500/30"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/30"></div>
             <span>{t("legend.yourPosition")}</span>
           </div>
         </div>

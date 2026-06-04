@@ -24,9 +24,8 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
 
   // Determine if panel should be shown
   const shouldShow = useMemo(() => {
-    if (!userData?.migrationData) return false;
-    
-    const status = userData.migrationData.status;
+    const status =
+      userData?.migrationStatus?.status ?? userData?.migrationData?.status ?? 0;
     // Show panel only if user exists in V1 (status 1) and hasn't migrated
     return status === 1;
   }, [userData]);
@@ -119,7 +118,7 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
             {parseFloat(legacyClaimable) > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-white/60">{t("legacyRoyalty")}</span>
-                <span className="text-sm font-medium text-green-400">
+                <span className="text-sm font-medium text-amber-300">
                   {parseFloat(legacyClaimable).toFixed(2)} USDT
                 </span>
               </div>
@@ -129,7 +128,7 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
             {parseFloat(v2Claimable) > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-white/60">{t("v2Royalty")}</span>
-                <span className="text-sm font-medium text-blue-400">
+                <span className="text-sm font-medium text-yellow-300">
                   {parseFloat(v2Claimable).toFixed(2)} USDT
                 </span>
               </div>
@@ -166,7 +165,7 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
 
           {/* Success Feedback */}
           {done && (
-            <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+            <div className="mt-4 rounded-xl border border-yellow-400/35 bg-yellow-500/10 px-3 py-2 text-sm text-amber-200">
               {t("status.success")}
             </div>
           )}

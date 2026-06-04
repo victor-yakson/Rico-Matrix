@@ -44,7 +44,7 @@ export const ReferralSection = () => {
   const isActive = Boolean(address);
 
   return (
-    <div className="rounded-2xl border border-purple-400/40 bg-slate-950/80 p-6 shadow-[0_0_26px_rgba(88,28,135,0.6)] backdrop-blur-sm">
+    <div className="theme-panel p-6">
       <h2 className="text-2xl font-bold text-slate-50 mb-4">
         {t('title')}
       </h2>
@@ -57,7 +57,7 @@ export const ReferralSection = () => {
         <ul className="space-y-2 text-sm text-slate-300">
           {t.raw('benefits.items').map((item: string, index: number) => (
             <li key={index} className="flex items-center">
-              <span className="mr-2 text-emerald-400">✓</span>
+              <span className="mr-2 text-yellow-300">✓</span>
               {item}
             </li>
           ))}
@@ -86,7 +86,7 @@ export const ReferralSection = () => {
           </button>
         </div>
         {copied && (
-          <p className="mt-1 text-xs text-emerald-300">
+          <p className="mt-1 text-xs text-amber-300">
             {t('link.copiedMessage')}
           </p>
         )}
@@ -103,7 +103,7 @@ export const ReferralSection = () => {
             disabled={!isActive}
             className={`flex-1 flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
               isActive
-                ? 'bg-gradient-to-r from-sky-500 via-sky-400 to-sky-500 text-white shadow-[0_0_16px_rgba(56,189,248,0.7)] hover:brightness-110 active:scale-[0.97]'
+                ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 text-black shadow-[0_0_16px_rgba(250,204,21,0.45)] hover:brightness-110 active:scale-[0.97]'
                 : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
             }`}
           >
@@ -115,7 +115,7 @@ export const ReferralSection = () => {
             disabled={!isActive}
             className={`flex-1 flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
               isActive
-                ? 'bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500 text-white shadow-[0_0_16px_rgba(59,130,246,0.6)] hover:brightness-110 active:scale-[0.97]'
+                ? 'bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 text-black shadow-[0_0_16px_rgba(250,204,21,0.35)] hover:brightness-110 active:scale-[0.97]'
                 : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
             }`}
           >
@@ -139,8 +139,8 @@ export const ReferralSection = () => {
               {t('stats.directLabel')}
             </div>
           </div>
-          <div className="rounded-2xl border border-purple-400/60 bg-slate-950/80 p-3 shadow-[0_0_18px_rgba(192,132,252,0.4)]">
-            <div className="text-lg font-bold text-purple-300">
+          <div className="rounded-2xl border border-yellow-400/60 bg-slate-950/80 p-3 shadow-[0_0_18px_rgba(250,204,21,0.25)]">
+            <div className="text-lg font-bold text-yellow-300">
               {t('stats.unilevelValue')}
             </div>
             <div className="mt-1 text-xs text-slate-400">
