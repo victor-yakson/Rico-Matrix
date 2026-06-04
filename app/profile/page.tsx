@@ -72,7 +72,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Left Column - Profile Info & Referral */}
             <div className="space-y-6 lg:col-span-1">
-              {/* Expect these components to be themed as well; container them in dark cards if needed */}
+              {/* Expect these components to be themed as well; container them in dark cards if needed ..*/}
               <div className="theme-panel-soft p-5">
                 <ProfileInfo userData={userData} />
               </div>
