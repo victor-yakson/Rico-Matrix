@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Web3Provider } from "../providers/Web3Provider";
 import { PageTransition } from "@/components/Layout/PageTransition";
-import SiteFooter from "@/components/Layout/SiteFooter";
 import { Toaster } from "sonner";
 import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
