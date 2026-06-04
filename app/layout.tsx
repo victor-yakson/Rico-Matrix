@@ -41,7 +41,6 @@ export default async function RootLayout({
               <VisitTracker />
               <WalletCookieSync />
               <PageTransition>{children}</PageTransition>
-              {/* <SiteFooter /> */}
             </Web3Provider>
           </NextIntlClientProvider>
         </body>
