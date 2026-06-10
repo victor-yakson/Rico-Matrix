@@ -6,6 +6,9 @@ export const TOKEN_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
 export const SURVEY_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS as `0x${string}`;
+export const VOTING_CONTRACT_ADDRESS =
+  (process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS as `0x${string}`) ||
+  "0x8C95Fc4b17902233fd40199525491Df87324F30e";
 export const RICO_STAKING_CONTRACT_ADDRESS =
   (process.env.NEXT_PUBLIC_RICO_STAKING_CONTRACT_ADDRESS as `0x${string}`) ||
   "0xE90b351a72AB1A535d763a98C9e6e260f8098042";
@@ -2136,6 +2139,231 @@ export const SURVEY_ABI = [
       { internalType: "bool", name: "didPass", type: "bool" },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
+export const VOTING_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "_usdtToken", type: "address" },
+      { internalType: "address", name: "_ricoToken", type: "address" },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  { inputs: [], name: "InvalidVoteAmount", type: "error" },
+  {
+    inputs: [{ internalType: "address", name: "owner", type: "address" }],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  { inputs: [], name: "ReentrancyGuardReentrantCall", type: "error" },
+  {
+    inputs: [{ internalType: "address", name: "token", type: "address" }],
+    name: "SafeERC20FailedOperation",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "voter",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "voteCount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "usdtPaid",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "ricoReceived",
+        type: "uint256",
+      },
+    ],
+    name: "VoteDelegated",
+    type: "event",
+  },
+  {
+    inputs: [{ internalType: "address", name: "_user", type: "address" }],
+    name: "getDashboardData",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "totalVotesCast",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalUsdtCollected",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalRicoDistributed",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct RicoQuantimaVoting.GlobalStats",
+        name: "global",
+        type: "tuple",
+      },
+      {
+        components: [
+          { internalType: "uint256", name: "votesCast", type: "uint256" },
+          { internalType: "uint256", name: "usdtSpent", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "ricoReceived",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct RicoQuantimaVoting.UserStats",
+        name: "user",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ricoPerVote",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ricoToken",
+    outputs: [
+      {
+        internalType: "contract IERC20Metadata",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalRicoDistributed",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalUsdtCollected",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalVotesCast",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "usdtPerVote",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "usdtToken",
+    outputs: [
+      {
+        internalType: "contract IERC20Metadata",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "userStats",
+    outputs: [
+      { internalType: "uint256", name: "votesCast", type: "uint256" },
+      { internalType: "uint256", name: "usdtSpent", type: "uint256" },
+      { internalType: "uint256", name: "ricoReceived", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_voteCount", type: "uint256" }],
+    name: "vote",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "_token", type: "address" },
+      { internalType: "uint256", name: "_amount", type: "uint256" },
+    ],
+    name: "withdrawAssets",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
 ] as const;

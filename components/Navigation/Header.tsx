@@ -32,16 +32,22 @@ export const Header = () => {
       icon: "▤",
     },
     {
-      name: t("navigation.authors"),
-      href: "/library",
-      current: pathname?.startsWith("/library"),
-      icon: "◫",
-    },
-    {
       name: t("navigation.rico"),
       href: "/rico",
       current: pathname === "/rico",
       icon: "◎",
+    },
+    {
+      name: t("navigation.voting"),
+      href: "/voting",
+      current: pathname === "/voting",
+      icon: "◍",
+    },
+    {
+      name: t("navigation.authors"),
+      href: "/library",
+      current: pathname?.startsWith("/library"),
+      icon: "◫",
     },
     {
       name: t("navigation.skills"),

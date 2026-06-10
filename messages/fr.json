@@ -3,7 +3,11 @@
     "heroTyping": {
       "prefix": "Apprenez, publiez, gagnez et stakez avec",
       "suffix": "au sein d’un écosystème Web3 premium unique",
-      "words": ["IA", "Marketing", "Publication"]
+      "words": [
+        "IA",
+        "Marketing",
+        "Publication"
+      ]
     },
     "title": "Apprenez, publiez, gagnez et stakez dans un seul écosystème éducatif Web3",
     "subtitle": "Rico Matrix combine la propriété de chapitres, la formation en IA et en marketing, l’édition dans une bibliothèque, les royalties communautaires, les airdrops et le staking sur la BNB Smart Chain.",
@@ -502,7 +506,8 @@
       "profile": "Profil",
       "documentation": "Docs",
       "matrix": "Matrix",
-      "whitepaper": "Whitepaper"
+      "whitepaper": "Whitepaper",
+      "voting": "Vote"
     },
     "socials": {
       "followUs": "Suivez-nous",
@@ -1019,7 +1024,6 @@
         "telegram": "Rejoignez notre Telegram pour les mises à jour",
         "featureCarousel": {
           "kicker": "Aperçu Produit",
-          "cta": "Rejoignez notre Telegram pour les mises à jour",
           "learnMore": "En savoir plus",
           "items": [
             {
@@ -1092,6 +1096,11 @@
           "title": "Voir Matrix",
           "description": "Ouvrez l espace matrix complet et consultez toutes les positions par chapitre.",
           "button": "Ouvrir Matrix"
+        },
+        "votePortal": {
+          "title": "Portail de vote",
+          "description": "Soutenez le déploiement de Quantima, votez en direct et suivez les RICO débloqués à chaque soumission.",
+          "button": "Ouvrir le vote"
         }
       },
       "globalSummary": {
@@ -1120,6 +1129,13 @@
         "description": "Passez au chapitre suivant pour continuer a gagner avec vos positions matrix.",
         "action": "Mettre a niveau maintenant",
         "item": "{track} Chapitre {chapter} bloque"
+      },
+      "votingCallout": {
+        "kicker": "Le vote de gouvernance est en direct",
+        "title": "Votez pour le lancement de Quantima et empilez 70 RICO par vote.",
+        "description": "Les membres Rico Matrix inscrits peuvent ouvrir le modal de vote ici même ou passer au portail complet pour voir les totaux, les incitations et les jalons de lancement.",
+        "openModal": "Ouvrir le modal de vote",
+        "openPage": "Ouvrir la page de vote"
       }
     }
   },
@@ -2387,5 +2403,174 @@
     },
     "open": "Ouvrir",
     "current": "Page actuelle"
+  },
+  "VotingPage": {
+    "page": {
+      "kicker": "Vote de gouvernance",
+      "title": "Déposez vos votes. Empilez vos RICO. Poussez Quantima vers son lancement.",
+      "description": "Votez depuis le contrat en direct, financez le déploiement et accumulez votre allocation RICO."
+    },
+    "modal": {
+      "kicker": "Alerte gouvernance",
+      "title": "Le vote Rico Quantima est en direct",
+      "close": "Fermer",
+      "description": "Le vote communautaire est en direct. Soutenez le déploiement, débloquez des récompenses RICO, puis ouvrez le portail complet quand vous êtes prêt.",
+      "incentiveKicker": "Boucle d’incitation des votants",
+      "votePriceLabel": "1 Vote",
+      "votePriceValue": "2 $ USDT",
+      "voteRewardLabel": "Récompense par vote",
+      "voteRewardValue": "70 RICO",
+      "timelineKicker": "Calendrier de lancement",
+      "ctaKicker": "Étape suivante",
+      "ctaTitle": "Ouvrir le portail complet de vote",
+      "ctaDescription": "Ouvrez la page de vote pour choisir votre volume, approuver les USDT et soumettre votre vote.",
+      "openVotingPage": "Ouvrir la page de vote",
+      "dismiss": "Plus tard",
+      "milestones": [
+        {
+          "date": "20 juin 2026",
+          "title": "Début des tests alpha exclusifs en direct"
+        },
+        {
+          "date": "30 juin 2026",
+          "title": "Lancement public mondial du mainnet"
+        }
+      ],
+      "highlights": [
+        "Les résultats quotidiens pilotés par les mathématiques se débloquent lorsque la dynamique de gouvernance est prouvée.",
+        "Dix leaders élite de la communauté seront sélectionnés pour un accès API restreint avant le lancement public.",
+        "Il n’y a aucune limite de vote, les membres peuvent donc accumuler leur allocation avant la fenêtre de listing sur exchange."
+      ]
+    },
+    "hero": {
+      "kicker": "Portail de gouvernance",
+      "title": "La révolution Quantima a besoin de votre puissance",
+      "description": "Le moteur Quantima approche. Ce portail est l’endroit où la communauté montre sa puissance.",
+      "ceoMessage": "Message du CEO"
+    },
+    "launchMilestones": [
+      {
+        "date": "20 juin 2026",
+        "title": "Début des tests alpha exclusifs en direct"
+      },
+      {
+        "date": "30 juin 2026",
+        "title": "Lancement public mondial du mainnet"
+      }
+    ],
+    "announcementBullets": [
+      "Le Rico Quantima Advanced AI Quant Trading Engine est achevé à 85 % et approche rapidement de son déploiement.",
+      "Des résultats quotidiens d’exécution de trades, pilotés par les mathématiques, seront partagés directement depuis le moteur dès que la communauté débloquera le jalon de gouvernance.",
+      "Dix leaders élite de la communauté seront sélectionnés pour se brancher aux lignes API restreintes et trader en direct avant le lancement public officiel."
+    ],
+    "countdown": {
+      "alphaKicker": "Compte à rebours avant l’alpha",
+      "alphaTitle": "Les tests alpha exclusifs en direct commencent bientôt",
+      "alphaDate": "L’alpha commence le 20 juin 2026",
+      "mainnetKicker": "Compte à rebours avant le mainnet",
+      "mainnetTitle": "Le lancement public mondial du mainnet approche",
+      "mainnetDate": "Le mainnet sera lancé le 30 juin 2026",
+      "liveKicker": "Statut du lancement",
+      "liveTitle": "La fenêtre de lancement du mainnet Quantima est ouverte",
+      "liveDate": "La date du 30 juin 2026 est arrivée.",
+      "days": "Jours",
+      "hours": "Heures",
+      "minutes": "Minutes",
+      "liveBadge": "Lancement",
+      "liveNow": "En direct",
+      "seconds": "Secondes"
+    },
+    "incentive": {
+      "kicker": "Boucle d’incitation des votants",
+      "title": "Un slider. Un wallet. Un vote en direct.",
+      "badge": "Voter"
+    },
+    "stats": {
+      "perVoteCost": "Coût par vote",
+      "perVoteCostNote": "",
+      "ricoPerVote": "RICO par vote",
+      "ricoPerVoteNote": "",
+      "globalVotes": "Votes globaux",
+      "usdtRaised": "USDT collectés",
+      "ricoDistributed": "RICO distribués"
+    },
+    "setup": {
+      "kicker": "Configuration du vote",
+      "title": "Choisissez la taille de votre vote",
+      "description": "1 vote coûte {usdt} USDT et débloque {rico} RICO.",
+      "walletStatus": "Statut du wallet",
+      "walletDisconnected": "Wallet non connecté",
+      "voteCount": "Nombre de votes",
+      "projectedRico": "RICO projetés",
+      "quickSlider": "Slider rapide",
+      "customCount": "Personnalisé : {count}",
+      "sliderCount": "{count} votes",
+      "sliderAria": "Slider du nombre de votes",
+      "totalCost": "Coût total",
+      "yourUsdt": "Vos USDT",
+      "allowance": "Allowance",
+      "yourRicoWallet": "Votre wallet RICO",
+      "projectedUsdt": "USDT projetés"
+    },
+    "status": {
+      "connectWallet": "Connectez votre wallet pour débloquer les contrôles de gouvernance.",
+      "registeredOnly": "Vous pouvez prévisualiser le portail de vote, mais le vote depuis le tableau de bord est réservé aux membres Rico Matrix inscrits.",
+      "needUsdt": "Vous avez besoin de plus d’USDT dans ce wallet pour voter avec ce volume.",
+      "needApproval": "Approuvez les USDT une fois, puis revenez immédiatement voter depuis le même bouton principal.",
+      "ready": "Vous êtes prêt. Confirmez la transaction dans votre wallet et votre allocation RICO sera mise à jour après confirmation.",
+      "approvalReminderTitle": "Approbation USDT requise :",
+      "approvalReminderBody": "votre wallet doit approuver les USDT avant que le contrat de vote puisse les dépenser pour les votes."
+    },
+    "actions": {
+      "connectWallet": "Connecter le wallet pour voter",
+      "registerRequired": "Inscrivez-vous sur Rico Matrix pour débloquer le vote",
+      "approving": "Approbation des USDT...",
+      "casting": "Vote en cours...",
+      "approveAmount": "Approuver {amount} USDT",
+      "castVotes": "Lancer {count} votes",
+      "joinTelegram": "Rejoindre le canal Telegram"
+    },
+    "snapshot": {
+      "kicker": "Votre aperçu du portail",
+      "votesCast": "Votes déposés",
+      "usdtSpent": "USDT dépensés",
+      "ricoReceived": "RICO reçus"
+    },
+    "details": {
+      "kicker": "Détails du portail",
+      "contract": "Contrat",
+      "owner": "Propriétaire",
+      "usdtToken": "Token USDT",
+      "ricoToken": "Token RICO"
+    },
+    "toasts": {
+      "voteSuccessTitle": "Vote envoyé",
+      "voteSuccessDescription": "Votre wallet a déposé {count} votes et débloqué {reward} RICO.",
+      "invalidCount": "Entrez un nombre de votes valide.",
+      "insufficientUsdt": "Solde USDT insuffisant pour ce volume de vote.",
+      "approvalSuccessTitle": "USDT approuvés",
+      "approvalSuccessDescription": "Approbation confirmée. Vous pouvez maintenant voter.",
+      "voteFailedTitle": "Échec du vote",
+      "voteFailedFallback": "La requête de vote a échoué. Vérifiez votre wallet puis réessayez.",
+      "connectWallet": "Connectez votre wallet pour voter.",
+      "registerRequired": "Inscrivez-vous sur Rico Matrix pour débloquer le vote."
+    },
+    "flow": {
+      "step1Label": "Étape 1",
+      "step1Title": "Approuver la dépense USDT",
+      "step1Description": "Approuvez les USDT une fois pour que le contrat puisse utiliser votre volume de vote.",
+      "step2Label": "Étape 2",
+      "step2Title": "Voter et recevoir des RICO",
+      "step2Description": "Après approbation, lancez vos votes et débloquez immédiatement les RICO.",
+      "currentStepLabel": "Action en cours",
+      "currentStepApprove": "Approuver les USDT pour débloquer le vote",
+      "currentStepApproveDescription": "",
+      "currentStepVote": "Lancer vos votes en direct",
+      "currentStepVoteDescription": "",
+      "summaryKicker": "Résumé du vote en direct",
+      "summaryVotes": "Votes sélectionnés",
+      "summaryUsdt": "USDT requis",
+      "summaryRico": "RICO débloqués"
+    }
   }
 }

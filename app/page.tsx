@@ -18,6 +18,7 @@ import { Stats } from "../components/Dashboard/Stats";
 import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
+import { VotingModal } from "@/components/Voting/VotingModal";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
@@ -52,8 +53,6 @@ export default function Dashboard() {
     refetchGlobalRicoFarming,
     migrationAndRoyaltyUI,
   } = useQuantuMatrix();
-
-  console.log("user data", userData);
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
     null,
   );
@@ -62,6 +61,8 @@ export default function Dashboard() {
     Array<{ track: "X3" | "X6"; chapter: number }>
   >([]);
   const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
+  const [isVotingModalOpen, setIsVotingModalOpen] = useState(false);
+  const [hasPromptedVoting, setHasPromptedVoting] = useState(false);
   const searchParams = useSearchParams();
   const urlReferral = searchParams.get("ref");
 
@@ -71,25 +72,29 @@ export default function Dashboard() {
         icon: "📈",
         title: t("header.featureCarousel.items.0.title"),
         status: t("header.featureCarousel.items.0.status"),
-        description: t("header.featureCarousel.items.0.description"),
+        tone:
+          "border-yellow-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(250,204,21,0.22),rgba(250,204,21,0.08))] text-yellow-100 shadow-[0_0_24px_rgba(234,179,8,0.16)]",
       },
       {
         icon: "⚙️",
         title: t("header.featureCarousel.items.1.title"),
         status: t("header.featureCarousel.items.1.status"),
-        description: t("header.featureCarousel.items.1.description"),
+        tone:
+          "border-cyan-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(34,211,238,0.2),rgba(34,211,238,0.06))] text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.14)]",
       },
       {
         icon: "🧠",
         title: t("header.featureCarousel.items.2.title"),
         status: t("header.featureCarousel.items.2.status"),
-        description: t("header.featureCarousel.items.2.description"),
+        tone:
+          "border-amber-300/20 bg-[radial-gradient(circle_at_30%_30%,rgba(251,191,36,0.22),rgba(251,191,36,0.07))] text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.14)]",
       },
       {
         icon: "⚡",
         title: t("header.featureCarousel.items.3.title"),
         status: t("header.featureCarousel.items.3.status"),
-        description: t("header.featureCarousel.items.3.description"),
+        tone:
+          "border-sky-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.2),rgba(56,189,248,0.06))] text-sky-100 shadow-[0_0_24px_rgba(56,189,248,0.14)]",
       },
     ],
     [t],
@@ -274,6 +279,17 @@ export default function Dashboard() {
     return () => window.clearInterval(intervalId);
   }, [dashboardState, upcomingFeatures.length]);
 
+  useEffect(() => {
+    if (
+      dashboardState === "dashboard" &&
+      userData?.exists &&
+      !hasPromptedVoting
+    ) {
+      setIsVotingModalOpen(true);
+      setHasPromptedVoting(true);
+    }
+  }, [dashboardState, hasPromptedVoting, userData?.exists]);
+
   // Show landing page if not connected
   if (!isConnected) {
     return <RicoMatrixLandingPage />;
@@ -368,33 +384,36 @@ export default function Dashboard() {
                       </p>
                       <div
                         key={featureCarouselIndex}
-                        className="dashboard-feature-carousel min-h-[128px] sm:min-h-[104px]"
+                        className="dashboard-feature-carousel min-h-[116px] sm:min-h-[92px]"
                       >
-                        <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-yellow-200/90">
-                          <span className="text-sm" aria-hidden="true">
-                            {upcomingFeatures[featureCarouselIndex]?.icon}
-                          </span>
+                        <div className="inline-flex rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-yellow-200/90">
                           <span>
                             {upcomingFeatures[featureCarouselIndex]?.status}
                           </span>
                         </div>
-                        <h2 className="mt-3 text-xl font-semibold text-slate-50 sm:text-2xl">
-                          {upcomingFeatures[featureCarouselIndex]?.title}
-                        </h2>
-                        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                          {upcomingFeatures[featureCarouselIndex]?.description}
-                        </p>
+                        <div className="mt-3 flex items-center justify-center gap-3 sm:justify-start">
+                          <div
+                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl ${upcomingFeatures[featureCarouselIndex]?.tone}`}
+                          >
+                            <span aria-hidden="true">
+                              {upcomingFeatures[featureCarouselIndex]?.icon}
+                            </span>
+                          </div>
+                          <h2 className="text-xl font-semibold text-slate-50 sm:text-2xl">
+                            {upcomingFeatures[featureCarouselIndex]?.title}
+                          </h2>
+                        </div>
                       </div>
                     </div>
 
                     <div className="flex flex-col items-center gap-3 sm:items-end">
                       <a
-                        href="https://t.me/ricomatrixdapp"
+                        href="https://app.ricomatrix.com"
                         target="_blank"
                         rel="noreferrer"
                         className="theme-button-secondary px-4 py-2 text-xs md:text-sm"
                       >
-                        <span>{t("header.featureCarousel.cta")}</span>
+                        <span>{t("header.featureCarousel.learnMore")}</span>
                       </a>
 
                       <div className="flex items-center justify-center gap-2 sm:justify-end">
@@ -417,6 +436,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
           </div>
 
           {/* Show Migration Panel if user needs to migrate */}
@@ -589,99 +609,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Quick Links Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 lg:gap-6 mb-8">
-                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 flex items-center justify-center text-xl mb-4 mx-auto">
-                    📚
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    {t("quickLinks.viewChapters.title")}
-                  </h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    {t("quickLinks.viewChapters.description")}
-                  </p>
-                  <Link
-                    href="/chapters"
-                    className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
-                  >
-                    {t("quickLinks.viewChapters.button")}
-                  </Link>
-                </div>
-
-                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
-                    ◉
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    {t("quickLinks.viewMatrix.title")}
-                  </h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    {t("quickLinks.viewMatrix.description")}
-                  </p>
-                  <Link
-                    href="/matrix"
-                    className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
-                  >
-                    {t("quickLinks.viewMatrix.button")}
-                  </Link>
-                </div>
-
-                <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
-                    🎓
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    {t("quickLinks.skillLab.title")}
-                  </h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    {t("quickLinks.skillLab.description")}
-                  </p>
-                  <Link
-                    href="/skills"
-                    className="inline-block rounded-xl bg-yellow-500/10 px-6 py-2 text-sm font-semibold text-yellow-300 border border-yellow-400/60 hover:bg-yellow-500/20 transition-all"
-                  >
-                    {t("quickLinks.skillLab.button")}
-                  </Link>
-                </div>
-
-                <div className="rounded-2xl border border-yellow-400/30 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
-                    👑
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    {t("quickLinks.checkRoyalty.title")}
-                  </h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    {t("quickLinks.checkRoyalty.description")}
-                  </p>
-                  <Link
-                    href="/royalty"
-                    className="inline-block rounded-xl bg-yellow-400/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(184,128,54,0.62)] hover:brightness-110 active:scale-[0.98] transition-all"
-                  >
-                    {t("quickLinks.checkRoyalty.button")}
-                  </Link>
-                </div>
-
-                <div className="rounded-2xl border border-yellow-500/25 bg-slate-950/70 p-6 text-center shadow-[0_0_28px_rgba(0,0,0,0.6)]">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-300 to-amber-400 flex items-center justify-center text-xl mb-4 mx-auto">
-                    🪙
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-50 mb-2">
-                    {t("quickLinks.viewRICO.title")}
-                  </h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    {t("quickLinks.viewRICO.description")}
-                  </p>
-                  <Link
-                    href="/rico"
-                    className="inline-block rounded-xl bg-yellow-400/90 px-6 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(245,158,11,0.45)] hover:brightness-110 active:scale-[0.98] transition-all"
-                  >
-                    {t("quickLinks.viewRICO.button")}
-                  </Link>
-                </div>
-              </div>
-
               {/* Leaderboards Section */}
               <Leaderboards
                 topEarners={topEarners}
@@ -696,6 +623,10 @@ export default function Dashboard() {
         </div>
         <SiteFooter />
       </div>
+      <VotingModal
+        open={dashboardState === "dashboard" && userData?.exists && isVotingModalOpen}
+        onClose={() => setIsVotingModalOpen(false)}
+      />
       <style jsx>{`
         .dashboard-feature-carousel {
           animation: dashboardFeatureFade 0.5s ease;

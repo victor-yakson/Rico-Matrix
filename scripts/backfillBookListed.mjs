@@ -149,14 +149,14 @@ const main = async () => {
       }
     }
 
-    console.log(
-      `[backfill] blocks ${start}..${end} | logs=${logs.length} | upserted=${upserted} skipped=${skipped} failed=${failures}`
+    process.stdout.write(
+      `[backfill] blocks ${start}..${end} | logs=${logs.length} | upserted=${upserted} skipped=${skipped} failed=${failures}\n`
     );
     start = end + 1n;
   }
 
-  console.log(
-    `[backfill] complete | scannedLogs=${scannedLogs} upserted=${upserted} skipped=${skipped} failed=${failures}`
+  process.stdout.write(
+    `[backfill] complete | scannedLogs=${scannedLogs} upserted=${upserted} skipped=${skipped} failed=${failures}\n`
   );
 };
 
