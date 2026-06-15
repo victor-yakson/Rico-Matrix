@@ -2509,6 +2509,7 @@
       "totalCost": "Coût total",
       "yourUsdt": "Vos USDT",
       "allowance": "Allowance",
+      "unlimitedAllowance": "Illimitée",
       "yourRicoWallet": "Votre wallet RICO",
       "projectedUsdt": "USDT projetés"
     },
@@ -2528,7 +2529,8 @@
       "casting": "Vote en cours...",
       "approveAmount": "Approuver {amount} USDT",
       "castVotes": "Lancer {count} votes",
-      "joinTelegram": "Rejoindre le canal Telegram"
+      "joinTelegram": "Rejoindre le canal Telegram",
+      "approveMax": "Approuver le max USDT"
     },
     "snapshot": {
       "kicker": "Votre aperçu du portail",
@@ -2549,7 +2551,7 @@
       "invalidCount": "Entrez un nombre de votes valide.",
       "insufficientUsdt": "Solde USDT insuffisant pour ce volume de vote.",
       "approvalSuccessTitle": "USDT approuvés",
-      "approvalSuccessDescription": "Approbation confirmée. Vous pouvez maintenant voter.",
+      "approvalSuccessDescription": "L’approbation maximale est confirmée. Vous pouvez maintenant voter.",
       "voteFailedTitle": "Échec du vote",
       "voteFailedFallback": "La requête de vote a échoué. Vérifiez votre wallet puis réessayez.",
       "connectWallet": "Connectez votre wallet pour voter.",

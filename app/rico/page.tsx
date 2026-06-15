@@ -44,7 +44,7 @@ const PRESET_DURATIONS = [
 const ALLOWED_STAKE_DAYS: ReadonlySet<number> = new Set(
   PRESET_DURATIONS.map((option) => option.days)
 );
-const WHITEPAPER_URL = 'https://rico-matrix.gitbook.io/whitepaper';
+const WHITEPAPER_URL = 'https://rico-token.gitbook.io/rico';
 
 const formatTokenAmount = (value?: bigint | null, fractionDigits = 2) => {
   if (typeof value !== 'bigint') return '--';
@@ -191,29 +191,9 @@ export default function RICOStatsPage() {
     ...ricoStakingContract,
     functionName: 'paused',
   });
-  const { data: airdropEnabled, refetch: refetchAirdropEnabled } = useReadContract({
-    ...ricoStakingContract,
-    functionName: 'airdropEnabled',
-  });
-  const { data: airdropAmount, refetch: refetchAirdropAmount } = useReadContract({
-    ...ricoStakingContract,
-    functionName: 'AIRDROP_AMOUNT',
-  });
-  const { data: airdropCooldown, refetch: refetchAirdropCooldown } = useReadContract({
-    ...ricoStakingContract,
-    functionName: 'AIRDROP_COOLDOWN',
-  });
-  const { data: maxAirdropSupply, refetch: refetchMaxAirdropSupply } = useReadContract({
-    ...ricoStakingContract,
-    functionName: 'MAX_AIRDROP_SUPPLY',
-  });
   const { data: minStakeHolder, refetch: refetchMinStakeHolder } = useReadContract({
     ...ricoStakingContract,
     functionName: 'MIN_STAKE_HOLDER',
-  });
-  const { data: totalAirdropped, refetch: refetchTotalAirdropped } = useReadContract({
-    ...ricoStakingContract,
-    functionName: 'totalAirdropped',
   });
   const { data: totalStaked, refetch: refetchTotalStaked } = useReadContract({
     ...ricoStakingContract,
@@ -240,12 +220,6 @@ export default function RICOStatsPage() {
   const { data: userKarma, refetch: refetchUserKarma } = useReadContract({
     ...ricoStakingContract,
     functionName: 'userKarma',
-    args: address ? [address] : undefined,
-    query: { enabled: Boolean(address) },
-  });
-  const { data: lastAirdropClaim, refetch: refetchLastAirdropClaim } = useReadContract({
-    ...ricoStakingContract,
-    functionName: 'lastAirdropClaim',
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address) },
   });
@@ -317,12 +291,7 @@ export default function RICOStatsPage() {
   const userKarmaValue = typeof userKarma === 'bigint' ? userKarma : undefined;
   const rewardPoolBalanceValue = typeof rewardPoolBalance === 'bigint' ? rewardPoolBalance : undefined;
   const accRewardPerShareValue = typeof accRewardPerShare === 'bigint' ? accRewardPerShare : undefined;
-  const lastAirdropClaimValue = typeof lastAirdropClaim === 'bigint' ? lastAirdropClaim : undefined;
-  const airdropCooldownValue = typeof airdropCooldown === 'bigint' ? airdropCooldown : undefined;
   const minStakeHolderValue = typeof minStakeHolder === 'bigint' ? minStakeHolder : undefined;
-  const airdropAmountValue = typeof airdropAmount === 'bigint' ? airdropAmount : undefined;
-  const totalAirdroppedValue = typeof totalAirdropped === 'bigint' ? totalAirdropped : undefined;
-  const maxAirdropSupplyValue = typeof maxAirdropSupply === 'bigint' ? maxAirdropSupply : undefined;
   const totalStakedValue = typeof totalStaked === 'bigint' ? totalStaked : undefined;
   const totalBurnedValue = typeof totalBurned === 'bigint' ? totalBurned : undefined;
   const totalPenaltyDistributedValue = typeof totalPenaltyDistributed === 'bigint' ? totalPenaltyDistributed : undefined;
@@ -379,46 +348,6 @@ export default function RICOStatsPage() {
 
   const hasAllowance = typeof ricoAllowanceValue === 'bigint' && ricoAllowanceValue >= parsedStakeAmount;
   const hasBalance = typeof ricoBalanceValue === 'bigint' && ricoBalanceValue >= parsedStakeAmount;
-  const meetsHolderRequirement =
-    typeof ricoBalanceValue === 'bigint' &&
-    typeof minStakeHolderValue === 'bigint' &&
-    ricoBalanceValue >= minStakeHolderValue;
-  const hasActiveStake = typeof totalStakedByUserValue === 'bigint' && totalStakedByUserValue > ZERO;
-  const hasAirdropSupply =
-    typeof totalAirdroppedValue === 'bigint' &&
-    typeof maxAirdropSupplyValue === 'bigint' &&
-    typeof airdropAmountValue === 'bigint' &&
-    totalAirdroppedValue + airdropAmountValue <= maxAirdropSupplyValue;
-  const airdropCooldownComplete =
-    typeof lastAirdropClaimValue === 'bigint' &&
-    typeof airdropCooldownValue === 'bigint' &&
-    (lastAirdropClaimValue === ZERO ||
-      lastAirdropClaimValue + airdropCooldownValue <= BigInt(Math.floor(Date.now() / 1000)));
-  const hasAirdropFunds =
-    typeof rewardPoolBalanceValue === 'bigint' &&
-    typeof totalStakedValue === 'bigint' &&
-    typeof airdropAmountValue === 'bigint' &&
-    rewardPoolBalanceValue >= totalStakedValue + airdropAmountValue;
-  const airdropSystemReady =
-    Boolean(address) &&
-    paused !== true &&
-    airdropEnabled === true &&
-    hasAirdropSupply &&
-    hasAirdropFunds;
-  const airdropUserEligible =
-    Boolean(address) &&
-    (meetsHolderRequirement || hasActiveStake) &&
-    airdropCooldownComplete;
-  const canClaimAirdrop = airdropSystemReady && airdropUserEligible;
-  const airdropStatusMessage = !address
-    ? 'Connect your wallet to check airdrop access.'
-    : !airdropSystemReady
-      ? 'Airdrop is temporarily unavailable from the protocol side.'
-      : !meetsHolderRequirement && !hasActiveStake
-        ? 'Hold at least 5 RICO or keep an active stake to claim.'
-        : !airdropCooldownComplete
-          ? getCooldownText(lastAirdropClaimValue, airdropCooldownValue)
-          : 'You are eligible to claim right now.';
   const walletTokenAddress = useMemo(() => effectiveRicoTokenAddress, [effectiveRicoTokenAddress]);
   const tokenImportImage = useMemo(() => {
     if (typeof window === 'undefined') return undefined;
@@ -495,19 +424,13 @@ export default function RICOStatsPage() {
         refetchRicoToken(),
         refetchOwner(),
         refetchPaused(),
-        refetchAirdropEnabled(),
-        refetchAirdropAmount(),
-        refetchAirdropCooldown(),
-        refetchMaxAirdropSupply(),
         refetchMinStakeHolder(),
-        refetchTotalAirdropped(),
         refetchTotalStaked(),
         refetchTotalBurned(),
         refetchTotalPenaltyDistributed(),
         refetchAccRewardPerShare(),
         refetchTotalStakedByUser(),
         refetchUserKarma(),
-        refetchLastAirdropClaim(),
         refetchRicoBalance(),
         refetchRicoAllowance(),
         refetchRewardPoolBalance(),
@@ -522,12 +445,7 @@ export default function RICOStatsPage() {
   }, [
     loadStakes,
     refetchAccRewardPerShare,
-    refetchAirdropAmount,
-    refetchAirdropCooldown,
-    refetchAirdropEnabled,
     refetchAllData,
-    refetchLastAirdropClaim,
-    refetchMaxAirdropSupply,
     refetchMinStakeHolder,
     refetchOwner,
     refetchPaused,
@@ -535,7 +453,6 @@ export default function RICOStatsPage() {
     refetchRicoAllowance,
     refetchRicoBalance,
     refetchRicoToken,
-    refetchTotalAirdropped,
     refetchTotalBurned,
     refetchTotalPenaltyDistributed,
     refetchTotalStaked,
@@ -611,17 +528,6 @@ export default function RICOStatsPage() {
     });
   };
 
-  const handleClaimAirdrop = async () => {
-    if (!canClaimAirdrop) {
-      toast.error('Airdrop is not yet claimable.');
-      return;
-    }
-    await runWrite('claimAirdrop', 'Airdrop claimed successfully', {
-      ...ricoStakingContract,
-      functionName: 'claimAirdrop',
-    });
-  };
-
   const handleUnstake = async (index: number) => {
     await runWrite(`unstake-${index}`, 'Stake unstaked successfully', {
       ...ricoStakingContract,
@@ -653,14 +559,6 @@ export default function RICOStatsPage() {
       ...ricoStakingContract,
       functionName: 'fundRewardPool',
       args: [amount],
-    });
-  };
-
-  const handleToggleAirdrop = async (status: boolean) => {
-    await runWrite(status ? 'airdrop-on' : 'airdrop-off', status ? 'Airdrop enabled' : 'Airdrop disabled', {
-      ...ricoStakingContract,
-      functionName: 'toggleAirdrop',
-      args: [status],
     });
   };
 
@@ -843,9 +741,9 @@ export default function RICOStatsPage() {
               <p className="mt-1 text-xs text-slate-500">{copy.summary.accShare} {formatTokenAmount(accRewardPerShareValue, 4)}</p>
             </div>
             <div className="theme-stat-panel p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.summary.airdrop}</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-200">{airdropEnabled ? copy.summary.enabled : copy.summary.disabled}</p>
-              <p className="mt-1 text-xs text-slate-500">{getCooldownText(lastAirdropClaimValue, airdropCooldownValue)}</p>
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.totalStaked}</p>
+              <p className="mt-2 text-2xl font-semibold text-amber-200">{formatTokenAmount(totalStakedValue)}</p>
+              <p className="mt-1 text-xs text-slate-500">{copy.labels.penaltyDistributed} {formatTokenAmount(totalPenaltyDistributedValue)}</p>
             </div>
           </div>
 
@@ -1277,83 +1175,6 @@ export default function RICOStatsPage() {
 
             <div className="space-y-6 xl:col-span-4">
               <SectionCard
-                id="airdrop"
-                title={copy.sections.airdropTitle}
-                description={copy.sections.airdropDescription}
-              >
-                <div className="space-y-3">
-                  <div className="rounded-[28px] border border-yellow-500/20 bg-[linear-gradient(180deg,rgba(255,219,128,0.08),rgba(11,11,11,0.84))] p-4 sm:p-5">
-                    <div className="text-center">
-                      <p className="text-xs uppercase tracking-[0.16em] text-yellow-100/75">Airdrop Center</p>
-                      <p className="mt-2 text-3xl font-semibold text-yellow-100">{formatTokenAmount(airdropAmountValue)} RICO</p>
-                      <p className="mt-2 text-sm text-slate-300">{airdropStatusMessage}</p>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-xl border border-white/10 bg-black/35 p-3 text-center">
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Requirement</p>
-                        <p className="mt-2 text-sm font-medium text-slate-50">Hold 5 RICO or keep an active stake</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/35 p-3 text-center">
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Cooldown</p>
-                        <p className="mt-2 text-sm font-medium text-slate-50">{getCooldownText(lastAirdropClaimValue, airdropCooldownValue)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/35 p-3 text-center">
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Status</p>
-                        <p className={`mt-2 text-sm font-medium ${canClaimAirdrop ? 'text-yellow-100' : 'text-slate-50'}`}>
-                          {canClaimAirdrop ? 'Ready to claim' : 'Not ready'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-2">
-                      {[
-                        { label: 'Wallet qualifies', met: meetsHolderRequirement || hasActiveStake },
-                        { label: 'Cooldown completed', met: airdropCooldownComplete },
-                        { label: 'Airdrop is live', met: paused !== true && airdropEnabled === true },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className={`flex items-center justify-between rounded-xl border px-3 py-2 ${
-                            item.met
-                              ? 'border-yellow-400/20 bg-black/30 text-yellow-50'
-                              : 'border-red-400/20 bg-red-500/10 text-red-100'
-                          }`}
-                        >
-                          <span className="text-sm">{item.label}</span>
-                          <span className="text-xs font-semibold uppercase tracking-[0.16em]">
-                            {item.met ? copy.labels.yes : copy.labels.no}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.airdroppedCap}</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-50">
-                        {formatTokenAmount(totalAirdroppedValue)} / {formatTokenAmount(maxAirdropSupplyValue)}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.cooldown}</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-50">{formatDuration(airdropCooldownValue)}</p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => void handleClaimAirdrop()}
-                    disabled={activeAction === 'claimAirdrop' || !canClaimAirdrop || paused === true}
-                    className="w-full rounded-xl bg-gradient-to-r from-yellow-300 to-amber-300 px-4 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:opacity-50"
-                  >
-                    {activeAction === 'claimAirdrop' ? copy.actions.claiming : copy.actions.claimAirdrop}
-                  </button>
-                </div>
-              </SectionCard>
-
-              <SectionCard
                 title={copy.sections.totalsTitle}
                 description={copy.sections.totalsDescription}
               >
@@ -1406,22 +1227,6 @@ export default function RICOStatsPage() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => void handleToggleAirdrop(true)}
-                        disabled={activeAction === 'airdrop-on' || airdropEnabled === true}
-                        className="rounded-xl border border-yellow-400/40 bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-100 transition hover:bg-yellow-500/20 disabled:opacity-50"
-                      >
-                        {copy.actions.enableAirdrop}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleToggleAirdrop(false)}
-                        disabled={activeAction === 'airdrop-off' || airdropEnabled === false}
-                        className="rounded-xl border border-yellow-400/40 bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-100 transition hover:bg-yellow-500/20 disabled:opacity-50"
-                      >
-                        {copy.actions.disableAirdrop}
-                      </button>
                       <button
                         type="button"
                         onClick={() => void handlePause(true)}

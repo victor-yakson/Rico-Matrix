@@ -83,7 +83,7 @@ export const Header = () => {
 
   const socialLinks = [
     { name: "Telegram", href: "https://t.me/ricomatrixdapp" },
-    { name: "X", href: "https://x.com/ricomatrixdapp" },
+    { name: "X", href: "https://x.com/rmdapp" },
     { name: "YouTube", href: "https://www.youtube.com/@ricomatrix" },
     { name: "TikTok", href: "https://tiktok.com/@ricomatrix" },
   ];

@@ -301,9 +301,9 @@ export default function RicoMatrixLandingPage() {
   const footerLinks = useMemo(
     () => [
       { label: t("footer.links.website"), href: "https://ricomatrix.com/" },
-      { label: t("footer.links.whitepaper"), href: "https://rico-matrix.gitbook.io/whitepaper" },
+      { label: t("footer.links.whitepaper"), href: "https://rico-token.gitbook.io/rico" },
       { label: t("footer.links.telegram"), href: "https://t.me/ricomatrixdapp" },
-      { label: t("footer.links.twitter"), href: "https://x.com/ricomatrixdapp" },
+      { label: t("footer.links.twitter"), href: "https://x.com/rmdapp" },
       { label: t("footer.links.youtube"), href: "https://www.youtube.com/@ricomatrix" },
       { label: "Email", href: "mailto:info@ricomatrix.com" },
     ],
@@ -465,7 +465,7 @@ export default function RicoMatrixLandingPage() {
                   </a>
                 ))}
               </div>
-              <a href="https://rico-matrix.gitbook.io/whitepaper" target="_blank" rel="noreferrer" className={styles.drawerExternal}>
+              <a href="https://rico-token.gitbook.io/rico" target="_blank" rel="noreferrer" className={styles.drawerExternal}>
                 {t("footer.links.whitepaper")}
               </a>
             </motion.nav>

@@ -221,7 +221,7 @@
 .copyLinkButton {
   margin-top: 4px;
   padding: 0.4rem 0.9rem;
-  border-radius: 999px;
+  border-radius: 18px;
   border: 1px solid var(--border-subtle);
   background: rgba(13, 16, 26, 0.95);
   color: var(--text-main);

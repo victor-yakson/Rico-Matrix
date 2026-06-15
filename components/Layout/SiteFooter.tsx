@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-const whitepaperUrl = "https://rico-matrix.gitbook.io/whitepaper";
+const whitepaperUrl = "https://rico-token.gitbook.io/rico";
 
 export default function SiteFooter() {
   const t = useTranslations("LandingPage.footer");
@@ -12,7 +12,7 @@ export default function SiteFooter() {
   const primaryLinks = [
     { label: t("links.whitepaper"), href: whitepaperUrl },
     { label: t("links.telegram"), href: "https://t.me/ricomatrixdapp" },
-    { label: t("links.twitter"), href: "https://x.com/ricomatrixdapp" },
+    { label: t("links.twitter"), href: "https://x.com/rmdapp" },
     { label: t("links.youtube"), href: "https://www.youtube.com/@ricomatrix" },
   ];
 

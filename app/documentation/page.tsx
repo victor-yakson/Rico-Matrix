@@ -11,7 +11,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 // Local worker served from /public/pdfjs
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
-const WHITEPAPER_URL = "https://rico-matrix.gitbook.io/whitepaper";
+const WHITEPAPER_URL = "https://rico-token.gitbook.io/rico";
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
