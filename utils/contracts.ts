@@ -6,8 +6,6 @@ import {
   USDT_ABI,
   SURVEY_CONTRACT_ADDRESS,
   SURVEY_ABI,
-  VOTING_CONTRACT_ADDRESS,
-  VOTING_ABI,
   LIBRARY_CONTRACT_ADDRESS,
   LIBRARY_ABI,
   RICO_STAKING_CONTRACT_ADDRESS,
@@ -27,11 +25,6 @@ export const usdtContract = {
 export const surveyContract = {
   address: SURVEY_CONTRACT_ADDRESS,
   abi: SURVEY_ABI as unknown as Abi,
-} as const;
-
-export const votingContract = {
-  address: VOTING_CONTRACT_ADDRESS,
-  abi: VOTING_ABI as unknown as Abi,
 } as const;
 
 export const libraryContract = {

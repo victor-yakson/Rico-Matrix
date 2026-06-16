@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 type VotingModalProps = {
@@ -12,6 +11,7 @@ export function VotingModal({ open, onClose }: VotingModalProps) {
   const t = useTranslations('VotingPage.modal');
   const milestones = t.raw('milestones') as Array<{ date: string; title: string }>;
   const highlights = t.raw('highlights') as string[];
+  const notices = t.raw('notices') as string[];
 
   if (!open) return null;
 
@@ -58,16 +58,7 @@ export function VotingModal({ open, onClose }: VotingModalProps) {
               <p className="text-xs uppercase tracking-[0.18em] text-yellow-200/80">
                 {t('incentiveKicker')}
               </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t('votePriceLabel')}</p>
-                  <p className="mt-2 text-xl font-semibold text-slate-50 sm:text-2xl">{t('votePriceValue')}</p>
-                </div>
-                <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                  <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/80">{t('voteRewardLabel')}</p>
-                  <p className="mt-2 text-xl font-semibold text-slate-50 sm:text-2xl">{t('voteRewardValue')}</p>
-                </div>
-              </div>
+              <p className="mt-3 text-xl font-semibold text-slate-50 sm:text-2xl">{t('incentiveValue')}</p>
             </div>
 
             <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
@@ -81,6 +72,17 @@ export function VotingModal({ open, onClose }: VotingModalProps) {
                 </div>
               ))}
             </div>
+
+            <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
+              {notices.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-cyan-400/15 bg-cyan-400/10 px-4 py-3"
+                >
+                  <p className="text-sm leading-6 text-cyan-50">{item}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="mt-4 flex flex-col gap-4 md:mt-0">
@@ -90,17 +92,10 @@ export function VotingModal({ open, onClose }: VotingModalProps) {
               <p className="mt-2 text-sm leading-6 text-slate-300">{t('ctaDescription')}</p>
 
               <div className="mt-4 grid gap-3 sm:mt-5">
-                <Link
-                  href="/voting"
-                  onClick={onClose}
-                  className="theme-button-primary w-full justify-center px-5 py-3 text-sm"
-                >
-                  {t('openVotingPage')}
-                </Link>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="theme-button-secondary w-full justify-center px-5 py-3 text-sm"
+                  className="theme-button-primary w-full justify-center px-5 py-3 text-sm"
                 >
                   {t('dismiss')}
                 </button>
