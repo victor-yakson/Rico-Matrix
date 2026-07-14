@@ -506,7 +506,8 @@
       "profile": "Profile",
       "documentation": "Docs",
       "matrix": "Matrix",
-      "whitepaper": "Whitepaper"
+      "whitepaper": "Whitepaper",
+      "voting": "Voting"
     },
     "socials": {
       "followUs": "Follow Us",
@@ -2416,37 +2417,178 @@
     "current": "Current page"
   },
   "VotingPage": {
+    "page": {
+      "kicker": "Premium vote",
+      "title": "Vote now, get rewarded, and power the Quant Engine rollout.",
+      "description": "Use the live voting contract, approve USDT once, then vote by amount while your projected RICO reward updates instantly.",
+      "badgeOne": "Min 0.1 USDT",
+      "badgeTwo": "Live contract"
+    },
     "modal": {
-      "kicker": "Community update",
-      "title": "True DAO power demonstrated",
+      "kicker": "Hot celebration",
+      "title": "The premium vote is now live",
       "close": "Close",
-      "description": "We successfully completed our governance vote in less than 10 days. Huge congratulations to the community — you have proven Rico Matrix never sleeps.",
-      "incentiveKicker": "DAO milestone",
-      "incentiveValue": "The Quantima engine is roaring, and we are here to stay.",
-      "timelineKicker": "What happens next",
+      "description": "In celebration of our Quant Engine, we are running an exclusive premium vote to make sure our community loves what we are building. For that reason, we would like you to vote while getting rewarded.",
+      "rewardKicker": "Reward loop",
+      "rewardTitle": "Vote now and get free coins",
+      "rewardDescription": "Approve USDT once, open the full portal, select your vote size, and your projected reward updates before you submit.",
       "ctaKicker": "Next step",
-      "ctaTitle": "Quantima integration is in progress",
-      "ctaDescription": "We are currently integrating cross-APIs into the dashboard for the Rico Quantima Engine and battle-testing the system before inviting the top 10 voters into live testing around June 26th (+/-).",
-      "dismiss": "Amazing",
-      "milestones": [
+      "ctaTitle": "Open the full voting portal",
+      "ctaDescription": "The voting page covers approval, live projections, wallet balances, and success states end to end.",
+      "openVotingPage": "Open voting page",
+      "dismiss": "Maybe later",
+      "details": [
         {
-          "date": "Now",
-          "title": "Cross-API integration is underway inside the dashboard"
+          "label": "Total Rico pool",
+          "value": "50,000 RICO"
         },
         {
-          "date": "Around June 26, 2026",
-          "title": "Top 10 voters move into live battle-testing access"
+          "label": "Min. vote amount",
+          "value": "$0.1 USDT"
+        },
+        {
+          "label": "Max vote",
+          "value": "Unlimited"
+        },
+        {
+          "label": "Rate",
+          "value": "$1 = 33 RICO"
         }
       ],
       "highlights": [
-        "We completed the governance vote in under 10 days.",
-        "The community has shown that Rico Matrix never sleeps.",
-        "Wallets that voted the most will be checked and contacted appropriately."
-      ],
-      "notices": [
-        "Top voters: please make sure your USDT liquidity is ready on your Binance or Bybit exchange accounts.",
-        "We will reach out appropriately after verifying the highest-voting wallet addresses."
+        "The contract is configured for live approvals and live voting.",
+        "Your reward projection updates before you submit the transaction.",
+        "Registered users can move straight from the dashboard prompt into the full portal."
       ]
-    }
+    },
+    "hero": {
+      "kicker": "Premium governance portal",
+      "title": "Cast your votes and stack your RICO reward live.",
+      "description": "This voting flow is built around a direct USDT amount: approve once, vote from the same primary action, and see your wallet stats and reward projection update after confirmation."
+    },
+    "announcement": {
+      "kicker": "Official announcement",
+      "body": "Hot Celebration\n\nIn Celebration of our Quant Engine, we've decided to run an exclusive premium vote to ensure our community love what we are building.\n\nFor that reason, we would like you to vote while getting rewarded.\n\nVote now and get free Coins."
+    },
+    "campaign": {
+      "totalPool": "Total Rico pool",
+      "minimum": "Min. vote amount",
+      "rate": "Reward rate",
+      "perVoteReward": "Live reward for one vote",
+      "perDollar": "Reward per $1",
+      "perDollarNote": "$1 currently projects this many RICO",
+      "maximum": "Max vote",
+      "unlimited": "Unlimited"
+    },
+    "campaignHighlights": [
+      "Total Rico pool: 50,000.",
+      "Minimum vote amount: $0.1 USDT.",
+      "Maximum vote size: unlimited."
+    ],
+    "launchBadges": [
+      {
+        "label": "Voting contract",
+        "value": "Live on BNB Smart Chain"
+      },
+      {
+        "label": "Approval flow",
+        "value": "Max USDT approval supported"
+      },
+      {
+        "label": "Vote mode",
+        "value": "Amount-based USDT voting"
+      }
+    ],
+    "perks": [
+      "Support the Quant Engine rollout directly from your wallet.",
+      "See your projected USDT spend and projected RICO before confirming.",
+      "Track your votes cast and cumulative RICO earned inside the same portal."
+    ],
+    "stats": {
+      "kicker": "Live voting stats",
+      "ricoDistributed": "RICO distributed"
+    },
+    "setup": {
+      "kicker": "Vote setup",
+      "title": "Choose your USDT amount",
+      "description": "$ {usdt} currently projects about {rico} RICO based on the live rate.",
+      "amountLabel": "USDT amount",
+      "projectedRico": "Projected RICO",
+      "quickSlider": "Quick amount",
+      "customAmount": "Custom: {amount} USDT",
+      "sliderAmount": "{amount} USDT",
+      "sliderAria": "USDT amount slider",
+      "minimumLabel": "Minimum vote",
+      "yourUsdt": "Your USDT",
+      "allowance": "Allowance",
+      "unlimitedAllowance": "Unlimited",
+      "yourRicoWallet": "Your RICO wallet",
+      "selectedUsdt": "Selected USDT"
+    },
+    "approval": {
+      "kicker": "Approval unlocked",
+      "description": "Your wallet has approved max USDT for the voting contract. You can now cast votes from the same primary button."
+    },
+    "success": {
+      "kicker": "Vote completed",
+      "title": "Your premium vote has been recorded.",
+      "description": "You spent {usdt} USDT and unlocked {rico} RICO from this transaction."
+    },
+    "status": {
+      "connectWallet": "Connect your wallet to unlock the voting controls.",
+      "registeredOnly": "Only registered Rico Matrix users can cast votes from this portal.",
+      "needUsdt": "You need more USDT in this wallet for the selected vote amount.",
+      "needApproval": "Approve USDT once and the primary button will switch straight into live voting.",
+      "ready": "Everything is ready. Confirm in your wallet to cast your votes and receive the reward allocation.",
+      "minimumVote": "The minimum vote amount is 0.1 USDT."
+    },
+    "actions": {
+      "connectWallet": "Connect wallet to vote",
+      "registerRequired": "Register on Rico Matrix to vote",
+      "approving": "Approving USDT...",
+      "casting": "Casting votes...",
+      "castVotes": "Vote With {amount} USDT",
+      "approveMax": "Approve Max USDT"
+    },
+    "snapshot": {
+      "kicker": "Your voting snapshot",
+      "usdtSpent": "USDT spent",
+      "ricoReceived": "RICO received"
+    },
+    "details": {
+      "kicker": "Contract details",
+      "contract": "Voting contract",
+      "usdtToken": "USDT token",
+      "ricoToken": "RICO token"
+    },
+    "toasts": {
+      "voteSuccessTitle": "Vote submitted",
+      "voteSuccessDescription": "Your wallet voted with {amount} USDT and unlocked {reward} RICO.",
+      "invalidCount": "Enter a valid vote count.",
+      "insufficientUsdt": "Insufficient USDT balance for this vote size.",
+      "approvalSuccessTitle": "USDT approved",
+      "approvalSuccessDescription": "Max approval confirmed. You can now cast your votes.",
+      "voteFailedTitle": "Voting failed",
+      "voteFailedFallback": "Voting request failed. Please check your wallet and try again.",
+      "connectWallet": "Connect your wallet to vote.",
+      "registerRequired": "Register on Rico Matrix to unlock voting.",
+      "minimumVote": "Enter at least 0.1 USDT."
+    },
+    "flow": {
+      "step1Label": "Step 1",
+      "step1Title": "Approve USDT spending",
+      "step1Description": "Approve USDT once so the voting contract can use your selected amount.",
+      "step2Label": "Step 2",
+      "step2Title": "Submit the live vote",
+      "step2Description": "After approval, send the USDT amount and receive the projected RICO allocation.",
+      "currentStepLabel": "Current action",
+      "currentStepApprove": "Approve USDT to unlock voting",
+      "currentStepVote": "Submit your live vote",
+      "summaryKicker": "Live vote summary",
+      "summaryUsdt": "USDT amount",
+      "summaryRico": "Projected RICO",
+      "summaryRate": "Reward rate"
+    },
+    "perksKicker": "Why this matters"
   }
 }
