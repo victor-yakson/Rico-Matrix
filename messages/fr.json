@@ -51,7 +51,7 @@
     },
     "launchInfo": {
       "launching": "INSCRIPTIONS OUVERTES",
-      "time": "Bibliothèque en ligne sur la BNB Smart Chain",
+      "time": "Rico Quant Engine sera lancé le vendredi 17 juillet 2026 à 17h00 WAT",
       "badges": {
         "decentralized": "Propriété on-chain des chapitres",
         "earnings": "Gains directs X3 + gains par débordement X6",
@@ -489,6 +489,40 @@
           "description": "Le staking renforce l’utilité de la plateforme et rend l’expérience plus complète."
         }
       ]
+    },
+    "quantEngine": {
+      "kicker": "Nouveau produit RicoMatrix",
+      "title": "Rico Quant Engine arrive le vendredi 17 juillet 2026 à 17h00 WAT.",
+      "liveTitle": "Rico Quant Engine est maintenant en direct sur app.ricomatrix.com.",
+      "subtitle": "Rico Quant Engine est un produit RicoMatrix conçu pour la prochaine phase d’exécution crypto intelligente sur app.ricomatrix.com.",
+      "liveSubtitle": "Rico Quant Engine fait maintenant partie de l’écosystème produit live de RicoMatrix et est disponible via app.ricomatrix.com.",
+      "description": "Ce nouveau lancement étend l’écosystème RicoMatrix avec une expérience quant dédiée, des outils d’exécution plus précis et un environnement produit focalisé sous la marque RicoMatrix.",
+      "launchBadge": "Lancement aujourd’hui",
+      "launchTime": "17h00 WAT · vendredi 17 juillet 2026",
+      "liveBadge": "En direct",
+      "liveTime": "Maintenant en direct sur app.ricomatrix.com",
+      "ctaLaunch": "Voir la page de lancement",
+      "ctaLive": "Ouvrir Rico Quant Engine",
+      "points": [
+        "Il est hébergé sur app.ricomatrix.com comme produit officiel RicoMatrix.",
+        "Le lancement bascule automatiquement une fois qu’il est 17h00 au Nigeria.",
+        "Les utilisateurs peuvent passer directement de la landing RicoMatrix au produit en direct."
+      ],
+      "card": {
+        "kicker": "Fenêtre de lancement",
+        "title": "Construit dans l’écosystème RicoMatrix.",
+        "description": "Le Quant Engine vient compléter les produits éducation, matrix, bibliothèque, royalties et staking alors que la plateforme s’étend vers des outils centrés sur l’exécution.",
+        "stats": [
+          {
+            "label": "Date de lancement",
+            "value": "17 juillet 2026"
+          },
+          {
+            "label": "Heure de lancement",
+            "value": "17h00 WAT"
+          }
+        ]
+      }
     }
   },
   "Header": {
@@ -1032,9 +1066,10 @@
               "description": "Des signaux assistés par l IA conçus pour un meilleur timing de marché et une préparation de trade plus claire."
             },
             {
-              "title": "Moteur de Trading Quant",
-              "status": "Bientôt disponible",
-              "description": "Un moteur structuré pensé pour alimenter des workflows de trading quantitatif plus disciplinés sur la plateforme."
+              "title": "Rico Quant Engine",
+              "status": "Aujourd’hui • 17h WAT",
+              "description": "Le RicoMatrix Quant Engine est lancé sur app.ricomatrix.com et ouvre un environnement produit dédié aux workflows quant en direct.",
+              "liveStatus": "Lancement"
             },
             {
               "title": "Scanner Crypto IA",

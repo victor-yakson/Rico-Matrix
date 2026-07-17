@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import MobileWalletConnector from "../Common/MobileWalletConnector";
 import { LanguageSwitcher } from "../Common/LanguageSwitcher";
 import WorldMap, { type WorldMapCountryStat } from "../WorldMap";
+import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
 import styles from "./Landingpage.module.css";
 
 type MapTotals = {
@@ -200,6 +201,7 @@ export default function RicoMatrixLandingPage() {
   });
   const [mapState, setMapState] = useState<"loading" | "ready" | "empty" | "error">("loading");
   const [cursor, setCursor] = useState({ x: 0, y: 0, visible: false });
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   const heroWords = useMemo(
     () => [t("heroTyping.words.0"), t("heroTyping.words.1"), t("heroTyping.words.2")],
@@ -383,7 +385,29 @@ export default function RicoMatrixLandingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 30000);
+
+    return () => window.clearInterval(timerId);
+  }, []);
+
   const closeDrawer = () => setMobileNavOpen(false);
+
+  const isQuantEngineLive = useMemo(() => isRicoQuantEngineLive(currentTime), [currentTime]);
+  const quantEngineBadge = isQuantEngineLive
+    ? t("quantEngine.liveBadge")
+    : t("quantEngine.launchBadge");
+  const quantEngineTimeLabel = isQuantEngineLive
+    ? t("quantEngine.liveTime")
+    : t("quantEngine.launchTime");
+  const quantEngineTitle = isQuantEngineLive
+    ? t("quantEngine.liveTitle")
+    : t("quantEngine.title");
+  const quantEngineSubtitle = isQuantEngineLive
+    ? t("quantEngine.liveSubtitle")
+    : t("quantEngine.subtitle");
 
   return (
     <div className={styles.page} id="top">
@@ -480,7 +504,7 @@ export default function RicoMatrixLandingPage() {
               <motion.div initial="hidden" animate="visible" variants={revealMotion} className={styles.heroCopy}>
                 <div className={styles.badgeRow}>
                   <span className={styles.liveBadge}>{t("launchInfo.launching")}</span>
-                  <span className={styles.liveBadgeSecondary}>{t("launchInfo.time")}</span>
+                  <span className={styles.liveBadgeSecondary}>{quantEngineTimeLabel}</span>
                 </div>
                 <div className={styles.glitchTag} aria-label="Read Earn Own">
                   <span>READ • EARN • OWN</span>
@@ -591,6 +615,54 @@ export default function RicoMatrixLandingPage() {
                       <span>{item}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section className={`${styles.section} ${styles.sectionTight}`} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
+          <div className={styles.container}>
+            <div className={styles.engineLaunchPanel}>
+              <div className={styles.engineLaunchCopy}>
+                <div className={styles.badgeRow}>
+                  <span className={styles.liveBadge}>{quantEngineBadge}</span>
+                  <span className={styles.liveBadgeSecondary}>{quantEngineTimeLabel}</span>
+                </div>
+                <SectionHeading
+                  kicker={t("quantEngine.kicker")}
+                  title={quantEngineTitle}
+                  subtitle={quantEngineSubtitle}
+                  align="left"
+                />
+                <p className={styles.engineLaunchDescription}>{t("quantEngine.description")}</p>
+                <div className={styles.engineLaunchPoints}>
+                  {[t("quantEngine.points.0"), t("quantEngine.points.1"), t("quantEngine.points.2")].map((item) => (
+                    <div key={item} className={styles.engineLaunchPoint}>
+                      <span className={styles.videoPointDot} aria-hidden="true" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.heroCtas}>
+                  <a href="https://app.ricomatrix.com" target="_blank" rel="noreferrer" className={styles.secondaryCta}>
+                    {isQuantEngineLive ? t("quantEngine.ctaLive") : t("quantEngine.ctaLaunch")}
+                  </a>
+                </div>
+              </div>
+              <div className={styles.engineLaunchCard}>
+                <span className={styles.statementKicker}>{t("quantEngine.card.kicker")}</span>
+                <h3>{t("quantEngine.card.title")}</h3>
+                <p>{t("quantEngine.card.description")}</p>
+                <div className={styles.engineLaunchStatGrid}>
+                  <div className={styles.engineLaunchStat}>
+                    <span>{t("quantEngine.card.stats.0.label")}</span>
+                    <strong>{t("quantEngine.card.stats.0.value")}</strong>
+                  </div>
+                  <div className={styles.engineLaunchStat}>
+                    <span>{t("quantEngine.card.stats.1.label")}</span>
+                    <strong>{t("quantEngine.card.stats.1.value")}</strong>
+                  </div>
                 </div>
               </div>
             </div>

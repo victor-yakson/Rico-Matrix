@@ -805,7 +805,8 @@ margin-top: 1.2rem;
 .mapShell,
 .matrixPanel,
 .stakingPanel,
-.ctaPanel {
+.ctaPanel,
+.engineLaunchPanel {
   position: relative;
   overflow: hidden;
   border-radius: var(--rm-radius);
@@ -820,16 +821,107 @@ margin-top: 1.2rem;
 .splitPanelReverse,
 .matrixPanel,
 .stakingPanel,
-.ctaPanel {
+.ctaPanel,
+.engineLaunchPanel {
   padding: clamp(1.4rem, 3vw, 2rem);
 }
 
 .videoPanel,
 .mapShell,
 .splitPanel,
-.splitPanelReverse {
+.splitPanelReverse,
+.engineLaunchPanel {
   display: grid;
   gap: 1.5rem;
+}
+
+.engineLaunchPanel {
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  background:
+    radial-gradient(circle at top right, rgba(0, 212, 255, 0.1), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(245, 166, 35, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(8, 12, 20, 0.98), rgba(5, 8, 14, 0.98));
+}
+
+.engineLaunchCopy {
+  min-width: 0;
+}
+
+.engineLaunchDescription {
+  margin: 0;
+  color: var(--rm-text-soft);
+  line-height: 1.8;
+}
+
+.engineLaunchPoints {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.1rem;
+}
+
+.engineLaunchPoint {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  padding: 1rem 1.05rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--rm-text-soft);
+}
+
+.engineLaunchCard {
+  position: relative;
+  padding: 1.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.engineLaunchCard h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.08rem;
+  line-height: 1.45;
+  color: white;
+  font-family: "Orbitron", sans-serif;
+}
+
+.engineLaunchCard p {
+  margin: 0;
+  color: var(--rm-text-soft);
+  line-height: 1.75;
+}
+
+.engineLaunchStatGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1.2rem;
+}
+
+.engineLaunchStat {
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.engineLaunchStat span {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--rm-gold);
+}
+
+.engineLaunchStat strong {
+  display: block;
+  margin-top: 0.55rem;
+  color: white;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
 .videoPanel {
@@ -1793,6 +1885,7 @@ margin-top: 1.2rem;
   .splitPanel,
   .splitPanelReverse,
   .videoPanel,
+  .engineLaunchPanel,
   .stakingBody,
   .heroGrid {
     grid-template-columns: 1fr;
@@ -1898,6 +1991,10 @@ margin-top: 1.2rem;
   }
 
   .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .engineLaunchStatGrid {
     grid-template-columns: 1fr;
   }
 }

@@ -19,6 +19,7 @@ import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
 import { VotingModal } from "@/components/Voting/VotingModal";
+import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
 
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
@@ -63,8 +64,14 @@ export default function Dashboard() {
   const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
   const [isVotingModalOpen, setIsVotingModalOpen] = useState(false);
   const [hasPromptedVoting, setHasPromptedVoting] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const searchParams = useSearchParams();
   const urlReferral = searchParams.get("ref");
+
+  const isQuantEngineLive = useMemo(
+    () => isRicoQuantEngineLive(currentTime),
+    [currentTime],
+  );
 
   const upcomingFeatures = useMemo(
     () => [
@@ -78,7 +85,9 @@ export default function Dashboard() {
       {
         icon: "⚙️",
         title: t("header.featureCarousel.items.1.title"),
-        status: t("header.featureCarousel.items.1.status"),
+        status: isQuantEngineLive
+          ? t("header.featureCarousel.items.1.liveStatus")
+          : t("header.featureCarousel.items.1.status"),
         tone:
           "border-cyan-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(34,211,238,0.2),rgba(34,211,238,0.06))] text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.14)]",
       },
@@ -97,7 +106,7 @@ export default function Dashboard() {
           "border-sky-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.2),rgba(56,189,248,0.06))] text-sky-100 shadow-[0_0_24px_rgba(56,189,248,0.14)]",
       },
     ],
-    [t],
+    [isQuantEngineLive, t],
   );
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -263,6 +272,14 @@ export default function Dashboard() {
     userData?.track1Unlocked,
     userData?.track2Unlocked,
   ]);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 30000);
+
+    return () => window.clearInterval(timerId);
+  }, []);
 
   useEffect(() => {
     if (dashboardState !== "dashboard") {
