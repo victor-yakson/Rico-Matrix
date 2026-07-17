@@ -79,6 +79,8 @@ export default function Dashboard() {
         icon: "📈",
         title: t("header.featureCarousel.items.0.title"),
         status: t("header.featureCarousel.items.0.status"),
+        href: "/#ecosystem",
+        domainLabel: "RicoMatrix",
         tone:
           "border-yellow-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(250,204,21,0.22),rgba(250,204,21,0.08))] text-yellow-100 shadow-[0_0_24px_rgba(234,179,8,0.16)]",
       },
@@ -88,6 +90,8 @@ export default function Dashboard() {
         status: isQuantEngineLive
           ? t("header.featureCarousel.items.1.liveStatus")
           : t("header.featureCarousel.items.1.status"),
+        href: "https://app.ricomatrix.com",
+        domainLabel: "app.ricomatrix.com",
         tone:
           "border-cyan-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(34,211,238,0.2),rgba(34,211,238,0.06))] text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.14)]",
       },
@@ -95,6 +99,8 @@ export default function Dashboard() {
         icon: "🧠",
         title: t("header.featureCarousel.items.2.title"),
         status: t("header.featureCarousel.items.2.status"),
+        href: "/#ecosystem",
+        domainLabel: "RicoMatrix",
         tone:
           "border-amber-300/20 bg-[radial-gradient(circle_at_30%_30%,rgba(251,191,36,0.22),rgba(251,191,36,0.07))] text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.14)]",
       },
@@ -102,12 +108,16 @@ export default function Dashboard() {
         icon: "⚡",
         title: t("header.featureCarousel.items.3.title"),
         status: t("header.featureCarousel.items.3.status"),
+        href: "/#ecosystem",
+        domainLabel: "RicoMatrix",
         tone:
           "border-sky-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.2),rgba(56,189,248,0.06))] text-sky-100 shadow-[0_0_24px_rgba(56,189,248,0.14)]",
       },
     ],
     [isQuantEngineLive, t],
   );
+
+  const activeFeature = upcomingFeatures[featureCarouselIndex];
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -395,7 +405,12 @@ export default function Dashboard() {
                   <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-yellow-300/70 to-transparent" />
                   <div className="pointer-events-none absolute -right-12 top-6 h-24 w-24 rounded-full bg-yellow-300/10 blur-3xl" />
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 flex-1 text-center sm:text-left">
+                    <a
+                      href={activeFeature?.href}
+                      target={activeFeature?.href?.startsWith("http") ? "_blank" : undefined}
+                      rel={activeFeature?.href?.startsWith("http") ? "noreferrer" : undefined}
+                      className="group min-w-0 flex-1 rounded-[1.6rem] text-center transition-transform duration-300 hover:-translate-y-0.5 hover:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b12] sm:-mx-2 sm:px-2 sm:py-1 sm:text-left"
+                    >
                       <p className="theme-kicker mb-2 justify-center text-[10px] sm:justify-start">
                         {t("header.featureCarousel.kicker")}
                       </p>
@@ -403,32 +418,43 @@ export default function Dashboard() {
                         key={featureCarouselIndex}
                         className="dashboard-feature-carousel min-h-[116px] sm:min-h-[92px]"
                       >
-                        <div className="inline-flex rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-yellow-200/90">
+                        <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/90 shadow-[0_0_18px_rgba(34,211,238,0.12)]">
                           <span>
-                            {upcomingFeatures[featureCarouselIndex]?.status}
+                            {activeFeature?.status}
                           </span>
                         </div>
                         <div className="mt-3 flex items-center justify-center gap-3 sm:justify-start">
                           <div
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl ${upcomingFeatures[featureCarouselIndex]?.tone}`}
+                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl transition-transform duration-300 group-hover:scale-105 ${activeFeature?.tone}`}
                           >
                             <span aria-hidden="true">
-                              {upcomingFeatures[featureCarouselIndex]?.icon}
+                              {activeFeature?.icon}
                             </span>
                           </div>
-                          <h2 className="text-xl font-semibold text-slate-50 sm:text-2xl">
-                            {upcomingFeatures[featureCarouselIndex]?.title}
-                          </h2>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                              <h2 className="text-xl font-semibold text-slate-50 transition-colors duration-300 group-hover:text-cyan-100 sm:text-2xl">
+                                {activeFeature?.title}
+                              </h2>
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">
+                                {activeFeature?.domainLabel}
+                              </span>
+                            </div>
+                            <div className="mt-2 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-cyan-200/90">
+                              <span>{t("header.featureCarousel.learnMore")}</span>
+                              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </a>
 
                     <div className="flex flex-col items-center gap-3 sm:items-end">
                       <a
-                        href="https://app.ricomatrix.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="theme-button-secondary px-4 py-2 text-xs md:text-sm"
+                        href={activeFeature?.href}
+                        target={activeFeature?.href?.startsWith("http") ? "_blank" : undefined}
+                        rel={activeFeature?.href?.startsWith("http") ? "noreferrer" : undefined}
+                        className="inline-flex min-h-[46px] items-center justify-center rounded-2xl border border-cyan-300/35 bg-[linear-gradient(135deg,rgba(14,165,233,0.22),rgba(6,182,212,0.34),rgba(30,41,59,0.92))] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_28px_rgba(34,211,238,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/70 hover:shadow-[0_0_32px_rgba(34,211,238,0.28)] md:text-sm"
                       >
                         <span>{t("header.featureCarousel.learnMore")}</span>
                       </a>

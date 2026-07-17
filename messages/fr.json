@@ -51,7 +51,7 @@
     },
     "launchInfo": {
       "launching": "INSCRIPTIONS OUVERTES",
-      "time": "Rico Quant Engine sera lancé le vendredi 17 juillet 2026 à 17h00 WAT",
+      "time": "Rico Quant Bot sera lancé le vendredi 17 juillet 2026 à 17h00 WAT",
       "badges": {
         "decentralized": "Propriété on-chain des chapitres",
         "earnings": "Gains directs X3 + gains par débordement X6",
@@ -491,27 +491,27 @@
       ]
     },
     "quantEngine": {
-      "kicker": "Nouveau produit RicoMatrix",
-      "title": "Rico Quant Engine arrive le vendredi 17 juillet 2026 à 17h00 WAT.",
-      "liveTitle": "Rico Quant Engine est maintenant en direct sur app.ricomatrix.com.",
-      "subtitle": "Rico Quant Engine est un produit RicoMatrix conçu pour la prochaine phase d’exécution crypto intelligente sur app.ricomatrix.com.",
-      "liveSubtitle": "Rico Quant Engine fait maintenant partie de l’écosystème produit live de RicoMatrix et est disponible via app.ricomatrix.com.",
-      "description": "Ce nouveau lancement étend l’écosystème RicoMatrix avec une expérience quant dédiée, des outils d’exécution plus précis et un environnement produit focalisé sous la marque RicoMatrix.",
+      "kicker": "Produit RicoMatrix en vedette",
+      "title": "Rico Quant Bot arrive le vendredi 17 juillet 2026 à 17h00 WAT.",
+      "liveTitle": "Rico Quant Bot est maintenant en direct sur app.ricomatrix.com.",
+      "subtitle": "Rico Quant Bot est un produit RicoMatrix séparé conçu pour l’exécution crypto intelligente sur app.ricomatrix.com.",
+      "liveSubtitle": "Rico Quant Bot est maintenant en direct comme produit RicoMatrix séparé sur app.ricomatrix.com.",
+      "description": "Nous mettons Rico Quant Bot en avant dans l’écosystème RicoMatrix afin que les utilisateurs découvrent ce nouveau produit directement depuis l’expérience principale.",
       "launchBadge": "Lancement aujourd’hui",
       "launchTime": "17h00 WAT · vendredi 17 juillet 2026",
       "liveBadge": "En direct",
       "liveTime": "Maintenant en direct sur app.ricomatrix.com",
       "ctaLaunch": "Voir la page de lancement",
-      "ctaLive": "Ouvrir Rico Quant Engine",
+      "ctaLive": "Ouvrir Rico Quant Bot",
       "points": [
-        "Il est hébergé sur app.ricomatrix.com comme produit officiel RicoMatrix.",
-        "Le lancement bascule automatiquement une fois qu’il est 17h00 au Nigeria.",
-        "Les utilisateurs peuvent passer directement de la landing RicoMatrix au produit en direct."
+        "Rico Quant Bot est hébergé sur app.ricomatrix.com comme produit RicoMatrix séparé.",
+        "L’état du lancement bascule automatiquement une fois qu’il est 17h00 au Nigeria le vendredi 17 juillet 2026.",
+        "Les utilisateurs peuvent découvrir le bot depuis RicoMatrix puis entrer directement dans le produit en direct."
       ],
       "card": {
-        "kicker": "Fenêtre de lancement",
-        "title": "Construit dans l’écosystème RicoMatrix.",
-        "description": "Le Quant Engine vient compléter les produits éducation, matrix, bibliothèque, royalties et staking alors que la plateforme s’étend vers des outils centrés sur l’exécution.",
+        "kicker": "Lancement produit",
+        "title": "Mis en avant dans l’écosystème RicoMatrix.",
+        "description": "Rico Quant Bot est présenté dans ce produit comme un lancement connecté à RicoMatrix tout en restant une expérience autonome sur app.ricomatrix.com.",
         "stats": [
           {
             "label": "Date de lancement",
@@ -1066,10 +1066,10 @@
               "description": "Des signaux assistés par l IA conçus pour un meilleur timing de marché et une préparation de trade plus claire."
             },
             {
-              "title": "Rico Quant Engine",
+              "title": "Rico Quant Bot",
               "status": "Aujourd’hui • 17h WAT",
-              "description": "Le RicoMatrix Quant Engine est lancé sur app.ricomatrix.com et ouvre un environnement produit dédié aux workflows quant en direct.",
-              "liveStatus": "Lancement"
+              "description": "Rico Quant Bot est lancé sur app.ricomatrix.com comme produit RicoMatrix séparé pour les workflows quant en direct.",
+              "liveStatus": "En direct"
             },
             {
               "title": "Scanner Crypto IA",

@@ -645,12 +645,26 @@ export default function RicoMatrixLandingPage() {
                   ))}
                 </div>
                 <div className={styles.heroCtas}>
-                  <a href="https://app.ricomatrix.com" target="_blank" rel="noreferrer" className={styles.secondaryCta}>
+                  <a href="https://app.ricomatrix.com" target="_blank" rel="noreferrer" className={styles.engineLaunchCta}>
                     {isQuantEngineLive ? t("quantEngine.ctaLive") : t("quantEngine.ctaLaunch")}
+                  </a>
+                  <a
+                    href="https://app.ricomatrix.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.engineLaunchGhostLink}
+                  >
+                    app.ricomatrix.com
                   </a>
                 </div>
               </div>
-              <div className={styles.engineLaunchCard}>
+              <a
+                href="https://app.ricomatrix.com"
+                target="_blank"
+                rel="noreferrer"
+                className={styles.engineLaunchCard}
+                aria-label="Open Rico Quant Bot on app.ricomatrix.com"
+              >
                 <span className={styles.statementKicker}>{t("quantEngine.card.kicker")}</span>
                 <h3>{t("quantEngine.card.title")}</h3>
                 <p>{t("quantEngine.card.description")}</p>
@@ -664,7 +678,10 @@ export default function RicoMatrixLandingPage() {
                     <strong>{t("quantEngine.card.stats.1.value")}</strong>
                   </div>
                 </div>
-              </div>
+                <span className={styles.engineLaunchCardAction}>
+                  {isQuantEngineLive ? t("quantEngine.ctaLive") : t("quantEngine.ctaLaunch")}
+                </span>
+              </a>
             </div>
           </div>
         </motion.section>

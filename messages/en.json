@@ -51,7 +51,7 @@
     },
     "launchInfo": {
       "launching": "NOW ENROLLING",
-      "time": "Rico Quant Engine launches Friday, July 17, 2026 at 5:00 PM WAT",
+      "time": "Rico Quant Bot launches Friday, July 17, 2026 at 5:00 PM WAT",
       "badges": {
         "decentralized": "On-chain ownership of chapters",
         "earnings": "X3 direct + X6 spillover earnings",
@@ -491,27 +491,27 @@
       ]
     },
     "quantEngine": {
-      "kicker": "New RicoMatrix Product",
-      "title": "Rico Quant Engine arrives Friday, July 17, 2026 at 5:00 PM WAT.",
-      "liveTitle": "Rico Quant Engine is now live on app.ricomatrix.com.",
-      "subtitle": "Rico Quant Engine is a RicoMatrix product built for the next phase of intelligent crypto execution at app.ricomatrix.com.",
-      "liveSubtitle": "Rico Quant Engine is now part of the live RicoMatrix product ecosystem and available through app.ricomatrix.com.",
-      "description": "This new launch extends the RicoMatrix ecosystem with a dedicated quant experience, sharper execution tooling, and a focused product environment under the RicoMatrix brand.",
+      "kicker": "Featured RicoMatrix Product",
+      "title": "Rico Quant Bot arrives Friday, July 17, 2026 at 5:00 PM WAT.",
+      "liveTitle": "Rico Quant Bot is now live on app.ricomatrix.com.",
+      "subtitle": "Rico Quant Bot is a separate RicoMatrix product built for intelligent crypto execution at app.ricomatrix.com.",
+      "liveSubtitle": "Rico Quant Bot is now live as a separate RicoMatrix product at app.ricomatrix.com.",
+      "description": "We are featuring Rico Quant Bot inside the RicoMatrix ecosystem so users can discover the new product directly from the main platform experience.",
       "launchBadge": "Launch Today",
       "launchTime": "5:00 PM WAT · Friday, July 17, 2026",
-      "liveBadge": "Live Now",
+      "liveBadge": "Live",
       "liveTime": "Now live on app.ricomatrix.com",
       "ctaLaunch": "View Launch Page",
-      "ctaLive": "Open Rico Quant Engine",
+      "ctaLive": "Open Rico Quant Bot",
       "points": [
-        "It lives at app.ricomatrix.com as an official RicoMatrix product.",
-        "The launch switches automatically once it is 5:00 PM in Nigeria.",
-        "Users can move from the main RicoMatrix landing page straight into the live product."
+        "Rico Quant Bot lives at app.ricomatrix.com as a separate RicoMatrix product.",
+        "The launch state switches automatically once it is 5:00 PM in Nigeria on Friday, July 17, 2026.",
+        "Users can discover the bot from RicoMatrix and move straight into the live product."
       ],
       "card": {
-        "kicker": "Launch Window",
-        "title": "Built under the RicoMatrix ecosystem.",
-        "description": "The Quant Engine sits beside the core education, matrix, library, royalty, and staking products as the platform expands into execution-focused tools.",
+        "kicker": "Product Launch",
+        "title": "Featured inside the RicoMatrix ecosystem.",
+        "description": "Rico Quant Bot is being presented inside this product as a connected RicoMatrix launch while remaining its own standalone experience on app.ricomatrix.com.",
         "stats": [
           {
             "label": "Launch Date",
@@ -1065,10 +1065,10 @@
               "description": "AI-assisted signal delivery built for sharper market timing and cleaner trade preparation."
             },
             {
-              "title": "Rico Quant Engine",
+              "title": "Rico Quant Bot",
               "status": "Today • 5PM WAT",
-              "description": "The RicoMatrix Quant Engine launches at app.ricomatrix.com and opens a dedicated product environment for live quant workflows.",
-              "liveStatus": "Launch Now"
+              "description": "Rico Quant Bot launches on app.ricomatrix.com as a separate RicoMatrix product for live quant workflows.",
+              "liveStatus": "Live"
             },
             {
               "title": "AI Crypto Scanner",

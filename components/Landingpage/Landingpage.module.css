@@ -575,6 +575,41 @@
   box-shadow: 0 0 24px rgba(0, 212, 255, 0.18);
 }
 
+.engineLaunchCta,
+.engineLaunchGhostLink {
+  min-height: 52px;
+  padding: 0.85rem 1.4rem;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.28s ease;
+}
+
+.engineLaunchCta {
+  border: 1px solid rgba(103, 232, 249, 0.38);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.24), rgba(6, 182, 212, 0.38), rgba(15, 23, 42, 0.96));
+  color: white;
+  box-shadow: 0 0 28px rgba(0, 212, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.engineLaunchCta:hover {
+  transform: translateY(-1px);
+  border-color: rgba(165, 243, 252, 0.72);
+  box-shadow: 0 0 32px rgba(0, 212, 255, 0.28);
+}
+
+.engineLaunchGhostLink {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--rm-text);
+}
+
+.engineLaunchGhostLink:hover {
+  border-color: rgba(241, 210, 133, 0.45);
+  box-shadow: 0 0 24px rgba(241, 210, 133, 0.14);
+}
+
 .heroChipRow {
 margin-top: 1.2rem;
   display: grid;
@@ -872,11 +907,20 @@ margin-top: 1.2rem;
 
 .engineLaunchCard {
   position: relative;
+  display: block;
   padding: 1.5rem;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  text-decoration: none;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+.engineLaunchCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(103, 232, 249, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 32px rgba(0, 212, 255, 0.14);
 }
 
 .engineLaunchCard h3 {
@@ -922,6 +966,27 @@ margin-top: 1.2rem;
   font-family: "Orbitron", sans-serif;
   font-size: 1rem;
   line-height: 1.45;
+}
+
+.engineLaunchCardAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rm-cyan);
+}
+
+.engineLaunchCardAction::after {
+  content: "→";
+  transition: transform 0.28s ease;
+}
+
+.engineLaunchCard:hover .engineLaunchCardAction::after {
+  transform: translateX(4px);
 }
 
 .videoPanel {
