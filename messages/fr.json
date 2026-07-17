@@ -51,7 +51,7 @@
     },
     "launchInfo": {
       "launching": "INSCRIPTIONS OUVERTES",
-      "time": "Rico Quant Bot sera lancé le vendredi 17 juillet 2026 à 17h00 WAT",
+      "time": "Rico Quant Bot sera lancé le vendredi 17 juillet 2026 à 23h00 WAT",
       "badges": {
         "decentralized": "Propriété on-chain des chapitres",
         "earnings": "Gains directs X3 + gains par débordement X6",
@@ -492,13 +492,13 @@
     },
     "quantEngine": {
       "kicker": "Produit RicoMatrix en vedette",
-      "title": "Rico Quant Bot arrive le vendredi 17 juillet 2026 à 17h00 WAT.",
+      "title": "Rico Quant Bot arrive le vendredi 17 juillet 2026 à 23h00 WAT.",
       "liveTitle": "Rico Quant Bot est maintenant en direct sur app.ricomatrix.com.",
       "subtitle": "Rico Quant Bot est un produit RicoMatrix séparé conçu pour l’exécution crypto intelligente sur app.ricomatrix.com.",
       "liveSubtitle": "Rico Quant Bot est maintenant en direct comme produit RicoMatrix séparé sur app.ricomatrix.com.",
       "description": "Nous mettons Rico Quant Bot en avant dans l’écosystème RicoMatrix afin que les utilisateurs découvrent ce nouveau produit directement depuis l’expérience principale.",
       "launchBadge": "Lancement aujourd’hui",
-      "launchTime": "17h00 WAT · vendredi 17 juillet 2026",
+      "launchTime": "23h00 WAT · vendredi 17 juillet 2026",
       "liveBadge": "En direct",
       "liveTime": "Maintenant en direct sur app.ricomatrix.com",
       "ctaLaunch": "Voir la page de lancement",
@@ -1067,7 +1067,7 @@
             },
             {
               "title": "Rico Quant Bot",
-              "status": "Aujourd’hui • 17h WAT",
+              "status": "Aujourd’hui • 23h WAT",
               "description": "Rico Quant Bot est lancé sur app.ricomatrix.com comme produit RicoMatrix séparé pour les workflows quant en direct.",
               "liveStatus": "En direct"
             },
