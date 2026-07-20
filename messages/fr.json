@@ -1062,24 +1062,24 @@
           "items": [
             {
               "title": "Signaux Crypto IA Avancés",
-              "status": "Bientôt disponible",
-              "description": "Des signaux assistés par l IA conçus pour un meilleur timing de marché et une préparation de trade plus claire."
+              "status": "En direct",
+              "description": "Les signaux crypto IA avancés sont maintenant en direct sur app.ricomatrix.com pour un meilleur timing de marché et une préparation de trade plus claire."
             },
             {
               "title": "Rico Quant Bot",
-              "status": "Aujourd’hui • 23h WAT",
-              "description": "Rico Quant Bot est lancé sur app.ricomatrix.com comme produit RicoMatrix séparé pour les workflows quant en direct.",
+              "status": "En direct",
+              "description": "Rico Quant Bot est maintenant en direct sur app.ricomatrix.com comme produit RicoMatrix séparé pour les workflows quant en direct.",
               "liveStatus": "En direct"
             },
             {
               "title": "Scanner Crypto IA",
-              "status": "Bientôt disponible",
-              "description": "Un scanner intelligent qui aide les utilisateurs à repérer plus vite les configurations, le momentum et les mouvements inhabituels."
+              "status": "En direct",
+              "description": "Le scanner crypto IA est maintenant en direct sur app.ricomatrix.com pour aider les utilisateurs à repérer plus vite les configurations, le momentum et les mouvements inhabituels."
             },
             {
               "title": "Bot de Trading Haute Fréquence",
-              "status": "Bientôt disponible",
-              "description": "Une couche d exécution plus rapide pour des stratégies automatisées avancées lors de la prochaine phase de la plateforme."
+              "status": "En direct",
+              "description": "Le bot de trading haute fréquence est maintenant en direct sur app.ricomatrix.com comme couche d exécution plus rapide pour des stratégies automatisées avancées."
             }
           ]
         }

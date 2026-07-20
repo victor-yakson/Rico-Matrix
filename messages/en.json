@@ -1061,24 +1061,24 @@
           "items": [
             {
               "title": "Advanced AI Crypto Signals",
-              "status": "Coming Soon",
-              "description": "AI-assisted signal delivery built for sharper market timing and cleaner trade preparation."
+              "status": "Live",
+              "description": "AI-assisted signal delivery is now live on app.ricomatrix.com for sharper market timing and cleaner trade preparation."
             },
             {
               "title": "Rico Quant Bot",
-              "status": "Today • 11PM WAT",
-              "description": "Rico Quant Bot launches on app.ricomatrix.com as a separate RicoMatrix product for live quant workflows.",
+              "status": "Live",
+              "description": "Rico Quant Bot is now live on app.ricomatrix.com as a separate RicoMatrix product for live quant workflows.",
               "liveStatus": "Live"
             },
             {
               "title": "AI Crypto Scanner",
-              "status": "Coming Soon",
-              "description": "A smart market scanner that helps users surface setups, momentum, and unusual crypto activity faster."
+              "status": "Live",
+              "description": "The AI Crypto Scanner is now live on app.ricomatrix.com to help users surface setups, momentum, and unusual crypto activity faster."
             },
             {
               "title": "High Frequency Trading Bot",
-              "status": "Coming Soon",
-              "description": "A faster execution layer for advanced automated strategies when the next phase of the platform goes live."
+              "status": "Live",
+              "description": "The High Frequency Trading Bot is now live on app.ricomatrix.com as a faster execution layer for advanced automated strategies."
             }
           ]
         }

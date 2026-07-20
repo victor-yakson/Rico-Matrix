@@ -79,8 +79,8 @@ export default function Dashboard() {
         icon: "📈",
         title: t("header.featureCarousel.items.0.title"),
         status: t("header.featureCarousel.items.0.status"),
-        href: "/#ecosystem",
-        domainLabel: "RicoMatrix",
+        href: "https://app.ricomatrix.com",
+        domainLabel: "app.ricomatrix.com",
         tone:
           "border-yellow-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(250,204,21,0.22),rgba(250,204,21,0.08))] text-yellow-100 shadow-[0_0_24px_rgba(234,179,8,0.16)]",
       },
@@ -99,8 +99,8 @@ export default function Dashboard() {
         icon: "🧠",
         title: t("header.featureCarousel.items.2.title"),
         status: t("header.featureCarousel.items.2.status"),
-        href: "/#ecosystem",
-        domainLabel: "RicoMatrix",
+        href: "https://app.ricomatrix.com",
+        domainLabel: "app.ricomatrix.com",
         tone:
           "border-amber-300/20 bg-[radial-gradient(circle_at_30%_30%,rgba(251,191,36,0.22),rgba(251,191,36,0.07))] text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.14)]",
       },
@@ -108,8 +108,8 @@ export default function Dashboard() {
         icon: "⚡",
         title: t("header.featureCarousel.items.3.title"),
         status: t("header.featureCarousel.items.3.status"),
-        href: "/#ecosystem",
-        domainLabel: "RicoMatrix",
+        href: "https://app.ricomatrix.com",
+        domainLabel: "app.ricomatrix.com",
         tone:
           "border-sky-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.2),rgba(56,189,248,0.06))] text-sky-100 shadow-[0_0_24px_rgba(56,189,248,0.14)]",
       },
