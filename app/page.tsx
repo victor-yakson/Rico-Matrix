@@ -18,7 +18,6 @@ import { Stats } from "../components/Dashboard/Stats";
 import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
-import { VotingModal } from "@/components/Voting/VotingModal";
 import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
 
 export default function Dashboard() {
@@ -62,8 +61,6 @@ export default function Dashboard() {
     Array<{ track: "X3" | "X6"; chapter: number }>
   >([]);
   const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
-  const [isVotingModalOpen, setIsVotingModalOpen] = useState(false);
-  const [hasPromptedVoting, setHasPromptedVoting] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const searchParams = useSearchParams();
   const urlReferral = searchParams.get("ref");
@@ -305,17 +302,6 @@ export default function Dashboard() {
 
     return () => window.clearInterval(intervalId);
   }, [dashboardState, upcomingFeatures.length]);
-
-  useEffect(() => {
-    if (
-      dashboardState === "dashboard" &&
-      userData?.exists &&
-      !hasPromptedVoting
-    ) {
-      setIsVotingModalOpen(true);
-      setHasPromptedVoting(true);
-    }
-  }, [dashboardState, hasPromptedVoting, userData?.exists]);
 
   // Show landing page if not connected
   if (!isConnected) {
@@ -666,10 +652,6 @@ export default function Dashboard() {
         </div>
         <SiteFooter />
       </div>
-      <VotingModal
-        open={dashboardState === "dashboard" && userData?.exists && isVotingModalOpen}
-        onClose={() => setIsVotingModalOpen(false)}
-      />
       <style jsx>{`
         .dashboard-feature-carousel {
           animation: dashboardFeatureFade 0.5s ease;

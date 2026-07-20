@@ -38,12 +38,6 @@ export const Header = () => {
       icon: "◎",
     },
     {
-      name: t("navigation.voting"),
-      href: "/voting",
-      current: pathname === "/voting",
-      icon: "✦",
-    },
-    {
       name: t("navigation.authors"),
       href: "/library",
       current: pathname?.startsWith("/library"),
@@ -113,7 +107,7 @@ export const Header = () => {
         </div>
       </header>
     );
-  }
+}
 
   return (
     <>
