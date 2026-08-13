@@ -1537,7 +1537,7 @@ export const useQuantuMatrix = () => {
         ...activeMigratorContract,
         functionName: "importUser",
         args: [address],
-        value: activeNativeFee,
+        value: BigInt(0),
       });
 
       toast.loading("Dashboard access submitted", {
@@ -1606,7 +1606,6 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     address,
-    activeNativeFee,
     publicClient,
     activeMigratorContract,
     refetchUserData,
