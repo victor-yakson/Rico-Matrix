@@ -51,15 +51,14 @@ export type RicoPaymentToken = {
 };
 
 const ETH_USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const ETH_USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
-const ETH_DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+const ETH_USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
 const BSC_USDC = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 const BSC_USDT = "0x55d398326f99059fF775485246999027B3197955";
 const BSC_DAI = "0x1AF3F329e8BE154074D8769D1FFa4eE058B1Dbc3";
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const BASE_USDS = "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc";
-const POLYGON_USDC = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
-const ROBINHOOD_USDG = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
+const BASE_USDT = "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2";
+const POLYGON_USDC = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
+const ROBINHOOD_USDG = "0x5fc5360d0400a0fd4f2af552add042d716f1d168";
 
 const ETH_RICO_TOKEN =
   (process.env.NEXT_PUBLIC_ETH_RICO_TOKEN_ADDRESS as `0x${string}`) ||
@@ -94,7 +93,6 @@ export const getRicoTokenAddress = (chainId?: number) =>
 const ETH_PAYMENT_TOKENS: RicoPaymentToken[] = [
   { symbol: "USDC", address: ETH_USDC as `0x${string}`, decimals: 6 },
   { symbol: "USDT", address: ETH_USDT as `0x${string}`, decimals: 6 },
-  { symbol: "DAI", address: ETH_DAI as `0x${string}`, decimals: 18 },
 ];
 
 const BSC_PAYMENT_TOKENS: RicoPaymentToken[] = [
@@ -105,7 +103,7 @@ const BSC_PAYMENT_TOKENS: RicoPaymentToken[] = [
 
 const BASE_PAYMENT_TOKENS: RicoPaymentToken[] = [
   { symbol: "USDC", address: BASE_USDC as `0x${string}`, decimals: 6 },
-  { symbol: "USDS", address: BASE_USDS as `0x${string}`, decimals: 18 },
+  { symbol: "USDT", address: BASE_USDT as `0x${string}`, decimals: 6 },
 ];
 
 const POLYGON_PAYMENT_TOKENS: RicoPaymentToken[] = [
