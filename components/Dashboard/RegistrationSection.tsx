@@ -415,7 +415,9 @@ export const RegistrationSection = ({
         setError(t("error.invalidAddress"));
       } else if (msg.toLowerCase().includes("refer yourself")) {
         setError(t("error.selfReferral"));
-      } else if (msg.toLowerCase().includes("referral")) {
+        } else if (msg.toLowerCase().includes("wallet confirmation")) {
+          setError(err?.message || t("error.registrationFailed"));
+        } else if (msg.toLowerCase().includes("referral")) {
         setError(t("error.invalidReferral"));
       } else if (
         msg.toLowerCase().includes("already registered") ||
@@ -1067,7 +1069,7 @@ export const RegistrationSection = ({
                       }`}
                     >
                       {isRegistering
-                        ? t("buttons.registering")
+                        ? t("buttons.confirmInWallet")
                         : t("buttons.completeRegistration")}
                     </button>
                   )}

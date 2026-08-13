@@ -915,6 +915,7 @@
         "insufficientBalance": "Insufficient Balance",
         "processing": "Processing...",
         "approveUsdt": "Approve {amount} {token}",
+        "confirmInWallet": "Confirm in Wallet",
         "completeRegistration": "Complete Registration"
       },
       "error": {

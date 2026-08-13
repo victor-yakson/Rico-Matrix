@@ -916,6 +916,7 @@
         "insufficientBalance": "Solde Insuffisant",
         "processing": "Traitement en cours...",
         "approveUsdt": "Approuver {amount} {token}",
+        "confirmInWallet": "Confirmer dans le portefeuille",
         "completeRegistration": "Finaliser l'Inscription"
       },
       "error": {

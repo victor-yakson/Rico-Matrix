@@ -23,6 +23,30 @@ import {
 
 const MIN_ROYALTY_USDT = 0.5;
 const PAYMENT_TOKEN_MAX_ALLOWANCE = "21000";
+const WALLET_CONFIRM_TIMEOUT_MS = 45000;
+
+const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(
+            new Error(
+              "Wallet confirmation did not open. Please reopen your wallet app and try again.",
+            ),
+          );
+        }, WALLET_CONFIRM_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+};
 
 // Helper function to safely convert BigInt to string for serialization
 const safeBigInt = (value: any): any => {
@@ -1182,12 +1206,14 @@ export const useQuantuMatrix = () => {
           duration: 10000,
         });
 
-        const hash = await writeContractAsync({
-          ...activeMatrixContract,
-          functionName: "joinLibraryHub",
-          args: [activePaymentToken.address, referrer as `0x${string}`],
-          value: activeNativeFee,
-        });
+        const hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...activeMatrixContract,
+            functionName: "joinLibraryHub",
+            args: [activePaymentToken.address, referrer as `0x${string}`],
+            value: activeNativeFee,
+          }),
+        );
 
         toast.loading("Registration Submitted!", {
           id: toastId,
