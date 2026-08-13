@@ -9,9 +9,7 @@ export const RICO_MATRIX_V3_ADDRESS =
   RICO_MATRIX_V3_SPOKE_ADDRESS;
 export const RICO_MIGRATOR_ADDRESS =
   (process.env.NEXT_PUBLIC_MIGRATOR_ADDRESS as `0x${string}`) ||
-  (process.env.NEXT_PUBLIC_RICO_V1_MIGRATOR_ADDRESS as `0x${string}`) ||
   "0x1a5F3275F05aC6184F8f151e008CE489117a738D";
-export const RICO_V1_MIGRATOR_ADDRESS = RICO_MIGRATOR_ADDRESS;
 export const OMNICHAIN_SYNC_MANAGER_ADDRESS =
   (process.env.NEXT_PUBLIC_OMNICHAIN_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
   "0x30f884b45d934984ede86e74930e0b7742c6bfba";
@@ -152,7 +150,7 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30101,
     cctpDomain: 0,
     matrix: RICO_MATRIX_V3_ADDRESS,
-    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
     paymentTokens: ETH_PAYMENT_TOKENS,
     paymentToken: ETH_DEFAULT_PAYMENT_TOKEN.address,
@@ -165,7 +163,7 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30102,
     cctpDomain: 0,
     matrix: RICO_MATRIX_V3_ADDRESS,
-    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
     paymentTokens: BSC_PAYMENT_TOKENS,
     paymentToken: BSC_DEFAULT_PAYMENT_TOKEN.address,
@@ -178,7 +176,7 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30184,
     cctpDomain: 6,
     matrix: RICO_MATRIX_V3_ADDRESS,
-    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
     paymentTokens: BASE_PAYMENT_TOKENS,
     paymentToken: BASE_DEFAULT_PAYMENT_TOKEN.address,
@@ -191,7 +189,7 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30109,
     cctpDomain: 7,
     matrix: RICO_MATRIX_V3_ADDRESS,
-    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
     paymentTokens: POLYGON_PAYMENT_TOKENS,
     paymentToken: POLYGON_DEFAULT_PAYMENT_TOKEN.address,
@@ -204,7 +202,7 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30416,
     cctpDomain: 0,
     matrix: RICO_MATRIX_V3_ADDRESS,
-    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
     paymentTokens: ROBINHOOD_PAYMENT_TOKENS,
     paymentToken: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.address,
@@ -217,6 +215,16 @@ export type RicoSupportedChainId = keyof typeof RICO_CHAIN_CONFIG;
 
 export const getRicoChainConfig = (chainId?: number) =>
   RICO_CHAIN_CONFIG[(chainId || 56) as RicoSupportedChainId] || RICO_CHAIN_CONFIG[56];
+
+export const RICO_MIGRATOR_ABI = [
+  {
+    inputs: [],
+    name: "importUser",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+] as const;
 
 export const RICO_MATRIX_V3_ABI = [
   {

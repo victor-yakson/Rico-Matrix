@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import {
   CONTRACT_ABI,
   LEGACY_V2_CONTRACT_ADDRESS,
+  RICO_MIGRATOR_ABI,
   USDT_ABI,
   getRicoChainConfig,
   getRicoTokenAddress,
@@ -200,6 +201,13 @@ export const useQuantuMatrix = () => {
       address: activeChain.matrix,
     }),
     [activeChain.matrix],
+  );
+  const activeMigratorContract = useMemo(
+    () => ({
+      address: activeChain.migrator,
+      abi: RICO_MIGRATOR_ABI,
+    }),
+    [activeChain.migrator],
   );
   const activePaymentTokenContract = useMemo(
     () => ({
@@ -1472,7 +1480,7 @@ export const useQuantuMatrix = () => {
     ]
   );
 
-  // Migrate self function
+  // Dashboard access uses the v2-to-v3 migrator contract.
   const migrateSelf = useCallback(async () => {
     const toastId = "migrate-self";
 
@@ -1492,8 +1500,8 @@ export const useQuantuMatrix = () => {
       });
 
       const hash = await writeContractAsync({
-        ...activeMatrixContract,
-        functionName: "migrateSelf",
+        ...activeMigratorContract,
+        functionName: "importUser",
       });
 
       toast.loading("Dashboard access submitted", {
@@ -1554,7 +1562,7 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     publicClient,
-    activeMatrixContract,
+    activeMigratorContract,
     refetchUserData,
     refetchAllData,
   ]);
