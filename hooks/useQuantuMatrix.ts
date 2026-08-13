@@ -9,7 +9,7 @@ import {
 } from "wagmi";
 import { quantuMatrixContract } from "../utils/contracts";
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits, parseEther, parseUnits } from "viem";
 import type { ContractFunctionParameters } from "viem";
 import { toast } from "sonner";
 import {
@@ -64,6 +64,15 @@ const toBigIntValue = (value: any): bigint => {
     }
   }
   return BigInt(0);
+};
+
+const parseNativeFee = (value: string | undefined): bigint => {
+  if (!value || value === "0") return BigInt(0);
+  try {
+    return parseEther(value);
+  } catch {
+    return BigInt(0);
+  }
 };
 
 const toUsdtNumber = (value: any): number => {
@@ -189,6 +198,10 @@ export const useQuantuMatrix = () => {
       ) ||
       activeChain.paymentTokens[0],
     [activeChain, selectedPaymentTokenAddress],
+  );
+  const activeNativeFee = useMemo(
+    () => parseNativeFee(activeChain.nativeFee),
+    [activeChain.nativeFee],
   );
 
   useEffect(() => {
@@ -1132,7 +1145,16 @@ export const useQuantuMatrix = () => {
         setLoading(false);
       }
     },
-    [writeContractAsync, publicClient, refetchAllData]
+    [
+      activeChain.id,
+      activeMatrixContract,
+      activeNativeFee,
+      activePaymentToken.address,
+      activePaymentToken.symbol,
+      publicClient,
+      refetchAllData,
+      writeContractAsync,
+    ]
   );
 
   // Join library function
@@ -1159,6 +1181,7 @@ export const useQuantuMatrix = () => {
           ...activeMatrixContract,
           functionName: "joinLibraryHub",
           args: [activePaymentToken.address, referrer as `0x${string}`],
+          value: activeNativeFee,
         });
 
         toast.loading("Registration Submitted!", {
@@ -1248,6 +1271,7 @@ export const useQuantuMatrix = () => {
           ...activeMatrixContract,
           functionName: "buyChapterBatchHub",
           args: [activePaymentToken.address, track, chapter, chapter],
+          value: activeNativeFee,
         });
 
         toast.loading("Transaction Submitted", {
@@ -1316,6 +1340,11 @@ export const useQuantuMatrix = () => {
     },
     [
       writeContractAsync,
+      activeChain.id,
+      activeNativeFee,
+      activePaymentToken.address,
+      activePaymentToken.symbol,
+      activeMatrixContract,
       address,
       clearMatrixCache,
       publicClient,
@@ -1352,6 +1381,7 @@ export const useQuantuMatrix = () => {
           ...activeMatrixContract,
           functionName: "buyChapterBatchHub",
           args: [activePaymentToken.address, track, startChapter, endChapter],
+          value: activeNativeFee,
         });
 
         toast.loading("Batch Purchase Submitted", {
@@ -1422,6 +1452,8 @@ export const useQuantuMatrix = () => {
       activePaymentToken.symbol,
       activePaymentToken.address,
       activeMatrixContract,
+      activeNativeFee,
+      activeChain.id,
       address,
       clearMatrixCache,
       publicClient,
@@ -1660,6 +1692,7 @@ export const useQuantuMatrix = () => {
           ...activeMatrixContract,
           functionName: "claimRico",
           args: [claimAmount],
+          value: activeNativeFee,
         });
 
         toast.loading("RICO Claim Submitted!", {
@@ -1714,7 +1747,14 @@ export const useQuantuMatrix = () => {
         setLoading(false);
       }
     },
-    [writeContractAsync, publicClient, refetchRicoFarming, refetchUserData]
+    [
+      activeMatrixContract,
+      activeNativeFee,
+      publicClient,
+      refetchRicoFarming,
+      refetchUserData,
+      writeContractAsync,
+    ]
   );
 
   // Claim V2 royalty function
@@ -1854,6 +1894,7 @@ export const useQuantuMatrix = () => {
         ...activeMatrixContract,
         functionName: "claimRoyaltyV3",
         args: [activePaymentToken.address, activeChain.lzEid],
+        value: activeNativeFee,
       });
 
       toast.loading("Royalty Claim Submitted!", {
@@ -1913,6 +1954,8 @@ export const useQuantuMatrix = () => {
     writeContractAsync,
     publicClient,
     activeChain.lzEid,
+    activeChain.id,
+    activeNativeFee,
     activePaymentToken.address,
     activeMatrixContract,
     royaltyAvailable,
