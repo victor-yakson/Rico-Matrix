@@ -466,10 +466,8 @@ export const useQuantuMatrix = () => {
 
   // Calculate join cost
   const joinCost =
-    chapterPrices && Array.isArray(chapterPrices) && chapterPrices.length > 1
-      ? (
-          parseFloat(formatUnits(BigInt(chapterPrices[1] || "0"), 18)) * 2
-        ).toString()
+    chapterPrices && Array.isArray(chapterPrices) && chapterPrices.length > 0
+      ? formatUnits(BigInt(chapterPrices[0] || "0"), 18)
       : "0";
 
   // Process Track2 data
