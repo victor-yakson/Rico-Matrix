@@ -1085,9 +1085,6 @@
           ]
         }
       },
-      "networks": {
-        "availableOn": "Available On:"
-      },
       "ricoFarmingSection": {
         "title": "🪙 RICO Token Farming",
         "viewToken": "View Token",
@@ -2630,5 +2627,8 @@
       "summaryRate": "Reward rate"
     },
     "perksKicker": "Why this matters"
+  },
+  "GlobalNetworks": {
+    "availableOn": "Available On:"
   }
 }

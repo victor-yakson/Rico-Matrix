@@ -7,6 +7,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import VisitTracker from "@/components/Common/VisitTracker";
 import WalletCookieSync from "@/components/Common/WalletCookieSync";
+import NetworkShowcase from "@/components/Common/NetworkShowcase";
 
 export const metadata: Metadata = {
   title: "RicoMatrix - Read • Earn • Own",
@@ -39,6 +40,7 @@ export default async function RootLayout({
               />
               <VisitTracker />
               <WalletCookieSync />
+              <NetworkShowcase />
               <PageTransition>{children}</PageTransition>
             </Web3Provider>
           </NextIntlClientProvider>
