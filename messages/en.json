@@ -903,8 +903,8 @@
       },
       "cost": {
         "registrationCost": "Registration Cost",
-        "balance": "Your USDT Balance",
-        "allowance": "USDT Allowance",
+        "balance": "Your {token} Balance",
+        "allowance": "{token} Allowance",
         "ready": "Ready",
         "approvalRequired": "Approval required"
       },
@@ -914,7 +914,7 @@
         "reviewRequired": "Review Required",
         "insufficientBalance": "Insufficient Balance",
         "processing": "Processing...",
-        "approveUsdt": "Approve {amount} USDT",
+        "approveUsdt": "Approve {amount} {token}",
         "completeRegistration": "Complete Registration"
       },
       "error": {
@@ -925,10 +925,10 @@
         "alreadyRegistered": "You are already registered",
         "approvalFailed": "USDT approval failed",
         "registrationFailed": "Registration failed",
-        "insufficientBalance": "Insufficient USDT balance. Required: {joinCost} USDT, Available: {usdtBalance} USDT"
+        "insufficientBalance": "Insufficient {token} balance. Required: {joinCost} {token}, Available: {usdtBalance} {token}"
       },
       "progress": {
-        "step1": "1. Approve USDT",
+        "step1": "1. Approve {token}",
         "step2": "2. Register Wallet",
         "note": "All actions happen directly on BSC via your wallet. RicoMatrix cannot move your funds without your transaction approval.",
         "confirming": "Confirming your registration on-chain..."
@@ -1040,7 +1040,7 @@
         }
       },
       "alerts": {
-        "insufficientBalance": "Insufficient USDT balance. You need {joinCost} USDT but only have {usdtBalance} USDT"
+        "insufficientBalance": "Insufficient {token} balance. You need {joinCost} {token} but only have {usdtBalance} {token}"
       },
       "sectionTitle": "Create Your Account"
     },

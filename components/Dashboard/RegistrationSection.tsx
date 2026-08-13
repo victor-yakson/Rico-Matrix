@@ -16,6 +16,56 @@ interface RegistrationSectionProps {
 
 const FALLBACK_REFERRER = "0xd7e5a3c00b7871f57aeff293f1844db466260f4f";
 const REFERRAL_STORAGE_KEY = "quantumatrix_referral_address";
+
+type PaymentTokenOption = {
+  symbol: string;
+  address: `0x${string}`;
+  decimals: number;
+};
+
+const TOKEN_STYLES: Record<
+  string,
+  { label: string; className: string; ringClassName: string }
+> = {
+  USDT: {
+    label: "T",
+    className: "from-emerald-300 via-teal-400 to-emerald-600 text-white",
+    ringClassName: "ring-emerald-300/40",
+  },
+  USDC: {
+    label: "$",
+    className: "from-sky-300 via-blue-500 to-blue-700 text-white",
+    ringClassName: "ring-blue-300/40",
+  },
+  DAI: {
+    label: "D",
+    className: "from-amber-200 via-yellow-500 to-orange-600 text-slate-950",
+    ringClassName: "ring-yellow-300/40",
+  },
+  USDG: {
+    label: "G",
+    className: "from-lime-200 via-emerald-400 to-cyan-600 text-slate-950",
+    ringClassName: "ring-emerald-300/40",
+  },
+};
+
+const TokenLogo = ({ symbol }: { symbol: string }) => {
+  const style = TOKEN_STYLES[symbol] || {
+    label: symbol.slice(0, 1),
+    className: "from-slate-300 via-slate-500 to-slate-700 text-white",
+    ringClassName: "ring-slate-300/30",
+  };
+
+  return (
+    <span
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-black shadow-lg ring-2 ${style.className} ${style.ringClassName}`}
+      aria-hidden="true"
+    >
+      {style.label}
+    </span>
+  );
+};
+
 export const RegistrationSection = ({
   referralAddress,
   onRegistrationComplete,
@@ -53,6 +103,7 @@ export const RegistrationSection = ({
   const [agreedToDisclaimer, setAgreedToDisclaimer] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [tokenMenuOpen, setTokenMenuOpen] = useState(false);
 
   // Check if user is already registered and clear referral if they are
   useEffect(() => {
@@ -149,6 +200,16 @@ export const RegistrationSection = ({
     () => parseFloat(usdtAllowance || "0"),
     [usdtAllowance]
   );
+  const activePaymentToken = useMemo(
+    () =>
+      paymentTokens?.find(
+        (token: PaymentTokenOption) =>
+          token.address.toLowerCase() ===
+          selectedPaymentTokenAddress?.toLowerCase(),
+      ) || paymentTokens?.[0],
+    [paymentTokens, selectedPaymentTokenAddress],
+  );
+  const selectedTokenSymbol = activePaymentToken?.symbol || paymentTokenSymbol || "USDT";
 
   const hasSufficientBalance =
     numericBalance >= numericJoinCost && numericJoinCost > 0;
@@ -716,6 +777,7 @@ export const RegistrationSection = ({
                   {t("alerts.insufficientBalance", {
                     joinCost: joinCost || "0",
                     usdtBalance: usdtBalance || "0",
+                    token: selectedTokenSymbol,
                   })}
                 </div>
               )}
@@ -730,21 +792,21 @@ export const RegistrationSection = ({
                     {t("cost.registrationCost")}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-yellow-300">
-                    {joinCost || "0"} {paymentTokenSymbol || "USDT"}
+                    {joinCost || "0"} {selectedTokenSymbol}
                   </div>
                 </div>
                 <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-3 py-3">
                   <div className="text-[0.7rem] text-slate-400 mb-1">
-                    {t("cost.balance")}
+                    {t("cost.balance", { token: selectedTokenSymbol })}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-slate-100">
-                    {Number(usdtBalance).toFixed(2) || "0"} {paymentTokenSymbol || "USDT"}
+                    {Number(usdtBalance).toFixed(2) || "0"} {selectedTokenSymbol}
                   </div>
                 </div>
               </div>
 
               <div className="mb-4 flex items-center justify-between text-[0.7rem]">
-                <span className="text-slate-400">{t("cost.allowance")}</span>
+                <span className="text-slate-400">{t("cost.allowance", { token: selectedTokenSymbol })}</span>
                 <span
                   className={
                     hasSufficientAllowance
@@ -759,22 +821,87 @@ export const RegistrationSection = ({
               </div>
 
               {paymentTokens?.length > 1 && (
-                <label className="mb-4 block text-[0.7rem] text-slate-400">
-                  Payment token
-                  <select
-                    value={selectedPaymentTokenAddress}
-                    onChange={(event) =>
-                      setSelectedPaymentTokenAddress(event.target.value as `0x${string}`)
-                    }
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                <div className="relative mb-4">
+                  <span className="mb-2 block text-[0.7rem] text-slate-400">
+                    Payment token
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTokenMenuOpen((open) => !open)}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-700/80 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 px-3 py-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_26px_rgba(0,0,0,0.32)] transition hover:border-yellow-400/50 focus:outline-none focus:ring-2 focus:ring-yellow-400/40"
+                    aria-expanded={tokenMenuOpen}
+                    aria-haspopup="listbox"
                   >
-                    {paymentTokens.map((token) => (
-                      <option key={token.address} value={token.address}>
-                        {token.symbol}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    <span className="flex min-w-0 items-center gap-3">
+                      <TokenLogo symbol={selectedTokenSymbol} />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-slate-50">
+                          {selectedTokenSymbol}
+                        </span>
+                        <span className="block truncate text-[0.65rem] text-slate-400">
+                          {activePaymentToken?.address}
+                        </span>
+                      </span>
+                    </span>
+                    <svg
+                      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${tokenMenuOpen ? "rotate-180" : ""}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  {tokenMenuOpen && (
+                    <div
+                      className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-yellow-400/25 bg-slate-950/98 shadow-[0_20px_45px_rgba(0,0,0,0.55)] backdrop-blur"
+                      role="listbox"
+                    >
+                      {paymentTokens.map((token: PaymentTokenOption) => {
+                        const isSelected =
+                          token.address.toLowerCase() ===
+                          selectedPaymentTokenAddress?.toLowerCase();
+
+                        return (
+                          <button
+                            key={token.address}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPaymentTokenAddress(token.address);
+                              setTokenMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center gap-3 px-3 py-3 text-left transition ${
+                              isSelected
+                                ? "bg-yellow-400/10 text-yellow-100"
+                                : "text-slate-200 hover:bg-slate-800"
+                            }`}
+                            role="option"
+                            aria-selected={isSelected}
+                          >
+                            <TokenLogo symbol={token.symbol} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold">
+                                {token.symbol}
+                              </span>
+                              <span className="block truncate text-[0.65rem] text-slate-500">
+                                {token.address}
+                              </span>
+                            </span>
+                            {isSelected && (
+                              <span className="rounded-full bg-yellow-300 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-950">
+                                Active
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               )}
 
               {userData?.exists ? (
@@ -819,7 +946,10 @@ export const RegistrationSection = ({
                     >
                       {isApproving
                         ? t("buttons.approving")
-                        : t("buttons.approveUsdt", { amount: joinCost || "0" })}
+                        : t("buttons.approveUsdt", {
+                            amount: joinCost || "0",
+                            token: selectedTokenSymbol,
+                          })}
                     </button>
                   )}
 
@@ -865,7 +995,7 @@ export const RegistrationSection = ({
                         : "text-slate-400"
                     }
                   >
-                    {t("progress.step1")}
+                    {t("progress.step1", { token: selectedTokenSymbol })}
                   </span>
                   <span
                     className={

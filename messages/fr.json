@@ -904,8 +904,8 @@
       },
       "cost": {
         "registrationCost": "Coût d'Inscription",
-        "balance": "Votre Solde USDT",
-        "allowance": "Autorisation USDT",
+        "balance": "Votre Solde {token}",
+        "allowance": "Autorisation {token}",
         "ready": "Prêt",
         "approvalRequired": "Approbation requise"
       },
@@ -915,7 +915,7 @@
         "reviewRequired": "Révision Requise",
         "insufficientBalance": "Solde Insuffisant",
         "processing": "Traitement en cours...",
-        "approveUsdt": "Approuver {amount} USDT",
+        "approveUsdt": "Approuver {amount} {token}",
         "completeRegistration": "Finaliser l'Inscription"
       },
       "error": {
@@ -926,10 +926,10 @@
         "alreadyRegistered": "Vous êtes déjà inscrit",
         "approvalFailed": "Échec de l'approbation USDT",
         "registrationFailed": "Échec de l'inscription",
-        "insufficientBalance": "Solde USDT insuffisant. Requis : {joinCost} USDT, Disponible : {usdtBalance} USDT"
+        "insufficientBalance": "Solde {token} insuffisant. Requis : {joinCost} {token}, Disponible : {usdtBalance} {token}"
       },
       "progress": {
-        "step1": "1. Approuver USDT",
+        "step1": "1. Approuver {token}",
         "step2": "2. Inscrire le Portefeuille",
         "note": "Toutes les actions se produisent directement sur BSC via votre portefeuille. RicoMatrix ne peut pas déplacer vos fonds sans votre approbation de transaction.",
         "confirming": "Confirmation de votre inscription sur la blockchain..."
@@ -1041,7 +1041,7 @@
         }
       },
       "alerts": {
-        "insufficientBalance": "Solde USDT insuffisant. Vous avez besoin de {joinCost} USDT mais n'avez que {usdtBalance} USDT"
+        "insufficientBalance": "Solde {token} insuffisant. Vous avez besoin de {joinCost} {token} mais n'avez que {usdtBalance} {token}"
       },
       "sectionTitle": "Créer Votre Compte"
     },

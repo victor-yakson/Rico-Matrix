@@ -91,19 +91,19 @@ export const getRicoTokenAddress = (chainId?: number) =>
   TOKEN_CONTRACT_ADDRESS;
 
 const ETH_PAYMENT_TOKENS: RicoPaymentToken[] = [
-  { symbol: "USDC", address: ETH_USDC as `0x${string}`, decimals: 6 },
   { symbol: "USDT", address: ETH_USDT as `0x${string}`, decimals: 6 },
+  { symbol: "USDC", address: ETH_USDC as `0x${string}`, decimals: 6 },
 ];
 
 const BSC_PAYMENT_TOKENS: RicoPaymentToken[] = [
-  { symbol: "USDC", address: BSC_USDC as `0x${string}`, decimals: 18 },
   { symbol: "USDT", address: BSC_USDT as `0x${string}`, decimals: 18 },
+  { symbol: "USDC", address: BSC_USDC as `0x${string}`, decimals: 18 },
   { symbol: "DAI", address: BSC_DAI as `0x${string}`, decimals: 18 },
 ];
 
 const BASE_PAYMENT_TOKENS: RicoPaymentToken[] = [
-  { symbol: "USDC", address: BASE_USDC as `0x${string}`, decimals: 6 },
   { symbol: "USDT", address: BASE_USDT as `0x${string}`, decimals: 6 },
+  { symbol: "USDC", address: BASE_USDC as `0x${string}`, decimals: 6 },
 ];
 
 const POLYGON_PAYMENT_TOKENS: RicoPaymentToken[] = [
