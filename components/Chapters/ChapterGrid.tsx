@@ -24,6 +24,7 @@ export const ChapterGrid = () => {
     usdtAllowance,
     usdtBalance,
     paymentTokenSymbol,
+    paymentTokenMaxAllowance,
     paymentTokens,
     selectedPaymentTokenAddress,
     setSelectedPaymentTokenAddress,
@@ -269,7 +270,7 @@ export const ChapterGrid = () => {
               {isBatchBuying
                 ? "Processing..."
                 : batchNeedsApproval
-                  ? `Approve ${formatUnits(batchCost, 18)} ${paymentTokenSymbol || "USDT"}`
+                  ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"}`
                   : `Buy ${batchStart}-${batchEnd}`}
             </button>
           </div>

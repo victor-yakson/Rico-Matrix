@@ -22,6 +22,7 @@ import {
 } from "@/utils/constants";
 
 const MIN_ROYALTY_USDT = 0.5;
+const PAYMENT_TOKEN_MAX_ALLOWANCE = "21000";
 
 // Helper function to safely convert BigInt to string for serialization
 const safeBigInt = (value: any): any => {
@@ -1061,7 +1062,7 @@ export const useQuantuMatrix = () => {
 
   // Approve USDT function
   const approveUsdt = useCallback(
-    async (amount: string) => {
+    async (_amount: string) => {
       const toastId = "approve-usdt";
 
       try {
@@ -1073,11 +1074,15 @@ export const useQuantuMatrix = () => {
           );
         }
 
-        const amountInWei = parseUnits(amount, activePaymentToken.decimals);
+        const approvalAmount = PAYMENT_TOKEN_MAX_ALLOWANCE;
+        const amountInWei = parseUnits(
+          approvalAmount,
+          activePaymentToken.decimals,
+        );
 
         toast.info(`Approve ${activePaymentToken.symbol}`, {
           id: toastId,
-          description: "Please confirm the transaction in your wallet...",
+          description: `Please approve ${approvalAmount} ${activePaymentToken.symbol} in your wallet...`,
           duration: 10000,
         });
 
@@ -1104,7 +1109,7 @@ export const useQuantuMatrix = () => {
         if (receipt.status === "success") {
           toast.success("Approval Successful!", {
             id: toastId,
-            description: `${activePaymentToken.symbol} approved successfully.`,
+            description: `${approvalAmount} ${activePaymentToken.symbol} approved successfully.`,
             duration: 5000,
           });
 
@@ -2032,6 +2037,7 @@ export const useQuantuMatrix = () => {
     paymentTokenAddress: activePaymentToken.address,
     paymentTokenSymbol: activePaymentToken.symbol,
     paymentTokenDecimals: activePaymentToken.decimals,
+    paymentTokenMaxAllowance: PAYMENT_TOKEN_MAX_ALLOWANCE,
     paymentTokenSupported: selectedPaymentTokenSupported,
     paymentTokens: activeChain.paymentTokens,
     selectedPaymentTokenAddress: activePaymentToken.address,

@@ -80,6 +80,7 @@ export const RegistrationSection = ({
     loading,
     contractConfig,
     paymentTokenSymbol,
+    paymentTokenMaxAllowance,
     paymentTokens,
     selectedPaymentTokenAddress,
     setSelectedPaymentTokenAddress,
@@ -957,7 +958,7 @@ export const RegistrationSection = ({
                       {isApproving
                         ? t("buttons.approving")
                         : t("buttons.approveUsdt", {
-                            amount: joinCost || "0",
+                            amount: paymentTokenMaxAllowance || "21000",
                             token: selectedTokenSymbol,
                           })}
                     </button>
