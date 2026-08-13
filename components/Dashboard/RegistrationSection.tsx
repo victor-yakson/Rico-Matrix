@@ -84,6 +84,7 @@ export const RegistrationSection = ({
     contractConfig,
     paymentTokenSymbol,
     paymentTokenMaxAllowance,
+    paymentTokenSupported,
     paymentTokens,
     selectedPaymentTokenAddress,
     setSelectedPaymentTokenAddress,
@@ -256,7 +257,8 @@ export const RegistrationSection = ({
           hasSufficientBalance &&
           effectiveReferralAddress &&
           isReferralValid &&
-          !isSelfReferral
+          !isSelfReferral &&
+          paymentTokenSupported !== false
       );
 
   // -----------------------------
@@ -360,6 +362,11 @@ export const RegistrationSection = ({
 
     if (!hasSufficientAllowance) {
       setError(`Please approve ${selectedTokenSymbol} before registering.`);
+      return;
+    }
+
+    if (paymentTokenSupported === false) {
+      setError(`${selectedTokenSymbol} is not supported for registration on this chain.`);
       return;
     }
 

@@ -225,19 +225,24 @@ export const useQuantuMatrix = () => {
   const activeChain = useMemo(() => getRicoChainConfig(chainId), [chainId]);
   const [selectedPaymentTokenAddress, setSelectedPaymentTokenAddress] =
     useState<`0x${string}` | null>(null);
+  const defaultPaymentToken = useMemo(
+    () =>
+      activeChain.paymentTokens.find(
+        (token) =>
+          token.address.toLowerCase() === activeChain.paymentToken.toLowerCase(),
+      ) ||
+      activeChain.paymentTokens.find((token) => token.symbol === "USDT") ||
+      activeChain.paymentTokens[0],
+    [activeChain],
+  );
   const activePaymentToken = useMemo(
     () =>
       activeChain.paymentTokens.find(
         (token) =>
           token.address.toLowerCase() ===
           selectedPaymentTokenAddress?.toLowerCase(),
-      ) ||
-      activeChain.paymentTokens.find(
-        (token) =>
-          token.address.toLowerCase() === activeChain.paymentToken.toLowerCase(),
-      ) ||
-      activeChain.paymentTokens[0],
-    [activeChain, selectedPaymentTokenAddress],
+      ) || defaultPaymentToken,
+    [activeChain.paymentTokens, defaultPaymentToken, selectedPaymentTokenAddress],
   );
   const activeNativeFee = useMemo(
     () => parseNativeFee(activeChain.nativeFee),
@@ -305,8 +310,8 @@ export const useQuantuMatrix = () => {
   }, [activeChain.id]);
 
   useEffect(() => {
-    setSelectedPaymentTokenAddress(activeChain.paymentToken);
-  }, [activeChain.paymentToken]);
+    setSelectedPaymentTokenAddress(defaultPaymentToken.address);
+  }, [defaultPaymentToken.address]);
 
   const activeMatrixContract = useMemo(
     () => ({
@@ -1281,6 +1286,20 @@ export const useQuantuMatrix = () => {
           duration: 10000,
         });
 
+        if (selectedPaymentTokenSupported === false) {
+          throw new Error(
+            `${activePaymentToken.symbol} is not supported for registration on ${activeChain.name}.`
+          );
+        }
+
+        await publicClient.simulateContract({
+          ...activeMatrixContract,
+          functionName: "joinLibraryHub",
+          args: [activePaymentToken.address, referrer as `0x${string}`],
+          account: address,
+          value: BigInt(0),
+        });
+
         const hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...activeMatrixContract,
@@ -1330,6 +1349,11 @@ export const useQuantuMatrix = () => {
           errorMessage = `Insufficient ${activePaymentToken.symbol} balance or allowance`;
         } else if (error?.message?.includes("ReaderExists")) {
           errorMessage = "You are already registered";
+        } else if (
+          error?.message?.includes("TokenNotSupported") ||
+          error?.message?.includes("not supported")
+        ) {
+          errorMessage = `${activePaymentToken.symbol} is not supported for registration on ${activeChain.name}.`;
         } else if (error?.message?.includes("on-chain")) {
           errorMessage = "Transaction failed on-chain";
         } else if (error?.message?.includes("Wallet client not available")) {
@@ -1350,11 +1374,14 @@ export const useQuantuMatrix = () => {
     },
     [
       activeChain.id,
+      activeChain.name,
       activeMatrixContract,
       activePaymentToken.address,
       activePaymentToken.symbol,
+      address,
       publicClient,
       refetchAllData,
+      selectedPaymentTokenSupported,
       writeContractAsync,
     ]
   );
