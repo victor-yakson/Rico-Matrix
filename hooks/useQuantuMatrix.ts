@@ -1355,6 +1355,9 @@ export const useQuantuMatrix = () => {
         } else if (error?.message?.includes("LZ_InsufficientFee")) {
           errorMessage =
             "The registration sync fee was too low. Please try again so the app can recalculate the current network fee.";
+        } else if (error?.message?.includes("Transfer_NativeFailed")) {
+          errorMessage =
+            "LayerZero could not refund native gas to the V3 contract. The contract needs a payable receive function or the sync manager must refund to a payable address.";
         } else if (error?.message?.includes("on-chain")) {
           errorMessage = "Transaction failed on-chain";
         } else if (error?.message?.includes("Wallet client not available")) {
