@@ -66,6 +66,9 @@ const TokenLogo = ({ symbol }: { symbol: string }) => {
   );
 };
 
+const formatAddress = (value?: string) =>
+  value ? `${value.slice(0, 6)}...${value.slice(-4)}` : "";
+
 export const RegistrationSection = ({
   referralAddress,
   onRegistrationComplete,
@@ -105,6 +108,7 @@ export const RegistrationSection = ({
   const [isApproving, setIsApproving] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [tokenMenuOpen, setTokenMenuOpen] = useState(false);
+  const [copiedTokenAddress, setCopiedTokenAddress] = useState(false);
 
   // Check if user is already registered and clear referral if they are
   useEffect(() => {
@@ -218,6 +222,18 @@ export const RegistrationSection = ({
       setError(null);
     }
   }, [selectedPaymentTokenAddress, userData?.exists]);
+
+  const copyTokenAddress = async (value?: string) => {
+    if (!value) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedTokenAddress(true);
+      setTimeout(() => setCopiedTokenAddress(false), 1600);
+    } catch (error) {
+      console.error("Failed to copy token address:", error);
+    }
+  };
 
   const hasSufficientBalance =
     numericBalance >= numericJoinCost && numericJoinCost > 0;
@@ -847,8 +863,8 @@ export const RegistrationSection = ({
                         <span className="block text-sm font-semibold text-slate-50">
                           {selectedTokenSymbol}
                         </span>
-                        <span className="block truncate text-[0.65rem] text-slate-400">
-                          {activePaymentToken?.address}
+                        <span className="block text-[0.65rem] text-slate-400">
+                          Selected payment token
                         </span>
                       </span>
                     </span>
@@ -865,6 +881,45 @@ export const RegistrationSection = ({
                       />
                     </svg>
                   </button>
+                  {activePaymentToken?.address && (
+                    <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/75 px-3 py-2">
+                      <span className="min-w-0 text-[0.68rem] text-slate-400">
+                        {formatAddress(activePaymentToken.address)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyTokenAddress(activePaymentToken.address)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-300 transition hover:border-yellow-400/60 hover:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400/40"
+                        title="Copy token address"
+                        aria-label="Copy token address"
+                      >
+                        {copiedTokenAddress ? (
+                          <svg
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.704 5.29a1 1 0 010 1.42l-7.25 7.25a1 1 0 01-1.42 0l-3.25-3.25a1 1 0 111.42-1.42l2.54 2.54 6.54-6.54a1 1 0 011.42 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path d="M7 3.5A2.5 2.5 0 019.5 1h5A2.5 2.5 0 0117 3.5v7A2.5 2.5 0 0114.5 13h-5A2.5 2.5 0 017 10.5v-7z" />
+                            <path d="M3 7.5A2.5 2.5 0 015.5 5H6v5.5A3.5 3.5 0 009.5 14H13v.5a2.5 2.5 0 01-2.5 2.5h-5A2.5 2.5 0 013 14.5v-7z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  )}
                   {tokenMenuOpen && (
                     <div
                       className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-yellow-400/25 bg-slate-950/98 shadow-[0_20px_45px_rgba(0,0,0,0.55)] backdrop-blur"
@@ -898,8 +953,8 @@ export const RegistrationSection = ({
                               <span className="block text-sm font-semibold">
                                 {token.symbol}
                               </span>
-                              <span className="block truncate text-[0.65rem] text-slate-500">
-                                {token.address}
+                              <span className="block text-[0.65rem] text-slate-500">
+                                {formatAddress(token.address)}
                               </span>
                             </span>
                             {isSelected && (
