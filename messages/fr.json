@@ -889,6 +889,7 @@
         "alreadyRegistered": "Déjà inscrit",
         "noReferralNeeded": "Pas besoin de parrainage - vous faites déjà partie du système",
         "required": "Parrainage requis",
+        "defaultReferrer": "Parrain par défaut sélectionné",
         "checking": "Vérification du parrainage...",
         "selfReferral": "Impossible de se parrainer soi-même",
         "invalid": "Parrainage invalide",

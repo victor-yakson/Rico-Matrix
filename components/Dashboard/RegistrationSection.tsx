@@ -140,10 +140,16 @@ export const RegistrationSection = ({
     }
   }, [referralAddress, userData?.exists]);
 
-  // Use persisted referral for validation (only if user is not registered)
+  // Use persisted referral first, then the URL referral, then the default referrer.
+  const hasProvidedReferral = Boolean(persistedReferralAddress || referralAddress);
   const effectiveReferralAddress = userData?.exists
     ? null
-    : persistedReferralAddress || referralAddress;
+    : persistedReferralAddress || referralAddress || FALLBACK_REFERRER;
+  const usingDefaultReferral = Boolean(
+    !userData?.exists &&
+      !hasProvidedReferral &&
+      effectiveReferralAddress === FALLBACK_REFERRER
+  );
 
   // -----------------------------
   // Referral validation (skip if user is already registered)
@@ -444,6 +450,9 @@ export const RegistrationSection = ({
     }
     if (!effectiveReferralAddress) {
       return t("referral.required");
+    }
+    if (usingDefaultReferral) {
+      return t("referral.defaultReferrer");
     }
     if (checkingReferral) {
       return t("referral.checking");

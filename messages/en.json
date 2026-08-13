@@ -888,6 +888,7 @@
         "alreadyRegistered": "Already registered",
         "noReferralNeeded": "No referral needed - you are already part of the system",
         "required": "Referral required",
+        "defaultReferrer": "Default referrer selected",
         "checking": "Checking referral...",
         "selfReferral": "Cannot refer yourself",
         "invalid": "Invalid referral",
