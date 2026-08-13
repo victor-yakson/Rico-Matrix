@@ -1085,6 +1085,9 @@
           ]
         }
       },
+      "networks": {
+        "availableOn": "Available On:"
+      },
       "ricoFarmingSection": {
         "title": "🪙 RICO Token Farming",
         "viewToken": "View Token",

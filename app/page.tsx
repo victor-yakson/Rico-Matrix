@@ -19,6 +19,8 @@ import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
 import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
 
+const supportedNetworks = ["Robinhood", "Ethereum", "Polygon", "Base", "BSC"];
+
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
 
@@ -364,6 +366,26 @@ export default function Dashboard() {
                   ? "Start your journey with RICO Matrix and unlock earning opportunities"
                   : t("header.description")}
             </p>
+
+            {dashboardState === "register" && (
+              <div className="mx-auto mt-5 max-w-3xl">
+                <div className="rounded-3xl border border-yellow-400/20 bg-slate-950/55 px-4 py-4 shadow-[0_0_28px_rgba(234,179,8,0.1)] backdrop-blur">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-yellow-200/85">
+                    {t("networks.availableOn")}
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2.5">
+                    {supportedNetworks.map((network) => (
+                      <span
+                        key={network}
+                        className="inline-flex min-h-9 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3.5 py-2 text-xs font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                      >
+                        {network}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Show Migration Status for migrated users */}
             {/* {dashboardState === "dashboard" && userData?.migrationData && (
