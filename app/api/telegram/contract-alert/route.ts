@@ -20,11 +20,23 @@ function isHexHash(value: unknown): value is Hex {
   return typeof value === "string" && /^0x[a-fA-F0-9]{64}$/.test(value);
 }
 
+function isSupportedChainId(value: unknown): value is number {
+  const chainId = Number(value);
+  return (
+    chainId === 1 ||
+    chainId === 56 ||
+    chainId === 137 ||
+    chainId === 8453 ||
+    chainId === 4663
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const action = body?.action;
     const txHash = body?.txHash;
+    const chainId = Number(body?.chainId ?? 56);
 
     if (!isMatrixAlertAction(action)) {
       return NextResponse.json(
@@ -40,9 +52,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!isSupportedChainId(chainId)) {
+      return NextResponse.json(
+        { ok: false, error: "Unsupported chain for contract alert." },
+        { status: 400 },
+      );
+    }
+
     const result = await sendMatrixContractAlert({
       action,
       txHash,
+      chainId,
     });
 
     return NextResponse.json(result);

@@ -139,6 +139,7 @@ type MatrixAlertAction = "registration" | "chapter-upgrade" | "royalty-claim";
 const notifyTelegramContractAlert = async (
   action: MatrixAlertAction,
   txHash: `0x${string}`,
+  chainId: number,
 ) => {
   try {
     const response = await fetch("/api/telegram/contract-alert", {
@@ -149,6 +150,7 @@ const notifyTelegramContractAlert = async (
       body: JSON.stringify({
         action,
         txHash,
+        chainId,
       }),
     });
 
@@ -1221,7 +1223,7 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
-          void notifyTelegramContractAlert("registration", hash);
+          void notifyTelegramContractAlert("registration", hash, activeChain.id);
 
           setTimeout(() => {
             refetchAllData();
@@ -1310,7 +1312,7 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
-          void notifyTelegramContractAlert("chapter-upgrade", hash);
+          void notifyTelegramContractAlert("chapter-upgrade", hash, activeChain.id);
 
           if (address) {
             clearMatrixCache(address);
@@ -1414,7 +1416,7 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
-          void notifyTelegramContractAlert("chapter-upgrade", hash);
+          void notifyTelegramContractAlert("chapter-upgrade", hash, activeChain.id);
 
           if (address) {
             clearMatrixCache(address);
@@ -1622,7 +1624,7 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
-          void notifyTelegramContractAlert("royalty-claim", hash);
+          void notifyTelegramContractAlert("royalty-claim", hash, activeChain.id);
 
           setTimeout(() => {
             refetchMigrationAndRoyaltyUI();
@@ -1811,7 +1813,7 @@ export const useQuantuMatrix = () => {
           duration: 5000,
         });
 
-        void notifyTelegramContractAlert("royalty-claim", hash);
+        void notifyTelegramContractAlert("royalty-claim", hash, activeChain.id);
 
         setTimeout(() => {
           refetchRoyaltyV2();
@@ -1913,7 +1915,7 @@ export const useQuantuMatrix = () => {
           duration: 5000,
         });
 
-        void notifyTelegramContractAlert("royalty-claim", hash);
+        void notifyTelegramContractAlert("royalty-claim", hash, activeChain.id);
 
         setTimeout(() => {
           refetchRoyalty();
