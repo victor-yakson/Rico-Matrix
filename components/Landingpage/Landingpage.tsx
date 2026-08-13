@@ -530,6 +530,7 @@ export default function RicoMatrixLandingPage() {
 
                 <div className={styles.heroMetaPills}>
                   <span className={styles.heroMiniPill}>{t("launchInfo.badges.decentralized")}</span>
+                  <span className={styles.heroMiniPill}>{t("launchInfo.badges.omnichain")}</span>
                   <span className={styles.heroMiniPill}>{t("launchInfo.badges.earnings")}</span>
                   <span className={styles.heroMiniPill}>{t("launchInfo.badges.royalty")}</span>
                 </div>

@@ -10,7 +10,6 @@ export const RoyaltyPool = () => {
     userData,
     migrationAndRoyaltyUI,
     claimRoyaltyV2,
-    claimLegacyRoyalty,
     loading,
     refetchUserData,
   } = useQuantuMatrix();
@@ -54,37 +53,20 @@ export const RoyaltyPool = () => {
     }
   };
 
-  // Handle legacy royalty claim
-  const handleClaimLegacyRoyalty = async () => {
-    const legacyClaimable = migrationAndRoyaltyUI?.legacyClaimable || "0";
-    if (parseFloat(legacyClaimable) === 0) return;
-    
-    try {
-      const hash = await claimLegacyRoyalty();
-      if (hash) {
-        setCurrentTxHash(hash);
-      }
-    } catch (error) {
-      console.error("Legacy Claim failed:", error);
-      setCurrentTxHash(null);
-    }
-  };
-
   const isProcessing = loading || isConfirming;
 
   // Get royalty data from migrationAndRoyaltyUI
-  const legacyClaimableAmount = migrationAndRoyaltyUI?.legacyClaimable || "0";
+  const legacyClaimableAmount = "0";
   const v2ClaimableAmount = migrationAndRoyaltyUI?.v2Claimable || "0";
-  const totalClaimableAmount = migrationAndRoyaltyUI?.totalClaimable || "0";
-  const v1RoyaltyPercent = migrationAndRoyaltyUI?.v1RoyaltyPercent || 0;
+  const totalClaimableAmount = v2ClaimableAmount;
+  const v1RoyaltyPercent = 0;
   const migrationStatus = migrationAndRoyaltyUI?.status || 0;
 
   // Check what type of royalty is available
-  const hasLegacyRoyalty = parseFloat(legacyClaimableAmount) >= 0.5;
+  const hasLegacyRoyalty = false;
   const hasV2Royalty = parseFloat(v2ClaimableAmount) >= 0.5;
-  const canClaimLegacy = hasLegacyRoyalty;
   const canClaimV2 = hasV2Royalty;
-  const canClaim = hasLegacyRoyalty || hasV2Royalty;
+  const canClaim = hasV2Royalty;
 
   // Calculate current royalty percent
   const v2RoyaltyPercent = userData?.exists ? userData.royaltyPercent : 0;
@@ -96,15 +78,13 @@ export const RoyaltyPool = () => {
 
   // Get migration status badge label
   const getMigrationStatusLabel = () => {
-    if (migrationStatus === 1) return t("migration.v1Found");
+    if (migrationStatus === 1) return "Dashboard access pending";
     if (migrationStatus === 2) return t("migration.migrated");
     return "";
   };
 
   // Get summary description based on available royalties
   const getSummaryDescription = () => {
-    if (hasLegacyRoyalty && hasV2Royalty) return t("summary.descriptionBoth");
-    if (hasLegacyRoyalty) return t("summary.descriptionLegacy");
     if (hasV2Royalty) return t("summary.descriptionCurrent");
     return "";
   };
@@ -307,14 +287,6 @@ export const RoyaltyPool = () => {
                 ${userData?.exists ? Number(userData.royaltiesClaimed).toFixed(2) : "0.00"}
               </span>
             </div>
-            {migrationStatus === 2 && (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{t("stats.legacyClaimed")}</span>
-                <span className="text-amber-300">
-                  ${(parseFloat(legacyClaimableAmount) > 0 ? parseFloat(legacyClaimableAmount) : 0).toFixed(2)}
-                </span>
-              </div>
-            )}
           </div>
           <p className="mt-3 text-xs text-slate-500">
             {t("stats.claimedDescription")}
@@ -324,59 +296,6 @@ export const RoyaltyPool = () => {
 
       {/* Claim Buttons */}
       <div className="space-y-4">
-        {/* Legacy Royalty Claim */}
-        {canClaimLegacy && (
-          <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-900/30 to-orange-900/20 p-5">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-amber-200">
-                      {t("claims.legacy.title")}
-                    </h4>
-                    <p className="text-sm text-amber-300/80">
-                      {t("claims.legacy.subtitle")}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-amber-300/70">
-                  {t("claims.legacy.description")}
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-amber-300 mb-1">
-                  ${parseFloat(legacyClaimableAmount).toFixed(2)}
-                </div>
-                <button
-                  onClick={handleClaimLegacyRoyalty}
-                  disabled={!canClaimLegacy || isProcessing}
-                  className={`mt-3 flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-bold transition-all relative overflow-hidden group
-                    ${
-                      canClaimLegacy && !isProcessing
-                        ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-[0_0_22px_rgba(245,158,11,0.7)] hover:brightness-110 hover:shadow-[0_0_30px_rgba(245,158,11,0.9)] active:scale-[0.98]"
-                        : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
-                    }
-                  `}
-                >
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                  {isProcessing ? (
-                    <span className="relative z-10">Processing...</span>
-                  ) : (
-                    <span className="relative z-10">
-                      {t("claims.legacy.button")}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Current Royalty Claim */}
         {canClaimV2 && (
           <div className="rounded-2xl border border-yellow-500/35 bg-gradient-to-r from-yellow-900/18 to-black p-5">

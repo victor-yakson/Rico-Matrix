@@ -5,13 +5,20 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
   usePublicClient,
+  useChainId,
 } from "wagmi";
-import { quantuMatrixContract, usdtContract } from "../utils/contracts";
-import { useState, useCallback, useEffect } from "react";
+import { quantuMatrixContract } from "../utils/contracts";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { formatUnits, parseUnits } from "viem";
 import type { ContractFunctionParameters } from "viem";
 import { toast } from "sonner";
-import { CONTRACT_ADDRESS, TOKEN_CONTRACT_ADDRESS } from "@/utils/constants";
+import {
+  CONTRACT_ABI,
+  LEGACY_V2_CONTRACT_ADDRESS,
+  USDT_ABI,
+  getRicoChainConfig,
+  getRicoTokenAddress,
+} from "@/utils/constants";
 
 const MIN_ROYALTY_USDT = 0.5;
 
@@ -43,6 +50,21 @@ const toNumber = (value: any, fallback = 0): number => {
   return fallback;
 };
 
+const toBigIntValue = (value: any): bigint => {
+  if (typeof value === "bigint") return value;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return BigInt(Math.trunc(value));
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      return BigInt(value);
+    } catch {
+      return BigInt(0);
+    }
+  }
+  return BigInt(0);
+};
+
 const toUsdtNumber = (value: any): number => {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return value;
@@ -72,12 +94,12 @@ interface Track2Data {
   closedPart: string;
 }
 
-// Migration Status interface
+// V2 to current account status interface
 interface MigrationStatus {
-  status: number; // 0 = Not found in V1, 1 = Found in V1 but not migrated, 2 = Migrated ✅
+  status: number; // 0 = Not found, 1 = V2 account pending dashboard access, 2 = Active
 }
 
-// Migration Data interface
+// V2 to current account data interface
 interface MigrationData {
   status: number;
   v1RoyaltyPercent: number;
@@ -112,12 +134,85 @@ interface UserData {
   migrationData?: MigrationData;
 }
 
+type MatrixAlertAction = "registration" | "chapter-upgrade" | "royalty-claim";
+
+const notifyTelegramContractAlert = async (
+  action: MatrixAlertAction,
+  txHash: `0x${string}`,
+) => {
+  try {
+    const response = await fetch("/api/telegram/contract-alert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action,
+        txHash,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      throw new Error(
+        payload?.error || `Contract alert request failed (${response.status}).`,
+      );
+    }
+  } catch (error) {
+    console.error(`Failed to send ${action} Telegram alert:`, error);
+  }
+};
+
 export const useQuantuMatrix = () => {
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const [loading, setLoading] = useState(false);
-  const rewardTokenAddress = TOKEN_CONTRACT_ADDRESS;
+  const rewardTokenAddress = getRicoTokenAddress(chainId);
+  const activeChain = useMemo(() => getRicoChainConfig(chainId), [chainId]);
+  const [selectedPaymentTokenAddress, setSelectedPaymentTokenAddress] =
+    useState<`0x${string}` | null>(null);
+  const activePaymentToken = useMemo(
+    () =>
+      activeChain.paymentTokens.find(
+        (token) =>
+          token.address.toLowerCase() ===
+          selectedPaymentTokenAddress?.toLowerCase(),
+      ) ||
+      activeChain.paymentTokens.find(
+        (token) =>
+          token.address.toLowerCase() === activeChain.paymentToken.toLowerCase(),
+      ) ||
+      activeChain.paymentTokens[0],
+    [activeChain, selectedPaymentTokenAddress],
+  );
+
+  useEffect(() => {
+    setSelectedPaymentTokenAddress(activeChain.paymentToken);
+  }, [activeChain.paymentToken]);
+
+  const activeMatrixContract = useMemo(
+    () => ({
+      ...quantuMatrixContract,
+      address: activeChain.matrix,
+    }),
+    [activeChain.matrix],
+  );
+  const activePaymentTokenContract = useMemo(
+    () => ({
+      address: activePaymentToken.address,
+      abi: USDT_ABI,
+    }),
+    [activePaymentToken.address],
+  );
+  const legacyV2Contract = useMemo(
+    () => ({
+      address: LEGACY_V2_CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+    }),
+    [],
+  );
   const [matrixCache, setMatrixCache] = useState<{
     track1: Record<string, Record<number, any>>;
     track2: Record<string, Record<number, Track2Data>>;
@@ -125,7 +220,7 @@ export const useQuantuMatrix = () => {
 
   // Read user existence
   const { data: userExists, refetch: refetchUserExists } = useReadContract({
-    ...quantuMatrixContract,
+    ...activeMatrixContract,
     functionName: "isReaderExists",
     args: address ? [address] : undefined,
     query: {
@@ -133,32 +228,39 @@ export const useQuantuMatrix = () => {
     },
   });
 
+  const legacyV2Configured = Boolean(LEGACY_V2_CONTRACT_ADDRESS);
+
+  const { data: legacyV2UserExists, refetch: refetchLegacyV2UserExists } =
+    useReadContract({
+      ...legacyV2Contract,
+      functionName: "isReaderExists",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: Boolean(address && legacyV2Configured),
+      },
+    });
+
   const userContracts = (
     address && userExists
       ? [
           {
-            ...quantuMatrixContract,
-            functionName: "getReaderTotals",
-            args: [address],
-          },
-          {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "getReaderSummary",
             args: [address],
           },
           {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "getRicoFarming",
             args: [address],
           },
           {
-            ...quantuMatrixContract,
-            functionName: "viewRoyalty",
+            ...activeMatrixContract,
+            functionName: "viewRoyaltyV3",
             args: [address],
           },
           {
-            ...quantuMatrixContract,
-            functionName: "viewRoyaltyPercent",
+            ...activeMatrixContract,
+            functionName: "viewRoyaltyPercentV3",
             args: [address],
           },
         ]
@@ -169,27 +271,26 @@ export const useQuantuMatrix = () => {
     address
       ? [
           {
-            ...quantuMatrixContract,
-            functionName: "getMigrationAndRoyaltyUI",
-            args: [address],
-          },
-          {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "viewLegacyClaimable",
             args: [address],
           },
+          ...(legacyV2Configured
+            ? [
+                {
+                  ...legacyV2Contract,
+                  functionName: "viewRoyaltyV2",
+                  args: [address],
+                },
+                {
+                  ...legacyV2Contract,
+                  functionName: "viewRoyaltyPercentV2",
+                  args: [address],
+                },
+              ]
+            : []),
           {
-            ...quantuMatrixContract,
-            functionName: "viewRoyaltyV2",
-            args: [address],
-          },
-          {
-            ...quantuMatrixContract,
-            functionName: "viewRoyaltyPercentV2",
-            args: [address],
-          },
-          {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "viewRicoPending",
             args: [address],
           },
@@ -208,11 +309,10 @@ export const useQuantuMatrix = () => {
     return result !== undefined ? safeBigInt(result) : result;
   };
 
-  const readerTotals = getUserResult(0);
-  const readerSummary = getUserResult(1);
-  const ricoFarming = getUserResult(2);
-  const royaltyAvailable = getUserResult(3);
-  const royaltyPercent = getUserResult(4);
+  const readerSummary = getUserResult(0);
+  const ricoFarming = getUserResult(1);
+  const royaltyAvailable = getUserResult(2);
+  const royaltyPercent = getUserResult(3);
 
   const { data: migrationReads, refetch: refetchMigrationReads } = useReadContracts({
     contracts: migrationContracts,
@@ -225,11 +325,10 @@ export const useQuantuMatrix = () => {
     return result !== undefined ? safeBigInt(result) : result;
   };
 
-  const migrationAndRoyaltyUI = getMigrationResult(0);
-  const legacyClaimable = getMigrationResult(1);
-  const royaltyV2 = getMigrationResult(2);
-  const royaltyPercentV2 = getMigrationResult(3);
-  const ricoPending = getMigrationResult(4);
+  const legacyClaimable = getMigrationResult(0);
+  const royaltyV2 = legacyV2Configured ? getMigrationResult(1) : "0";
+  const royaltyPercentV2 = legacyV2Configured ? getMigrationResult(2) : "0";
+  const ricoPending = legacyV2Configured ? getMigrationResult(3) : getMigrationResult(1);
 
   const refetchReaderTotals = () => refetchUserReads();
   const refetchReaderSummary = () => refetchUserReads();
@@ -242,27 +341,33 @@ export const useQuantuMatrix = () => {
   const refetchRoyaltyPercentV2 = () => refetchMigrationReads();
   const refetchRicoPending = () => refetchMigrationReads();
 
-  // Read migration status for any connected address so legacy-only users can be detected
-  const { data: migrationStatusData, refetch: refetchMigrationStatus } =
-    useReadContract({
-      ...quantuMatrixContract,
-      functionName: "migrationStatus",
-      args: address ? [address] : undefined,
-      query: {
-        enabled: !!address,
-      },
-    });
+  const migrationStatusData = userExists
+    ? 2
+    : legacyV2UserExists ||
+        toUsdtNumber(royaltyV2) > 0 ||
+        toUsdtNumber(legacyClaimable) > 0
+      ? 1
+      : 0;
+  const refetchMigrationStatus = () => refetchMigrationReads();
+  const migrationAndRoyaltyUI = [
+    migrationStatusData,
+    royaltyPercentV2 || 0,
+    legacyClaimable || 0,
+    royaltyV2 || 0,
+    toBigIntValue(legacyClaimable) + toBigIntValue(royaltyV2),
+  ];
 
   const preRegistrationContracts = (
     address
       ? [
           {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "getChapterPrices",
           },
           {
-            ...quantuMatrixContract,
-            functionName: "usdt",
+            ...activeMatrixContract,
+            functionName: "isSupportedPaymentToken",
+            args: [activePaymentToken.address],
           },
         ]
       : []
@@ -277,34 +382,21 @@ export const useQuantuMatrix = () => {
   const preRegistrationList =
     (preRegistrationReads as any[] | undefined) ?? [];
   const preRegistrationChapterPrices = preRegistrationList[0]?.result;
-  const preRegistrationUsdtAddress = preRegistrationList[1]
-    ?.result as `0x${string}` | undefined;
+  const selectedPaymentTokenSupported = preRegistrationList[1]?.result !== false;
 
   const globalContracts = (
     userExists
       ? [
           {
-            ...quantuMatrixContract,
-            functionName: "getGlobalChapterStats",
-          },
-          {
-            ...quantuMatrixContract,
-            functionName: "getGlobalSummary",
-          },
-          {
-            ...quantuMatrixContract,
-            functionName: "getRicoFarmingGlobal",
-          },
-          {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "getTotalReaders",
           },
           {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "getTopEarners",
           },
           {
-            ...quantuMatrixContract,
+            ...activeMatrixContract,
             functionName: "getTopReferrers",
           },
         ]
@@ -322,18 +414,18 @@ export const useQuantuMatrix = () => {
     return result !== undefined ? safeBigInt(result) : result;
   };
 
-  const globalStats = getGlobalResult(0);
-  const globalSummary = getGlobalResult(1);
-  const globalRicoFarming = getGlobalResult(2);
-  const totalReaders = getGlobalResult(3);
-  const topEarners = getGlobalResult(4);
-  const topReferrers = getGlobalResult(5);
+  const globalStats = undefined;
+  const globalSummary = undefined;
+  const globalRicoFarming = undefined;
+  const totalReaders = getGlobalResult(0);
+  const topEarners = getGlobalResult(1);
+  const topReferrers = getGlobalResult(2);
 
   const chapterPricesRaw =
     preRegistrationChapterPrices !== undefined
       ? safeBigInt(preRegistrationChapterPrices)
       : undefined;
-  const usdtAddress = preRegistrationUsdtAddress;
+  const usdtAddress = activePaymentToken.address;
 
   const chapterPrices = Array.isArray(chapterPricesRaw)
     ? (chapterPricesRaw as readonly any[]).map((price) =>
@@ -353,12 +445,12 @@ export const useQuantuMatrix = () => {
     address
       ? [
           {
-            ...usdtContract,
+            ...activePaymentTokenContract,
             functionName: "allowance",
-            args: [address, quantuMatrixContract.address],
+            args: [address, activeMatrixContract.address],
           },
           {
-            ...usdtContract,
+            ...activePaymentTokenContract,
             functionName: "balanceOf",
             args: [address],
           },
@@ -497,7 +589,7 @@ export const useQuantuMatrix = () => {
           const batchPromises = batch.map((chapter) =>
             publicClient
               .readContract({
-                ...quantuMatrixContract,
+                ...activeMatrixContract,
                 functionName: "getTrack2",
                 args: [userAddress, chapter],
               })
@@ -567,7 +659,7 @@ export const useQuantuMatrix = () => {
 
       try {
         const data = await publicClient.readContract({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "getTrack2",
           args: [userAddress, chapter],
         });
@@ -602,7 +694,7 @@ export const useQuantuMatrix = () => {
 
       try {
         const data = (await publicClient.readContract({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "getTrack1",
           args: [userAddress, chapter],
         })) as any;
@@ -662,7 +754,7 @@ export const useQuantuMatrix = () => {
           const batchPromises = batch.map((chapter) =>
             publicClient
               .readContract({
-                ...quantuMatrixContract,
+                ...activeMatrixContract,
                 functionName: "getTrack1",
                 args: [userAddress, chapter],
               })
@@ -729,7 +821,7 @@ export const useQuantuMatrix = () => {
         }
 
         const result = await publicClient.readContract({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "findFreeTrack1Referrer",
           args: [userAddress as `0x${string}`, chapter],
         });
@@ -758,7 +850,7 @@ export const useQuantuMatrix = () => {
         }
 
         const result = await publicClient.readContract({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "findFreeTrack2Referrer",
           args: [userAddress as `0x${string}`, chapter],
         });
@@ -875,28 +967,14 @@ export const useQuantuMatrix = () => {
       readerId: "0",
       referrer: address || "",
       partnersCount: "0",
-      track1TotalEarned: readerTotals
-        ? formatUnits(BigInt((readerTotals as any)[0] || "0"), 18)
-        : "0",
-      track2TotalEarned: readerTotals
-        ? formatUnits(BigInt((readerTotals as any)[1] || "0"), 18)
-        : "0",
-      track1TotalCycles: readerTotals
-        ? Number((readerTotals as any)[2] || "0")
-        : 0,
-      track2TotalCycles: readerTotals
-        ? Number((readerTotals as any)[3] || "0")
-        : 0,
-      track1Unlocked: readerTotals
-        ? Number((readerTotals as any)[4] || "0")
-        : 0,
-      track2Unlocked: readerTotals
-        ? Number((readerTotals as any)[5] || "0")
-        : 0,
+      track1TotalEarned: "0",
+      track2TotalEarned: "0",
+      track1TotalCycles: 0,
+      track2TotalCycles: 0,
+      track1Unlocked: 0,
+      track2Unlocked: 0,
       royaltyAvailable: migrationUI.totalClaimable,
-      royaltiesClaimed: readerTotals
-        ? formatUnits(BigInt((readerTotals as any)[7] || "0"), 18)
-        : "0",
+      royaltiesClaimed: "0",
       royaltyPercent: royaltyPercent ? Number(royaltyPercent) : 0,
       ricoShouldHave: ricoFarming
         ? formatUnits(BigInt((ricoFarming as any)[0] || "0"), 18)
@@ -921,6 +999,7 @@ export const useQuantuMatrix = () => {
 
     const refetches: Promise<unknown>[] = [
       refetchUserExists(),
+      refetchLegacyV2UserExists(),
       refetchUsdtAllowance(),
       refetchUsdtBalance(),
       refetchMigrationStatus(),
@@ -954,6 +1033,7 @@ export const useQuantuMatrix = () => {
     }
   }, [
     refetchUserExists,
+    refetchLegacyV2UserExists,
     refetchReaderTotals,
     refetchReaderSummary,
     refetchRicoFarming,
@@ -1020,18 +1100,18 @@ export const useQuantuMatrix = () => {
           );
         }
 
-        const amountInWei = parseUnits(amount, 18);
+        const amountInWei = parseUnits(amount, activePaymentToken.decimals);
 
-        toast.info("Approve USDT", {
+        toast.info(`Approve ${activePaymentToken.symbol}`, {
           id: toastId,
           description: "Please confirm the transaction in your wallet...",
           duration: 10000,
         });
 
         const hash = await writeContractAsync({
-          ...usdtContract,
+          ...activePaymentTokenContract,
           functionName: "approve",
-          args: [quantuMatrixContract.address, amountInWei],
+          args: [activeMatrixContract.address, amountInWei],
         });
 
         toast.loading("Transaction Submitted", {
@@ -1051,7 +1131,7 @@ export const useQuantuMatrix = () => {
         if (receipt.status === "success") {
           toast.success("Approval Successful!", {
             id: toastId,
-            description: `USDT approved successfully.`,
+            description: `${activePaymentToken.symbol} approved successfully.`,
             duration: 5000,
           });
 
@@ -1067,11 +1147,11 @@ export const useQuantuMatrix = () => {
       } catch (error: any) {
         console.error("Error approving USDT:", error);
 
-        let errorMessage = "Failed to approve USDT";
+        let errorMessage = `Failed to approve ${activePaymentToken.symbol}`;
         if (error?.message?.includes("rejected") || error?.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet";
         } else if (error?.message?.includes("insufficient")) {
-          errorMessage = "Insufficient USDT balance";
+          errorMessage = `Insufficient ${activePaymentToken.symbol} balance`;
         } else if (error?.message?.includes("User denied")) {
           errorMessage = "User denied transaction signature";
         } else if (error?.message?.includes("on-chain")) {
@@ -1116,9 +1196,9 @@ export const useQuantuMatrix = () => {
         });
 
         const hash = await writeContractAsync({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "joinLibrary",
-          args: [referrer as `0x${string}`],
+          args: [activePaymentToken.address, referrer as `0x${string}`],
         });
 
         toast.loading("Registration Submitted!", {
@@ -1141,6 +1221,8 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
+          void notifyTelegramContractAlert("registration", hash);
+
           setTimeout(() => {
             refetchAllData();
           }, 2000);
@@ -1156,7 +1238,7 @@ export const useQuantuMatrix = () => {
         if (error?.message?.includes("rejected") || error?.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet";
         } else if (error?.message?.includes("insufficient")) {
-          errorMessage = "Insufficient USDT balance or allowance";
+          errorMessage = `Insufficient ${activePaymentToken.symbol} balance or allowance`;
         } else if (error?.message?.includes("ReaderExists")) {
           errorMessage = "You are already registered";
         } else if (error?.message?.includes("on-chain")) {
@@ -1203,9 +1285,9 @@ export const useQuantuMatrix = () => {
         });
 
         const hash = await writeContractAsync({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "buyNewChapter",
-          args: [track, chapter],
+          args: [activePaymentToken.address, track, chapter],
         });
 
         toast.loading("Transaction Submitted", {
@@ -1228,6 +1310,8 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
+          void notifyTelegramContractAlert("chapter-upgrade", hash);
+
           if (address) {
             clearMatrixCache(address);
           }
@@ -1247,7 +1331,7 @@ export const useQuantuMatrix = () => {
         if (error?.message?.includes("rejected") || error?.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet";
         } else if (error?.message?.includes("insufficient")) {
-          errorMessage = "Insufficient USDT balance or allowance";
+          errorMessage = `Insufficient ${activePaymentToken.symbol} balance or allowance`;
         } else if (error?.message?.includes("PreviousChapterRequired")) {
           errorMessage = "You need to unlock the previous chapter first";
         } else if (error?.message?.includes("ChapterAlreadyUnlocked")) {
@@ -1279,6 +1363,113 @@ export const useQuantuMatrix = () => {
     ]
   );
 
+  const buyChapterBatch = useCallback(
+    async (track: number, startChapter: number, endChapter: number) => {
+      const toastId = "buy-chapter-batch";
+
+      try {
+        setLoading(true);
+
+        if (!publicClient) {
+          throw new Error(
+            "Wallet client not available. Please connect your wallet."
+          );
+        }
+
+        if (endChapter < startChapter) {
+          throw new Error("Invalid chapter range");
+        }
+
+        const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
+
+        toast.info("Purchasing Chapters...", {
+          id: toastId,
+          description: `Buying Chapters ${startChapter}-${endChapter} of ${trackName}. Please confirm in wallet.`,
+          duration: 10000,
+        });
+
+        const hash = await writeContractAsync({
+          ...activeMatrixContract,
+          functionName: "buyChapterBatch",
+          args: [activePaymentToken.address, track, startChapter, endChapter],
+        });
+
+        toast.loading("Batch Purchase Submitted", {
+          id: toastId,
+          description: `Chapters ${startChapter}-${endChapter} purchase in progress. Transaction: ${hash.slice(
+            0,
+            10
+          )}...${hash.slice(-8)}`,
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status === "success") {
+          toast.success("Batch Purchase Successful!", {
+            id: toastId,
+            description: `Successfully purchased Chapters ${startChapter}-${endChapter} of ${trackName}!`,
+            duration: 5000,
+          });
+
+          void notifyTelegramContractAlert("chapter-upgrade", hash);
+
+          if (address) {
+            clearMatrixCache(address);
+          }
+
+          setTimeout(() => {
+            refetchAllData();
+          }, 2000);
+        } else {
+          throw new Error("Transaction failed on-chain");
+        }
+
+        return hash;
+      } catch (error: any) {
+        console.error("Error buying chapter batch:", error);
+
+        let errorMessage = "Failed to purchase chapter batch";
+        if (error?.message?.includes("rejected") || error?.code === 4001) {
+          errorMessage = "Transaction was rejected in your wallet";
+        } else if (error?.message?.includes("insufficient")) {
+          errorMessage = `Insufficient ${activePaymentToken.symbol} balance or allowance`;
+        } else if (error?.message?.includes("PreviousChapterRequired")) {
+          errorMessage = "You need to unlock earlier chapters first";
+        } else if (error?.message?.includes("InvalidBatch")) {
+          errorMessage = "Invalid chapter batch";
+        } else if (error?.message?.includes("on-chain")) {
+          errorMessage = "Transaction failed on-chain";
+        } else if (error?.message?.includes("Wallet client not available")) {
+          errorMessage =
+            "Wallet not connected. Please connect your wallet first.";
+        }
+
+        toast.error("Batch Purchase Failed", {
+          id: toastId,
+          description: errorMessage,
+          duration: 7000,
+        });
+
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      activePaymentToken.symbol,
+      activePaymentToken.address,
+      activeMatrixContract,
+      address,
+      clearMatrixCache,
+      publicClient,
+      refetchAllData,
+      writeContractAsync,
+    ]
+  );
+
   // Migrate self function
   const migrateSelf = useCallback(async () => {
     const toastId = "migrate-self";
@@ -1292,33 +1483,20 @@ export const useQuantuMatrix = () => {
         );
       }
 
-      // Get current migration status
-      const currentStatus = processMigrationStatus(migrationStatusData);
-      if (currentStatus.status === 2) {
-        throw new Error("You have already migrated from V1");
-      }
-
-      if (currentStatus.status === 0) {
-        throw new Error("You are not registered in V1");
-      }
-
-      toast.info("Migrating to V2...", {
+      toast.info("Preparing dashboard access...", {
         id: toastId,
-        description: "Please confirm the migration transaction in your wallet.",
+        description: "Confirm the wallet transaction to continue.",
         duration: 10000,
       });
 
       const hash = await writeContractAsync({
-        ...quantuMatrixContract,
+        ...activeMatrixContract,
         functionName: "migrateSelf",
       });
 
-      toast.loading("Migration Submitted!", {
+      toast.loading("Dashboard access submitted", {
         id: toastId,
-        description: `Migration transaction: ${hash.slice(
-          0,
-          10
-        )}...${hash.slice(-8)}`,
+        description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({
@@ -1327,40 +1505,41 @@ export const useQuantuMatrix = () => {
       });
 
       if (receipt.status === "success") {
-        toast.success("Migration Successful!", {
+        toast.success("Account updated", {
           id: toastId,
-          description: "You have successfully migrated from V1 to V2!",
+          description: "Your account has been updated. Refreshing dashboard data...",
           duration: 5000,
         });
 
-        await refetchAllData({ showToast: false });
-        await Promise.all([
-          refetchMigrationStatus(),
-          refetchMigrationAndRoyaltyUI(),
-        ]);
+        setTimeout(() => {
+          refetchUserData({ showToast: false });
+          refetchAllData({ showToast: false });
+        }, 2000);
       } else {
-        throw new Error("Migration transaction failed on-chain");
+        throw new Error("Dashboard access transaction failed on-chain");
       }
 
       return hash;
     } catch (error: any) {
-      console.error("Error migrating:", error);
+      console.error("Error preparing dashboard access:", error);
 
-      let errorMessage = "Failed to migrate";
+      let errorMessage = "Failed to update account";
       if (error?.message?.includes("rejected") || error?.code === 4001) {
         errorMessage = "Transaction was rejected in your wallet";
+      } else if (error?.message?.includes("NoRoyalty")) {
+        errorMessage = "Please claim available royalty before continuing";
       } else if (error?.message?.includes("AlreadyMigrated")) {
-        errorMessage = "You have already migrated from V1";
-      } else if (error?.message?.includes("NotInV1")) {
-        errorMessage = "You are not registered in V1";
-      } else if (error?.message?.includes("on-chain")) {
-        errorMessage = "Migration transaction failed on-chain";
+        errorMessage = "Account is already updated";
+      } else if (error?.message?.includes("not configured")) {
+        errorMessage = "Required contract is not configured";
       } else if (error?.message?.includes("Wallet client not available")) {
         errorMessage =
           "Wallet not connected. Please connect your wallet first.";
+      } else if (error?.message?.includes("on-chain")) {
+        errorMessage = "Transaction failed on-chain";
       }
 
-      toast.error("Migration Failed", {
+      toast.error("Account Update Failed", {
         id: toastId,
         description: errorMessage,
         duration: 7000,
@@ -1373,10 +1552,9 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     publicClient,
-    migrationStatusData,
+    activeMatrixContract,
+    refetchUserData,
     refetchAllData,
-    refetchMigrationStatus,
-    refetchMigrationAndRoyaltyUI,
   ]);
 
   // Claim legacy royalty function
@@ -1405,10 +1583,8 @@ export const useQuantuMatrix = () => {
           );
         }
 
-        // Check migration status
-        const currentStatus = processMigrationStatus(migrationStatusData);
-        if (currentStatus.status !== 2) {
-          throw new Error("You need to migrate from V1 first");
+        if (!legacyV2Configured) {
+          throw new Error("Legacy V2 contract is not configured.");
         }
 
         const claimAmount = amount ? parseUnits(amount, 18) : BigInt(0);
@@ -1422,7 +1598,7 @@ export const useQuantuMatrix = () => {
         });
 
         const hash = await writeContractAsync({
-          ...quantuMatrixContract,
+          ...legacyV2Contract,
           functionName: "claimLegacyRoyalty",
           args: [claimAmount],
         });
@@ -1446,6 +1622,8 @@ export const useQuantuMatrix = () => {
             duration: 5000,
           });
 
+          void notifyTelegramContractAlert("royalty-claim", hash);
+
           setTimeout(() => {
             refetchMigrationAndRoyaltyUI();
             refetchUserData();
@@ -1461,8 +1639,8 @@ export const useQuantuMatrix = () => {
         let errorMessage = "Failed to claim legacy royalty";
         if (error?.message?.includes("rejected") || error?.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet";
-        } else if (error?.message?.includes("NotMigrated")) {
-          errorMessage = "You need to migrate from V1 first";
+        } else if (error?.message?.includes("not configured")) {
+          errorMessage = "Legacy V2 contract is not configured";
         } else if (error?.message?.includes("NoLegacyRoyalty")) {
           errorMessage = "No legacy royalty available to claim";
         } else if (error?.message?.includes("on-chain")) {
@@ -1486,7 +1664,8 @@ export const useQuantuMatrix = () => {
     [
       writeContractAsync,
       publicClient,
-      migrationStatusData,
+      legacyV2Configured,
+      legacyV2Contract,
       legacyClaimable,
       refetchMigrationAndRoyaltyUI,
       refetchUserData,
@@ -1518,7 +1697,7 @@ export const useQuantuMatrix = () => {
         });
 
         const hash = await writeContractAsync({
-          ...quantuMatrixContract,
+          ...activeMatrixContract,
           functionName: "claimRico",
           args: [claimAmount],
         });
@@ -1584,10 +1763,10 @@ export const useQuantuMatrix = () => {
 
     try {
       const available = toUsdtNumber(royaltyV2);
-      if (available < MIN_ROYALTY_USDT) {
+      if (available <= 0) {
         toast.error("V2 Royalty Claim Failed", {
           id: toastId,
-          description: `Minimum claim is ${MIN_ROYALTY_USDT} USDT.`,
+          description: "No V2 royalty is available to claim.",
           duration: 5000,
         });
         return;
@@ -1600,6 +1779,9 @@ export const useQuantuMatrix = () => {
           "Wallet client not available. Please connect your wallet."
         );
       }
+      if (!legacyV2Configured) {
+        throw new Error("Legacy V2 contract is not configured.");
+      }
 
       toast.info("Claiming V2 Royalty...", {
         id: toastId,
@@ -1608,7 +1790,7 @@ export const useQuantuMatrix = () => {
       });
 
       const hash = await writeContractAsync({
-        ...quantuMatrixContract,
+        ...legacyV2Contract,
         functionName: "claimRoyaltyV2",
       });
 
@@ -1629,6 +1811,8 @@ export const useQuantuMatrix = () => {
           duration: 5000,
         });
 
+        void notifyTelegramContractAlert("royalty-claim", hash);
+
         setTimeout(() => {
           refetchRoyaltyV2();
           refetchMigrationAndRoyaltyUI();
@@ -1647,6 +1831,8 @@ export const useQuantuMatrix = () => {
         errorMessage = "Transaction was rejected in your wallet";
       } else if (error?.message?.includes("NoRoyalty")) {
         errorMessage = "No V2 royalty available to claim";
+      } else if (error?.message?.includes("not configured")) {
+        errorMessage = "Legacy V2 contract is not configured";
       } else if (error?.message?.includes("on-chain")) {
         errorMessage = "Claim transaction failed on-chain";
       } else if (error?.message?.includes("Wallet client not available")) {
@@ -1667,6 +1853,8 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     publicClient,
+    legacyV2Contract,
+    legacyV2Configured,
     royaltyV2,
     refetchRoyaltyV2,
     refetchMigrationAndRoyaltyUI,
@@ -1703,8 +1891,9 @@ export const useQuantuMatrix = () => {
       });
 
       const hash = await writeContractAsync({
-        ...quantuMatrixContract,
-        functionName: "claimRoyalty",
+        ...activeMatrixContract,
+        functionName: "claimRoyaltyV3",
+        args: [activePaymentToken.address, activeChain.lzEid],
       });
 
       toast.loading("Royalty Claim Submitted!", {
@@ -1723,6 +1912,8 @@ export const useQuantuMatrix = () => {
           description: "Successfully claimed royalty!",
           duration: 5000,
         });
+
+        void notifyTelegramContractAlert("royalty-claim", hash);
 
         setTimeout(() => {
           refetchRoyalty();
@@ -1761,6 +1952,9 @@ export const useQuantuMatrix = () => {
   }, [
     writeContractAsync,
     publicClient,
+    activeChain.lzEid,
+    activePaymentToken.address,
+    activeMatrixContract,
     royaltyAvailable,
     refetchRoyalty,
     refetchUserData,
@@ -1783,16 +1977,16 @@ export const useQuantuMatrix = () => {
   };
 
   const formattedUsdtBalance = usdtBalance
-    ? formatUnits(usdtBalance as bigint, 18)
+    ? formatUnits(usdtBalance as bigint, activePaymentToken.decimals)
     : "0";
   const formattedUsdtAllowance = usdtAllowance
-    ? formatUnits(usdtAllowance as bigint, 18)
+    ? formatUnits(usdtAllowance as bigint, activePaymentToken.decimals)
     : "0";
 
   return {
     // Contract interaction methods
     writeContract: writeContractAsync,
-    contractConfig: quantuMatrixContract,
+    contractConfig: activeMatrixContract,
 
     // Data
     userData,
@@ -1817,6 +2011,14 @@ export const useQuantuMatrix = () => {
 
     // Token addresses
     usdtAddress: usdtAddress as `0x${string}` | undefined,
+    paymentTokenAddress: activePaymentToken.address,
+    paymentTokenSymbol: activePaymentToken.symbol,
+    paymentTokenDecimals: activePaymentToken.decimals,
+    paymentTokenSupported: selectedPaymentTokenSupported,
+    paymentTokens: activeChain.paymentTokens,
+    selectedPaymentTokenAddress: activePaymentToken.address,
+    setSelectedPaymentTokenAddress,
+    activeChain,
     rewardTokenAddress,
 
     // USDT data
@@ -1847,6 +2049,7 @@ export const useQuantuMatrix = () => {
     approveUsdt,
     joinLibrary,
     buyChapter,
+    buyChapterBatch,
     migrateSelf,
     claimLegacyRoyalty,
     claimRico,

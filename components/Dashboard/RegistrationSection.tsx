@@ -4,8 +4,6 @@ import { useQuantuMatrix } from "../../hooks/useQuantuMatrix";
 import { useState, useMemo, useEffect } from "react";
 import { useReadContract, useAccount } from "wagmi";
 import { useTranslations } from "next-intl";
-import { parseUnits } from "viem";
-import { quantuMatrixContract } from "@/utils/contracts";
 
 interface RegistrationSectionProps {
   referralAddress: string | null;
@@ -18,8 +16,6 @@ interface RegistrationSectionProps {
 
 const FALLBACK_REFERRER = "0xd7e5a3c00b7871f57aeff293f1844db466260f4f";
 const REFERRAL_STORAGE_KEY = "quantumatrix_referral_address";
-const USDT_DECIMALS = 18;
-
 export const RegistrationSection = ({
   referralAddress,
   onRegistrationComplete,
@@ -32,6 +28,11 @@ export const RegistrationSection = ({
     usdtAllowance,
     joinCost,
     loading,
+    contractConfig,
+    paymentTokenSymbol,
+    paymentTokens,
+    selectedPaymentTokenAddress,
+    setSelectedPaymentTokenAddress,
   } = useQuantuMatrix();
 
   const { address: userAddress } = useAccount();
@@ -106,8 +107,8 @@ export const RegistrationSection = ({
   // Wagmi read: only enabled when referral is valid and user is not registered
   const { data: referralExists, isLoading: checkingReferral } = useReadContract(
     {
-      address: quantuMatrixContract.address,
-      abi: quantuMatrixContract.abi,
+      address: contractConfig.address,
+      abi: contractConfig.abi,
       functionName: "isReaderExists",
       args:
         effectiveReferralAddress && !userData?.exists
@@ -150,16 +151,8 @@ export const RegistrationSection = ({
     numericBalance >= numericJoinCost && numericJoinCost > 0;
 
   const hasSufficientAllowance = useMemo(() => {
-    if (!usdtAllowance || !joinCost) return false;
-    try {
-      const allowanceBN = parseUnits(usdtAllowance, USDT_DECIMALS);
-      const costBN = parseUnits(joinCost, USDT_DECIMALS);
-      return allowanceBN >= costBN;
-    } catch (e) {
-      // fallback numeric compare (less accurate)
-      return numericAllowance >= numericJoinCost && numericJoinCost > 0;
-    }
-  }, [usdtAllowance, joinCost, numericAllowance, numericJoinCost]);
+    return numericAllowance >= numericJoinCost && numericJoinCost > 0;
+  }, [numericAllowance, numericJoinCost]);
 
   const isProcessing = Boolean(
     loading || isApproving || isRegistering || checkingReferral
@@ -238,9 +231,7 @@ export const RegistrationSection = ({
       setError(null);
       setIsApproving(true);
 
-      // Approve exactly joinCost in token units
-      const approveAmount = parseUnits(joinCost || "0", USDT_DECIMALS);
-      await approveUsdt(approveAmount.toString());
+      await approveUsdt(joinCost || "0");
 
       setStep("register");
     } catch (err: any) {
@@ -736,7 +727,7 @@ export const RegistrationSection = ({
                     {t("cost.registrationCost")}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-yellow-300">
-                    {joinCost || "0"} USDT
+                    {joinCost || "0"} {paymentTokenSymbol || "USDT"}
                   </div>
                 </div>
                 <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-3 py-3">
@@ -744,7 +735,7 @@ export const RegistrationSection = ({
                     {t("cost.balance")}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-slate-100">
-                    {Number(usdtBalance).toFixed(2) || "0"} USDT
+                    {Number(usdtBalance).toFixed(2) || "0"} {paymentTokenSymbol || "USDT"}
                   </div>
                 </div>
               </div>
@@ -763,6 +754,25 @@ export const RegistrationSection = ({
                     : t("cost.approvalRequired")}
                 </span>
               </div>
+
+              {paymentTokens?.length > 1 && (
+                <label className="mb-4 block text-[0.7rem] text-slate-400">
+                  Payment token
+                  <select
+                    value={selectedPaymentTokenAddress}
+                    onChange={(event) =>
+                      setSelectedPaymentTokenAddress(event.target.value as `0x${string}`)
+                    }
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  >
+                    {paymentTokens.map((token) => (
+                      <option key={token.address} value={token.address}>
+                        {token.symbol}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               {userData?.exists ? (
                 <div className="text-center py-6">

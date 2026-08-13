@@ -1,9 +1,39 @@
-export const CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
+export const RICO_MATRIX_V3_HUB_ADDRESS =
+  (process.env.NEXT_PUBLIC_RICOMATRIXV3_HUB_ADDRESS as `0x${string}`) ||
+  "0x7b31b39829E5f0fFbCFd2032B3d8aD8B8F415177";
+export const RICO_MATRIX_V3_SPOKE_ADDRESS =
+  (process.env.NEXT_PUBLIC_RICOMATRIXV3_SPOKE_ADDRESS as `0x${string}`) ||
+  "0x7b31b39829e5f0ffbcfd2032b3d8ad8b8f415177";
+export const RICO_MATRIX_V3_ADDRESS =
+  (process.env.NEXT_PUBLIC_RICO_MATRIX_V3_ADDRESS as `0x${string}`) ||
+  RICO_MATRIX_V3_SPOKE_ADDRESS;
+export const RICO_MIGRATOR_ADDRESS =
+  (process.env.NEXT_PUBLIC_MIGRATOR_ADDRESS as `0x${string}`) ||
+  (process.env.NEXT_PUBLIC_RICO_V1_MIGRATOR_ADDRESS as `0x${string}`) ||
+  "0x1a5F3275F05aC6184F8f151e008CE489117a738D";
+export const RICO_V1_MIGRATOR_ADDRESS = RICO_MIGRATOR_ADDRESS;
+export const OMNICHAIN_SYNC_MANAGER_ADDRESS =
+  (process.env.NEXT_PUBLIC_OMNICHAIN_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
+  "0x30f884b45d934984ede86e74930e0b7742c6bfba";
+export const RICO_FACTORY_ADDRESS =
+  (process.env.NEXT_PUBLIC_RICO_FACTORY_ADDRESS as `0x${string}`) ||
+  "0x618d4f7fc0e5cACb1bE8E6b066095327E9084533";
+export const RICO_MATRIX_LOGIC_LIB_ADDRESS =
+  (process.env.NEXT_PUBLIC_RICO_MATRIX_LOGIC_LIB_ADDRESS as `0x${string}`) ||
+  "0xba427B5502928FD7dc3C858480929c4a432b2820";
+
+export const CONTRACT_ADDRESS =
+  (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`) ||
+  RICO_MATRIX_V3_ADDRESS;
+export const LEGACY_V2_CONTRACT_ADDRESS =
+  (process.env.NEXT_PUBLIC_V2_CONTRACT_ADDRESS as `0x${string}`) ||
+  (process.env.NEXT_PUBLIC_LEGACY_CONTRACT_ADDRESS as `0x${string}`) ||
+  (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`);
 export const USDT_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_USDT_CONTRACT_ADDRESS as `0x${string}`;
-export const TOKEN_CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
+export const TOKEN_CONTRACT_ADDRESS =
+  (process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`) ||
+  "0x71a238ba3837896b6532b3514A58c483850ef458";
 export const SURVEY_CONTRACT_ADDRESS =
   process.env.NEXT_PUBLIC_SURVEY_CONTRACT_ADDRESS as `0x${string}`;
 export const VOTING_CONTRACT_ADDRESS =
@@ -12,6 +42,383 @@ export const VOTING_CONTRACT_ADDRESS =
 export const RICO_STAKING_CONTRACT_ADDRESS =
   (process.env.NEXT_PUBLIC_RICO_STAKING_CONTRACT_ADDRESS as `0x${string}`) ||
   "0xE90b351a72AB1A535d763a98C9e6e260f8098042";
+
+export type RicoPaymentToken = {
+  symbol: string;
+  address: `0x${string}`;
+  decimals: number;
+};
+
+const ETH_USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const ETH_USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+const ETH_DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+const BSC_USDC = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
+const BSC_USDT = "0x55d398326f99059fF775485246999027B3197955";
+const BSC_DAI = "0x1AF3F329e8BE154074D8769D1FFa4eE058B1Dbc3";
+const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const BASE_USDS = "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc";
+const POLYGON_USDC = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
+const ROBINHOOD_USDG = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
+
+const ETH_RICO_TOKEN =
+  (process.env.NEXT_PUBLIC_ETH_RICO_TOKEN_ADDRESS as `0x${string}`) ||
+  "0x6252d3cfbaf5e9957872c9d55f771c0cc401f71d";
+const BSC_RICO_TOKEN =
+  (process.env.NEXT_PUBLIC_BSC_RICO_TOKEN_ADDRESS as `0x${string}`) ||
+  TOKEN_CONTRACT_ADDRESS;
+const BASE_RICO_TOKEN =
+  (process.env.NEXT_PUBLIC_BASE_RICO_TOKEN_ADDRESS as `0x${string}`) ||
+  "0x757a6ccc3d163455ba76ce253872a6cf38e1e0af";
+const ROBINHOOD_RICO_TOKEN =
+  (process.env.NEXT_PUBLIC_ROBINHOOD_RICO_TOKEN_ADDRESS as `0x${string}`) ||
+  "0xf72a8Cccb5662ce382b0E2E298b013a703E27398";
+const POLYGON_RICO_TOKEN =
+  (process.env.NEXT_PUBLIC_POLYGON_RICO_TOKEN_ADDRESS as `0x${string}`) ||
+  "0xf72a8Cccb5662ce382b0E2E298b013a703E27398";
+
+export const RICO_TOKEN_ADDRESSES = {
+  1: ETH_RICO_TOKEN,
+  56: BSC_RICO_TOKEN,
+  137: POLYGON_RICO_TOKEN,
+  8453: BASE_RICO_TOKEN,
+  4663: ROBINHOOD_RICO_TOKEN,
+} as const;
+
+export type RicoTokenChainId = keyof typeof RICO_TOKEN_ADDRESSES;
+
+export const getRicoTokenAddress = (chainId?: number) =>
+  RICO_TOKEN_ADDRESSES[(chainId || 56) as RicoTokenChainId] ||
+  TOKEN_CONTRACT_ADDRESS;
+
+const ETH_PAYMENT_TOKENS: RicoPaymentToken[] = [
+  { symbol: "USDC", address: ETH_USDC as `0x${string}`, decimals: 6 },
+  { symbol: "USDT", address: ETH_USDT as `0x${string}`, decimals: 6 },
+  { symbol: "DAI", address: ETH_DAI as `0x${string}`, decimals: 18 },
+];
+
+const BSC_PAYMENT_TOKENS: RicoPaymentToken[] = [
+  { symbol: "USDC", address: BSC_USDC as `0x${string}`, decimals: 18 },
+  { symbol: "USDT", address: BSC_USDT as `0x${string}`, decimals: 18 },
+  { symbol: "DAI", address: BSC_DAI as `0x${string}`, decimals: 18 },
+];
+
+const BASE_PAYMENT_TOKENS: RicoPaymentToken[] = [
+  { symbol: "USDC", address: BASE_USDC as `0x${string}`, decimals: 6 },
+  { symbol: "USDS", address: BASE_USDS as `0x${string}`, decimals: 18 },
+];
+
+const POLYGON_PAYMENT_TOKENS: RicoPaymentToken[] = [
+  { symbol: "USDC", address: POLYGON_USDC as `0x${string}`, decimals: 6 },
+];
+
+const ROBINHOOD_PAYMENT_TOKENS: RicoPaymentToken[] = [
+  { symbol: "USDG", address: ROBINHOOD_USDG as `0x${string}`, decimals: 6 },
+];
+
+const resolvePaymentToken = (
+  tokens: RicoPaymentToken[],
+  override?: `0x${string}`,
+) =>
+  tokens.find(
+    (token) => token.address.toLowerCase() === override?.toLowerCase(),
+  ) || tokens[0];
+
+const ETH_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
+  ETH_PAYMENT_TOKENS,
+  process.env.NEXT_PUBLIC_ETH_PAYMENT_TOKEN_ADDRESS as `0x${string}`,
+);
+const BSC_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
+  BSC_PAYMENT_TOKENS,
+  (process.env.NEXT_PUBLIC_BSC_PAYMENT_TOKEN_ADDRESS as `0x${string}`) ||
+    USDT_CONTRACT_ADDRESS,
+);
+const BASE_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
+  BASE_PAYMENT_TOKENS,
+  process.env.NEXT_PUBLIC_BASE_PAYMENT_TOKEN_ADDRESS as `0x${string}`,
+);
+const POLYGON_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
+  POLYGON_PAYMENT_TOKENS,
+  process.env.NEXT_PUBLIC_POLYGON_PAYMENT_TOKEN_ADDRESS as `0x${string}`,
+);
+const ROBINHOOD_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
+  ROBINHOOD_PAYMENT_TOKENS,
+  process.env.NEXT_PUBLIC_ROBINHOOD_PAYMENT_TOKEN_ADDRESS as `0x${string}`,
+);
+
+export const RICO_CHAIN_CONFIG = {
+  1: {
+    id: 1,
+    name: "Ethereum",
+    lzEid: 30101,
+    cctpDomain: 0,
+    matrix: RICO_MATRIX_V3_ADDRESS,
+    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    paymentTokens: ETH_PAYMENT_TOKENS,
+    paymentToken: ETH_DEFAULT_PAYMENT_TOKEN.address,
+    paymentSymbol: ETH_DEFAULT_PAYMENT_TOKEN.symbol,
+    paymentDecimals: ETH_DEFAULT_PAYMENT_TOKEN.decimals,
+  },
+  56: {
+    id: 56,
+    name: "BNB Smart Chain",
+    lzEid: 30102,
+    cctpDomain: 0,
+    matrix: RICO_MATRIX_V3_ADDRESS,
+    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    paymentTokens: BSC_PAYMENT_TOKENS,
+    paymentToken: BSC_DEFAULT_PAYMENT_TOKEN.address,
+    paymentSymbol: BSC_DEFAULT_PAYMENT_TOKEN.symbol,
+    paymentDecimals: BSC_DEFAULT_PAYMENT_TOKEN.decimals,
+  },
+  8453: {
+    id: 8453,
+    name: "Base",
+    lzEid: 30184,
+    cctpDomain: 6,
+    matrix: RICO_MATRIX_V3_ADDRESS,
+    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    paymentTokens: BASE_PAYMENT_TOKENS,
+    paymentToken: BASE_DEFAULT_PAYMENT_TOKEN.address,
+    paymentSymbol: BASE_DEFAULT_PAYMENT_TOKEN.symbol,
+    paymentDecimals: BASE_DEFAULT_PAYMENT_TOKEN.decimals,
+  },
+  137: {
+    id: 137,
+    name: "Polygon",
+    lzEid: 30109,
+    cctpDomain: 7,
+    matrix: RICO_MATRIX_V3_ADDRESS,
+    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    paymentTokens: POLYGON_PAYMENT_TOKENS,
+    paymentToken: POLYGON_DEFAULT_PAYMENT_TOKEN.address,
+    paymentSymbol: POLYGON_DEFAULT_PAYMENT_TOKEN.symbol,
+    paymentDecimals: POLYGON_DEFAULT_PAYMENT_TOKEN.decimals,
+  },
+  4663: {
+    id: 4663,
+    name: "Robinhood Chain",
+    lzEid: 30416,
+    cctpDomain: 0,
+    matrix: RICO_MATRIX_V3_ADDRESS,
+    migrator: RICO_V1_MIGRATOR_ADDRESS,
+    syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    paymentTokens: ROBINHOOD_PAYMENT_TOKENS,
+    paymentToken: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.address,
+    paymentSymbol: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.symbol,
+    paymentDecimals: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.decimals,
+  },
+} as const;
+
+export type RicoSupportedChainId = keyof typeof RICO_CHAIN_CONFIG;
+
+export const getRicoChainConfig = (chainId?: number) =>
+  RICO_CHAIN_CONFIG[(chainId || 56) as RicoSupportedChainId] || RICO_CHAIN_CONFIG[56];
+
+export const RICO_MATRIX_V3_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "paymentToken", type: "address" },
+      { internalType: "address", name: "referrerAddress", type: "address" },
+    ],
+    name: "joinLibrary",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "paymentToken", type: "address" },
+      { internalType: "uint8", name: "track", type: "uint8" },
+      { internalType: "uint8", name: "chapter", type: "uint8" },
+    ],
+    name: "buyNewChapter",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "paymentToken", type: "address" },
+      { internalType: "uint8", name: "track", type: "uint8" },
+      { internalType: "uint8", name: "startChapter", type: "uint8" },
+      { internalType: "uint8", name: "endChapter", type: "uint8" },
+    ],
+    name: "buyChapterBatch",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "amount", type: "uint256" }],
+    name: "claimRico",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "toReceiveToken", type: "address" },
+      { internalType: "uint32", name: "targetDstEid", type: "uint32" },
+    ],
+    name: "claimRoyaltyV3",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "migrateSelf",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "readerAddr", type: "address" }],
+    name: "isReaderExists",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getChapterPrices",
+    outputs: [{ internalType: "uint256[13]", name: "prices", type: "uint256[13]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "readerAddr", type: "address" }],
+    name: "getReaderSummary",
+    outputs: [
+      {
+        components: [
+          { internalType: "uint256", name: "id", type: "uint256" },
+          { internalType: "address", name: "referrer", type: "address" },
+          { internalType: "uint256", name: "partnersCount", type: "uint256" },
+          { internalType: "uint256", name: "track1TotalEarned", type: "uint256" },
+          { internalType: "uint256", name: "track2TotalEarned", type: "uint256" },
+          { internalType: "uint256", name: "track1TotalCycles", type: "uint256" },
+          { internalType: "uint256", name: "track2TotalCycles", type: "uint256" },
+          { internalType: "uint256", name: "track1Unlocked", type: "uint256" },
+          { internalType: "uint256", name: "track2Unlocked", type: "uint256" },
+          { internalType: "uint256", name: "royaltyAvailable", type: "uint256" },
+          { internalType: "uint256", name: "royaltyClaimed", type: "uint256" },
+          { internalType: "uint256", name: "royaltyPercent", type: "uint256" },
+          { internalType: "uint256", name: "ricoShouldHave", type: "uint256" },
+          { internalType: "uint256", name: "ricoSent", type: "uint256" },
+          { internalType: "uint256", name: "ricoPending", type: "uint256" },
+        ],
+        internalType: "struct ReaderSummary",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getRicoFarming",
+    outputs: [
+      { internalType: "uint256", name: "shouldHave", type: "uint256" },
+      { internalType: "uint256", name: "sent", type: "uint256" },
+      { internalType: "uint256", name: "pending", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "readerAddr", type: "address" }],
+    name: "viewRoyaltyV3",
+    outputs: [{ internalType: "uint256", name: "availableUSD18", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "readerAddr", type: "address" }],
+    name: "viewRoyaltyPercentV3",
+    outputs: [{ internalType: "uint256", name: "percent", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "viewLegacyClaimable",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "viewRicoPending",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "user", type: "address" },
+      { internalType: "uint8", name: "chapter", type: "uint8" },
+    ],
+    name: "getTrack1",
+    outputs: [
+      { internalType: "address", name: "currentReferrer", type: "address" },
+      { internalType: "address[]", name: "referrals", type: "address[]" },
+      { internalType: "bool", name: "blocked", type: "bool" },
+      { internalType: "uint256", name: "reinvestCount", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "user", type: "address" },
+      { internalType: "uint8", name: "chapter", type: "uint8" },
+    ],
+    name: "getTrack2",
+    outputs: [
+      { internalType: "address", name: "currentReferrer", type: "address" },
+      { internalType: "address[]", name: "firstLine", type: "address[]" },
+      { internalType: "address[]", name: "secondLine", type: "address[]" },
+      { internalType: "bool", name: "blocked", type: "bool" },
+      { internalType: "uint256", name: "reinvestCount", type: "uint256" },
+      { internalType: "address", name: "closedPart", type: "address" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getTotalReaders",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getTopEarners",
+    outputs: [
+      { internalType: "address[8]", name: "addrs", type: "address[8]" },
+      { internalType: "uint256[8]", name: "amounts", type: "uint256[8]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getTopReferrers",
+    outputs: [
+      { internalType: "address[8]", name: "addrs", type: "address[8]" },
+      { internalType: "uint256[8]", name: "counts", type: "uint256[8]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
 
 export const CONTRACT_ABI = [
   {
@@ -924,6 +1331,7 @@ export const USDT_ABI = [
     ],
     name: "approve",
     outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -931,6 +1339,7 @@ export const USDT_ABI = [
     inputs: [{ name: "account", type: "address" }],
     name: "balanceOf",
     outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -941,6 +1350,23 @@ export const USDT_ABI = [
     ],
     name: "allowance",
     outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
     type: "function",
   },
 ] as const;

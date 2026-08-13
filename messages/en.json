@@ -10,7 +10,7 @@
       ]
     },
     "title": "Learn. Publish. Earn. On-Chain.",
-    "subtitle": "Chapter-based learning with RICO token rewards, royalties, and staking on BNB Smart Chain.",
+    "subtitle": "Chapter-based learning with RICO token rewards, royalties, and staking. Buy chapters on BNB Smart Chain, Ethereum, Base, Polygon, or Robinhood Chain and your access syncs across all supported networks.",
     "activateLevel": "Connect Wallet",
     "joinTelegram": "Join Telegram",
     "nav": {
@@ -26,7 +26,7 @@
     "matrixOverview": {
       "title": "X3 + X6 Library Matrix",
       "subtitle": "Chapters are books you own • Levels unlock lessons and resale rights",
-      "blockchain": "BNB Smart Chain",
+      "blockchain": "Multi-chain chapter sync",
       "note": "12 chapters per track · each new chapter costs 2× more and pays approximately 2× more.",
       "chapters": {
         "chapter1": "Chapter 1",
@@ -54,6 +54,7 @@
       "time": "Rico Quant Bot launches Friday, July 17, 2026 at 11:00 PM WAT",
       "badges": {
         "decentralized": "On-chain ownership of chapters",
+        "omnichain": "Buy on BSC, ETH, Base, Polygon, or Robinhood",
         "earnings": "X3 direct + X6 spillover earnings",
         "royalty": "Royalty community pool & unilevel"
       },
@@ -65,7 +66,7 @@
         "hours": "Hours",
         "mins": "Mins",
         "secs": "Secs",
-        "note": "Connect your wallet with USDT BEP-20 to purchase your first chapter."
+        "note": "Connect your wallet on BNB Smart Chain, Ethereum, Base, Polygon, or Robinhood Chain to purchase chapters. Your chapter access syncs across all supported chains."
       }
     },
     "media": {
@@ -81,7 +82,7 @@
     "worldMap": {
       "kicker": "Global Library",
       "title": "A book marketplace with readers in every region.",
-      "subtitle": "RICO MATRIX operates as a borderless education economy with on-chain chapter ownership and transparent royalty flows.",
+      "subtitle": "RICO MATRIX operates as a borderless education economy with on-chain chapter ownership, transparent royalty flows, and multi-chain continuity for chapter purchases.",
       "stats": {
         "readers": "Active readers",
         "readersNote": "Unique visitors recorded",
@@ -112,7 +113,7 @@
     "whyJoin": {
       "kicker": "Why readers are joining",
       "title": "Multiple income streams from one learning marketplace.",
-      "subtitle": "RICO MATRIX blends book sales, education access, unilevel commissions, royalty dividends, intellectual property ownership, and RICO rewards — all encoded on-chain.",
+      "subtitle": "RICO MATRIX blends book sales, education access, unilevel commissions, royalty dividends, intellectual property ownership, and RICO rewards — now with chapter purchases on BSC, Ethereum, Base, Polygon, and Robinhood Chain that sync across the platform.",
       "features": {
         "spillovers": {
           "kicker": "Spillovers",
@@ -134,22 +135,22 @@
     "howItWorks": {
       "kicker": "How it works",
       "title": "Three steps to start learning and earning.",
-      "subtitle": "RICO MATRIX is a self-executing library contract on the BNB Smart Chain. Once live, it automatically handles registrations, matrix placements, reinvestments, unilevel payouts and royalty distributions.",
+      "subtitle": "RICO MATRIX is a self-executing library contract with multi-chain chapter access. Buy on BNB Smart Chain, Ethereum, Base, Polygon, or Robinhood Chain, and the platform syncs your chapter continuity across all supported chains.",
       "steps": {
         "step1": {
           "index": "1",
-          "title": "Connect your BNB Smart Chain wallet",
-          "description": "Use Trust Wallet, SafePal, MetaMask, TokenPocket, OKX, or any compatible wallet. Fund it with a small amount of BNB for gas and at least $5 USDT BEP-20 for your first chapter."
+          "title": "Connect on any supported chain",
+          "description": "Use Trust Wallet, SafePal, MetaMask, TokenPocket, OKX, or any compatible wallet on BNB Smart Chain, Ethereum, Base, Polygon, or Robinhood Chain. Keep enough native gas on the chain you choose and the supported payment token for your chapter."
         },
         "step2": {
           "index": "2",
           "title": "Purchase Chapter 1 in X3 & X6",
-          "description": "With $5 USDT you unlock Chapter 1 access and enter RICO X3 and RICO X6 simultaneously. X3 is your direct sales engine (3 slots), while X6 is your spillover engine (2+4 slots). All payments move wallet-to-wallet via the smart contract."
+          "description": "With the chapter payment token on your selected chain, you unlock Chapter 1 access and enter RICO X3 and RICO X6 simultaneously. X3 is your direct sales engine (3 slots), while X6 is your spillover engine (2+4 slots). Your chapter access syncs across all supported chains."
         },
         "step3": {
           "index": "3",
           "title": "Upgrade your library and scale earnings",
-          "description": "Chapters 2–12 are each 2× the previous price and 2× the earning potential. Auto-recycle keeps chapters reopening. Unilevel and royalty pools reward network-wide activity, while RICO rewards drop based on your buys, upgrades and referrals."
+          "description": "Chapters 2–12 are each 2× the previous price and 2× the earning potential. You can buy a single chapter or batch-buy continuous chapters on any supported chain, while sync keeps your library continuity aligned across the platform."
         }
       }
     },
@@ -175,7 +176,7 @@
     "partners": {
       "kicker": "Strategic partners",
       "title": "Trusted by leading Web3 infrastructure.",
-      "subtitle": "RICO MATRIX integrates with widely used tools in the BNB Smart Chain ecosystem."
+      "subtitle": "RICO MATRIX integrates with widely used Web3 tooling and now supports chapter purchases across BNB Smart Chain, Ethereum, Base, Polygon, and Robinhood Chain."
     },
     "unilevel": {
       "kicker": "12-Level Reader Ladder",
@@ -302,7 +303,7 @@
     "cta": {
       "kicker": "Begin Your Journey",
       "title": "Ready to open your first chapter?",
-      "description": "Get your wallet ready with USDT BEP-20, start at Chapter 1 — or position higher at Chapter 9 and above — and bring at least three serious readers. The RICO MATRIX smart contract handles the rest.",
+      "description": "Get your wallet ready on BNB Smart Chain, Ethereum, Base, Polygon, or Robinhood Chain, start at Chapter 1 — or position higher at Chapter 9 and above — and bring at least three serious readers. Chapter purchases sync across all supported chains.",
       "disclaimer": "Reminder: This is not investment advice. Always do your own research before interacting with any smart contract or DeFi system."
     },
     "footer": {
@@ -347,7 +348,7 @@
     "ecosystem": {
       "kicker": "Ecosystem Overview",
       "title": "Everything inside the Rico Matrix platform",
-      "subtitle": "More than a chapter marketplace, Rico Matrix is a learn-to-earn platform built around access, publishing, community royalties, airdrops, and staking.",
+      "subtitle": "More than a chapter marketplace, Rico Matrix is a learn-to-earn platform built around synced chapter access across BSC, Ethereum, Base, Polygon, and Robinhood Chain, plus publishing, community royalties, airdrops, and staking.",
       "cards": {
         "skills": {
           "kicker": "Skills Hub",
@@ -384,12 +385,12 @@
     "access": {
       "kicker": "Access by Chapter",
       "title": "Your access grows as you unlock chapters",
-      "subtitle": "Each chapter is more than a purchase. It opens more earning power, more platform utility, and deeper ecosystem participation.",
+      "subtitle": "Each chapter is more than a purchase. Buy it on any supported chain and it opens more earning power, more platform utility, and synced ecosystem participation.",
       "steps": [
         {
           "step": "1",
           "title": "Chapter 1–2: Start your entry journey",
-          "description": "Join the ecosystem, activate chapter ownership, and begin your learning and reward journey inside the X3 and X6 system."
+          "description": "Join the ecosystem, activate synced chapter ownership, and begin your learning and reward journey inside the X3 and X6 system."
         },
         {
           "step": "3",

@@ -10,7 +10,7 @@
       ]
     },
     "title": "Apprenez, publiez, gagnez et stakez dans un seul écosystème éducatif Web3",
-    "subtitle": "Rico Matrix combine la propriété de chapitres, la formation en IA et en marketing, l’édition dans une bibliothèque, les royalties communautaires, les airdrops et le staking sur la BNB Smart Chain.",
+    "subtitle": "Rico Matrix combine la propriété de chapitres, la formation en IA et en marketing, l’édition dans une bibliothèque, les royalties communautaires, les airdrops et le staking. Achetez des chapitres sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain : votre accès se synchronise sur tous les réseaux pris en charge.",
     "activateLevel": "Connecter le portefeuille",
     "joinTelegram": "Rejoindre Telegram",
     "nav": {
@@ -26,7 +26,7 @@
     "matrixOverview": {
       "title": "Matrice de bibliothèque X3 + X6",
       "subtitle": "Les chapitres sont des livres que vous possédez • Les niveaux débloquent des leçons et des droits de revente",
-      "blockchain": "BNB Smart Chain",
+      "blockchain": "Synchronisation multi-chaînes",
       "note": "12 chapitres par parcours · chaque nouveau chapitre coûte 2× plus cher et rapporte environ 2× plus.",
       "chapters": {
         "chapter1": "Chapitre 1",
@@ -54,6 +54,7 @@
       "time": "Rico Quant Bot sera lancé le vendredi 17 juillet 2026 à 23h00 WAT",
       "badges": {
         "decentralized": "Propriété on-chain des chapitres",
+        "omnichain": "Achetez sur BSC, ETH, Base, Polygon ou Robinhood",
         "earnings": "Gains directs X3 + gains par débordement X6",
         "royalty": "Pool communautaire de royalties & unilevel"
       },
@@ -65,7 +66,7 @@
         "hours": "Heures",
         "mins": "Min",
         "secs": "Sec",
-        "note": "Connectez votre portefeuille avec de l’USDT BEP-20 pour acheter votre premier chapitre."
+        "note": "Connectez votre portefeuille sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain pour acheter des chapitres. Votre accès se synchronise sur toutes les chaînes prises en charge."
       }
     },
     "media": {
@@ -81,7 +82,7 @@
     "worldMap": {
       "kicker": "Bibliothèque mondiale",
       "title": "Une marketplace de livres avec des lecteurs dans chaque région.",
-      "subtitle": "RICO MATRIX fonctionne comme une économie éducative sans frontières avec une propriété on-chain des chapitres et des flux de royalties transparents.",
+      "subtitle": "RICO MATRIX fonctionne comme une économie éducative sans frontières avec une propriété on-chain des chapitres, des flux de royalties transparents et une continuité multi-chaînes pour les achats de chapitres.",
       "stats": {
         "readers": "Lecteurs actifs",
         "readersNote": "Visiteurs uniques enregistrés",
@@ -112,7 +113,7 @@
     "whyJoin": {
       "kicker": "Pourquoi les lecteurs rejoignent",
       "title": "Plusieurs sources de revenus à partir d’une seule marketplace d’apprentissage.",
-      "subtitle": "RICO MATRIX associe ventes de livres, accès à l’éducation, commissions unilevel, dividendes de royalties, propriété intellectuelle et récompenses RICO — le tout encodé on-chain.",
+      "subtitle": "RICO MATRIX associe ventes de livres, accès à l’éducation, commissions unilevel, dividendes de royalties, propriété intellectuelle et récompenses RICO — avec désormais des achats de chapitres sur BSC, Ethereum, Base, Polygon et Robinhood Chain qui se synchronisent sur la plateforme.",
       "features": {
         "spillovers": {
           "kicker": "Débordements",
@@ -134,22 +135,22 @@
     "howItWorks": {
       "kicker": "Comment ça fonctionne",
       "title": "Trois étapes pour commencer à apprendre et à gagner.",
-      "subtitle": "RICO MATRIX est un contrat de bibliothèque auto-exécutable sur la BNB Smart Chain. Une fois en ligne, il gère automatiquement les inscriptions, les placements dans la matrice, les réinvestissements, les paiements unilevel et les distributions de royalties.",
+      "subtitle": "RICO MATRIX est un contrat de bibliothèque auto-exécutable avec accès aux chapitres multi-chaînes. Achetez sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain, et la plateforme synchronise votre continuité de chapitres sur toutes les chaînes prises en charge.",
       "steps": {
         "step1": {
           "index": "1",
-          "title": "Connectez votre portefeuille BNB Smart Chain",
-          "description": "Utilisez Trust Wallet, SafePal, MetaMask, TokenPocket, OKX ou tout autre portefeuille compatible. Alimentez-le avec une petite quantité de BNB pour le gas et au moins 5 $ USDT BEP-20 pour votre premier chapitre."
+          "title": "Connectez-vous sur une chaîne prise en charge",
+          "description": "Utilisez Trust Wallet, SafePal, MetaMask, TokenPocket, OKX ou tout autre portefeuille compatible sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain. Gardez assez de gas natif sur la chaîne choisie et le token de paiement pris en charge pour votre chapitre."
         },
         "step2": {
           "index": "2",
           "title": "Achetez le Chapitre 1 en X3 & X6",
-          "description": "Avec 5 $ USDT, vous débloquez l’accès au Chapitre 1 et entrez simultanément dans RICO X3 et RICO X6. X3 est votre moteur de ventes directes (3 places), tandis que X6 est votre moteur de débordement (2+4 places). Tous les paiements passent de portefeuille à portefeuille via le smart contract."
+          "description": "Avec le token de paiement du chapitre sur la chaîne choisie, vous débloquez l’accès au Chapitre 1 et entrez simultanément dans RICO X3 et RICO X6. X3 est votre moteur de ventes directes (3 places), tandis que X6 est votre moteur de débordement (2+4 places). Votre accès aux chapitres se synchronise sur toutes les chaînes prises en charge."
         },
         "step3": {
           "index": "3",
           "title": "Améliorez votre bibliothèque et augmentez vos gains",
-          "description": "Les chapitres 2 à 12 coûtent chacun 2× le prix du précédent et offrent 2× le potentiel de gains. L’auto-recyclage maintient les chapitres réouverts. Les pools unilevel et de royalties récompensent l’activité de tout le réseau, tandis que les récompenses RICO sont distribuées selon vos achats, vos mises à niveau et vos parrainages."
+          "description": "Les chapitres 2 à 12 coûtent chacun 2× le prix du précédent et offrent 2× le potentiel de gains. Vous pouvez acheter un chapitre ou acheter plusieurs chapitres continus en lot sur toute chaîne prise en charge, tandis que la synchronisation garde votre bibliothèque alignée sur la plateforme."
         }
       }
     },
@@ -175,7 +176,7 @@
     "partners": {
       "kicker": "Partenaires stratégiques",
       "title": "Adopté par les principales infrastructures Web3.",
-      "subtitle": "RICO MATRIX s’intègre aux outils les plus utilisés dans l’écosystème BNB Smart Chain."
+      "subtitle": "RICO MATRIX s’intègre aux outils Web3 les plus utilisés et prend désormais en charge les achats de chapitres sur BNB Smart Chain, Ethereum, Base, Polygon et Robinhood Chain."
     },
     "unilevel": {
       "kicker": "Échelle de lecteurs sur 12 niveaux",
@@ -302,7 +303,7 @@
     "cta": {
       "kicker": "Commencez votre parcours",
       "title": "Prêt à ouvrir votre premier chapitre ?",
-      "description": "Préparez votre portefeuille avec de l’USDT BEP-20, commencez au Chapitre 1 — ou positionnez-vous plus haut au Chapitre 9 et au-delà — et amenez au moins trois lecteurs sérieux. Le smart contract RICO MATRIX s’occupe du reste.",
+      "description": "Préparez votre portefeuille sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain, commencez au Chapitre 1 — ou positionnez-vous plus haut au Chapitre 9 et au-delà — et amenez au moins trois lecteurs sérieux. Les achats de chapitres se synchronisent sur toutes les chaînes prises en charge.",
       "disclaimer": "Rappel : ceci ne constitue pas un conseil en investissement. Faites toujours vos propres recherches avant d’interagir avec un smart contract ou un système DeFi."
     },
     "footer": {
@@ -347,7 +348,7 @@
     "ecosystem": {
       "kicker": "Vue d’ensemble de l’écosystème",
       "title": "Tout ce qui se trouve dans la plateforme Rico Matrix",
-      "subtitle": "Plus qu’une marketplace de chapitres, Rico Matrix est une plateforme learn-to-earn construite autour de l’accès, de la publication, des royalties communautaires, des airdrops et du staking.",
+      "subtitle": "Plus qu’une marketplace de chapitres, Rico Matrix est une plateforme learn-to-earn construite autour d’un accès synchronisé aux chapitres sur BSC, Ethereum, Base, Polygon et Robinhood Chain, ainsi que la publication, les royalties communautaires, les airdrops et le staking.",
       "cards": {
         "skills": {
           "kicker": "Centre de compétences",
@@ -384,12 +385,12 @@
     "access": {
       "kicker": "Accès par chapitre",
       "title": "Votre accès grandit à mesure que vous débloquez des chapitres",
-      "subtitle": "Chaque chapitre est plus qu’un achat. Il ouvre davantage de pouvoir de gain, plus d’utilité sur la plateforme et une participation plus profonde à l’écosystème.",
+      "subtitle": "Chaque chapitre est plus qu’un achat. Achetez-le sur n’importe quelle chaîne prise en charge : il ouvre plus de puissance de gain, plus d’utilité sur la plateforme et une participation synchronisée dans l’écosystème.",
       "steps": [
         {
           "step": "1",
           "title": "Chapitre 1–2 : commencez votre parcours d’entrée",
-          "description": "Rejoignez l’écosystème, activez la propriété de chapitre et commencez votre parcours d’apprentissage et de récompenses au sein du système X3 et X6."
+          "description": "Rejoignez l’écosystème, activez la propriété synchronisée des chapitres et commencez votre parcours d’apprentissage et de récompenses au sein du système X3 et X6."
         },
         {
           "step": "3",

@@ -7,7 +7,6 @@ import ProfileInfo from "../components/Dashboard/ProfileInfo";
 import { ReferralSection } from "../components/Profile/ReferralSection";
 import { ProfileStats } from "../components/Dashboard/ProfileStats";
 import { RegistrationSection } from "../components/Dashboard/RegistrationSection";
-import MigrationPanel from "@/components/Dashboard/MigrationPanel";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -42,8 +41,8 @@ export default function Dashboard() {
     buyChapter,
     claimRoyalty,
     claimRoyaltyV2,
+    migrateSelf,
     claimRico,
-    claimLegacyRoyalty,
     fetchTrack1Matrix,
     fetchTrack2Matrix,
     refetchUserData,
@@ -62,6 +61,8 @@ export default function Dashboard() {
   >([]);
   const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [isLegacyActionRunning, setIsLegacyActionRunning] = useState(false);
+  const [legacyActionChecked, setLegacyActionChecked] = useState(false);
   const searchParams = useSearchParams();
   const urlReferral = searchParams.get("ref");
 
@@ -128,26 +129,26 @@ export default function Dashboard() {
   const getDashboardState = () => {
     if (!isConnected) return "landing";
 
-    // Check if user exists in V2
-    const existsInV2 = userData?.exists || false;
+    const existsInV3 = userData?.exists || false;
 
-    // Check migration status
     const migrationStatus =
       userData?.migrationStatus?.status ?? userData?.migrationData?.status ?? 0;
+    const legacyClaimable = parseFloat(
+      migrationAndRoyaltyUI?.legacyClaimable || "0",
+    );
+    const v2Claimable = parseFloat(migrationAndRoyaltyUI?.v2Claimable || "0");
+    const hasLegacyAccount =
+      migrationStatus === 1 || legacyClaimable > 0 || v2Claimable > 0;
 
-    if (!existsInV2) {
-      // User doesn't exist in V2
-      if (migrationStatus === 1) {
-        // User exists in V1 but not migrated to V2 - show migration
-        return "migrate";
+    if (!existsInV3) {
+      if (hasLegacyAccount) {
+        return "legacy";
       } else {
-        // User doesn't exist in V1 or V2 - show registration
         return "register";
       }
-    } else {
-      // User exists in V2 - show dashboard
-      return "dashboard";
     }
+
+    return "dashboard";
   };
 
   const dashboardState = getDashboardState();
@@ -159,14 +160,8 @@ export default function Dashboard() {
     refetchAllData();
   };
 
-  const handleMigrationComplete = () => {
-    refetchAllData();
-  };
-
   // Handle V2 royalty claim
   const handleClaimRoyaltyV2 = async () => {
-    if (!userData?.exists) return;
-
     const v2Claimable = migrationAndRoyaltyUI?.v2Claimable || "0";
     if (parseFloat(v2Claimable) === 0) return;
 
@@ -181,39 +176,43 @@ export default function Dashboard() {
     }
   };
 
-  // Handle legacy royalty claim
-  const handleClaimLegacyRoyalty = async () => {
-    const legacyClaimable = migrationAndRoyaltyUI?.legacyClaimable || "0";
-    if (parseFloat(legacyClaimable) === 0) return;
+  const handleLegacyDashboardContinue = async () => {
+    if (isLegacyActionRunning) return;
+
+    setLegacyActionChecked(false);
+    setIsLegacyActionRunning(true);
 
     try {
-      const hash = await claimLegacyRoyalty();
-      if (hash) {
-        setCurrentTxHash(hash);
+      if (canClaimRoyaltyV2) {
+        const hash = await claimRoyaltyV2();
+        if (hash) {
+          setCurrentTxHash(hash);
+        }
       }
+
+      const migrationHash = await migrateSelf();
+      if (migrationHash) {
+        setCurrentTxHash(migrationHash);
+      }
+
+      await refetchAllData({ showToast: false });
+      setLegacyActionChecked(true);
     } catch (error) {
-      console.error("Claim failed:", error);
+      console.error("Legacy dashboard flow failed:", error);
       setCurrentTxHash(null);
+    } finally {
+      setIsLegacyActionRunning(false);
     }
   };
 
-  const isProcessingRoyalty = loading || isConfirming;
+  const isProcessingRoyalty = loading || isConfirming || isLegacyActionRunning;
 
   // Check if user can claim V2 royalty
   const canClaimRoyaltyV2 =
-    userData?.exists &&
     migrationAndRoyaltyUI?.v2Claimable &&
-    parseFloat(migrationAndRoyaltyUI.v2Claimable) >= 0.5;
-
-  // Check if user can claim legacy royalty
-  const canClaimLegacyRoyalty =
-    userData?.exists &&
-    migrationAndRoyaltyUI?.legacyClaimable &&
-    parseFloat(migrationAndRoyaltyUI.legacyClaimable) >= 0.5;
+    parseFloat(migrationAndRoyaltyUI.v2Claimable) > 0;
 
   const royaltyAvailable = userData?.royaltyAvailable || "0.00";
-  const legacyClaimableAmount =
-    migrationAndRoyaltyUI?.legacyClaimable || "0.00";
   const v2ClaimableAmount = migrationAndRoyaltyUI?.v2Claimable || "0.00";
 
   // Helper function to render HTML
@@ -345,22 +344,22 @@ export default function Dashboard() {
           {/* Header - Show for all states except landing */}
           <div className="mx-auto mb-8 max-w-4xl text-center md:mb-10 lg:mb-12">
             <p className="theme-kicker justify-center mb-3">
-              {dashboardState === "migrate"
-                ? "ACCOUNT UPGRADE REQUIRED"
+              {dashboardState === "legacy"
+                ? "GO TO DASHBOARD"
                 : dashboardState === "register"
                   ? "WELCOME TO RICO MATRIX"
                   : t("header.subtitle")}
             </p>
             <h1 className="theme-title mb-3 text-3xl md:text-4xl">
-              {dashboardState === "migrate"
-                ? "Migration Required"
+              {dashboardState === "legacy"
+                ? "Go to Dashboard"
                 : dashboardState === "register"
                   ? "Join RICO Matrix"
                   : t("header.title")}
             </h1>
             <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
-              {dashboardState === "migrate"
-                ? "Transfer your V1 account to access new V2 features and rewards"
+              {dashboardState === "legacy"
+                ? "Continue to your Rico Matrix dashboard. Any available royalty will be handled automatically first."
                 : dashboardState === "register"
                   ? "Start your journey with RICO Matrix and unlock earning opportunities"
                   : t("header.description")}
@@ -468,10 +467,40 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Show Migration Panel if user needs to migrate */}
-          {dashboardState === "migrate" && (
+          {dashboardState === "legacy" && (
             <div className="mb-8 md:mb-10 lg:mb-12">
-              <MigrationPanel onMigrationComplete={handleMigrationComplete} />
+              <div className="theme-panel mx-auto max-w-2xl p-5 text-center sm:p-6">
+                <p className="theme-kicker justify-center">Dashboard access</p>
+                <h2 className="mt-3 text-2xl font-semibold text-slate-50">Go to Dashboard</h2>
+                <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-300">
+                  Continue to your Rico Matrix dashboard. Any available royalty will be processed first, then your account will refresh automatically.
+                </p>
+                <div className="mt-5 rounded-2xl border border-yellow-400/20 bg-yellow-500/10 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-yellow-100/80">Available royalty</p>
+                  <p className="mt-2 text-2xl font-semibold text-yellow-100">{v2ClaimableAmount} USDT</p>
+                </div>
+                {legacyActionChecked ? (
+                  <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4 text-sm text-cyan-100">
+                    Account refreshed. You can continue to your dashboard.
+                  </div>
+                ) : null}
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLegacyDashboardContinue}
+                    disabled={isProcessingRoyalty}
+                    className="theme-button-primary justify-center px-5 py-3 text-sm"
+                  >
+                    {isProcessingRoyalty
+                      ? canClaimRoyaltyV2
+                        ? "Claiming and checking dashboard..."
+                        : "Checking dashboard..."
+                      : canClaimRoyaltyV2
+                        ? "Process Royalty & Go to Dashboard"
+                        : "Go to Dashboard"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -487,7 +516,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Show Full Dashboard if user exists in V2 */}
+          {/* Show Full Dashboard if user exists */}
           {dashboardState === "dashboard" && (
             <>
               {blockedChapters.length > 0 && (
@@ -558,32 +587,6 @@ export default function Dashboard() {
                       globalRicoFarming={globalRicoFarming}
                     />
 
-                    {/* Legacy Royalty Claim Button (if available) */}
-                    {canClaimLegacyRoyalty && (
-                      <div className="mt-4">
-                        <button
-                          onClick={handleClaimLegacyRoyalty}
-                          disabled={isProcessingRoyalty}
-                          className={`flex w-full items-center justify-center rounded-xl px-6 py-3 text-base md:text-lg font-semibold transition-all
-                              ${
-                                !isProcessingRoyalty
-                                  ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-[0_0_22px_rgba(245,158,11,0.7)] hover:brightness-110 active:scale-[0.98]"
-                                  : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
-                              }
-                            `}
-                        >
-                          {isProcessingRoyalty
-                            ? "Processing..."
-                            : `Claim V1 Royalty: ${parseFloat(
-                                legacyClaimableAmount,
-                              ).toFixed(2)} USDT`}
-                        </button>
-                        <p className="mt-2 text-[0.7rem] text-slate-500 text-center">
-                          Claim your V1 royalty balance from before migration
-                        </p>
-                      </div>
-                    )}
-
                     {/* V2 Royalty Claim Button */}
                     {canClaimRoyaltyV2 && (
                       <div className="mt-4">
@@ -611,17 +614,14 @@ export default function Dashboard() {
                     )}
 
                     {/* Combined Total if both available */}
-                    {(canClaimLegacyRoyalty || canClaimRoyaltyV2) && (
+                    {canClaimRoyaltyV2 && (
                       <div className="mt-3 pt-3 border-t border-slate-800">
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-slate-400">
                             Total Available:
                           </span>
                           <span className="font-bold text-amber-300">
-                            {(
-                              parseFloat(legacyClaimableAmount) +
-                              parseFloat(v2ClaimableAmount)
-                            ).toFixed(2)}{" "}
+                            {parseFloat(v2ClaimableAmount).toFixed(2)}{" "}
                             USDT
                           </span>
                         </div>

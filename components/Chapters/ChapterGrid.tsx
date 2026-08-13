@@ -17,11 +17,16 @@ export const ChapterGrid = () => {
   const {
     userData,
     buyChapter,
+    buyChapterBatch,
     approveUsdt,
     loading,
     chapterPrices,
     usdtAllowance,
     usdtBalance,
+    paymentTokenSymbol,
+    paymentTokens,
+    selectedPaymentTokenAddress,
+    setSelectedPaymentTokenAddress,
     fetchAllTrack1Chapters,
     fetchAllTrack2Chapters,
   } = useQuantuMatrix();
@@ -31,6 +36,10 @@ export const ChapterGrid = () => {
     track: number;
     chapter: number;
   } | null>(null);
+  const [batchTrack, setBatchTrack] = useState(1);
+  const [batchStart, setBatchStart] = useState(1);
+  const [batchEnd, setBatchEnd] = useState(3);
+  const [isBatchBuying, setIsBatchBuying] = useState(false);
   const [track1States, setTrack1States] = useState<Record<number, "active" | "blocked">>({});
   const [track2States, setTrack2States] = useState<Record<number, "active" | "blocked">>({});
   const t = useTranslations("ChaptersPage.ChapterGrid");
@@ -97,11 +106,22 @@ export const ChapterGrid = () => {
   ) => {
     try {
       setCurrentlyApproving({ track, chapter });
-      await approveUsdt(amount);
+      await approveUsdt(formatUnits(BigInt(amount || "0"), 18));
     } catch (error) {
       console.error("Approval failed:", error);
     } finally {
       setCurrentlyApproving(null);
+    }
+  };
+
+  const handleBatchBuy = async () => {
+    try {
+      setIsBatchBuying(true);
+      await buyChapterBatch(batchTrack, batchStart, batchEnd);
+    } catch (error) {
+      console.error("Batch purchase failed:", error);
+    } finally {
+      setIsBatchBuying(false);
     }
   };
 
@@ -112,8 +132,6 @@ export const ChapterGrid = () => {
     if (!chapterPrices || chapterPrices.length === 0) return "0";
     return chapterPrices[chapter]?.toString() || "0";
   };
-
-  const isProcessing = loading;
 
   // Check if user needs to approve USDT for a specific chapter
   const needsApproval = (chapterPrice: string) => {
@@ -130,6 +148,20 @@ export const ChapterGrid = () => {
       return false;
     }
   };
+
+  const isProcessing = loading;
+  const batchCost = Array.from(
+    { length: Math.max(0, batchEnd - batchStart + 1) },
+    (_, index) => batchStart + index,
+  ).reduce((total, chapter) => total + BigInt(getChapterPrice(chapter) || "0"), BigInt(0));
+  const batchNeedsApproval = needsApproval(batchCost.toString());
+  const batchDisabled =
+    isProcessing ||
+    isBatchBuying ||
+    !userData?.exists ||
+    batchStart < 1 ||
+    batchEnd > 12 ||
+    batchEnd < batchStart;
 
   // Check if a specific chapter is being approved
   const isChapterApproving = (track: number, chapter: number) => {
@@ -149,7 +181,7 @@ export const ChapterGrid = () => {
               {t("balance.title")}
             </h4>
             <p className="text-lg font-bold text-slate-50">
-              {Number(usdtBalance).toFixed(2) || "0"} {t("balance.currency")}
+              {Number(usdtBalance).toFixed(2) || "0"} {paymentTokenSymbol || t("balance.currency")}
             </p>
           </div>
           <div>
@@ -157,7 +189,7 @@ export const ChapterGrid = () => {
               {t("balance.approved")}
             </h4>
             <p className="text-lg font-bold text-yellow-300">
-              {Number(usdtAllowance).toFixed(2) || "0"} {t("balance.currency")}
+              {Number(usdtAllowance).toFixed(2) || "0"} {paymentTokenSymbol || t("balance.currency")}
             </p>
           </div>
         </div>
@@ -166,6 +198,82 @@ export const ChapterGrid = () => {
             {t("balance.warning")}
           </div>
         )}
+      </div>
+
+      <div className="theme-panel-soft rounded-2xl p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h4 className="text-sm font-semibold text-slate-100">Batch chapter purchase</h4>
+            <p className="mt-1 text-xs text-slate-400">
+              Buy continuous chapters in one transaction on the active chain.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-5 lg:min-w-[680px]">
+            {paymentTokens?.length > 1 && (
+              <label className="text-xs text-slate-400">
+                Token
+                <select
+                  value={selectedPaymentTokenAddress}
+                  onChange={(event) =>
+                    setSelectedPaymentTokenAddress(event.target.value as `0x${string}`)
+                  }
+                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                >
+                  {paymentTokens.map((token) => (
+                    <option key={token.address} value={token.address}>
+                      {token.symbol}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="text-xs text-slate-400">
+              Track
+              <select
+                value={batchTrack}
+                onChange={(event) => setBatchTrack(Number(event.target.value))}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              >
+                <option value={1}>X3</option>
+                <option value={2}>X6</option>
+              </select>
+            </label>
+            <label className="text-xs text-slate-400">
+              From
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={batchStart}
+                onChange={(event) => setBatchStart(Number(event.target.value))}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              />
+            </label>
+            <label className="text-xs text-slate-400">
+              To
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={batchEnd}
+                onChange={(event) => setBatchEnd(Number(event.target.value))}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={batchNeedsApproval ? () => approveUsdt(formatUnits(batchCost, 18)) : handleBatchBuy}
+              disabled={batchDisabled}
+              className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isBatchBuying
+                ? "Processing..."
+                : batchNeedsApproval
+                  ? `Approve ${formatUnits(batchCost, 18)} ${paymentTokenSymbol || "USDT"}`
+                  : `Buy ${batchStart}-${batchEnd}`}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Track 1 - X3 Matrix */}
