@@ -1298,14 +1298,6 @@ export const useQuantuMatrix = () => {
           );
         }
 
-        await publicClient.simulateContract({
-          ...activeMatrixContract,
-          functionName: "joinLibraryHub",
-          args: [activePaymentToken.address, referrer as `0x${string}`],
-          account: address,
-          value: activeBroadcastNativeFee,
-        });
-
         const hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...activeMatrixContract,

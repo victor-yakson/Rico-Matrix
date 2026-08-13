@@ -238,9 +238,17 @@ export const RegistrationSection = ({
   const hasSufficientBalance =
     numericBalance >= numericJoinCost && numericJoinCost > 0;
 
+  const numericRequiredAllowance = useMemo(
+    () => parseFloat(paymentTokenMaxAllowance || "21000"),
+    [paymentTokenMaxAllowance],
+  );
+
   const hasSufficientAllowance = useMemo(() => {
-    return numericAllowance >= numericJoinCost && numericJoinCost > 0;
-  }, [numericAllowance, numericJoinCost]);
+    return (
+      numericAllowance >= numericRequiredAllowance &&
+      numericRequiredAllowance > 0
+    );
+  }, [numericAllowance, numericRequiredAllowance]);
 
   const isProcessing = Boolean(
     loading || isApproving || isRegistering || checkingReferral
