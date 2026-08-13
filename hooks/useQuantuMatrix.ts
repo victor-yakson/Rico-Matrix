@@ -228,15 +228,16 @@ export const useQuantuMatrix = () => {
     track2: Record<string, Record<number, Track2Data>>;
   }>({ track1: {}, track2: {} });
 
-  // Read user existence
-  const { data: userExists, refetch: refetchUserExists } = useReadContract({
+  // Read user existence from readers(address).id.
+  const { data: userReader, refetch: refetchUserExists } = useReadContract({
     ...activeMatrixContract,
-    functionName: "isReaderExists",
+    functionName: "readers",
     args: address ? [address] : undefined,
     query: {
       enabled: !!address,
     },
   });
+  const userExists = toBigIntValue((userReader as any)?.id ?? (userReader as any)?.[0]) > BigInt(0);
 
   const legacyV2Configured = Boolean(LEGACY_V2_CONTRACT_ADDRESS);
 
@@ -253,26 +254,11 @@ export const useQuantuMatrix = () => {
   const userContracts = (
     address && userExists
       ? [
-          {
-            ...activeMatrixContract,
-            functionName: "getReaderSummary",
-            args: [address],
-          },
-          {
-            ...activeMatrixContract,
-            functionName: "getRicoFarming",
-            args: [address],
-          },
-          {
-            ...activeMatrixContract,
-            functionName: "viewRoyaltyV3",
-            args: [address],
-          },
-          {
-            ...activeMatrixContract,
-            functionName: "viewRoyaltyPercentV3",
-            args: [address],
-          },
+          { ...activeMatrixContract, functionName: "readers", args: [address] },
+          { ...activeMatrixContract, functionName: "ricoExpected", args: [address] },
+          { ...activeMatrixContract, functionName: "ricoClaimed", args: [address] },
+          { ...activeMatrixContract, functionName: "viewRicoPending", args: [address] },
+          { ...activeMatrixContract, functionName: "totalUnilevelEarned", args: [address] },
         ]
       : []
   ) as readonly ContractFunctionParameters[];
@@ -280,11 +266,6 @@ export const useQuantuMatrix = () => {
   const migrationContracts = (
     address
       ? [
-          {
-            ...activeMatrixContract,
-            functionName: "viewLegacyClaimable",
-            args: [address],
-          },
           ...(legacyV2Configured
             ? [
                 {
@@ -299,11 +280,7 @@ export const useQuantuMatrix = () => {
                 },
               ]
             : []),
-          {
-            ...activeMatrixContract,
-            functionName: "viewRicoPending",
-            args: [address],
-          },
+          { ...activeMatrixContract, functionName: "viewRicoPending", args: [address] },
         ]
       : []
   ) as readonly ContractFunctionParameters[];
@@ -320,9 +297,10 @@ export const useQuantuMatrix = () => {
   };
 
   const readerSummary = getUserResult(0);
-  const ricoFarming = getUserResult(1);
-  const royaltyAvailable = getUserResult(2);
-  const royaltyPercent = getUserResult(3);
+  const ricoExpected = getUserResult(1);
+  const ricoClaimed = getUserResult(2);
+  const ricoPendingFromUserReads = getUserResult(3);
+  const totalUnilevelEarned = getUserResult(4);
 
   const { data: migrationReads, refetch: refetchMigrationReads } = useReadContracts({
     contracts: migrationContracts,
@@ -335,10 +313,11 @@ export const useQuantuMatrix = () => {
     return result !== undefined ? safeBigInt(result) : result;
   };
 
-  const legacyClaimable = getMigrationResult(0);
-  const royaltyV2 = legacyV2Configured ? getMigrationResult(1) : "0";
-  const royaltyPercentV2 = legacyV2Configured ? getMigrationResult(2) : "0";
-  const ricoPending = legacyV2Configured ? getMigrationResult(3) : getMigrationResult(1);
+  const legacyClaimable = "0";
+  const royaltyV2 = legacyV2Configured ? getMigrationResult(0) : "0";
+  const royaltyPercentV2 = legacyV2Configured ? getMigrationResult(1) : "0";
+  const ricoPending = legacyV2Configured ? getMigrationResult(2) : getMigrationResult(0);
+  const royaltyAvailable = royaltyV2 || "0";
 
   const refetchReaderTotals = () => refetchUserReads();
   const refetchReaderSummary = () => refetchUserReads();
@@ -370,10 +349,11 @@ export const useQuantuMatrix = () => {
   const preRegistrationContracts = (
     address
       ? [
-          {
+          ...Array.from({ length: 12 }, (_, index) => ({
             ...activeMatrixContract,
-            functionName: "getChapterPrices",
-          },
+            functionName: "chapterPrice",
+            args: [index + 1],
+          })),
           {
             ...activeMatrixContract,
             functionName: "isSupportedPaymentToken",
@@ -391,23 +371,17 @@ export const useQuantuMatrix = () => {
 
   const preRegistrationList =
     (preRegistrationReads as any[] | undefined) ?? [];
-  const preRegistrationChapterPrices = preRegistrationList[0]?.result;
-  const selectedPaymentTokenSupported = preRegistrationList[1]?.result !== false;
+  const preRegistrationChapterPrices = preRegistrationList
+    .slice(0, 12)
+    .map((item) => item?.result);
+  const selectedPaymentTokenSupported = preRegistrationList[12]?.result !== false;
 
   const globalContracts = (
     userExists
       ? [
           {
             ...activeMatrixContract,
-            functionName: "getTotalReaders",
-          },
-          {
-            ...activeMatrixContract,
-            functionName: "getTopEarners",
-          },
-          {
-            ...activeMatrixContract,
-            functionName: "getTopReferrers",
+            functionName: "lastReaderId",
           },
         ]
       : []
@@ -428,13 +402,10 @@ export const useQuantuMatrix = () => {
   const globalSummary = undefined;
   const globalRicoFarming = undefined;
   const totalReaders = getGlobalResult(0);
-  const topEarners = getGlobalResult(1);
-  const topReferrers = getGlobalResult(2);
+  const topEarners = undefined;
+  const topReferrers = undefined;
 
-  const chapterPricesRaw =
-    preRegistrationChapterPrices !== undefined
-      ? safeBigInt(preRegistrationChapterPrices)
-      : undefined;
+  const chapterPricesRaw = safeBigInt(preRegistrationChapterPrices);
   const usdtAddress = activePaymentToken.address;
 
   const chapterPrices = Array.isArray(chapterPricesRaw)
@@ -929,45 +900,30 @@ export const useQuantuMatrix = () => {
 
     // Use readerSummary as primary source
     if (readerSummary) {
+      const reader = readerSummary as any;
+      const readerId = reader.id ?? reader[0] ?? "0";
+      const readerReferrer = reader.referrer ?? reader[1] ?? address ?? "";
+      const partnersCount = reader.partnersCount ?? reader[2] ?? "0";
+      const royaltyPoints = reader.royaltyPoints ?? reader[3] ?? "0";
+      const royaltiesClaimedV3 = reader.royaltiesClaimedV3 ?? reader[5] ?? "0";
+
       return {
         exists: true,
-        readerId: (readerSummary as any).id?.toString() || "0",
-        referrer: (readerSummary as any).referrer || address || "",
-        partnersCount: (readerSummary as any).partnersCount?.toString() || "0",
-        track1TotalEarned: formatUnits(
-          BigInt((readerSummary as any).track1TotalEarned || "0"),
-          18
-        ),
-        track2TotalEarned: formatUnits(
-          BigInt((readerSummary as any).track2TotalEarned || "0"),
-          18
-        ),
-        track1TotalCycles: Number(
-          (readerSummary as any).track1TotalCycles || "0"
-        ),
-        track2TotalCycles: Number(
-          (readerSummary as any).track2TotalCycles || "0"
-        ),
-        track1Unlocked: Number((readerSummary as any).track1Unlocked || "0"),
-        track2Unlocked: Number((readerSummary as any).track2Unlocked || "0"),
+        readerId: readerId?.toString() || "0",
+        referrer: readerReferrer,
+        partnersCount: partnersCount?.toString() || "0",
+        track1TotalEarned: formatUnits(BigInt(totalUnilevelEarned || "0"), 18),
+        track2TotalEarned: "0",
+        track1TotalCycles: 0,
+        track2TotalCycles: 0,
+        track1Unlocked: 0,
+        track2Unlocked: 0,
         royaltyAvailable: migrationUI.totalClaimable,
-        royaltiesClaimed: formatUnits(
-          BigInt((readerSummary as any).royaltyClaimed || "0"),
-          18
-        ),
-        royaltyPercent: Number((readerSummary as any).royaltyPercent || "0"),
-        ricoShouldHave: formatUnits(
-          BigInt((readerSummary as any).ricoShouldHave || "0"),
-          18
-        ),
-        ricoSent: formatUnits(
-          BigInt((readerSummary as any).ricoSent || "0"),
-          18
-        ),
-        ricoPending: formatUnits(
-          BigInt((readerSummary as any).ricoPending || "0"),
-          18
-        ),
+        royaltiesClaimed: formatUnits(BigInt(royaltiesClaimedV3 || "0"), 18),
+        royaltyPercent: Number(royaltyPoints || "0"),
+        ricoShouldHave: formatUnits(BigInt(ricoExpected || "0"), 18),
+        ricoSent: formatUnits(BigInt(ricoClaimed || "0"), 18),
+        ricoPending: formatUnits(BigInt(ricoPendingFromUserReads || "0"), 18),
       };
     }
 
@@ -985,16 +941,10 @@ export const useQuantuMatrix = () => {
       track2Unlocked: 0,
       royaltyAvailable: migrationUI.totalClaimable,
       royaltiesClaimed: "0",
-      royaltyPercent: royaltyPercent ? Number(royaltyPercent) : 0,
-      ricoShouldHave: ricoFarming
-        ? formatUnits(BigInt((ricoFarming as any)[0] || "0"), 18)
-        : "0",
-      ricoSent: ricoFarming
-        ? formatUnits(BigInt((ricoFarming as any)[1] || "0"), 18)
-        : "0",
-      ricoPending: ricoFarming
-        ? formatUnits(BigInt((ricoFarming as any)[2] || "0"), 18)
-        : "0",
+      royaltyPercent: 0,
+      ricoShouldHave: formatUnits(BigInt(ricoExpected || "0"), 18),
+      ricoSent: formatUnits(BigInt(ricoClaimed || "0"), 18),
+      ricoPending: formatUnits(BigInt(ricoPendingFromUserReads || "0"), 18),
     };
   };
 
@@ -1207,7 +1157,7 @@ export const useQuantuMatrix = () => {
 
         const hash = await writeContractAsync({
           ...activeMatrixContract,
-          functionName: "joinLibrary",
+          functionName: "joinLibraryHub",
           args: [activePaymentToken.address, referrer as `0x${string}`],
         });
 
@@ -1296,8 +1246,8 @@ export const useQuantuMatrix = () => {
 
         const hash = await writeContractAsync({
           ...activeMatrixContract,
-          functionName: "buyNewChapter",
-          args: [activePaymentToken.address, track, chapter],
+          functionName: "buyChapterBatchHub",
+          args: [activePaymentToken.address, track, chapter, chapter],
         });
 
         toast.loading("Transaction Submitted", {
@@ -1400,7 +1350,7 @@ export const useQuantuMatrix = () => {
 
         const hash = await writeContractAsync({
           ...activeMatrixContract,
-          functionName: "buyChapterBatch",
+          functionName: "buyChapterBatchHub",
           args: [activePaymentToken.address, track, startChapter, endChapter],
         });
 
@@ -2013,11 +1963,11 @@ export const useQuantuMatrix = () => {
 
     // Individual data points
     legacyClaimable: legacyClaimable
-      ? formatUnits(legacyClaimable as bigint, 18)
+      ? formatUnits(toBigIntValue(legacyClaimable), 18)
       : "0",
-    royaltyV2: royaltyV2 ? formatUnits(royaltyV2 as bigint, 18) : "0",
+    royaltyV2: royaltyV2 ? formatUnits(toBigIntValue(royaltyV2), 18) : "0",
     royaltyPercentV2: royaltyPercentV2 ? Number(royaltyPercentV2) : 0,
-    ricoPending: ricoPending ? formatUnits(ricoPending as bigint, 18) : "0",
+    ricoPending: ricoPending ? formatUnits(toBigIntValue(ricoPending), 18) : "0",
 
     // Token addresses
     usdtAddress: usdtAddress as `0x${string}` | undefined,

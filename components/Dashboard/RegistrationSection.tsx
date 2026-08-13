@@ -109,7 +109,7 @@ export const RegistrationSection = ({
     {
       address: contractConfig.address,
       abi: contractConfig.abi,
-      functionName: "isReaderExists",
+      functionName: "readers",
       args:
         effectiveReferralAddress && !userData?.exists
           ? [effectiveReferralAddress]
@@ -117,12 +117,15 @@ export const RegistrationSection = ({
       query: { enabled: isReferralValid && !userData?.exists },
     }
   );
+  const referralReaderId =
+    BigInt(((referralExists as any)?.id ?? (referralExists as any)?.[0] ?? 0).toString());
+  const referrerIsRegistered = referralReaderId > BigInt(0);
 
   // IMPORTANT: Force this into a boolean using Boolean(...)
   const showReferralWarning = Boolean(
-    effectiveReferralAddress &&
+      effectiveReferralAddress &&
       isReferralValid &&
-      referralExists === false &&
+      !referrerIsRegistered &&
       !checkingReferral &&
       !userData?.exists &&
       effectiveReferralAddress !== FALLBACK_REFERRER

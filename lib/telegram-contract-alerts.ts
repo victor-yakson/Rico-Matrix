@@ -23,9 +23,8 @@ export type MatrixAlertAction =
   | "royalty-claim";
 
 type SupportedFunctionName =
-  | "joinLibrary"
-  | "buyNewChapter"
-  | "buyChapterBatch"
+  | "joinLibraryHub"
+  | "buyChapterBatchHub"
   | "claimRoyaltyV3"
   | "claimRoyaltyV2"
   | "claimLegacyRoyalty";
@@ -37,9 +36,9 @@ type AlertBuildResult = {
 
 type ReaderSummary = {
   referrer: Hex;
-  track1Unlocked: bigint;
-  track2Unlocked: bigint;
-  royaltyPercent: bigint;
+  royaltyPoints: bigint;
+  royaltyDebt: bigint;
+  royaltiesClaimedV3: bigint;
 };
 
 const DEFAULT_CHANNEL = "@rico_update";
@@ -222,9 +221,9 @@ function getTrackLabel(track: number) {
 }
 
 function getCurrentChapterLabel(summary: ReaderSummary) {
-  const x3 = Number(summary.track1Unlocked || BigInt(0));
-  const x6 = Number(summary.track2Unlocked || BigInt(0));
-  return `X3 Chapter ${x3 || 1} • X6 Chapter ${x6 || 1}`;
+  return summary.royaltiesClaimedV3 > BigInt(0)
+    ? "Active v3 reader"
+    : "Reader account";
 }
 
 function getTransactionUrl(chain: AlertChainConfig, hash: Hex) {
@@ -235,9 +234,8 @@ function isSupportedFunctionName(
   functionName: string,
 ): functionName is SupportedFunctionName {
   return (
-    functionName === "joinLibrary" ||
-    functionName === "buyNewChapter" ||
-    functionName === "buyChapterBatch" ||
+    functionName === "joinLibraryHub" ||
+    functionName === "buyChapterBatchHub" ||
     functionName === "claimRoyaltyV3" ||
     functionName === "claimRoyaltyV2" ||
     functionName === "claimLegacyRoyalty"
@@ -319,22 +317,22 @@ async function readReaderSummary(
     const summaryResult = (await publicClient.readContract({
       address: chain.matrix,
       abi: RICO_MATRIX_V3_ABI,
-      functionName: "getReaderSummary",
+      functionName: "readers",
       args: [reader],
-    })) as {
-      referrer: Hex;
-      track1Unlocked: bigint;
-      track2Unlocked: bigint;
-      royaltyPercent: bigint;
-    };
+    })) as unknown as readonly [bigint, Hex, bigint, bigint, bigint, bigint];
 
-    return summaryResult;
+    return {
+      referrer: summaryResult[1],
+      royaltyPoints: summaryResult[3],
+      royaltyDebt: summaryResult[4],
+      royaltiesClaimedV3: summaryResult[5],
+    };
   } catch {
     return {
       referrer: "0x0000000000000000000000000000000000000000" as Hex,
-      track1Unlocked: BigInt(0),
-      track2Unlocked: BigInt(0),
-      royaltyPercent: BigInt(0),
+      royaltyPoints: BigInt(0),
+      royaltyDebt: BigInt(0),
+      royaltiesClaimedV3: BigInt(0),
     };
   }
 }
@@ -344,13 +342,12 @@ async function readChapterPrice(
   chain: AlertChainConfig,
   chapter: number,
 ) {
-  const prices = (await publicClient.readContract({
+  return (await publicClient.readContract({
     address: chain.matrix,
     abi: RICO_MATRIX_V3_ABI,
-    functionName: "getChapterPrices",
-  })) as readonly bigint[];
-
-  return prices[chapter - 1] || BigInt(0);
+    functionName: "chapterPrice",
+    args: [chapter],
+  })) as bigint;
 }
 
 async function buildRegistrationAlert(
@@ -360,17 +357,17 @@ async function buildRegistrationAlert(
   const { publicClient, tx, receipt, functionName, args } =
     await getVerifiedTransaction(hash, chain);
 
-  if (functionName !== "joinLibrary") {
+  if (functionName !== "joinLibraryHub") {
     throw new Error("Transaction is not a library registration.");
   }
 
   const joined = decodeMatchingEvent<{
-    reader: Hex;
+    user: Hex;
     referrer: Hex;
-  }>("ReaderJoined", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
+  }>("JoinedHub", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
 
   const referrerArg = args[1] as Hex | undefined;
-  const reader = joined?.reader || tx.from;
+  const reader = joined?.user || tx.from;
   const referrer = joined?.referrer || referrerArg || "0x0000000000000000000000000000000000000000";
   const amountPaid = await readChapterPrice(publicClient, chain, 1);
 
@@ -399,23 +396,24 @@ async function buildChapterUpgradeAlert(
 ): Promise<AlertBuildResult> {
   const { tx, receipt, functionName, args } = await getVerifiedTransaction(hash, chain);
 
-  if (functionName !== "buyNewChapter" && functionName !== "buyChapterBatch") {
+  if (functionName !== "buyChapterBatchHub") {
     throw new Error("Transaction is not a chapter purchase.");
   }
 
-  const isBatch = functionName === "buyChapterBatch";
+  const isBatch = Number(args[2] as number | bigint) !== Number(args[3] as number | bigint);
   const track = Number(args[1] as number | bigint);
   const chapter = Number(args[2] as number | bigint);
   const endChapter = isBatch ? Number(args[3] as number | bigint) : chapter;
   const chapterPurchased = decodeMatchingEvent<{
-    reader: Hex;
+    user: Hex;
     track: number;
-    chapter: number;
-    price: bigint;
-  }>("ChapterPurchased", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
+    startCh: number;
+    endCh: number;
+    totalUSD: bigint;
+  }>("ChapterPurchasedHub", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
 
-  const reader = chapterPurchased?.reader || tx.from;
-  const contractValue = chapterPurchased?.price || BigInt(0);
+  const reader = chapterPurchased?.user || tx.from;
+  const contractValue = chapterPurchased?.totalUSD || BigInt(0);
   const trackLabel = getTrackLabel(track);
   const chapterLabel = isBatch
     ? `Chapters ${chapter}-${endChapter}`
@@ -480,7 +478,7 @@ async function buildRoyaltyClaimAlert(
     `👤 <b>Claimant:</b> <code>${escapeHtml(shortAddress(reader))}</code>`,
     `👑 <b>Claim Type:</b> ${escapeHtml(claimLabel)}`,
     `📚 <b>Chapter Access:</b> ${escapeHtml(getCurrentChapterLabel(summary))}`,
-    `📊 <b>Royalty Share:</b> ${escapeHtml(formatRoyaltyPercent(summary.royaltyPercent))}`,
+    `📊 <b>Royalty Points:</b> ${escapeHtml(summary.royaltyPoints.toString())}`,
     `💵 <b>Amount Claimed:</b> ${escapeHtml(formatUsdt(amount))} USD`,
     `🔗 <b>Tx Hash:</b> <a href="${escapeHtml(getTransactionUrl(chain, hash))}">View Transaction</a>`,
     "",
