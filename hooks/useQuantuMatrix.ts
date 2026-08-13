@@ -24,6 +24,14 @@ import {
 const MIN_ROYALTY_USDT = 0.5;
 const PAYMENT_TOKEN_MAX_ALLOWANCE = "21000";
 const WALLET_CONFIRM_TIMEOUT_MS = 45000;
+const BROADCAST_SYNC_USD_VALUE = 7;
+const NATIVE_PRICE_IDS: Record<number, string> = {
+  1: "ethereum",
+  56: "binancecoin",
+  137: "polygon-ecosystem-token",
+  8453: "ethereum",
+  4663: "ethereum",
+};
 
 const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -98,6 +106,11 @@ const parseNativeFee = (value: string | undefined): bigint => {
   } catch {
     return BigInt(0);
   }
+};
+
+const toDecimalString = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) return "0";
+  return value.toFixed(18).replace(/\.?0+$/, "");
 };
 
 const toUsdtNumber = (value: any): number => {
@@ -206,6 +219,8 @@ export const useQuantuMatrix = () => {
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const [loading, setLoading] = useState(false);
+  const [nativeUsdPrice, setNativeUsdPrice] = useState<number | null>(null);
+  const [nativePriceLoading, setNativePriceLoading] = useState(false);
   const rewardTokenAddress = getRicoTokenAddress(chainId);
   const activeChain = useMemo(() => getRicoChainConfig(chainId), [chainId]);
   const [selectedPaymentTokenAddress, setSelectedPaymentTokenAddress] =
@@ -228,6 +243,66 @@ export const useQuantuMatrix = () => {
     () => parseNativeFee(activeChain.nativeFee),
     [activeChain.nativeFee],
   );
+  const broadcastNativeFeeDisplay = useMemo(() => {
+    if (!nativeUsdPrice) return "";
+    return toDecimalString(BROADCAST_SYNC_USD_VALUE / nativeUsdPrice);
+  }, [nativeUsdPrice]);
+  const activeBroadcastNativeFee = useMemo(() => {
+    if (!broadcastNativeFeeDisplay) return null;
+    try {
+      return parseEther(broadcastNativeFeeDisplay);
+    } catch {
+      return null;
+    }
+  }, [broadcastNativeFeeDisplay]);
+
+  useEffect(() => {
+    const priceId = NATIVE_PRICE_IDS[activeChain.id];
+    let cancelled = false;
+
+    if (!priceId) {
+      setNativeUsdPrice(null);
+      return;
+    }
+
+    const fetchNativePrice = async () => {
+      try {
+        setNativePriceLoading(true);
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${priceId}&vs_currencies=usd`,
+          { cache: "no-store" },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Native price request failed (${response.status})`);
+        }
+
+        const payload = await response.json();
+        const price = Number(payload?.[priceId]?.usd);
+
+        if (!cancelled) {
+          setNativeUsdPrice(Number.isFinite(price) && price > 0 ? price : null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch native token price:", error);
+        if (!cancelled) {
+          setNativeUsdPrice(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setNativePriceLoading(false);
+        }
+      }
+    };
+
+    void fetchNativePrice();
+    const interval = window.setInterval(fetchNativePrice, 60000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [activeChain.id]);
 
   useEffect(() => {
     setSelectedPaymentTokenAddress(activeChain.paymentToken);
@@ -1299,9 +1374,15 @@ export const useQuantuMatrix = () => {
         }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
-        const nativeValue = broadcastAcrossChains
-          ? activeNativeFee
-          : BigInt(0);
+        if (broadcastAcrossChains && activeBroadcastNativeFee === null) {
+          throw new Error(
+            "Unable to fetch the current native token price for broadcast sync. Please try again in a moment.",
+          );
+        }
+        const nativeValue: bigint =
+          broadcastAcrossChains && activeBroadcastNativeFee !== null
+            ? activeBroadcastNativeFee
+            : BigInt(0);
 
         toast.info("Purchasing Chapter...", {
           id: toastId,
@@ -1387,7 +1468,7 @@ export const useQuantuMatrix = () => {
     [
       writeContractAsync,
       activeChain.id,
-      activeNativeFee,
+      activeBroadcastNativeFee,
       activePaymentToken.address,
       activePaymentToken.symbol,
       activeMatrixContract,
@@ -1421,9 +1502,15 @@ export const useQuantuMatrix = () => {
         }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
-        const nativeValue = broadcastAcrossChains
-          ? activeNativeFee
-          : BigInt(0);
+        if (broadcastAcrossChains && activeBroadcastNativeFee === null) {
+          throw new Error(
+            "Unable to fetch the current native token price for broadcast sync. Please try again in a moment.",
+          );
+        }
+        const nativeValue: bigint =
+          broadcastAcrossChains && activeBroadcastNativeFee !== null
+            ? activeBroadcastNativeFee
+            : BigInt(0);
 
         toast.info("Purchasing Chapters...", {
           id: toastId,
@@ -1515,7 +1602,7 @@ export const useQuantuMatrix = () => {
       activePaymentToken.symbol,
       activePaymentToken.address,
       activeMatrixContract,
-      activeNativeFee,
+      activeBroadcastNativeFee,
       activeChain.id,
       address,
       clearMatrixCache,
@@ -2095,6 +2182,9 @@ export const useQuantuMatrix = () => {
     paymentTokenSymbol: activePaymentToken.symbol,
     paymentTokenDecimals: activePaymentToken.decimals,
     paymentTokenMaxAllowance: PAYMENT_TOKEN_MAX_ALLOWANCE,
+    broadcastNativeFeeDisplay,
+    broadcastNativeFeeUsd: BROADCAST_SYNC_USD_VALUE,
+    nativePriceLoading,
     paymentTokenSupported: selectedPaymentTokenSupported,
     paymentTokens: activeChain.paymentTokens,
     selectedPaymentTokenAddress: activePaymentToken.address,

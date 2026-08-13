@@ -25,6 +25,9 @@ export const ChapterGrid = () => {
     usdtBalance,
     paymentTokenSymbol,
     paymentTokenMaxAllowance,
+    broadcastNativeFeeDisplay,
+    broadcastNativeFeeUsd,
+    nativePriceLoading,
     paymentTokens,
     selectedPaymentTokenAddress,
     setSelectedPaymentTokenAddress,
@@ -168,7 +171,8 @@ export const ChapterGrid = () => {
     !userData?.exists ||
     batchStart < 1 ||
     batchEnd > 12 ||
-    batchEnd < batchStart;
+    batchEnd < batchStart ||
+    (broadcastAcrossChains && !broadcastNativeFeeDisplay);
 
   // Check if a specific chapter is being approved
   const isChapterApproving = (track: number, chapter: number) => {
@@ -281,7 +285,11 @@ export const ChapterGrid = () => {
                   Broadcast to all chains
                 </span>
                 <span className="block text-[0.68rem] text-slate-500">
-                  Adds the configured native sync value, about $7.
+                  {nativePriceLoading
+                    ? "Calculating live native sync value..."
+                    : broadcastNativeFeeDisplay
+                      ? `Sends ${broadcastNativeFeeDisplay} native token, about $${broadcastNativeFeeUsd}.`
+                      : "Live native sync value unavailable."}
                 </span>
               </span>
             </label>
@@ -324,7 +332,10 @@ export const ChapterGrid = () => {
                 chapterState={track1States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 1, chapter)}
-                disabled={isProcessing}
+                disabled={
+                  isProcessing ||
+                  (broadcastAcrossChains && !broadcastNativeFeeDisplay)
+                }
                 needsApproval={chapterNeedsApproval}
                 isApproving={isChapterApproving(1, chapter)}
               />
@@ -354,7 +365,10 @@ export const ChapterGrid = () => {
                 chapterState={track2States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 2, chapter)}
-                disabled={isProcessing}
+                disabled={
+                  isProcessing ||
+                  (broadcastAcrossChains && !broadcastNativeFeeDisplay)
+                }
                 needsApproval={chapterNeedsApproval}
                 isApproving={isChapterApproving(2, chapter)}
               />
