@@ -1211,7 +1211,7 @@ export const useQuantuMatrix = () => {
             ...activeMatrixContract,
             functionName: "joinLibraryHub",
             args: [activePaymentToken.address, referrer as `0x${string}`],
-            value: activeNativeFee,
+            value: BigInt(0),
           }),
         );
 
@@ -1276,7 +1276,6 @@ export const useQuantuMatrix = () => {
     [
       activeChain.id,
       activeMatrixContract,
-      activeNativeFee,
       activePaymentToken.address,
       activePaymentToken.symbol,
       publicClient,
@@ -1287,7 +1286,7 @@ export const useQuantuMatrix = () => {
 
   // Buy chapter function
   const buyChapter = useCallback(
-    async (track: number, chapter: number) => {
+    async (track: number, chapter: number, broadcastAcrossChains = false) => {
       const toastId = "buy-chapter";
 
       try {
@@ -1300,10 +1299,15 @@ export const useQuantuMatrix = () => {
         }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
+        const nativeValue = broadcastAcrossChains
+          ? activeNativeFee
+          : BigInt(0);
 
         toast.info("Purchasing Chapter...", {
           id: toastId,
-          description: `Buying Chapter ${chapter} of ${trackName}. Please confirm in wallet.`,
+          description: broadcastAcrossChains
+            ? `Buying Chapter ${chapter} of ${trackName} and broadcasting sync across supported chains. Please confirm in wallet.`
+            : `Buying Chapter ${chapter} of ${trackName} on this chain only. Please confirm in wallet.`,
           duration: 10000,
         });
 
@@ -1312,7 +1316,7 @@ export const useQuantuMatrix = () => {
             ...activeMatrixContract,
             functionName: "buyChapterBatchHub",
             args: [activePaymentToken.address, track, chapter, chapter],
-            value: activeNativeFee,
+            value: nativeValue,
           }),
         );
 
@@ -1395,7 +1399,12 @@ export const useQuantuMatrix = () => {
   );
 
   const buyChapterBatch = useCallback(
-    async (track: number, startChapter: number, endChapter: number) => {
+    async (
+      track: number,
+      startChapter: number,
+      endChapter: number,
+      broadcastAcrossChains = false,
+    ) => {
       const toastId = "buy-chapter-batch";
 
       try {
@@ -1412,10 +1421,15 @@ export const useQuantuMatrix = () => {
         }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
+        const nativeValue = broadcastAcrossChains
+          ? activeNativeFee
+          : BigInt(0);
 
         toast.info("Purchasing Chapters...", {
           id: toastId,
-          description: `Buying Chapters ${startChapter}-${endChapter} of ${trackName}. Please confirm in wallet.`,
+          description: broadcastAcrossChains
+            ? `Buying Chapters ${startChapter}-${endChapter} of ${trackName} and broadcasting sync across supported chains. Please confirm in wallet.`
+            : `Buying Chapters ${startChapter}-${endChapter} of ${trackName} on this chain only. Please confirm in wallet.`,
           duration: 10000,
         });
 
@@ -1429,7 +1443,7 @@ export const useQuantuMatrix = () => {
               startChapter,
               endChapter,
             ],
-            value: activeNativeFee,
+            value: nativeValue,
           }),
         );
 

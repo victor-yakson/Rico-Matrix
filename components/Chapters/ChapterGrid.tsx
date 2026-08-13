@@ -41,6 +41,7 @@ export const ChapterGrid = () => {
   const [batchStart, setBatchStart] = useState(1);
   const [batchEnd, setBatchEnd] = useState(3);
   const [isBatchBuying, setIsBatchBuying] = useState(false);
+  const [broadcastAcrossChains, setBroadcastAcrossChains] = useState(false);
   const [track1States, setTrack1States] = useState<Record<number, "active" | "blocked">>({});
   const [track2States, setTrack2States] = useState<Record<number, "active" | "blocked">>({});
   const t = useTranslations("ChaptersPage.ChapterGrid");
@@ -94,7 +95,7 @@ export const ChapterGrid = () => {
 
   const handleBuyChapter = async (track: number, chapter: number) => {
     try {
-      await buyChapter(track, chapter);
+      await buyChapter(track, chapter, broadcastAcrossChains);
     } catch (error) {
       console.error("Purchase failed:", error);
     }
@@ -118,7 +119,12 @@ export const ChapterGrid = () => {
   const handleBatchBuy = async () => {
     try {
       setIsBatchBuying(true);
-      await buyChapterBatch(batchTrack, batchStart, batchEnd);
+      await buyChapterBatch(
+        batchTrack,
+        batchStart,
+        batchEnd,
+        broadcastAcrossChains,
+      );
     } catch (error) {
       console.error("Batch purchase failed:", error);
     } finally {
@@ -209,7 +215,7 @@ export const ChapterGrid = () => {
               Buy continuous chapters in one transaction on the active chain.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-5 lg:min-w-[680px]">
+          <div className="grid gap-3 sm:grid-cols-6 lg:min-w-[760px]">
             {paymentTokens?.length > 1 && (
               <label className="text-xs text-slate-400">
                 Token
@@ -261,17 +267,37 @@ export const ChapterGrid = () => {
                 className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               />
             </label>
+            <label className="flex min-h-[58px] cursor-pointer items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={broadcastAcrossChains}
+                onChange={(event) =>
+                  setBroadcastAcrossChains(event.target.checked)
+                }
+                className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-yellow-400 focus:ring-yellow-400"
+              />
+              <span>
+                <span className="block font-semibold text-slate-100">
+                  Broadcast to all chains
+                </span>
+                <span className="block text-[0.68rem] text-slate-500">
+                  Adds the configured native sync value, about $7.
+                </span>
+              </span>
+            </label>
             <button
               type="button"
               onClick={batchNeedsApproval ? () => approveUsdt(formatUnits(batchCost, 18)) : handleBatchBuy}
               disabled={batchDisabled}
-              className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2"
             >
               {isBatchBuying
                 ? "Processing..."
                 : batchNeedsApproval
                   ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"}`
-                  : `Buy ${batchStart}-${batchEnd}`}
+                  : broadcastAcrossChains
+                    ? `Buy ${batchStart}-${batchEnd} + Sync`
+                    : `Buy ${batchStart}-${batchEnd}`}
             </button>
           </div>
         </div>
