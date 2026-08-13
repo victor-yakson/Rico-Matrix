@@ -1474,6 +1474,9 @@ export const useQuantuMatrix = () => {
           "Wallet client not available. Please connect your wallet."
         );
       }
+      if (!address) {
+        throw new Error("Wallet address not available. Please reconnect your wallet.");
+      }
 
       toast.info("Preparing dashboard access...", {
         id: toastId,
@@ -1484,6 +1487,8 @@ export const useQuantuMatrix = () => {
       const hash = await writeContractAsync({
         ...activeMigratorContract,
         functionName: "importUser",
+        args: [address],
+        value: activeNativeFee,
       });
 
       toast.loading("Dashboard access submitted", {
@@ -1522,6 +1527,14 @@ export const useQuantuMatrix = () => {
         errorMessage = "Please claim available royalty before continuing";
       } else if (error?.message?.includes("AlreadyMigrated")) {
         errorMessage = "Account is already updated";
+      } else if (error?.message?.includes("NotInV1")) {
+        errorMessage = "This wallet was not found in the previous Rico Matrix contract";
+      } else if (error?.message?.includes("V1CallFailed")) {
+        errorMessage = "The previous Rico Matrix contract could not return this wallet data";
+      } else if (error?.message?.includes("ZeroAddress")) {
+        errorMessage = "Wallet address is missing. Please reconnect your wallet";
+      } else if (error?.message?.includes("Reentrancy")) {
+        errorMessage = "Dashboard access is already being processed. Please wait";
       } else if (error?.message?.includes("not configured")) {
         errorMessage = "Required contract is not configured";
       } else if (error?.message?.includes("Wallet client not available")) {
@@ -1543,6 +1556,8 @@ export const useQuantuMatrix = () => {
     }
   }, [
     writeContractAsync,
+    address,
+    activeNativeFee,
     publicClient,
     activeMigratorContract,
     refetchUserData,
