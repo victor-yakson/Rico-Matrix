@@ -1292,12 +1292,18 @@ export const useQuantuMatrix = () => {
           );
         }
 
+        if (activeBroadcastNativeFee === null) {
+          throw new Error(
+            "Unable to fetch the current native token price for registration sync. Please try again in a moment.",
+          );
+        }
+
         await publicClient.simulateContract({
           ...activeMatrixContract,
           functionName: "joinLibraryHub",
           args: [activePaymentToken.address, referrer as `0x${string}`],
           account: address,
-          value: BigInt(0),
+          value: activeBroadcastNativeFee,
         });
 
         const hash = await withWalletConfirmTimeout(
@@ -1305,7 +1311,7 @@ export const useQuantuMatrix = () => {
             ...activeMatrixContract,
             functionName: "joinLibraryHub",
             args: [activePaymentToken.address, referrer as `0x${string}`],
-            value: BigInt(0),
+            value: activeBroadcastNativeFee,
           }),
         );
 
@@ -1354,6 +1360,9 @@ export const useQuantuMatrix = () => {
           error?.message?.includes("not supported")
         ) {
           errorMessage = `${activePaymentToken.symbol} is not supported for registration on ${activeChain.name}.`;
+        } else if (error?.message?.includes("LZ_InsufficientFee")) {
+          errorMessage =
+            "The registration sync fee was too low. Please try again so the app can recalculate the current network fee.";
         } else if (error?.message?.includes("on-chain")) {
           errorMessage = "Transaction failed on-chain";
         } else if (error?.message?.includes("Wallet client not available")) {
@@ -1375,6 +1384,7 @@ export const useQuantuMatrix = () => {
     [
       activeChain.id,
       activeChain.name,
+      activeBroadcastNativeFee,
       activeMatrixContract,
       activePaymentToken.address,
       activePaymentToken.symbol,
