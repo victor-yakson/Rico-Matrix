@@ -1307,12 +1307,14 @@ export const useQuantuMatrix = () => {
           duration: 10000,
         });
 
-        const hash = await writeContractAsync({
-          ...activeMatrixContract,
-          functionName: "buyChapterBatchHub",
-          args: [activePaymentToken.address, track, chapter, chapter],
-          value: activeNativeFee,
-        });
+        const hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...activeMatrixContract,
+            functionName: "buyChapterBatchHub",
+            args: [activePaymentToken.address, track, chapter, chapter],
+            value: activeNativeFee,
+          }),
+        );
 
         toast.loading("Transaction Submitted", {
           id: toastId,
@@ -1417,12 +1419,19 @@ export const useQuantuMatrix = () => {
           duration: 10000,
         });
 
-        const hash = await writeContractAsync({
-          ...activeMatrixContract,
-          functionName: "buyChapterBatchHub",
-          args: [activePaymentToken.address, track, startChapter, endChapter],
-          value: activeNativeFee,
-        });
+        const hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...activeMatrixContract,
+            functionName: "buyChapterBatchHub",
+            args: [
+              activePaymentToken.address,
+              track,
+              startChapter,
+              endChapter,
+            ],
+            value: activeNativeFee,
+          }),
+        );
 
         toast.loading("Batch Purchase Submitted", {
           id: toastId,

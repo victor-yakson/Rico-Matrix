@@ -131,7 +131,7 @@ export const ChapterGrid = () => {
 
   const getChapterPrice = (chapter: number) => {
     if (!chapterPrices || chapterPrices.length === 0) return "0";
-    return chapterPrices[chapter]?.toString() || "0";
+    return chapterPrices[chapter - 1]?.toString() || "0";
   };
 
   // Check if user needs to approve USDT for a specific chapter
