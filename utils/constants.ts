@@ -114,6 +114,10 @@ const ROBINHOOD_PAYMENT_TOKENS: RicoPaymentToken[] = [
   { symbol: "USDG", address: ROBINHOOD_USDG as `0x${string}`, decimals: 6 },
 ];
 
+const SEVEN_USD_ETH_NATIVE_FEE = "0.0036762968";
+const SEVEN_USD_BNB_NATIVE_FEE = "0.012311805";
+const SEVEN_USD_POL_NATIVE_FEE = "97.138575";
+
 const resolvePaymentToken = (
   tokens: RicoPaymentToken[],
   override?: `0x${string}`,
@@ -150,7 +154,8 @@ export const RICO_CHAIN_CONFIG = {
     name: "Ethereum",
     lzEid: 30101,
     cctpDomain: 0,
-    nativeFee: process.env.NEXT_PUBLIC_ETH_NATIVE_FEE || "0",
+    nativeFee:
+      process.env.NEXT_PUBLIC_ETH_NATIVE_FEE || SEVEN_USD_ETH_NATIVE_FEE,
     matrix: RICO_MATRIX_V3_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
@@ -164,7 +169,8 @@ export const RICO_CHAIN_CONFIG = {
     name: "BNB Smart Chain",
     lzEid: 30102,
     cctpDomain: 0,
-    nativeFee: process.env.NEXT_PUBLIC_BSC_NATIVE_FEE || "0",
+    nativeFee:
+      process.env.NEXT_PUBLIC_BSC_NATIVE_FEE || SEVEN_USD_BNB_NATIVE_FEE,
     matrix: RICO_MATRIX_V3_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
@@ -178,7 +184,8 @@ export const RICO_CHAIN_CONFIG = {
     name: "Base",
     lzEid: 30184,
     cctpDomain: 6,
-    nativeFee: process.env.NEXT_PUBLIC_BASE_NATIVE_FEE || "0",
+    nativeFee:
+      process.env.NEXT_PUBLIC_BASE_NATIVE_FEE || SEVEN_USD_ETH_NATIVE_FEE,
     matrix: RICO_MATRIX_V3_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
@@ -192,7 +199,8 @@ export const RICO_CHAIN_CONFIG = {
     name: "Polygon",
     lzEid: 30109,
     cctpDomain: 7,
-    nativeFee: process.env.NEXT_PUBLIC_POLYGON_NATIVE_FEE || "0",
+    nativeFee:
+      process.env.NEXT_PUBLIC_POLYGON_NATIVE_FEE || SEVEN_USD_POL_NATIVE_FEE,
     matrix: RICO_MATRIX_V3_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
@@ -206,7 +214,8 @@ export const RICO_CHAIN_CONFIG = {
     name: "Robinhood Chain",
     lzEid: 30416,
     cctpDomain: 0,
-    nativeFee: process.env.NEXT_PUBLIC_ROBINHOOD_NATIVE_FEE || "0",
+    nativeFee:
+      process.env.NEXT_PUBLIC_ROBINHOOD_NATIVE_FEE || SEVEN_USD_ETH_NATIVE_FEE,
     matrix: RICO_MATRIX_V3_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: ROBINHOOD_SYNC_MANAGER_ADDRESS,
