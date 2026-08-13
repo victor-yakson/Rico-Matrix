@@ -2039,7 +2039,11 @@ export const useQuantuMatrix = () => {
     activeChain,
     rewardTokenAddress,
 
-    // USDT data
+    // Selected payment token data
+    paymentTokenBalance: formattedUsdtBalance,
+    paymentTokenAllowance: formattedUsdtAllowance,
+
+    // Legacy aliases used by older components
     usdtBalance: formattedUsdtBalance,
     usdtAllowance: formattedUsdtAllowance,
     joinCost,

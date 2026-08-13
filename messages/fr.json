@@ -842,7 +842,7 @@
         "title": "Rejoignez la Bibliothèque RicoMatrix (Accès Chapitre 1)",
         "subtitle": "Rejoindre RicoMatrix • Intégration",
         "stepIndicator": "Étape {stepIndex} sur 2",
-        "allowanceLabel": "Autorisation : {allowance} USDT",
+        "allowanceLabel": "Autorisation : {allowance} {token}",
         "registeredBadge": "Inscrit ✓"
       },
       "benefits": {
@@ -926,7 +926,7 @@
         "alreadyRegistered": "Vous êtes déjà inscrit",
         "approvalFailed": "Échec de l'approbation USDT",
         "registrationFailed": "Échec de l'inscription",
-        "insufficientBalance": "Solde {token} insuffisant. Requis : {joinCost} {token}, Disponible : {usdtBalance} {token}"
+        "insufficientBalance": "Solde {token} insuffisant. Requis : {joinCost} {token}, Disponible : {tokenBalance} {token}"
       },
       "progress": {
         "step1": "1. Approuver {token}",
@@ -1041,7 +1041,7 @@
         }
       },
       "alerts": {
-        "insufficientBalance": "Solde {token} insuffisant. Vous avez besoin de {joinCost} {token} mais n'avez que {usdtBalance} {token}"
+        "insufficientBalance": "Solde {token} insuffisant. Vous avez besoin de {joinCost} {token} mais n'avez que {tokenBalance} {token}"
       },
       "sectionTitle": "Créer Votre Compte"
     },

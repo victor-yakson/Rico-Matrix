@@ -74,8 +74,8 @@ export const RegistrationSection = ({
   const {
     joinLibrary,
     approveUsdt,
-    usdtBalance,
-    usdtAllowance,
+    paymentTokenBalance,
+    paymentTokenAllowance,
     joinCost,
     loading,
     contractConfig,
@@ -192,13 +192,13 @@ export const RegistrationSection = ({
   );
 
   const numericBalance = useMemo(
-    () => parseFloat(usdtBalance || "0"),
-    [usdtBalance]
+    () => parseFloat(paymentTokenBalance || "0"),
+    [paymentTokenBalance]
   );
 
   const numericAllowance = useMemo(
-    () => parseFloat(usdtAllowance || "0"),
-    [usdtAllowance]
+    () => parseFloat(paymentTokenAllowance || "0"),
+    [paymentTokenAllowance]
   );
   const activePaymentToken = useMemo(
     () =>
@@ -210,6 +210,13 @@ export const RegistrationSection = ({
     [paymentTokens, selectedPaymentTokenAddress],
   );
   const selectedTokenSymbol = activePaymentToken?.symbol || paymentTokenSymbol || "USDT";
+
+  useEffect(() => {
+    if (!userData?.exists) {
+      setStep("info");
+      setError(null);
+    }
+  }, [selectedPaymentTokenAddress, userData?.exists]);
 
   const hasSufficientBalance =
     numericBalance >= numericJoinCost && numericJoinCost > 0;
@@ -429,7 +436,8 @@ export const RegistrationSection = ({
             </span>
             <span className="text-xs text-slate-500">
               {t("header.allowanceLabel", {
-                allowance: Number(usdtAllowance).toFixed(2),
+                allowance: Number(paymentTokenAllowance).toFixed(2),
+                token: selectedTokenSymbol,
               })}
             </span>
             {userData?.exists && (
@@ -776,7 +784,7 @@ export const RegistrationSection = ({
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-200">
                   {t("alerts.insufficientBalance", {
                     joinCost: joinCost || "0",
-                    usdtBalance: usdtBalance || "0",
+                    tokenBalance: paymentTokenBalance || "0",
                     token: selectedTokenSymbol,
                   })}
                 </div>
@@ -800,7 +808,7 @@ export const RegistrationSection = ({
                     {t("cost.balance", { token: selectedTokenSymbol })}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-slate-100">
-                    {Number(usdtBalance).toFixed(2) || "0"} {selectedTokenSymbol}
+                    {Number(paymentTokenBalance).toFixed(2) || "0"} {selectedTokenSymbol}
                   </div>
                 </div>
               </div>
@@ -872,6 +880,8 @@ export const RegistrationSection = ({
                             type="button"
                             onClick={() => {
                               setSelectedPaymentTokenAddress(token.address);
+                              setStep("info");
+                              setError(null);
                               setTokenMenuOpen(false);
                             }}
                             className={`flex w-full items-center gap-3 px-3 py-3 text-left transition ${

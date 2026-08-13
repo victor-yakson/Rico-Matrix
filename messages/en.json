@@ -841,7 +841,7 @@
         "title": "Join the RicoMatrix Library (Chapter 1 Access)",
         "subtitle": "Join RicoMatrix • Onboarding",
         "stepIndicator": "Step {stepIndex} of 2",
-        "allowanceLabel": "Allowance: {allowance} USDT",
+        "allowanceLabel": "Allowance: {allowance} {token}",
         "registeredBadge": "Registered ✓"
       },
       "benefits": {
@@ -925,7 +925,7 @@
         "alreadyRegistered": "You are already registered",
         "approvalFailed": "USDT approval failed",
         "registrationFailed": "Registration failed",
-        "insufficientBalance": "Insufficient {token} balance. Required: {joinCost} {token}, Available: {usdtBalance} {token}"
+        "insufficientBalance": "Insufficient {token} balance. Required: {joinCost} {token}, Available: {tokenBalance} {token}"
       },
       "progress": {
         "step1": "1. Approve {token}",
@@ -1040,7 +1040,7 @@
         }
       },
       "alerts": {
-        "insufficientBalance": "Insufficient {token} balance. You need {joinCost} {token} but only have {usdtBalance} {token}"
+        "insufficientBalance": "Insufficient {token} balance. You need {joinCost} {token} but only have {tokenBalance} {token}"
       },
       "sectionTitle": "Create Your Account"
     },
