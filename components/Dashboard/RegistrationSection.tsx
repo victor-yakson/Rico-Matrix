@@ -216,13 +216,6 @@ export const RegistrationSection = ({
   );
   const selectedTokenSymbol = activePaymentToken?.symbol || paymentTokenSymbol || "USDT";
 
-  useEffect(() => {
-    if (!userData?.exists) {
-      setStep("info");
-      setError(null);
-    }
-  }, [selectedPaymentTokenAddress, userData?.exists]);
-
   const copyTokenAddress = async (value?: string) => {
     if (!value) return;
 
@@ -340,6 +333,37 @@ export const RegistrationSection = ({
     // Check if referral is provided
     if (!effectiveReferralAddress) {
       setError(t("error.referralRequired"));
+      return;
+    }
+
+    if (checkingReferral) {
+      setError(t("referral.checking"));
+      return;
+    }
+
+    if (!hasSufficientBalance) {
+      setError(
+        t("alerts.insufficientBalance", {
+          joinCost: joinCost || "0",
+          tokenBalance: paymentTokenBalance || "0",
+          token: selectedTokenSymbol,
+        }),
+      );
+      return;
+    }
+
+    if (!hasSufficientAllowance) {
+      setError(`Please approve ${selectedTokenSymbol} before registering.`);
+      return;
+    }
+
+    if (isSelfReferral) {
+      setError(t("error.selfReferral"));
+      return;
+    }
+
+    if (showReferralWarning) {
+      setError(t("error.invalidReferral"));
       return;
     }
 

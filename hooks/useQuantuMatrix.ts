@@ -1247,7 +1247,16 @@ export const useQuantuMatrix = () => {
         setLoading(false);
       }
     },
-    [writeContractAsync, publicClient, refetchAllData]
+    [
+      activeChain.id,
+      activeMatrixContract,
+      activeNativeFee,
+      activePaymentToken.address,
+      activePaymentToken.symbol,
+      publicClient,
+      refetchAllData,
+      writeContractAsync,
+    ]
   );
 
   // Buy chapter function
