@@ -37,11 +37,6 @@ const TOKEN_STYLES: Record<
     className: "from-sky-300 via-blue-500 to-blue-700 text-white",
     ringClassName: "ring-blue-300/40",
   },
-  DAI: {
-    label: "D",
-    className: "from-amber-200 via-yellow-500 to-orange-600 text-slate-950",
-    ringClassName: "ring-yellow-300/40",
-  },
   USDG: {
     label: "G",
     className: "from-lime-200 via-emerald-400 to-cyan-600 text-slate-950",

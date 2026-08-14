@@ -174,6 +174,11 @@ interface UserData {
   migrationData?: MigrationData;
 }
 
+type ChainActivity = {
+  track1Unlocked: number;
+  track2Unlocked: number;
+};
+
 type MatrixAlertAction = "registration" | "chapter-upgrade" | "royalty-claim";
 
 const notifyTelegramContractAlert = async (
@@ -335,6 +340,10 @@ export const useQuantuMatrix = () => {
     track1: Record<string, Record<number, any>>;
     track2: Record<string, Record<number, Track2Data>>;
   }>({ track1: {}, track2: {} });
+  const [chainActivity, setChainActivity] = useState<ChainActivity>({
+    track1Unlocked: 0,
+    track2Unlocked: 0,
+  });
 
   // Read user existence from readers(address).id.
   const { data: userReader, refetch: refetchUserExists } = useReadContract({
@@ -346,6 +355,85 @@ export const useQuantuMatrix = () => {
     },
   });
   const userExists = toBigIntValue((userReader as any)?.id ?? (userReader as any)?.[0]) > BigInt(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadChainActivity = async () => {
+      if (!publicClient || !address || !userExists) {
+        setChainActivity({ track1Unlocked: 0, track2Unlocked: 0 });
+        return;
+      }
+
+      try {
+        const getEvents = async (eventName: string) =>
+          ((await (publicClient as any).getContractEvents({
+            ...activeMatrixContract,
+            eventName,
+            args: { user: address },
+            fromBlock: BigInt(0),
+            toBlock: "latest",
+          })) || []) as Array<{ args?: Record<string, unknown> }>;
+
+        const [joinedEvents, purchasedEvents, boostedEvents] =
+          await Promise.all([
+            getEvents("JoinedHub"),
+            getEvents("ChapterPurchasedHub"),
+            getEvents("UserBoostedHub"),
+          ]);
+
+        let track1Unlocked = joinedEvents.length > 0 ? 1 : 0;
+        let track2Unlocked = joinedEvents.length > 0 ? 1 : 0;
+
+        purchasedEvents.forEach((event) => {
+          const track = Number(event.args?.track || 0);
+          const endChapter = Number(
+            event.args?.endCh || event.args?.chapter || 0,
+          );
+
+          if (track === 1) {
+            track1Unlocked = Math.max(track1Unlocked, endChapter);
+          } else if (track === 2) {
+            track2Unlocked = Math.max(track2Unlocked, endChapter);
+          }
+        });
+
+        boostedEvents.forEach((event) => {
+          const track = Number(event.args?.track || 0);
+          const chapter = Number(event.args?.chapter || 0);
+
+          if (track === 1) {
+            track1Unlocked = Math.max(track1Unlocked, chapter);
+          } else if (track === 2) {
+            track2Unlocked = Math.max(track2Unlocked, chapter);
+          }
+        });
+
+        if (userExists) {
+          track1Unlocked = Math.max(track1Unlocked, 1);
+          track2Unlocked = Math.max(track2Unlocked, 1);
+        }
+
+        if (!cancelled) {
+          setChainActivity({ track1Unlocked, track2Unlocked });
+        }
+      } catch (error) {
+        console.error("Failed to load chain-local chapter activity:", error);
+        if (!cancelled) {
+          setChainActivity({
+            track1Unlocked: userExists ? 1 : 0,
+            track2Unlocked: userExists ? 1 : 0,
+          });
+        }
+      }
+    };
+
+    void loadChainActivity();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMatrixContract, address, publicClient, userExists]);
 
   const legacyV2Configured = Boolean(LEGACY_V2_CONTRACT_ADDRESS);
 
@@ -1014,6 +1102,16 @@ export const useQuantuMatrix = () => {
       const partnersCount = reader.partnersCount ?? reader[2] ?? "0";
       const royaltyPoints = reader.royaltyPoints ?? reader[3] ?? "0";
       const royaltiesClaimedV3 = reader.royaltiesClaimedV3 ?? reader[5] ?? "0";
+      const track1Unlocked = Math.max(
+        toNumber(reader.track1Unlocked ?? reader.t1Unlocked ?? reader[13], 0),
+        chainActivity.track1Unlocked,
+        1,
+      );
+      const track2Unlocked = Math.max(
+        toNumber(reader.track2Unlocked ?? reader.t2Unlocked ?? reader[14], 0),
+        chainActivity.track2Unlocked,
+        1,
+      );
 
       return {
         exists: true,
@@ -1024,8 +1122,8 @@ export const useQuantuMatrix = () => {
         track2TotalEarned: "0",
         track1TotalCycles: 0,
         track2TotalCycles: 0,
-        track1Unlocked: 0,
-        track2Unlocked: 0,
+        track1Unlocked,
+        track2Unlocked,
         royaltyAvailable: migrationUI.totalClaimable,
         royaltiesClaimed: formatUnits(BigInt(royaltiesClaimedV3 || "0"), 18),
         royaltyPercent: Number(royaltyPoints || "0"),
@@ -1045,8 +1143,8 @@ export const useQuantuMatrix = () => {
       track2TotalEarned: "0",
       track1TotalCycles: 0,
       track2TotalCycles: 0,
-      track1Unlocked: 0,
-      track2Unlocked: 0,
+      track1Unlocked: Math.max(chainActivity.track1Unlocked, 1),
+      track2Unlocked: Math.max(chainActivity.track2Unlocked, 1),
       royaltyAvailable: migrationUI.totalClaimable,
       royaltiesClaimed: "0",
       royaltyPercent: 0,
