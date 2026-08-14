@@ -9,7 +9,7 @@ import {
 } from "wagmi";
 import { quantuMatrixContract } from "../utils/contracts";
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { formatUnits, parseEther, parseUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import type { ContractFunctionParameters } from "viem";
 import { toast } from "sonner";
 import {
@@ -98,15 +98,6 @@ const toBigIntValue = (value: any): bigint => {
     }
   }
   return BigInt(0);
-};
-
-const parseNativeFee = (value: string | undefined): bigint => {
-  if (!value || value === "0") return BigInt(0);
-  try {
-    return parseEther(value);
-  } catch {
-    return BigInt(0);
-  }
 };
 
 const toDecimalString = (value: number) => {
@@ -244,10 +235,6 @@ export const useQuantuMatrix = () => {
           selectedPaymentTokenAddress?.toLowerCase(),
       ) || defaultPaymentToken,
     [activeChain.paymentTokens, defaultPaymentToken, selectedPaymentTokenAddress],
-  );
-  const activeNativeFee = useMemo(
-    () => parseNativeFee(activeChain.nativeFee),
-    [activeChain.nativeFee],
   );
   const broadcastNativeFeeDisplay = useMemo(() => {
     if (!nativeUsdPrice) return "";
@@ -1260,7 +1247,6 @@ export const useQuantuMatrix = () => {
     [
       activeChain.id,
       activeMatrixContract,
-      activeNativeFee,
       activePaymentToken.address,
       activePaymentToken.symbol,
       publicClient,
@@ -2018,7 +2004,6 @@ export const useQuantuMatrix = () => {
     },
     [
       activeMatrixContract,
-      activeNativeFee,
       publicClient,
       refetchRicoFarming,
       refetchUserData,
