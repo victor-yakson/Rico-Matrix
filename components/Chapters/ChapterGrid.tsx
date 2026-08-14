@@ -12,6 +12,15 @@ type MatrixChapterState = {
   blocked?: boolean;
 };
 
+const toBigIntSafe = (value: unknown): bigint => {
+  try {
+    if (value === null || value === undefined || value === "") return BigInt(0);
+    return BigInt(String(value));
+  } catch {
+    return BigInt(0);
+  }
+};
+
 export const ChapterGrid = () => {
   const { address } = useAccount();
   const {
@@ -111,7 +120,7 @@ export const ChapterGrid = () => {
   ) => {
     try {
       setCurrentlyApproving({ track, chapter });
-      await approveUsdt(formatUnits(BigInt(amount || "0"), 18));
+      await approveUsdt(formatUnits(toBigIntSafe(amount), 18));
     } catch (error) {
       console.error("Approval failed:", error);
     } finally {
@@ -148,7 +157,7 @@ export const ChapterGrid = () => {
     if (!chapterPrice || chapterPrice === "0") return false;
 
     try {
-      const priceNumber = parseFloat(formatUnits(BigInt(chapterPrice), 18));
+      const priceNumber = parseFloat(formatUnits(toBigIntSafe(chapterPrice), 18));
       const allowanceNumber = parseFloat(usdtAllowance || "0");
 
 
@@ -163,7 +172,7 @@ export const ChapterGrid = () => {
   const batchCost = Array.from(
     { length: Math.max(0, batchEnd - batchStart + 1) },
     (_, index) => batchStart + index,
-  ).reduce((total, chapter) => total + BigInt(getChapterPrice(chapter) || "0"), BigInt(0));
+  ).reduce((total, chapter) => total + toBigIntSafe(getChapterPrice(chapter)), BigInt(0));
   const batchNeedsApproval = needsApproval(batchCost.toString());
   const batchDisabled =
     isProcessing ||

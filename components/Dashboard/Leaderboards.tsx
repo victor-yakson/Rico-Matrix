@@ -8,6 +8,15 @@ interface LeaderboardsProps {
   topReferrers?: [string[], string[]] | null;
 }
 
+const toBigIntSafe = (value: unknown): bigint => {
+  try {
+    if (value === null || value === undefined || value === "") return BigInt(0);
+    return BigInt(String(value));
+  } catch {
+    return BigInt(0);
+  }
+};
+
 const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
   const { address: userAddress } = useAccount();
   const t = useTranslations("Dashboard.leaderboards");
@@ -54,7 +63,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
     ? filteredLeaderboardEarnings
         .slice(0, 10)
         .reduce((sum: bigint, earning: string) => {
-          return sum + BigInt(earning || "0");
+          return sum + toBigIntSafe(earning);
         }, BigInt(0))
     : BigInt(0);
 
@@ -63,7 +72,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
   // Calculate total referrals for top 10 (after filtering)
   const totalTop10Referrals = hasTopReferrers
     ? filteredReferrerCounts.slice(0, 10).reduce((sum: bigint, count: string) => {
-        return sum + BigInt(count || "0");
+        return sum + toBigIntSafe(count);
       }, BigInt(0))
     : BigInt(0);
 
@@ -75,7 +84,7 @@ const Leaderboards = ({ topEarners, topReferrers }: LeaderboardsProps) => {
 
   // Helper function to format USDT amount
   const formatUSDT = (amount: string) => {
-    const formatted = formatUnits(BigInt(amount || "0"), 18);
+    const formatted = formatUnits(toBigIntSafe(amount), 18);
     return parseFloat(formatted).toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

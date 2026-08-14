@@ -647,7 +647,7 @@ export const useQuantuMatrix = () => {
   const joinCost =
     chapterPrices && Array.isArray(chapterPrices) && chapterPrices.length > 0
       ? (
-          parseFloat(formatUnits(BigInt(chapterPrices[0] || "0"), 18)) * 2
+          parseFloat(formatUnitsSafe(chapterPrices[0])) * 2
         ).toString()
       : "0";
 
@@ -696,15 +696,9 @@ export const useQuantuMatrix = () => {
       return {
         status: toNumber(status, 0),
         v1RoyaltyPercent: toNumber(v1RoyaltyPercent, 0),
-        legacyClaimable: formatUnits(
-          BigInt(legacyClaimable?.toString() || "0"),
-          18
-        ),
-        v2Claimable: formatUnits(BigInt(v2Claimable?.toString() || "0"), 18),
-        totalClaimable: formatUnits(
-          BigInt(totalClaimable?.toString() || "0"),
-          18
-        ),
+        legacyClaimable: formatUnitsSafe(legacyClaimable),
+        v2Claimable: formatUnitsSafe(v2Claimable),
+        totalClaimable: formatUnitsSafe(totalClaimable),
       };
     }
     return {
