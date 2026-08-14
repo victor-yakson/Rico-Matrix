@@ -16,6 +16,7 @@ import {
   CONTRACT_ABI,
   LEGACY_V2_CONTRACT_ADDRESS,
   RICO_MIGRATOR_ABI,
+  RICO_CHAIN_CONFIG,
   USDT_ABI,
   getRicoChainConfig,
   getRicoTokenAddress,
@@ -252,14 +253,6 @@ export const useQuantuMatrix = () => {
     if (!nativeUsdPrice) return "";
     return toDecimalString(BROADCAST_SYNC_USD_VALUE / nativeUsdPrice);
   }, [nativeUsdPrice]);
-  const activeBroadcastNativeFee = useMemo(() => {
-    if (!broadcastNativeFeeDisplay) return null;
-    try {
-      return parseEther(broadcastNativeFeeDisplay);
-    } catch {
-      return null;
-    }
-  }, [broadcastNativeFeeDisplay]);
 
   useEffect(() => {
     const priceId = NATIVE_PRICE_IDS[activeChain.id];
@@ -319,6 +312,16 @@ export const useQuantuMatrix = () => {
       address: activeChain.matrix,
     }),
     [activeChain.matrix],
+  );
+  const syncTargetChains = useMemo(
+    () =>
+      Object.values(RICO_CHAIN_CONFIG)
+        .filter((chain) => chain.id !== activeChain.id)
+        .map((chain) => ({
+          eid: chain.lzEid,
+          name: chain.name,
+        })),
+    [activeChain.id],
   );
   const activeMigratorContract = useMemo(
     () => ({
@@ -1377,6 +1380,69 @@ export const useQuantuMatrix = () => {
     ]
   );
 
+  const syncUserToSupportedChains = useCallback(
+    async (toastId: string) => {
+      if (!publicClient) {
+        throw new Error(
+          "Wallet client not available. Please connect your wallet.",
+        );
+      }
+
+      const syncHashes: `0x${string}`[] = [];
+
+      for (const target of syncTargetChains) {
+        toast.info("Preparing Cross-chain Sync...", {
+          id: toastId,
+          description: `Calculating live sync gas for ${target.name}.`,
+          duration: 10000,
+        });
+
+        const nativeFee = (await publicClient.readContract({
+          ...activeMatrixContract,
+          functionName: "quoteSyncFee",
+          args: [target.eid],
+        })) as bigint;
+
+        toast.info("Confirm Cross-chain Sync...", {
+          id: toastId,
+          description: `Confirm sync to ${target.name} in your wallet.`,
+          duration: 10000,
+        });
+
+        const syncHash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...activeMatrixContract,
+            functionName: "syncUserToSpoke",
+            args: [target.eid],
+            value: nativeFee,
+          }),
+        );
+
+        syncHashes.push(syncHash);
+
+        toast.loading("Cross-chain Sync Submitted", {
+          id: toastId,
+          description: `Syncing to ${target.name}. Transaction: ${syncHash.slice(
+            0,
+            10,
+          )}...${syncHash.slice(-8)}`,
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash: syncHash,
+          confirmations: 1,
+        });
+
+        if (receipt.status !== "success") {
+          throw new Error(`Cross-chain sync to ${target.name} failed on-chain`);
+        }
+      }
+
+      return syncHashes;
+    },
+    [activeMatrixContract, publicClient, syncTargetChains, writeContractAsync],
+  );
+
   // Buy chapter function
   const buyChapter = useCallback(
     async (track: number, chapter: number, broadcastAcrossChains = false) => {
@@ -1392,20 +1458,11 @@ export const useQuantuMatrix = () => {
         }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
-        if (broadcastAcrossChains && activeBroadcastNativeFee === null) {
-          throw new Error(
-            "Unable to fetch the current native token price for broadcast sync. Please try again in a moment.",
-          );
-        }
-        const nativeValue: bigint =
-          broadcastAcrossChains && activeBroadcastNativeFee !== null
-            ? activeBroadcastNativeFee
-            : BigInt(0);
 
         toast.info("Purchasing Chapter...", {
           id: toastId,
           description: broadcastAcrossChains
-            ? `Buying Chapter ${chapter} of ${trackName} and broadcasting sync across supported chains. Please confirm in wallet.`
+            ? `Buying Chapter ${chapter} of ${trackName}. Cross-chain sync will be requested after purchase confirmation.`
             : `Buying Chapter ${chapter} of ${trackName} on this chain only. Please confirm in wallet.`,
           duration: 10000,
         });
@@ -1442,6 +1499,27 @@ export const useQuantuMatrix = () => {
 
           if (address) {
             clearMatrixCache(address);
+          }
+
+          if (broadcastAcrossChains) {
+            try {
+              const syncHashes = await syncUserToSupportedChains(toastId);
+
+              toast.success("Cross-chain Sync Complete!", {
+                id: toastId,
+                description: `Chapter ${chapter} synced across ${syncHashes.length} supported chains.`,
+                duration: 5000,
+              });
+            } catch (syncError: any) {
+              console.error("Error syncing chapter purchase:", syncError);
+              toast.error("Sync Failed", {
+                id: toastId,
+                description:
+                  syncError?.message ||
+                  "The chapter purchase succeeded, but cross-chain sync did not complete.",
+                duration: 8000,
+              });
+            }
           }
 
           setTimeout(() => {
@@ -1485,7 +1563,6 @@ export const useQuantuMatrix = () => {
     [
       writeContractAsync,
       activeChain.id,
-      activeBroadcastNativeFee,
       activePaymentToken.address,
       activePaymentToken.symbol,
       activeMatrixContract,
@@ -1493,6 +1570,7 @@ export const useQuantuMatrix = () => {
       clearMatrixCache,
       publicClient,
       refetchAllData,
+      syncUserToSupportedChains,
     ]
   );
 
@@ -1519,20 +1597,11 @@ export const useQuantuMatrix = () => {
         }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
-        if (broadcastAcrossChains && activeBroadcastNativeFee === null) {
-          throw new Error(
-            "Unable to fetch the current native token price for broadcast sync. Please try again in a moment.",
-          );
-        }
-        const nativeValue: bigint =
-          broadcastAcrossChains && activeBroadcastNativeFee !== null
-            ? activeBroadcastNativeFee
-            : BigInt(0);
 
         toast.info("Purchasing Chapters...", {
           id: toastId,
           description: broadcastAcrossChains
-            ? `Buying Chapters ${startChapter}-${endChapter} of ${trackName} and broadcasting sync across supported chains. Please confirm in wallet.`
+            ? `Buying Chapters ${startChapter}-${endChapter} of ${trackName}. Cross-chain sync will be requested after purchase confirmation.`
             : `Buying Chapters ${startChapter}-${endChapter} of ${trackName} on this chain only. Please confirm in wallet.`,
           duration: 10000,
         });
@@ -1574,6 +1643,27 @@ export const useQuantuMatrix = () => {
 
           if (address) {
             clearMatrixCache(address);
+          }
+
+          if (broadcastAcrossChains) {
+            try {
+              const syncHashes = await syncUserToSupportedChains(toastId);
+
+              toast.success("Cross-chain Sync Complete!", {
+                id: toastId,
+                description: `Chapters ${startChapter}-${endChapter} synced across ${syncHashes.length} supported chains.`,
+                duration: 5000,
+              });
+            } catch (syncError: any) {
+              console.error("Error syncing batch chapter purchase:", syncError);
+              toast.error("Sync Failed", {
+                id: toastId,
+                description:
+                  syncError?.message ||
+                  "The chapter purchase succeeded, but cross-chain sync did not complete.",
+                duration: 8000,
+              });
+            }
           }
 
           setTimeout(() => {
@@ -1618,12 +1708,12 @@ export const useQuantuMatrix = () => {
       activePaymentToken.symbol,
       activePaymentToken.address,
       activeMatrixContract,
-      activeBroadcastNativeFee,
       activeChain.id,
       address,
       clearMatrixCache,
       publicClient,
       refetchAllData,
+      syncUserToSupportedChains,
       writeContractAsync,
     ]
   );

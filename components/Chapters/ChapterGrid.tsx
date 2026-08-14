@@ -171,8 +171,7 @@ export const ChapterGrid = () => {
     !userData?.exists ||
     batchStart < 1 ||
     batchEnd > 12 ||
-    batchEnd < batchStart ||
-    (broadcastAcrossChains && !broadcastNativeFeeDisplay);
+    batchEnd < batchStart;
 
   // Check if a specific chapter is being approved
   const isChapterApproving = (track: number, chapter: number) => {
@@ -288,8 +287,8 @@ export const ChapterGrid = () => {
                   {nativePriceLoading
                     ? "Calculating live native sync value..."
                     : broadcastNativeFeeDisplay
-                      ? `Sends ${broadcastNativeFeeDisplay} native token, about $${broadcastNativeFeeUsd}.`
-                      : "Live native sync value unavailable."}
+                      ? `Shows about $${broadcastNativeFeeUsd}; exact value is quoted before sync.`
+                      : "Exact sync value is quoted before confirmation."}
                 </span>
               </span>
             </label>
@@ -332,10 +331,7 @@ export const ChapterGrid = () => {
                 chapterState={track1States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 1, chapter)}
-                disabled={
-                  isProcessing ||
-                  (broadcastAcrossChains && !broadcastNativeFeeDisplay)
-                }
+                disabled={isProcessing}
                 needsApproval={chapterNeedsApproval}
                 isApproving={isChapterApproving(1, chapter)}
               />
@@ -365,10 +361,7 @@ export const ChapterGrid = () => {
                 chapterState={track2States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 2, chapter)}
-                disabled={
-                  isProcessing ||
-                  (broadcastAcrossChains && !broadcastNativeFeeDisplay)
-                }
+                disabled={isProcessing}
                 needsApproval={chapterNeedsApproval}
                 isApproving={isChapterApproving(2, chapter)}
               />
