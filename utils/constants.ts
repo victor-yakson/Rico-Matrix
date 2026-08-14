@@ -1,6 +1,9 @@
 export const RICO_MATRIX_V3_HUB_ADDRESS =
   (process.env.NEXT_PUBLIC_RICOMATRIXV3_HUB_ADDRESS as `0x${string}`) ||
   "0x65ffc2758b27dd347ee8e4ca434a6725b4694089";
+export const BSC_RICO_MATRIX_V3_HUB_ADDRESS =
+  (process.env.NEXT_PUBLIC_BSC_RICOMATRIXV3_HUB_ADDRESS as `0x${string}`) ||
+  "0xdF6A868347c10500a2Dbc1871Fe2744e7cEa42A6";
 export const RICO_MATRIX_V3_SPOKE_ADDRESS =
   (process.env.NEXT_PUBLIC_RICOMATRIXV3_SPOKE_ADDRESS as `0x${string}`) ||
   "0xfE76F12B24074811df564944E81c83e593C61951";
@@ -174,7 +177,7 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30102,
     cctpDomain: 0,
     nativeFee: process.env.NEXT_PUBLIC_BSC_NATIVE_FEE || "0",
-    matrix: RICO_MATRIX_V3_ADDRESS,
+    matrix: BSC_RICO_MATRIX_V3_HUB_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
     paymentTokens: BSC_PAYMENT_TOKENS,
