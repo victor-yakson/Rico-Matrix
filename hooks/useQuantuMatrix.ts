@@ -1292,18 +1292,11 @@ export const useQuantuMatrix = () => {
           );
         }
 
-        if (activeBroadcastNativeFee === null) {
-          throw new Error(
-            "Unable to fetch the current native token price for registration sync. Please try again in a moment.",
-          );
-        }
-
         const hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...activeMatrixContract,
             functionName: "joinLibraryHub",
             args: [activePaymentToken.address, referrer as `0x${string}`],
-            value: activeBroadcastNativeFee,
           }),
         );
 
@@ -1352,12 +1345,6 @@ export const useQuantuMatrix = () => {
           error?.message?.includes("not supported")
         ) {
           errorMessage = `${activePaymentToken.symbol} is not supported for registration on ${activeChain.name}.`;
-        } else if (error?.message?.includes("LZ_InsufficientFee")) {
-          errorMessage =
-            "The registration sync fee was too low. Please try again so the app can recalculate the current network fee.";
-        } else if (error?.message?.includes("Transfer_NativeFailed")) {
-          errorMessage =
-            "LayerZero could not refund native gas to the V3 contract. The contract needs a payable receive function or the sync manager must refund to a payable address.";
         } else if (error?.message?.includes("on-chain")) {
           errorMessage = "Transaction failed on-chain";
         } else if (error?.message?.includes("Wallet client not available")) {
@@ -1379,7 +1366,6 @@ export const useQuantuMatrix = () => {
     [
       activeChain.id,
       activeChain.name,
-      activeBroadcastNativeFee,
       activeMatrixContract,
       activePaymentToken.address,
       activePaymentToken.symbol,
@@ -1429,7 +1415,6 @@ export const useQuantuMatrix = () => {
             ...activeMatrixContract,
             functionName: "buyChapterBatchHub",
             args: [activePaymentToken.address, track, chapter, chapter],
-            value: nativeValue,
           }),
         );
 
@@ -1562,7 +1547,6 @@ export const useQuantuMatrix = () => {
               startChapter,
               endChapter,
             ],
-            value: nativeValue,
           }),
         );
 
@@ -1888,7 +1872,6 @@ export const useQuantuMatrix = () => {
           ...activeMatrixContract,
           functionName: "claimRico",
           args: [claimAmount],
-          value: activeNativeFee,
         });
 
         toast.loading("RICO Claim Submitted!", {
@@ -2072,55 +2055,14 @@ export const useQuantuMatrix = () => {
         return;
       }
 
-      setLoading(true);
-
-      if (!publicClient) {
-        throw new Error(
-          "Wallet client not available. Please connect your wallet."
-        );
-      }
-
-      toast.info("Claiming Royalty...", {
+      toast.error("Claim Unavailable", {
         id: toastId,
-        description: "Please confirm the transaction in your wallet.",
-        duration: 10000,
+        description:
+          "The new hub ABI no longer exposes claimRoyaltyV3. V3 royalty claims must use the royalty vault flow.",
+        duration: 7000,
       });
 
-      const hash = await writeContractAsync({
-        ...activeMatrixContract,
-        functionName: "claimRoyaltyV3",
-        args: [activePaymentToken.address, activeChain.lzEid],
-        value: activeNativeFee,
-      });
-
-      toast.loading("Royalty Claim Submitted!", {
-        id: toastId,
-        description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
-      });
-
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash,
-        confirmations: 1,
-      });
-
-      if (receipt.status === "success") {
-        toast.success("Royalty Claimed!", {
-          id: toastId,
-          description: "Successfully claimed royalty!",
-          duration: 5000,
-        });
-
-        void notifyTelegramContractAlert("royalty-claim", hash, activeChain.id);
-
-        setTimeout(() => {
-          refetchRoyalty();
-          refetchUserData();
-        }, 2000);
-      } else {
-        throw new Error("Royalty claim transaction failed on-chain");
-      }
-
-      return hash;
+      return undefined;
     } catch (error: any) {
       console.error("Error claiming royalty:", error);
 
@@ -2147,16 +2089,7 @@ export const useQuantuMatrix = () => {
       setLoading(false);
     }
   }, [
-    writeContractAsync,
-    publicClient,
-    activeChain.lzEid,
-    activeChain.id,
-    activeNativeFee,
-    activePaymentToken.address,
-    activeMatrixContract,
     royaltyAvailable,
-    refetchRoyalty,
-    refetchUserData,
   ]);
 
   const resolvedMigrationStatus = processMigrationStatus(migrationStatusData);
