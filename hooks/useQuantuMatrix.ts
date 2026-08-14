@@ -117,6 +117,15 @@ const toUsdtNumber = (value: any): number => {
   }
 };
 
+const formatUnitsSafe = (value: unknown, decimals = 18): string => {
+  try {
+    if (value === null || value === undefined || value === "") return "0";
+    return formatUnits(BigInt(String(value)), decimals);
+  } catch {
+    return "0";
+  }
+};
+
 // Track2 Data interface
 interface Track2Data {
   currentReferrer: string;
@@ -1105,18 +1114,18 @@ export const useQuantuMatrix = () => {
         readerId: readerId?.toString() || "0",
         referrer: readerReferrer,
         partnersCount: partnersCount?.toString() || "0",
-        track1TotalEarned: formatUnits(BigInt(totalUnilevelEarned || "0"), 18),
+        track1TotalEarned: formatUnitsSafe(totalUnilevelEarned),
         track2TotalEarned: "0",
         track1TotalCycles: 0,
         track2TotalCycles: 0,
         track1Unlocked,
         track2Unlocked,
         royaltyAvailable: migrationUI.totalClaimable,
-        royaltiesClaimed: formatUnits(BigInt(royaltiesClaimedV3 || "0"), 18),
+        royaltiesClaimed: formatUnitsSafe(royaltiesClaimedV3),
         royaltyPercent: Number(royaltyPoints || "0"),
-        ricoShouldHave: formatUnits(BigInt(ricoExpected || "0"), 18),
-        ricoSent: formatUnits(BigInt(ricoClaimed || "0"), 18),
-        ricoPending: formatUnits(BigInt(ricoPendingFromUserReads || "0"), 18),
+        ricoShouldHave: formatUnitsSafe(ricoExpected),
+        ricoSent: formatUnitsSafe(ricoClaimed),
+        ricoPending: formatUnitsSafe(ricoPendingFromUserReads),
       };
     }
 
@@ -1135,9 +1144,9 @@ export const useQuantuMatrix = () => {
       royaltyAvailable: migrationUI.totalClaimable,
       royaltiesClaimed: "0",
       royaltyPercent: 0,
-      ricoShouldHave: formatUnits(BigInt(ricoExpected || "0"), 18),
-      ricoSent: formatUnits(BigInt(ricoClaimed || "0"), 18),
-      ricoPending: formatUnits(BigInt(ricoPendingFromUserReads || "0"), 18),
+      ricoShouldHave: formatUnitsSafe(ricoExpected),
+      ricoSent: formatUnitsSafe(ricoClaimed),
+      ricoPending: formatUnitsSafe(ricoPendingFromUserReads),
     };
   };
 

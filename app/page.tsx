@@ -19,6 +19,15 @@ import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
 import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
 
+const formatUnitsSafe = (value: unknown, decimals = 18): string => {
+  try {
+    if (value === null || value === undefined || value === "") return "0";
+    return formatUnits(BigInt(String(value)), decimals);
+  } catch {
+    return "0";
+  }
+};
+
 export default function Dashboard() {
   const t = useTranslations("Dashboard.page");
 
@@ -375,7 +384,7 @@ export default function Dashboard() {
             {/* RICO Token Announcement - only show on dashboard */}
             {dashboardState === "dashboard" &&
               globalRicoFarming?.[0] &&
-              parseFloat(formatUnits(BigInt(globalRicoFarming[0]), 18)) > 0 && (
+              parseFloat(formatUnitsSafe(globalRicoFarming[0])) > 0 && (
                 <div className="mt-4">
                   <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/50 bg-yellow-500/10 px-4 py-2 text-xs md:text-sm font-medium text-yellow-100 hover:bg-yellow-500/20 transition-all">
                     <span className="text-base">🪙</span>

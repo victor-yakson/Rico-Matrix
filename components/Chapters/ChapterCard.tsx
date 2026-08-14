@@ -10,6 +10,15 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+const formatUnitsSafe = (value: unknown, decimals = 18): string => {
+  try {
+    if (value === null || value === undefined || value === "") return "0";
+    return formatUnits(BigInt(String(value)), decimals);
+  } catch {
+    return "0";
+  }
+};
+
 interface ChapterCardProps {
   track: number; // 1 = X3, 2 = X6
   chapter: number; // 1..12
@@ -243,7 +252,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const formattedPrice =
-    price && price !== "0" ? formatUnits(BigInt(price), 18) : "0";
+    price && price !== "0" ? formatUnitsSafe(price) : "0";
   const isButtonDisabled = isUnlocked || disabled;
   const isApproveButtonDisabled = isUnlocked || isApproving;
 
