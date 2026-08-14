@@ -26,13 +26,6 @@ const MIN_ROYALTY_USDT = 0.5;
 const PAYMENT_TOKEN_MAX_ALLOWANCE = "21000";
 const WALLET_CONFIRM_TIMEOUT_MS = 45000;
 const BROADCAST_SYNC_USD_VALUE = 7;
-const NATIVE_PRICE_IDS: Record<number, string> = {
-  1: "ethereum",
-  56: "binancecoin",
-  137: "polygon-ecosystem-token",
-  8453: "ethereum",
-  4663: "ethereum",
-};
 
 const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -247,19 +240,13 @@ export const useQuantuMatrix = () => {
   }, [nativeUsdPrice]);
 
   useEffect(() => {
-    const priceId = NATIVE_PRICE_IDS[activeChain.id];
     let cancelled = false;
-
-    if (!priceId) {
-      setNativeUsdPrice(null);
-      return;
-    }
 
     const fetchNativePrice = async () => {
       try {
         setNativePriceLoading(true);
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${priceId}&vs_currencies=usd`,
+          `/api/native-price?chainId=${activeChain.id}`,
           { cache: "no-store" },
         );
 
@@ -268,7 +255,7 @@ export const useQuantuMatrix = () => {
         }
 
         const payload = await response.json();
-        const price = Number(payload?.[priceId]?.usd);
+        const price = Number(payload?.priceUsd);
 
         if (!cancelled) {
           setNativeUsdPrice(Number.isFinite(price) && price > 0 ? price : null);
