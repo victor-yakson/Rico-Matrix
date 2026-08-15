@@ -1,21 +1,24 @@
 export const RICO_MATRIX_V3_HUB_ADDRESS =
   (process.env.NEXT_PUBLIC_RICOMATRIXV3_HUB_ADDRESS as `0x${string}`) ||
-  "0x65ffc2758b27dd347ee8e4ca434a6725b4694089";
+  "0xDc5fBd4841dfd658BC408108CF64a78907e0B454";
 export const BSC_RICO_MATRIX_V3_HUB_ADDRESS =
   (process.env.NEXT_PUBLIC_BSC_RICOMATRIXV3_HUB_ADDRESS as `0x${string}`) ||
-  "0xdF6A868347c10500a2Dbc1871Fe2744e7cEa42A6";
+  RICO_MATRIX_V3_HUB_ADDRESS;
 export const RICO_MATRIX_V3_SPOKE_ADDRESS =
   (process.env.NEXT_PUBLIC_RICOMATRIXV3_SPOKE_ADDRESS as `0x${string}`) ||
-  "0xfE76F12B24074811df564944E81c83e593C61951";
+  "0x3376be8333Dc9811965f28A84b582Ce8c0ce8271";
 export const RICO_MATRIX_V3_ADDRESS =
   (process.env.NEXT_PUBLIC_RICO_MATRIX_V3_ADDRESS as `0x${string}`) ||
-  RICO_MATRIX_V3_HUB_ADDRESS;
+  RICO_MATRIX_V3_SPOKE_ADDRESS;
 export const RICO_MIGRATOR_ADDRESS =
   (process.env.NEXT_PUBLIC_MIGRATOR_ADDRESS as `0x${string}`) ||
-  "0xe8e5ed8d7247ccd43e6c3323549f77f5ef8aec98";
+  "0x46F585D0ED5FDc236f87FE7a35d14c205cba517E";
 export const OMNICHAIN_SYNC_MANAGER_ADDRESS =
   (process.env.NEXT_PUBLIC_OMNICHAIN_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
-  "0x4e5A403Ae2Ffb79E2d55B2E2785Fcf5824339aD1";
+  "0xABFd52324bBA6Fb199960adD4Dc09572F5a81c0f";
+export const BSC_OMNICHAIN_SYNC_MANAGER_ADDRESS =
+  (process.env.NEXT_PUBLIC_BSC_OMNICHAIN_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
+  "0x534e377bd34794D839C2191260755802B819bF4d";
 export const ROBINHOOD_SYNC_MANAGER_ADDRESS =
   (process.env.NEXT_PUBLIC_ROBINHOOD_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
   OMNICHAIN_SYNC_MANAGER_ADDRESS;
@@ -115,6 +118,7 @@ const BASE_PAYMENT_TOKENS: RicoPaymentToken[] = [
 ];
 
 const POLYGON_PAYMENT_TOKENS: RicoPaymentToken[] = [
+  { symbol: "USDT", address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", decimals: 6 },
   { symbol: "USDC", address: POLYGON_USDC as `0x${string}`, decimals: 6 },
 ];
 
@@ -159,9 +163,10 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30101,
     cctpDomain: 0,
     nativeFee: process.env.NEXT_PUBLIC_ETH_NATIVE_FEE || "0",
-    matrix: RICO_MATRIX_V3_ADDRESS,
+    matrix: RICO_MATRIX_V3_SPOKE_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    contractMode: "spoke",
     paymentTokens: ETH_PAYMENT_TOKENS,
     paymentToken: ETH_DEFAULT_PAYMENT_TOKEN.address,
     paymentSymbol: ETH_DEFAULT_PAYMENT_TOKEN.symbol,
@@ -175,7 +180,8 @@ export const RICO_CHAIN_CONFIG = {
     nativeFee: process.env.NEXT_PUBLIC_BSC_NATIVE_FEE || "0",
     matrix: BSC_RICO_MATRIX_V3_HUB_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
-    syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    syncManager: BSC_OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    contractMode: "hub",
     paymentTokens: BSC_PAYMENT_TOKENS,
     paymentToken: BSC_DEFAULT_PAYMENT_TOKEN.address,
     paymentSymbol: BSC_DEFAULT_PAYMENT_TOKEN.symbol,
@@ -187,9 +193,10 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30184,
     cctpDomain: 6,
     nativeFee: process.env.NEXT_PUBLIC_BASE_NATIVE_FEE || "0",
-    matrix: RICO_MATRIX_V3_ADDRESS,
+    matrix: RICO_MATRIX_V3_SPOKE_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    contractMode: "spoke",
     paymentTokens: BASE_PAYMENT_TOKENS,
     paymentToken: BASE_DEFAULT_PAYMENT_TOKEN.address,
     paymentSymbol: BASE_DEFAULT_PAYMENT_TOKEN.symbol,
@@ -201,9 +208,10 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30109,
     cctpDomain: 7,
     nativeFee: process.env.NEXT_PUBLIC_POLYGON_NATIVE_FEE || "0",
-    matrix: RICO_MATRIX_V3_ADDRESS,
+    matrix: RICO_MATRIX_V3_SPOKE_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: OMNICHAIN_SYNC_MANAGER_ADDRESS,
+    contractMode: "spoke",
     paymentTokens: POLYGON_PAYMENT_TOKENS,
     paymentToken: POLYGON_DEFAULT_PAYMENT_TOKEN.address,
     paymentSymbol: POLYGON_DEFAULT_PAYMENT_TOKEN.symbol,
@@ -215,9 +223,10 @@ export const RICO_CHAIN_CONFIG = {
     lzEid: 30416,
     cctpDomain: 0,
     nativeFee: process.env.NEXT_PUBLIC_ROBINHOOD_NATIVE_FEE || "0",
-    matrix: RICO_MATRIX_V3_ADDRESS,
+    matrix: RICO_MATRIX_V3_SPOKE_ADDRESS,
     migrator: RICO_MIGRATOR_ADDRESS,
     syncManager: ROBINHOOD_SYNC_MANAGER_ADDRESS,
+    contractMode: "spoke",
     paymentTokens: ROBINHOOD_PAYMENT_TOKENS,
     paymentToken: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.address,
     paymentSymbol: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.symbol,

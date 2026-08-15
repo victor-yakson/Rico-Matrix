@@ -21,6 +21,10 @@ import {
   getRicoChainConfig,
   getRicoTokenAddress,
 } from "@/utils/constants";
+import {
+  RICO_MATRIX_HUB_ABI,
+  RICO_MATRIX_SPOKE_ABI,
+} from "@/utils/ricoMatrixAbi";
 
 const MIN_ROYALTY_USDT = 0.5;
 const PAYMENT_TOKEN_MAX_ALLOWANCE = "21000";
@@ -222,6 +226,7 @@ export const useQuantuMatrix = () => {
   const [nativePriceLoading, setNativePriceLoading] = useState(false);
   const rewardTokenAddress = getRicoTokenAddress(chainId);
   const activeChain = useMemo(() => getRicoChainConfig(chainId), [chainId]);
+  const isHubChain = activeChain.contractMode === "hub";
   const [selectedPaymentTokenAddress, setSelectedPaymentTokenAddress] =
     useState<`0x${string}` | null>(null);
   const defaultPaymentToken = useMemo(
@@ -298,18 +303,19 @@ export const useQuantuMatrix = () => {
     () => ({
       ...quantuMatrixContract,
       address: activeChain.matrix,
+      abi: isHubChain ? RICO_MATRIX_HUB_ABI : RICO_MATRIX_SPOKE_ABI,
     }),
-    [activeChain.matrix],
+    [activeChain.matrix, isHubChain],
   );
   const syncTargetChains = useMemo(
     () =>
-      Object.values(RICO_CHAIN_CONFIG)
+      (isHubChain ? Object.values(RICO_CHAIN_CONFIG) : [])
         .filter((chain) => chain.id !== activeChain.id)
         .map((chain) => ({
           eid: chain.lzEid,
           name: chain.name,
         })),
-    [activeChain.id],
+    [activeChain.id, isHubChain],
   );
   const activeMigratorContract = useMemo(
     () => ({
@@ -344,13 +350,16 @@ export const useQuantuMatrix = () => {
   // Read user existence from readers(address).id.
   const { data: userReader, refetch: refetchUserExists } = useReadContract({
     ...activeMatrixContract,
-    functionName: "readers",
+    functionName: isHubChain ? "readers" : "localView",
     args: address ? [address] : undefined,
     query: {
       enabled: !!address,
     },
   });
-  const userExists = toBigIntValue((userReader as any)?.id ?? (userReader as any)?.[0]) > BigInt(0);
+  const userExists = isHubChain
+    ? toBigIntValue((userReader as any)?.id ?? (userReader as any)?.[0]) >
+      BigInt(0)
+    : Boolean((userReader as any)?.exists ?? (userReader as any)?.[4]);
 
   useEffect(() => {
     let cancelled = false;
@@ -358,6 +367,15 @@ export const useQuantuMatrix = () => {
     const loadChainActivity = async () => {
       if (!publicClient || !address || !userExists) {
         setChainActivity({ track1Unlocked: 0, track2Unlocked: 0 });
+        return;
+      }
+
+      if (!isHubChain) {
+        const local = userReader as any;
+        setChainActivity({
+          track1Unlocked: toNumber(local?.t1Unlocked ?? local?.[1], 0),
+          track2Unlocked: toNumber(local?.t2Unlocked ?? local?.[2], 0),
+        });
         return;
       }
 
@@ -429,9 +447,9 @@ export const useQuantuMatrix = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeMatrixContract, address, publicClient, userExists]);
+  }, [activeMatrixContract, address, isHubChain, publicClient, userExists, userReader]);
 
-  const legacyV2Configured = Boolean(LEGACY_V2_CONTRACT_ADDRESS);
+  const legacyV2Configured = Boolean(LEGACY_V2_CONTRACT_ADDRESS) && isHubChain;
 
   const { data: legacyV2UserExists, refetch: refetchLegacyV2UserExists } =
     useReadContract({
@@ -446,11 +464,41 @@ export const useQuantuMatrix = () => {
   const userContracts = (
     address && userExists
       ? [
-          { ...activeMatrixContract, functionName: "readers", args: [address] },
-          { ...activeMatrixContract, functionName: "ricoExpected", args: [address] },
-          { ...activeMatrixContract, functionName: "ricoClaimed", args: [address] },
-          { ...activeMatrixContract, functionName: "viewRicoPending", args: [address] },
-          { ...activeMatrixContract, functionName: "totalUnilevelEarned", args: [address] },
+          ...(isHubChain
+            ? [
+                {
+                  ...activeMatrixContract,
+                  functionName: "readers",
+                  args: [address],
+                },
+                {
+                  ...activeMatrixContract,
+                  functionName: "ricoExpected",
+                  args: [address],
+                },
+                {
+                  ...activeMatrixContract,
+                  functionName: "ricoClaimed",
+                  args: [address],
+                },
+                {
+                  ...activeMatrixContract,
+                  functionName: "viewRicoPending",
+                  args: [address],
+                },
+                {
+                  ...activeMatrixContract,
+                  functionName: "totalUnilevelEarned",
+                  args: [address],
+                },
+              ]
+            : [
+                {
+                  ...activeMatrixContract,
+                  functionName: "localView",
+                  args: [address],
+                },
+              ]),
         ]
       : []
   ) as readonly ContractFunctionParameters[];
@@ -472,7 +520,15 @@ export const useQuantuMatrix = () => {
                 },
               ]
             : []),
-          { ...activeMatrixContract, functionName: "viewRicoPending", args: [address] },
+          ...(isHubChain
+            ? [
+                {
+                  ...activeMatrixContract,
+                  functionName: "viewRicoPending",
+                  args: [address],
+                },
+              ]
+            : []),
         ]
       : []
   ) as readonly ContractFunctionParameters[];
@@ -489,10 +545,10 @@ export const useQuantuMatrix = () => {
   };
 
   const readerSummary = getUserResult(0);
-  const ricoExpected = getUserResult(1);
-  const ricoClaimed = getUserResult(2);
-  const ricoPendingFromUserReads = getUserResult(3);
-  const totalUnilevelEarned = getUserResult(4);
+  const ricoExpected = isHubChain ? getUserResult(1) : "0";
+  const ricoClaimed = isHubChain ? getUserResult(2) : "0";
+  const ricoPendingFromUserReads = isHubChain ? getUserResult(3) : "0";
+  const totalUnilevelEarned = isHubChain ? getUserResult(4) : "0";
 
   const { data: migrationReads, refetch: refetchMigrationReads } = useReadContracts({
     contracts: migrationContracts,
@@ -508,7 +564,11 @@ export const useQuantuMatrix = () => {
   const legacyClaimable = "0";
   const royaltyV2 = legacyV2Configured ? getMigrationResult(0) : "0";
   const royaltyPercentV2 = legacyV2Configured ? getMigrationResult(1) : "0";
-  const ricoPending = legacyV2Configured ? getMigrationResult(2) : getMigrationResult(0);
+  const ricoPending = legacyV2Configured
+    ? getMigrationResult(2)
+    : isHubChain
+      ? getMigrationResult(0)
+      : "0";
   const royaltyAvailable = royaltyV2 || "0";
 
   const refetchReaderTotals = () => refetchUserReads();
@@ -569,7 +629,7 @@ export const useQuantuMatrix = () => {
   const selectedPaymentTokenSupported = preRegistrationList[12]?.result !== false;
 
   const globalContracts = (
-    userExists
+    userExists && isHubChain
       ? [
           {
             ...activeMatrixContract,
@@ -728,7 +788,7 @@ export const useQuantuMatrix = () => {
       userAddress: string,
       maxChapters: number
     ): Promise<Record<number, Track2Data>> => {
-      if (!publicClient || !userAddress || maxChapters <= 0) {
+      if (!publicClient || !userAddress || maxChapters <= 0 || !isHubChain) {
         return {};
       }
 
@@ -757,8 +817,8 @@ export const useQuantuMatrix = () => {
             publicClient
               .readContract({
                 ...activeMatrixContract,
-                functionName: "getTrack2",
-                args: [userAddress, chapter],
+                functionName: "getTrack2Info",
+                args: [userAddress as `0x${string}`, chapter],
               })
               .catch((error) => {
                 console.error(`Error fetching chapter ${chapter}:`, error);
@@ -807,13 +867,13 @@ export const useQuantuMatrix = () => {
         throw error;
       }
     },
-    [publicClient, matrixCache.track2]
+    [activeMatrixContract, isHubChain, publicClient, matrixCache.track2]
   );
 
   // Single chapter fetch
   const fetchTrack2Matrix = useCallback(
     async (userAddress: string, chapter: number): Promise<Track2Data> => {
-      if (!publicClient || !userAddress) {
+      if (!publicClient || !userAddress || !isHubChain) {
         return {
           currentReferrer: "",
           firstLineReferrals: [],
@@ -827,8 +887,8 @@ export const useQuantuMatrix = () => {
       try {
         const data = await publicClient.readContract({
           ...activeMatrixContract,
-          functionName: "getTrack2",
-          args: [userAddress, chapter],
+          functionName: "getTrack2Info",
+          args: [userAddress as `0x${string}`, chapter],
         });
 
         return processTrack2Data(data);
@@ -844,13 +904,13 @@ export const useQuantuMatrix = () => {
         };
       }
     },
-    [publicClient]
+    [activeMatrixContract, isHubChain, publicClient]
   );
 
   // Track1 matrix functions
   const fetchTrack1Matrix = useCallback(
     async (userAddress: string, chapter: number) => {
-      if (!publicClient || !userAddress) {
+      if (!publicClient || !userAddress || !isHubChain) {
         return {
           currentReferrer: "",
           referrals: [],
@@ -862,14 +922,20 @@ export const useQuantuMatrix = () => {
       try {
         const data = (await publicClient.readContract({
           ...activeMatrixContract,
-          functionName: "getTrack1",
-          args: [userAddress, chapter],
+          functionName: "getTrack1Info",
+          args: [userAddress as `0x${string}`, chapter],
         })) as any;
 
         if (data && Array.isArray(data) && data.length >= 4) {
+          const referrals = (await publicClient.readContract({
+            ...activeMatrixContract,
+            functionName: "getTrack1Referrals",
+            args: [userAddress as `0x${string}`, chapter],
+          }).catch(() => [])) as string[];
+
           return {
             currentReferrer: data[0] || "",
-            referrals: Array.isArray(data[1]) ? data[1] : [],
+            referrals: Array.isArray(referrals) ? referrals : [],
             blocked: Boolean(data[2]),
             reinvestCount: toNumber(data[3], 0),
           };
@@ -891,7 +957,7 @@ export const useQuantuMatrix = () => {
         };
       }
     },
-    [publicClient]
+    [activeMatrixContract, isHubChain, publicClient]
   );
 
   // Bulk fetch Track1 chapters
@@ -900,7 +966,7 @@ export const useQuantuMatrix = () => {
       userAddress: string,
       maxChapters: number
     ): Promise<Record<number, any>> => {
-      if (!publicClient || !userAddress || maxChapters <= 0) {
+      if (!publicClient || !userAddress || maxChapters <= 0 || !isHubChain) {
         return {};
       }
 
@@ -922,8 +988,8 @@ export const useQuantuMatrix = () => {
             publicClient
               .readContract({
                 ...activeMatrixContract,
-                functionName: "getTrack1",
-                args: [userAddress, chapter],
+                functionName: "getTrack1Info",
+                args: [userAddress as `0x${string}`, chapter],
               })
               .catch((error) => {
                 console.error(
@@ -936,12 +1002,18 @@ export const useQuantuMatrix = () => {
 
           const batchResults = await Promise.all(batchPromises);
 
-          batchResults.forEach((result, batchIndex) => {
+          for (let batchIndex = 0; batchIndex < batchResults.length; batchIndex += 1) {
+            const result = batchResults[batchIndex];
             const chapter = batch[i + batchIndex];
             if (result && Array.isArray(result) && result.length >= 4) {
+              const referrals = (await publicClient.readContract({
+                ...activeMatrixContract,
+                functionName: "getTrack1Referrals",
+                args: [userAddress as `0x${string}`, chapter],
+              }).catch(() => [])) as string[];
               results[chapter] = {
                 currentReferrer: result[0] || "",
-                referrals: Array.isArray(result[1]) ? result[1] : [],
+                referrals,
                 blocked: Boolean(result[2]),
                 reinvestCount: toNumber(result[3], 0),
               };
@@ -953,7 +1025,7 @@ export const useQuantuMatrix = () => {
                 reinvestCount: 0,
               };
             }
-          });
+          }
 
           if (i + BATCH_SIZE < chapters.length) {
             await new Promise((resolve) => setTimeout(resolve, 50));
@@ -974,7 +1046,7 @@ export const useQuantuMatrix = () => {
         throw error;
       }
     },
-    [publicClient, matrixCache.track1]
+    [activeMatrixContract, isHubChain, publicClient, matrixCache.track1]
   );
 
   // Find free Track1 referrer
@@ -983,17 +1055,13 @@ export const useQuantuMatrix = () => {
       const toastId = "find-free-track1-referrer";
 
       try {
+        if (!isHubChain) {
+          return userAddress;
+        }
         if (!publicClient) {
           throw new Error("Wallet client not available");
         }
-
-        const result = await publicClient.readContract({
-          ...activeMatrixContract,
-          functionName: "findFreeTrack1Referrer",
-          args: [userAddress as `0x${string}`, chapter],
-        });
-
-        return result as string;
+        return userAddress;
       } catch (error: any) {
         console.error("Error finding free Track1 referrer:", error);
         toast.error("Failed to find referrer", {
@@ -1003,7 +1071,7 @@ export const useQuantuMatrix = () => {
         throw error;
       }
     },
-    [publicClient]
+    [isHubChain, publicClient]
   );
 
   // Find free Track2 referrer
@@ -1012,17 +1080,13 @@ export const useQuantuMatrix = () => {
       const toastId = "find-free-track2-referrer";
 
       try {
+        if (!isHubChain) {
+          return userAddress;
+        }
         if (!publicClient) {
           throw new Error("Wallet client not available");
         }
-
-        const result = await publicClient.readContract({
-          ...activeMatrixContract,
-          functionName: "findFreeTrack2Referrer",
-          args: [userAddress as `0x${string}`, chapter],
-        });
-
-        return result as string;
+        return userAddress;
       } catch (error: any) {
         console.error("Error finding free Track2 referrer:", error);
         toast.error("Failed to find referrer", {
@@ -1032,7 +1096,7 @@ export const useQuantuMatrix = () => {
         throw error;
       }
     },
-    [publicClient]
+    [isHubChain, publicClient]
   );
 
   // Clear matrix cache for a user
@@ -1087,39 +1151,45 @@ export const useQuantuMatrix = () => {
     // Use readerSummary as primary source
     if (readerSummary) {
       const reader = readerSummary as any;
-      const readerId = reader.id ?? reader[0] ?? "0";
-      const readerReferrer = reader.referrer ?? reader[1] ?? address ?? "";
-      const partnersCount = reader.partnersCount ?? reader[2] ?? "0";
+      const readerId = isHubChain ? reader.id ?? reader[0] ?? "0" : "0";
+      const readerReferrer = reader.referrer ?? reader[0] ?? address ?? "";
+      const partnersCount = isHubChain
+        ? reader.partnersCount ?? reader[2] ?? "0"
+        : reader.partnersCount ?? reader[3] ?? "0";
       const royaltyPoints = reader.royaltyPoints ?? reader[3] ?? "0";
       const royaltiesClaimedV3 = reader.royaltiesClaimedV3 ?? reader[5] ?? "0";
-      const track1Unlocked = Math.max(
-        toNumber(reader.track1Unlocked ?? reader.t1Unlocked ?? reader[13], 0),
-        chainActivity.track1Unlocked,
-        1,
-      );
-      const track2Unlocked = Math.max(
-        toNumber(reader.track2Unlocked ?? reader.t2Unlocked ?? reader[14], 0),
-        chainActivity.track2Unlocked,
-        1,
-      );
+      const track1Unlocked = isHubChain
+        ? Math.max(
+            toNumber(reader.track1Unlocked ?? reader.t1Unlocked ?? reader[13], 0),
+            chainActivity.track1Unlocked,
+            1,
+          )
+        : Math.max(toNumber(reader.t1Unlocked ?? reader[1], 0), 0);
+      const track2Unlocked = isHubChain
+        ? Math.max(
+            toNumber(reader.track2Unlocked ?? reader.t2Unlocked ?? reader[14], 0),
+            chainActivity.track2Unlocked,
+            1,
+          )
+        : Math.max(toNumber(reader.t2Unlocked ?? reader[2], 0), 0);
 
       return {
         exists: true,
         readerId: readerId?.toString() || "0",
         referrer: readerReferrer,
         partnersCount: partnersCount?.toString() || "0",
-        track1TotalEarned: formatUnitsSafe(totalUnilevelEarned),
+        track1TotalEarned: isHubChain ? formatUnitsSafe(totalUnilevelEarned) : "0",
         track2TotalEarned: "0",
         track1TotalCycles: 0,
         track2TotalCycles: 0,
         track1Unlocked,
         track2Unlocked,
-        royaltyAvailable: migrationUI.totalClaimable,
-        royaltiesClaimed: formatUnitsSafe(royaltiesClaimedV3),
-        royaltyPercent: Number(royaltyPoints || "0"),
-        ricoShouldHave: formatUnitsSafe(ricoExpected),
-        ricoSent: formatUnitsSafe(ricoClaimed),
-        ricoPending: formatUnitsSafe(ricoPendingFromUserReads),
+        royaltyAvailable: isHubChain ? migrationUI.totalClaimable : "0",
+        royaltiesClaimed: isHubChain ? formatUnitsSafe(royaltiesClaimedV3) : "0",
+        royaltyPercent: isHubChain ? Number(royaltyPoints || "0") : 0,
+        ricoShouldHave: isHubChain ? formatUnitsSafe(ricoExpected) : "0",
+        ricoSent: isHubChain ? formatUnitsSafe(ricoClaimed) : "0",
+        ricoPending: isHubChain ? formatUnitsSafe(ricoPendingFromUserReads) : "0",
       };
     }
 
@@ -1135,12 +1205,12 @@ export const useQuantuMatrix = () => {
       track2TotalCycles: 0,
       track1Unlocked: Math.max(chainActivity.track1Unlocked, 1),
       track2Unlocked: Math.max(chainActivity.track2Unlocked, 1),
-      royaltyAvailable: migrationUI.totalClaimable,
+      royaltyAvailable: isHubChain ? migrationUI.totalClaimable : "0",
       royaltiesClaimed: "0",
       royaltyPercent: 0,
-      ricoShouldHave: formatUnitsSafe(ricoExpected),
-      ricoSent: formatUnitsSafe(ricoClaimed),
-      ricoPending: formatUnitsSafe(ricoPendingFromUserReads),
+      ricoShouldHave: isHubChain ? formatUnitsSafe(ricoExpected) : "0",
+      ricoSent: isHubChain ? formatUnitsSafe(ricoClaimed) : "0",
+      ricoPending: isHubChain ? formatUnitsSafe(ricoPendingFromUserReads) : "0",
     };
   };
 
@@ -1369,13 +1439,42 @@ export const useQuantuMatrix = () => {
           );
         }
 
-        const hash = await withWalletConfirmTimeout(
-          writeContractAsync({
-            ...activeMatrixContract,
-            functionName: "joinLibraryHub",
-            args: [activePaymentToken.address, referrer as `0x${string}`],
-          }),
-        );
+        const hash = isHubChain
+          ? await withWalletConfirmTimeout(
+              writeContractAsync({
+                ...activeMatrixContract,
+                functionName: "joinLibraryHub",
+                args: [activePaymentToken.address, referrer as `0x${string}`],
+              }),
+            )
+          : await (async () => {
+              const estimate = (await publicClient.readContract({
+                ...activeMatrixContract,
+                functionName: "estimateJoinCost",
+                args: [activePaymentToken.address],
+              })) as readonly [
+                bigint,
+                bigint,
+                bigint,
+                bigint,
+                bigint,
+                number,
+                `0x${string}`,
+              ];
+
+              return withWalletConfirmTimeout(
+                writeContractAsync({
+                  ...activeMatrixContract,
+                  functionName: "joinLibrarySpoke",
+                  args: [
+                    activePaymentToken.address,
+                    referrer as `0x${string}`,
+                    estimate[2],
+                  ],
+                  value: estimate[4],
+                }),
+              );
+            })();
 
         toast.loading("Registration Submitted!", {
           id: toastId,
@@ -1447,6 +1546,7 @@ export const useQuantuMatrix = () => {
       activePaymentToken.address,
       activePaymentToken.symbol,
       address,
+      isHubChain,
       publicClient,
       refetchAllData,
       selectedPaymentTokenSupported,
@@ -1460,6 +1560,10 @@ export const useQuantuMatrix = () => {
         throw new Error(
           "Wallet client not available. Please connect your wallet.",
         );
+      }
+
+      if (!isHubChain) {
+        return [];
       }
 
       const syncHashes: `0x${string}`[] = [];
@@ -1514,7 +1618,7 @@ export const useQuantuMatrix = () => {
 
       return syncHashes;
     },
-    [activeMatrixContract, publicClient, syncTargetChains, writeContractAsync],
+    [activeMatrixContract, isHubChain, publicClient, syncTargetChains, writeContractAsync],
   );
 
   // Buy chapter function
@@ -1541,13 +1645,44 @@ export const useQuantuMatrix = () => {
           duration: 10000,
         });
 
-        const hash = await withWalletConfirmTimeout(
-          writeContractAsync({
-            ...activeMatrixContract,
-            functionName: "buyChapterBatchHub",
-            args: [activePaymentToken.address, track, chapter, chapter],
-          }),
-        );
+        const hash = isHubChain
+          ? await withWalletConfirmTimeout(
+              writeContractAsync({
+                ...activeMatrixContract,
+                functionName: "buyChapterBatchHub",
+                args: [activePaymentToken.address, track, chapter, BigInt(chapter)],
+              }),
+            )
+          : await (async () => {
+              const estimate = (await publicClient.readContract({
+                ...activeMatrixContract,
+                functionName: "estimateChapterBuyCost",
+                args: [activePaymentToken.address, chapter, chapter],
+              })) as readonly [
+                bigint,
+                bigint,
+                bigint,
+                bigint,
+                bigint,
+                number,
+                `0x${string}`,
+              ];
+
+              return withWalletConfirmTimeout(
+                writeContractAsync({
+                  ...activeMatrixContract,
+                  functionName: "buyChapterSpoke",
+                  args: [
+                    activePaymentToken.address,
+                    track,
+                    chapter,
+                    chapter,
+                    estimate[2],
+                  ],
+                  value: estimate[4],
+                }),
+              );
+            })();
 
         toast.loading("Transaction Submitted", {
           id: toastId,
@@ -1575,7 +1710,7 @@ export const useQuantuMatrix = () => {
             clearMatrixCache(address);
           }
 
-          if (broadcastAcrossChains) {
+          if (broadcastAcrossChains && isHubChain) {
             try {
               const syncHashes = await syncUserToSupportedChains(toastId);
 
@@ -1642,6 +1777,7 @@ export const useQuantuMatrix = () => {
       activeMatrixContract,
       address,
       clearMatrixCache,
+      isHubChain,
       publicClient,
       refetchAllData,
       syncUserToSupportedChains,
@@ -1680,18 +1816,49 @@ export const useQuantuMatrix = () => {
           duration: 10000,
         });
 
-        const hash = await withWalletConfirmTimeout(
-          writeContractAsync({
-            ...activeMatrixContract,
-            functionName: "buyChapterBatchHub",
-            args: [
-              activePaymentToken.address,
-              track,
-              startChapter,
-              endChapter,
-            ],
-          }),
-        );
+        const hash = isHubChain
+          ? await withWalletConfirmTimeout(
+              writeContractAsync({
+                ...activeMatrixContract,
+                functionName: "buyChapterBatchHub",
+                args: [
+                  activePaymentToken.address,
+                  track,
+                  startChapter,
+                  BigInt(endChapter),
+                ],
+              }),
+            )
+          : await (async () => {
+              const estimate = (await publicClient.readContract({
+                ...activeMatrixContract,
+                functionName: "estimateChapterBuyCost",
+                args: [activePaymentToken.address, startChapter, endChapter],
+              })) as readonly [
+                bigint,
+                bigint,
+                bigint,
+                bigint,
+                bigint,
+                number,
+                `0x${string}`,
+              ];
+
+              return withWalletConfirmTimeout(
+                writeContractAsync({
+                  ...activeMatrixContract,
+                  functionName: "buyChapterSpoke",
+                  args: [
+                    activePaymentToken.address,
+                    track,
+                    startChapter,
+                    endChapter,
+                    estimate[2],
+                  ],
+                  value: estimate[4],
+                }),
+              );
+            })();
 
         toast.loading("Batch Purchase Submitted", {
           id: toastId,
@@ -1719,7 +1886,7 @@ export const useQuantuMatrix = () => {
             clearMatrixCache(address);
           }
 
-          if (broadcastAcrossChains) {
+          if (broadcastAcrossChains && isHubChain) {
             try {
               const syncHashes = await syncUserToSupportedChains(toastId);
 
@@ -1785,6 +1952,7 @@ export const useQuantuMatrix = () => {
       activeChain.id,
       address,
       clearMatrixCache,
+      isHubChain,
       publicClient,
       refetchAllData,
       syncUserToSupportedChains,

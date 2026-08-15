@@ -14,8 +14,11 @@ import {
   CONTRACT_ABI,
   LEGACY_V2_CONTRACT_ADDRESS,
   RICO_CHAIN_CONFIG,
-  RICO_MATRIX_V3_ABI,
 } from "@/utils/constants";
+import {
+  RICO_MATRIX_HUB_ABI,
+  RICO_MATRIX_SPOKE_ABI,
+} from "@/utils/ricoMatrixAbi";
 
 export type MatrixAlertAction =
   | "registration"
@@ -24,7 +27,9 @@ export type MatrixAlertAction =
 
 type SupportedFunctionName =
   | "joinLibraryHub"
+  | "joinLibrarySpoke"
   | "buyChapterBatchHub"
+  | "buyChapterSpoke"
   | "claimRoyaltyV3"
   | "claimRoyaltyV2"
   | "claimLegacyRoyalty";
@@ -45,7 +50,8 @@ const DEFAULT_CHANNEL = "@rico_update";
 const USDT_DECIMALS = 18;
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6;
 const TELEGRAM_CONTRACT_ABI = [
-  ...RICO_MATRIX_V3_ABI,
+  ...RICO_MATRIX_HUB_ABI,
+  ...RICO_MATRIX_SPOKE_ABI,
   ...CONTRACT_ABI,
 ] as unknown as Abi;
 
@@ -235,7 +241,9 @@ function isSupportedFunctionName(
 ): functionName is SupportedFunctionName {
   return (
     functionName === "joinLibraryHub" ||
+    functionName === "joinLibrarySpoke" ||
     functionName === "buyChapterBatchHub" ||
+    functionName === "buyChapterSpoke" ||
     functionName === "claimRoyaltyV3" ||
     functionName === "claimRoyaltyV2" ||
     functionName === "claimLegacyRoyalty"
@@ -316,7 +324,7 @@ async function readReaderSummary(
   try {
     const summaryResult = (await publicClient.readContract({
       address: chain.matrix,
-      abi: RICO_MATRIX_V3_ABI,
+      abi: RICO_MATRIX_HUB_ABI,
       functionName: "readers",
       args: [reader],
     })) as unknown as readonly [bigint, Hex, bigint, bigint, bigint, bigint];
@@ -344,7 +352,7 @@ async function readChapterPrice(
 ) {
   return (await publicClient.readContract({
     address: chain.matrix,
-    abi: RICO_MATRIX_V3_ABI,
+    abi: RICO_MATRIX_HUB_ABI,
     functionName: "chapterPrice",
     args: [chapter],
   })) as bigint;
@@ -357,7 +365,7 @@ async function buildRegistrationAlert(
   const { publicClient, tx, receipt, functionName, args } =
     await getVerifiedTransaction(hash, chain);
 
-  if (functionName !== "joinLibraryHub") {
+  if (functionName !== "joinLibraryHub" && functionName !== "joinLibrarySpoke") {
     throw new Error("Transaction is not a library registration.");
   }
 
@@ -365,11 +373,21 @@ async function buildRegistrationAlert(
     user: Hex;
     referrer: Hex;
   }>("JoinedHub", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
+  const spokeOrder = decodeMatchingEvent<{
+    user: Hex;
+    referrer: Hex;
+    totalUSD: bigint;
+  }>("OrderSubmitted", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
 
   const referrerArg = args[1] as Hex | undefined;
-  const reader = joined?.user || tx.from;
-  const referrer = joined?.referrer || referrerArg || "0x0000000000000000000000000000000000000000";
-  const amountPaid = await readChapterPrice(publicClient, chain, 1);
+  const reader = joined?.user || spokeOrder?.user || tx.from;
+  const referrer =
+    joined?.referrer ||
+    spokeOrder?.referrer ||
+    referrerArg ||
+    "0x0000000000000000000000000000000000000000";
+  const amountPaid =
+    spokeOrder?.totalUSD || (await readChapterPrice(publicClient, chain, 1));
 
   const message = [
     "🥳 <b>NEW MEMBER JOINED THE MATRIX!</b>",
@@ -396,14 +414,14 @@ async function buildChapterUpgradeAlert(
 ): Promise<AlertBuildResult> {
   const { tx, receipt, functionName, args } = await getVerifiedTransaction(hash, chain);
 
-  if (functionName !== "buyChapterBatchHub") {
+  if (functionName !== "buyChapterBatchHub" && functionName !== "buyChapterSpoke") {
     throw new Error("Transaction is not a chapter purchase.");
   }
 
-  const isBatch = Number(args[2] as number | bigint) !== Number(args[3] as number | bigint);
   const track = Number(args[1] as number | bigint);
   const chapter = Number(args[2] as number | bigint);
-  const endChapter = isBatch ? Number(args[3] as number | bigint) : chapter;
+  const endChapter = Number(args[3] as number | bigint);
+  const isBatch = chapter !== endChapter;
   const chapterPurchased = decodeMatchingEvent<{
     user: Hex;
     track: number;
@@ -411,9 +429,13 @@ async function buildChapterUpgradeAlert(
     endCh: number;
     totalUSD: bigint;
   }>("ChapterPurchasedHub", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
+  const spokeOrder = decodeMatchingEvent<{
+    user: Hex;
+    totalUSD: bigint;
+  }>("OrderSubmitted", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
 
-  const reader = chapterPurchased?.user || tx.from;
-  const contractValue = chapterPurchased?.totalUSD || BigInt(0);
+  const reader = chapterPurchased?.user || spokeOrder?.user || tx.from;
+  const contractValue = chapterPurchased?.totalUSD || spokeOrder?.totalUSD || BigInt(0);
   const trackLabel = getTrackLabel(track);
   const chapterLabel = isBatch
     ? `Chapters ${chapter}-${endChapter}`

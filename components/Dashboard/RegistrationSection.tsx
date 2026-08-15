@@ -77,6 +77,7 @@ export const RegistrationSection = ({
     joinCost,
     loading,
     contractConfig,
+    activeChain,
     paymentTokenSymbol,
     paymentTokenMaxAllowance,
     paymentTokenSupported,
@@ -167,17 +168,21 @@ export const RegistrationSection = ({
     {
       address: contractConfig.address,
       abi: contractConfig.abi,
-      functionName: "readers",
+      functionName: activeChain.contractMode === "hub" ? "readers" : "localView",
       args:
         effectiveReferralAddress && !userData?.exists
-          ? [effectiveReferralAddress]
+          ? [effectiveReferralAddress as `0x${string}`]
           : undefined,
       query: { enabled: isReferralValid && !userData?.exists },
     }
   );
-  const referralReaderId =
-    BigInt(((referralExists as any)?.id ?? (referralExists as any)?.[0] ?? 0).toString());
-  const referrerIsRegistered = referralReaderId > BigInt(0);
+  const referralReaderId = BigInt(
+    ((referralExists as any)?.id ?? (referralExists as any)?.[0] ?? 0).toString()
+  );
+  const referrerIsRegistered =
+    activeChain.contractMode === "hub"
+      ? referralReaderId > BigInt(0)
+      : Boolean((referralExists as any)?.exists ?? (referralExists as any)?.[4]);
 
   // IMPORTANT: Force this into a boolean using Boolean(...)
   const showReferralWarning = Boolean(
@@ -412,7 +417,7 @@ export const RegistrationSection = ({
       }
 
       // referralExists from contract check (unless fallback)
-      if (referralExists === false && referrer !== FALLBACK_REFERRER) {
+      if (!referrerIsRegistered && referrer !== FALLBACK_REFERRER) {
         throw new Error(t("error.invalidReferral"));
       }
 
@@ -470,7 +475,7 @@ export const RegistrationSection = ({
     if (isSelfReferral) {
       return t("referral.selfReferral");
     }
-    if (isReferralValid && referralExists !== false) {
+    if (isReferralValid && referrerIsRegistered) {
       return t("referral.detected");
     }
     return t("referral.invalid");
@@ -593,7 +598,7 @@ export const RegistrationSection = ({
                   <div
                     className={`rounded-xl px-4 py-3 flex items-center justify-between gap-3 ${
                       isReferralValid &&
-                      referralExists !== false &&
+                      referrerIsRegistered &&
                       !isSelfReferral
                         ? "border border-yellow-400/35 bg-yellow-500/10"
                         : "border border-red-500/30 bg-red-500/10"
@@ -618,7 +623,7 @@ export const RegistrationSection = ({
                             />
                           </svg>
                         </div>
-                      ) : isReferralValid && referralExists !== false ? (
+                      ) : isReferralValid && referrerIsRegistered ? (
                         <div className="w-6 h-6 rounded-full bg-yellow-500/14 border border-yellow-400/35 flex items-center justify-center">
                           <svg
                             className="w-3 h-3 text-amber-300"
@@ -659,7 +664,7 @@ export const RegistrationSection = ({
                               ? "text-slate-300"
                               : isSelfReferral
                               ? "text-red-300"
-                              : isReferralValid && referralExists !== false
+                              : isReferralValid && referrerIsRegistered
                               ? "text-amber-300"
                               : "text-red-300"
                           }`}
@@ -678,7 +683,7 @@ export const RegistrationSection = ({
                           ? "border-slate-400/40 bg-slate-500/15 text-slate-300"
                           : isSelfReferral
                           ? "border-red-400/40 bg-red-500/15 text-red-200"
-                          : isReferralValid && referralExists !== false
+                          : isReferralValid && referrerIsRegistered
                           ? "border-yellow-400/35 bg-yellow-500/10 text-amber-200"
                           : "border-red-400/40 bg-red-500/15 text-red-200"
                       }`}
@@ -687,7 +692,7 @@ export const RegistrationSection = ({
                         ? t("referral.checkingBadge")
                         : isSelfReferral
                         ? t("referral.selfReferralBadge")
-                        : isReferralValid && referralExists !== false
+                        : isReferralValid && referrerIsRegistered
                         ? t("referral.validBadge")
                         : t("referral.invalidBadge")}
                     </span>
