@@ -90,6 +90,45 @@ const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => 
   }
 };
 
+const formatTxError = (error: unknown, fallback: string) => {
+  const message =
+    (error as { shortMessage?: string; message?: string })?.shortMessage ||
+    (error as { message?: string })?.message ||
+    fallback;
+
+  if (message.includes("execution reverted")) {
+    if (message.includes("PreviousChapterRequired")) {
+      return "You need to buy the next unlocked chapter in sequence.";
+    }
+    if (message.includes("ChapterAlreadyUnlocked")) {
+      return "That chapter is already unlocked on your account.";
+    }
+    if (message.includes("InvalidBatch")) {
+      return "Choose a valid continuous chapter range.";
+    }
+    if (message.includes("TokenNotSupported")) {
+      return "That payment token is not supported on the selected route.";
+    }
+    if (message.includes("InvalidAmount")) {
+      return "The contract rejected the amount for this purchase.";
+    }
+  }
+
+  if (message.includes("User rejected") || message.includes("denied")) {
+    return "You cancelled the wallet request before it was confirmed.";
+  }
+
+  if (message.includes("insufficient funds")) {
+    return "Your wallet does not have enough native gas for this transaction.";
+  }
+
+  if (message.includes("insufficient")) {
+    return "Your wallet does not have enough balance or allowance for this transaction.";
+  }
+
+  return message;
+};
+
 export const ChapterGrid = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -147,6 +186,17 @@ export const ChapterGrid = () => {
   const [syncFeeRows, setSyncFeeRows] = useState<Array<{ name: string; eid: number; nativeFee: string }>>([]);
   const [syncing, setSyncing] = useState(false);
   const t = useTranslations("ChaptersPage.ChapterGrid");
+  const nextAvailableChapter = useMemo(() => {
+    const unlocked = batchTrack === 1
+      ? userData?.track1Unlocked || 0
+      : userData?.track2Unlocked || 0;
+    return Math.min(12, Math.max(1, unlocked + 1));
+  }, [batchTrack, userData?.track1Unlocked, userData?.track2Unlocked]);
+  const allChaptersUnlocked = nextAvailableChapter >= 12 && (
+    batchTrack === 1
+      ? (userData?.track1Unlocked || 0) >= 12
+      : (userData?.track2Unlocked || 0) >= 12
+  );
 
   const resolvedRoute = useMemo<"hub" | "spoke">(() => {
     if (purchaseRoute === "hub") return "hub";
@@ -200,6 +250,11 @@ export const ChapterGrid = () => {
     userData?.track1Unlocked,
     userData?.track2Unlocked,
   ]);
+
+  useEffect(() => {
+    setBatchStart(nextAvailableChapter);
+    setBatchEnd(nextAvailableChapter);
+  }, [nextAvailableChapter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -342,6 +397,7 @@ export const ChapterGrid = () => {
     target: "contract" | "permit2",
     label?: { track: number; chapter: number },
   ) => {
+    const toastId = `chapter-approval-${target}`;
     if (!publicClient || !resolvedPaymentToken) {
       throw new Error("Wallet client not available. Please connect your wallet.");
     }
@@ -357,6 +413,13 @@ export const ChapterGrid = () => {
       if (label) {
         setCurrentlyApproving(label);
       }
+      toast.loading("Open your wallet to approve", {
+        id: toastId,
+        description:
+          target === "permit2"
+            ? `Approve ${resolvedPaymentToken.symbol} for Permit2 once, then continue with hub purchases.`
+            : `Approve ${resolvedPaymentToken.symbol} for the current purchase route.`,
+      });
       const hash = await withWalletConfirmTimeout(
         writeContractAsync({
           address: resolvedPaymentToken.address,
@@ -366,6 +429,7 @@ export const ChapterGrid = () => {
         }),
       );
       toast.loading("Approval submitted", {
+        id: toastId,
         description: `${resolvedPaymentToken.symbol} approval is waiting for confirmation.`,
       });
       const receipt = await publicClient.waitForTransactionReceipt({
@@ -376,6 +440,7 @@ export const ChapterGrid = () => {
         throw new Error("Approval failed on-chain.");
       }
       toast.success("Approval confirmed", {
+        id: toastId,
         description:
           target === "permit2"
             ? `Permit2 can now pull ${resolvedPaymentToken.symbol} for hub purchases.`
@@ -383,6 +448,15 @@ export const ChapterGrid = () => {
       });
       await refetchAllData({ showToast: false });
       return hash;
+    } catch (error) {
+      toast.error("Approval failed", {
+        id: toastId,
+        description: formatTxError(
+          error,
+          `Failed to approve ${resolvedPaymentToken.symbol}.`,
+        ),
+      });
+      throw error;
     } finally {
       if (label) {
         setCurrentlyApproving(null);
@@ -439,6 +513,7 @@ export const ChapterGrid = () => {
   };
 
   const syncAllSpokes = async () => {
+    const toastId = "chapter-sync-all";
     if (!publicClient || !isHubChain) {
       throw new Error("Switch to BNB Smart Chain to sync your spoke status.");
     }
@@ -448,12 +523,20 @@ export const ChapterGrid = () => {
       for (const target of Object.values(RICO_CHAIN_CONFIG).filter(
         (chain) => chain.id !== activeChain.id,
       )) {
+        toast.loading(`Preparing sync for ${target.name}`, {
+          id: toastId,
+          description: "Quoting live native gas from the hub contract.",
+        });
         const nativeFee = (await publicClient.readContract({
           ...contractConfig,
           functionName: "quoteSyncFee",
           args: [target.lzEid],
         })) as bigint;
 
+        toast.loading(`Confirm sync to ${target.name}`, {
+          id: toastId,
+          description: `Approve the sync transaction for ${target.name} in your wallet.`,
+        });
         const hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -463,6 +546,10 @@ export const ChapterGrid = () => {
           }),
         );
 
+        toast.loading(`Sync submitted for ${target.name}`, {
+          id: toastId,
+          description: `Waiting for on-chain confirmation on the BSC hub.`,
+        });
         const receipt = await publicClient.waitForTransactionReceipt({
           hash,
           confirmations: 1,
@@ -474,15 +561,26 @@ export const ChapterGrid = () => {
       }
 
       toast.success("Spoke sync completed", {
+        id: toastId,
         description: "Your BSC hub status has been pushed to all configured spokes.",
       });
       await refetchAllData({ showToast: false });
+    } catch (error) {
+      toast.error("Sync failed", {
+        id: toastId,
+        description: formatTxError(
+          error,
+          "The sync transaction did not complete.",
+        ),
+      });
+      throw error;
     } finally {
       setSyncing(false);
     }
   };
 
   const executePurchase = async (track: number, startChapter: number, endChapter: number) => {
+    const toastId = `chapter-purchase-${track}-${startChapter}-${endChapter}`;
     if (!publicClient || !resolvedPaymentToken) {
       throw new Error("Wallet client not available. Please connect your wallet.");
     }
@@ -492,6 +590,13 @@ export const ChapterGrid = () => {
     const isPermitPurchase = resolvedRoute === "hub" && paymentMode === "permit2";
 
     let hash: `0x${string}`;
+    toast.loading("Preparing purchase", {
+      id: toastId,
+      description:
+        resolvedRoute === "hub"
+          ? "Checking the hub route and building your purchase transaction."
+          : `Quoting spoke settlement fees on ${activeChain.name}.`,
+    });
 
     if (resolvedRoute === "spoke") {
       const estimate = (await publicClient.readContract({
@@ -500,6 +605,10 @@ export const ChapterGrid = () => {
         args: [resolvedPaymentToken.address, startChapter, endChapter],
       })) as readonly [bigint, bigint, bigint, bigint, bigint, number, `0x${string}`];
 
+      toast.loading("Confirm spoke purchase in wallet", {
+        id: toastId,
+        description: `This purchase will settle through the ${activeChain.name} spoke and back to the BSC hub.`,
+      });
       hash = await withWalletConfirmTimeout(
         writeContractAsync({
           ...contractConfig,
@@ -519,7 +628,15 @@ export const ChapterGrid = () => {
       const requestedAmount = rawAmountFrom18(totalUsd, resolvedPaymentToken.decimals);
 
       if (isPermitPurchase) {
+        toast.loading("Sign Permit2 approval", {
+          id: toastId,
+          description: "Your wallet will ask for a Permit2 signature before the hub purchase transaction.",
+        });
         const permit = await signPermit2(requestedAmount);
+        toast.loading("Confirm hub purchase in wallet", {
+          id: toastId,
+          description: "Your Permit2 signature is ready. Confirm the hub purchase transaction now.",
+        });
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -537,6 +654,10 @@ export const ChapterGrid = () => {
           }),
         );
       } else {
+        toast.loading("Confirm hub purchase in wallet", {
+          id: toastId,
+          description: "Approve the chapter purchase transaction on the BSC hub.",
+        });
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -547,6 +668,10 @@ export const ChapterGrid = () => {
       }
     }
 
+    toast.loading("Purchase submitted", {
+      id: toastId,
+      description: `Waiting for on-chain confirmation for chapters ${startChapter}-${endChapter}.`,
+    });
     const receipt = await publicClient.waitForTransactionReceipt({
       hash,
       confirmations: 1,
@@ -557,23 +682,30 @@ export const ChapterGrid = () => {
     }
 
     if (broadcastAcrossChains && isHubChain) {
+      toast.loading("Purchase confirmed, starting spoke sync", {
+        id: toastId,
+        description: "The hub purchase succeeded. Syncing your updated chapter status to the spoke networks now.",
+      });
       await syncAllSpokes();
     } else {
       await refetchAllData({ showToast: false });
     }
 
+    toast.success("Purchase confirmed", {
+      id: toastId,
+      description:
+        startChapter === endChapter
+          ? `Chapter ${startChapter} is now unlocked.`
+          : `Chapters ${startChapter}-${endChapter} are now unlocked.`,
+    });
     return hash;
   };
 
   const handleBuyChapter = async (track: number, chapter: number) => {
     try {
       await executePurchase(track, chapter, chapter);
-      toast.success(`Chapter ${chapter} purchased successfully.`);
     } catch (error: any) {
       console.error("Purchase failed:", error);
-      toast.error("Purchase failed", {
-        description: error?.message || "The chapter purchase did not complete.",
-      });
     }
   };
 
@@ -587,9 +719,6 @@ export const ChapterGrid = () => {
       await approveForTarget(amount, target, { track, chapter });
     } catch (error: any) {
       console.error("Approval failed:", error);
-      toast.error("Approval failed", {
-        description: error?.message || "The approval transaction did not complete.",
-      });
     }
   };
 
@@ -597,12 +726,8 @@ export const ChapterGrid = () => {
     try {
       setIsBatchBuying(true);
       await executePurchase(batchTrack, batchStart, batchEnd);
-      toast.success(`Chapters ${batchStart}-${batchEnd} purchased successfully.`);
     } catch (error: any) {
       console.error("Batch purchase failed:", error);
-      toast.error("Batch purchase failed", {
-        description: error?.message || "The batch purchase did not complete.",
-      });
     } finally {
       setIsBatchBuying(false);
     }
@@ -765,11 +890,11 @@ export const ChapterGrid = () => {
               From
               <input
                 type="number"
-                min={1}
+                min={nextAvailableChapter}
                 max={12}
                 value={batchStart}
                 onChange={(event) => {
-                  const next = Number(event.target.value);
+                  const next = Math.max(nextAvailableChapter, Number(event.target.value));
                   setBatchStart(next);
                   if (batchEnd < next) setBatchEnd(next);
                 }}
@@ -783,7 +908,9 @@ export const ChapterGrid = () => {
                 min={batchStart}
                 max={12}
                 value={batchEnd}
-                onChange={(event) => setBatchEnd(Number(event.target.value))}
+                onChange={(event) =>
+                  setBatchEnd(Math.max(batchStart, Number(event.target.value)))
+                }
                 className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               />
             </label>
@@ -797,7 +924,9 @@ export const ChapterGrid = () => {
                 min={batchStart}
                 max={12}
                 value={batchEnd}
-                onChange={(event) => setBatchEnd(Number(event.target.value))}
+                onChange={(event) =>
+                  setBatchEnd(Math.max(batchStart, Number(event.target.value)))
+                }
                 className="mt-3 w-full accent-yellow-400"
               />
             </div>
@@ -822,11 +951,13 @@ export const ChapterGrid = () => {
             <button
               type="button"
               onClick={batchNeedsApproval ? () => approveForTarget(formatUnits(batchCost, 18), resolvedRoute === "hub" && paymentMode === "permit2" ? "permit2" : "contract") : handleBatchBuy}
-              disabled={batchDisabled}
+              disabled={batchDisabled || allChaptersUnlocked}
               className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-3"
             >
               {isBatchBuying
                 ? "Processing..."
+                : allChaptersUnlocked
+                  ? "All chapters unlocked"
                 : batchNeedsApproval
                   ? resolvedRoute === "hub" && paymentMode === "permit2"
                     ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"} for Permit2`
@@ -844,6 +975,7 @@ export const ChapterGrid = () => {
             {feeBreakdown ? (
               <div className="mt-2 space-y-1 text-xs text-cyan-100/85">
                 <p>Route: {feeBreakdown.routeLabel}</p>
+                <p>Next unlockable chapter: {nextAvailableChapter}</p>
                 <p>Total USD value: {Number(feeBreakdown.totalUsd).toFixed(2)}</p>
                 <p>Token pull: {Number(feeBreakdown.tokenAmount).toFixed(6)} {resolvedPaymentToken?.symbol || paymentTokenSymbol}</p>
                 <p>LayerZero fee: {feeBreakdown.lzFee}</p>

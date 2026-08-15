@@ -55,7 +55,7 @@ const TELEGRAM_CONTRACT_ABI = [
   ...CONTRACT_ABI,
 ] as unknown as Abi;
 
-type TelegramAlertChainId = 1 | 56 | 137 | 8453 | 4663;
+type TelegramAlertChainId = 1 | 56 | 137 | 8453;
 
 type AlertChainConfig = {
   id: TelegramAlertChainId;
@@ -109,17 +109,6 @@ const supportedAlertChains: Record<TelegramAlertChainId, AlertChainConfig> = {
       process.env.NEXT_PUBLIC_BASE_RPC_URL || "",
       process.env.BASE_RPC_URL || "",
       "https://mainnet.base.org",
-    ],
-  },
-  4663: {
-    id: 4663,
-    name: "Robinhood Chain",
-    matrix: RICO_CHAIN_CONFIG[4663].matrix,
-    explorerTxBaseUrl: "https://robinhoodchain.blockscout.com/tx/",
-    rpcUrls: [
-      process.env.NEXT_PUBLIC_ROBINHOOD_RPC_URL || "",
-      process.env.ROBINHOOD_RPC_URL || "",
-      "https://rpc.mainnet.chain.robinhood.com",
     ],
   },
 };

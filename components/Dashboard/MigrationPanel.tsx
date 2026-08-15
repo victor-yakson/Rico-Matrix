@@ -21,6 +21,30 @@ const formatAmount = (value?: bigint) => {
   }
 };
 
+const getMigrationErrorMessage = (error: unknown) => {
+  const message =
+    (error as { shortMessage?: string; message?: string })?.shortMessage ||
+    (error as { message?: string })?.message ||
+    "Migration failed. Try again.";
+
+  if (
+    message.includes("UnclaimedBalanceOnV2") ||
+    message.includes("0x1293e7bc")
+  ) {
+    return "This wallet still has claimable V2 balances. Claim the legacy royalty, V2 royalty, and pending RICO first, then try migration again.";
+  }
+
+  if (message.includes("NotInV2")) {
+    return "This wallet does not exist in the Rico Matrix V2 contract.";
+  }
+
+  if (message.includes("AlreadyMigrated")) {
+    return "This wallet has already been imported into the current V3 hub.";
+  }
+
+  return message;
+};
+
 const MigrationPanel: React.FC<MigrationPanelProps> = ({
   onMigrationComplete,
 }) => {
@@ -80,6 +104,7 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
     legacyClaimable > BigInt(0) ||
     v2Royalty > BigInt(0) ||
     ricoPending > BigInt(0);
+  const totalOutstandingClaims = legacyClaimable + v2Royalty + ricoPending;
 
   const shouldShow = useMemo(() => {
     const foundInV2 = Boolean(legacyExists);
@@ -111,7 +136,7 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
       setDone(true);
       onMigrationComplete?.();
     } catch (e: any) {
-      setError(e?.message || "Migration failed. Try again.");
+      setError(getMigrationErrorMessage(e));
     } finally {
       setIsMigrating(false);
     }
@@ -140,41 +165,52 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-white/60">Legacy V2 account</span>
-              <span className="text-sm font-medium text-yellow-400">Found</span>
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Migration Summary
+                </p>
+                <p className="mt-1 text-sm text-white/70">
+                  One-time import from Rico Matrix V2 into the live BSC V3 hub.
+                </p>
+              </div>
+              <span className="rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-300">
+                V2 Found
+              </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-white/60">Migrator status</span>
-              <span className="text-sm font-medium text-red-400">Not imported yet</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-white/60">Legacy royalty</span>
-              <span className="text-sm font-medium text-amber-300">{formatAmount(legacyClaimable)} USDT</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-white/60">V2 royalty</span>
-              <span className="text-sm font-medium text-yellow-300">{formatAmount(v2Royalty)} USDT</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-white/60">Pending RICO on V2</span>
-              <span className="text-sm font-medium text-cyan-300">{formatAmount(ricoPending)} RICO</span>
-            </div>
-          </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-yellow-900/20 to-yellow-800/10 border border-yellow-700/30">
-            <h4 className="text-sm font-semibold text-yellow-400 mb-2">Migration contract rules</h4>
-            <ul className="space-y-1 text-xs text-white/70">
-              <li>Migration only succeeds from BNB Smart Chain.</li>
-              <li>The wallet must exist in Rico Matrix V2.</li>
-              <li>Legacy royalty, V2 royalty, and pending RICO must all be zero first.</li>
-            </ul>
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
+                <p className="text-[0.7rem] uppercase tracking-[0.16em] text-white/45">
+                  Legacy royalty
+                </p>
+                <p className="mt-1 text-lg font-semibold text-amber-300">
+                  {formatAmount(legacyClaimable)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-3">
+                <p className="text-[0.7rem] uppercase tracking-[0.16em] text-white/45">
+                  V2 royalty
+                </p>
+                <p className="mt-1 text-lg font-semibold text-yellow-300">
+                  {formatAmount(v2Royalty)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-3">
+                <p className="text-[0.7rem] uppercase tracking-[0.16em] text-white/45">
+                  Pending RICO
+                </p>
+                <p className="mt-1 text-lg font-semibold text-cyan-300">
+                  {formatAmount(ricoPending)}
+                </p>
+              </div>
+            </div>
           </div>
 
           {hasUnclaimedBalances && (
             <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-              This wallet still has claimable value on V2, so the live migrator will revert until those balances are cleared.
+              Migration is blocked because this wallet still has outstanding V2 balances. Total remaining to clear: {formatAmount(totalOutstandingClaims)}.
             </div>
           )}
 
@@ -222,7 +258,7 @@ const MigrationPanel: React.FC<MigrationPanelProps> = ({
           </button>
 
           <div className="mt-3 text-center text-xs text-white/45">
-            This is a one-time contract import from the Rico Matrix V2 ledger into the current V3 hub.
+            Migration only works on BNB Smart Chain after all three V2 balances are zero.
           </div>
         </div>
       </div>

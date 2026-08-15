@@ -19,9 +19,6 @@ export const OMNICHAIN_SYNC_MANAGER_ADDRESS =
 export const BSC_OMNICHAIN_SYNC_MANAGER_ADDRESS =
   (process.env.NEXT_PUBLIC_BSC_OMNICHAIN_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
   "0x534e377bd34794D839C2191260755802B819bF4d";
-export const ROBINHOOD_SYNC_MANAGER_ADDRESS =
-  (process.env.NEXT_PUBLIC_ROBINHOOD_SYNC_MANAGER_ADDRESS as `0x${string}`) ||
-  OMNICHAIN_SYNC_MANAGER_ADDRESS;
 export const RICO_FACTORY_ADDRESS =
   (process.env.NEXT_PUBLIC_RICO_FACTORY_ADDRESS as `0x${string}`) ||
   "0x618d4f7fc0e5cACb1bE8E6b066095327E9084533";
@@ -71,7 +68,6 @@ const BSC_USDC = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 const BSC_USDT = "0x55d398326f99059fF775485246999027B3197955";
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const POLYGON_USDC = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
-const ROBINHOOD_USDG = "0x5fc5360d0400a0fd4f2af552add042d716f1d168";
 
 const ETH_RICO_TOKEN =
   (process.env.NEXT_PUBLIC_ETH_RICO_TOKEN_ADDRESS as `0x${string}`) ||
@@ -82,9 +78,6 @@ const BSC_RICO_TOKEN =
 const BASE_RICO_TOKEN =
   (process.env.NEXT_PUBLIC_BASE_RICO_TOKEN_ADDRESS as `0x${string}`) ||
   "0x757a6ccc3d163455ba76ce253872a6cf38e1e0af";
-const ROBINHOOD_RICO_TOKEN =
-  (process.env.NEXT_PUBLIC_ROBINHOOD_RICO_TOKEN_ADDRESS as `0x${string}`) ||
-  "0xf72a8Cccb5662ce382b0E2E298b013a703E27398";
 const POLYGON_RICO_TOKEN =
   (process.env.NEXT_PUBLIC_POLYGON_RICO_TOKEN_ADDRESS as `0x${string}`) ||
   "0xf72a8Cccb5662ce382b0E2E298b013a703E27398";
@@ -94,7 +87,6 @@ export const RICO_TOKEN_ADDRESSES = {
   56: BSC_RICO_TOKEN,
   137: POLYGON_RICO_TOKEN,
   8453: BASE_RICO_TOKEN,
-  4663: ROBINHOOD_RICO_TOKEN,
 } as const;
 
 export type RicoTokenChainId = keyof typeof RICO_TOKEN_ADDRESSES;
@@ -122,10 +114,6 @@ const POLYGON_PAYMENT_TOKENS: RicoPaymentToken[] = [
   { symbol: "USDC", address: POLYGON_USDC as `0x${string}`, decimals: 6 },
 ];
 
-const ROBINHOOD_PAYMENT_TOKENS: RicoPaymentToken[] = [
-  { symbol: "USDG", address: ROBINHOOD_USDG as `0x${string}`, decimals: 6 },
-];
-
 const resolvePaymentToken = (
   tokens: RicoPaymentToken[],
   override?: `0x${string}`,
@@ -151,11 +139,6 @@ const POLYGON_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
   POLYGON_PAYMENT_TOKENS,
   process.env.NEXT_PUBLIC_POLYGON_PAYMENT_TOKEN_ADDRESS as `0x${string}`,
 );
-const ROBINHOOD_DEFAULT_PAYMENT_TOKEN = resolvePaymentToken(
-  ROBINHOOD_PAYMENT_TOKENS,
-  process.env.NEXT_PUBLIC_ROBINHOOD_PAYMENT_TOKEN_ADDRESS as `0x${string}`,
-);
-
 export const RICO_CHAIN_CONFIG = {
   1: {
     id: 1,
@@ -212,20 +195,6 @@ export const RICO_CHAIN_CONFIG = {
     paymentToken: POLYGON_DEFAULT_PAYMENT_TOKEN.address,
     paymentSymbol: POLYGON_DEFAULT_PAYMENT_TOKEN.symbol,
     paymentDecimals: POLYGON_DEFAULT_PAYMENT_TOKEN.decimals,
-  },
-  4663: {
-    id: 4663,
-    name: "Robinhood Chain",
-    lzEid: 30416,
-    cctpDomain: 0,
-    matrix: RICO_MATRIX_V3_SPOKE_ADDRESS,
-    migrator: RICO_MIGRATOR_ADDRESS,
-    syncManager: ROBINHOOD_SYNC_MANAGER_ADDRESS,
-    contractMode: "spoke",
-    paymentTokens: ROBINHOOD_PAYMENT_TOKENS,
-    paymentToken: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.address,
-    paymentSymbol: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.symbol,
-    paymentDecimals: ROBINHOOD_DEFAULT_PAYMENT_TOKEN.decimals,
   },
 } as const;
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-const NETWORKS = ["Robinhood", "Ethereum", "Polygon", "Base", "BSC"];
+const NETWORKS = ["Ethereum", "Polygon", "Base", "BSC"];
 
 export default function NetworkShowcase() {
   const t = useTranslations("GlobalNetworks");

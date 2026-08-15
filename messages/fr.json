@@ -10,7 +10,7 @@
       ]
     },
     "title": "Apprenez, publiez, gagnez et stakez dans un seul écosystème éducatif Web3",
-    "subtitle": "Rico Matrix combine la propriété de chapitres, la formation en IA et en marketing, l’édition dans une bibliothèque, les royalties communautaires, les airdrops et le staking. Achetez des chapitres sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain : votre accès se synchronise sur tous les réseaux pris en charge.",
+    "subtitle": "Rico Matrix combine la propriété de chapitres, la formation en IA et en marketing, l’édition dans une bibliothèque, les royalties communautaires, les airdrops et le staking. Achetez des chapitres sur BNB Smart Chain, Ethereum, Base ou Polygon : votre accès se synchronise sur tous les réseaux pris en charge.",
     "activateLevel": "Connecter le portefeuille",
     "joinTelegram": "Rejoindre Telegram",
     "nav": {
@@ -54,7 +54,7 @@
       "time": "Rico Quant Bot sera lancé le vendredi 17 juillet 2026 à 23h00 WAT",
       "badges": {
         "decentralized": "Propriété on-chain des chapitres",
-        "omnichain": "Achetez sur BSC, ETH, Base, Polygon ou Robinhood",
+        "omnichain": "Achetez sur BSC, ETH, Base ou Polygon",
         "earnings": "Gains directs X3 + gains par débordement X6",
         "royalty": "Pool communautaire de royalties & unilevel"
       },
@@ -66,7 +66,7 @@
         "hours": "Heures",
         "mins": "Min",
         "secs": "Sec",
-        "note": "Connectez votre portefeuille sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain pour acheter des chapitres. Votre accès se synchronise sur toutes les chaînes prises en charge."
+        "note": "Connectez votre portefeuille sur BNB Smart Chain, Ethereum, Base ou Polygon pour acheter des chapitres. Votre accès se synchronise sur toutes les chaînes prises en charge."
       }
     },
     "media": {
@@ -113,7 +113,7 @@
     "whyJoin": {
       "kicker": "Pourquoi les lecteurs rejoignent",
       "title": "Plusieurs sources de revenus à partir d’une seule marketplace d’apprentissage.",
-      "subtitle": "RICO MATRIX associe ventes de livres, accès à l’éducation, commissions unilevel, dividendes de royalties, propriété intellectuelle et récompenses RICO — avec désormais des achats de chapitres sur BSC, Ethereum, Base, Polygon et Robinhood Chain qui se synchronisent sur la plateforme.",
+      "subtitle": "RICO MATRIX associe ventes de livres, accès à l’éducation, commissions unilevel, dividendes de royalties, propriété intellectuelle et récompenses RICO — avec désormais des achats de chapitres sur BSC, Ethereum, Base et Polygon qui se synchronisent sur la plateforme.",
       "features": {
         "spillovers": {
           "kicker": "Débordements",
@@ -135,12 +135,12 @@
     "howItWorks": {
       "kicker": "Comment ça fonctionne",
       "title": "Trois étapes pour commencer à apprendre et à gagner.",
-      "subtitle": "RICO MATRIX est un contrat de bibliothèque auto-exécutable avec accès aux chapitres multi-chaînes. Achetez sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain, et la plateforme synchronise votre continuité de chapitres sur toutes les chaînes prises en charge.",
+      "subtitle": "RICO MATRIX est un contrat de bibliothèque auto-exécutable avec accès aux chapitres multi-chaînes. Achetez sur BNB Smart Chain, Ethereum, Base ou Polygon, et la plateforme synchronise votre continuité de chapitres sur toutes les chaînes prises en charge.",
       "steps": {
         "step1": {
           "index": "1",
           "title": "Connectez-vous sur une chaîne prise en charge",
-          "description": "Utilisez Trust Wallet, SafePal, MetaMask, TokenPocket, OKX ou tout autre portefeuille compatible sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain. Gardez assez de gas natif sur la chaîne choisie et le token de paiement pris en charge pour votre chapitre."
+          "description": "Utilisez Trust Wallet, SafePal, MetaMask, TokenPocket, OKX ou tout autre portefeuille compatible sur BNB Smart Chain, Ethereum, Base ou Polygon. Gardez assez de gas natif sur la chaîne choisie et le token de paiement pris en charge pour votre chapitre."
         },
         "step2": {
           "index": "2",
@@ -176,7 +176,7 @@
     "partners": {
       "kicker": "Partenaires stratégiques",
       "title": "Adopté par les principales infrastructures Web3.",
-      "subtitle": "RICO MATRIX s’intègre aux outils Web3 les plus utilisés et prend désormais en charge les achats de chapitres sur BNB Smart Chain, Ethereum, Base, Polygon et Robinhood Chain."
+      "subtitle": "RICO MATRIX s’intègre aux outils Web3 les plus utilisés et prend désormais en charge les achats de chapitres sur BNB Smart Chain, Ethereum, Base et Polygon."
     },
     "unilevel": {
       "kicker": "Échelle de lecteurs sur 12 niveaux",
@@ -303,7 +303,7 @@
     "cta": {
       "kicker": "Commencez votre parcours",
       "title": "Prêt à ouvrir votre premier chapitre ?",
-      "description": "Préparez votre portefeuille sur BNB Smart Chain, Ethereum, Base, Polygon ou Robinhood Chain, commencez au Chapitre 1 — ou positionnez-vous plus haut au Chapitre 9 et au-delà — et amenez au moins trois lecteurs sérieux. Les achats de chapitres se synchronisent sur toutes les chaînes prises en charge.",
+      "description": "Préparez votre portefeuille sur BNB Smart Chain, Ethereum, Base ou Polygon, commencez au Chapitre 1 — ou positionnez-vous plus haut au Chapitre 9 et au-delà — et amenez au moins trois lecteurs sérieux. Les achats de chapitres se synchronisent sur toutes les chaînes prises en charge.",
       "disclaimer": "Rappel : ceci ne constitue pas un conseil en investissement. Faites toujours vos propres recherches avant d’interagir avec un smart contract ou un système DeFi."
     },
     "footer": {
@@ -348,7 +348,7 @@
     "ecosystem": {
       "kicker": "Vue d’ensemble de l’écosystème",
       "title": "Tout ce qui se trouve dans la plateforme Rico Matrix",
-      "subtitle": "Plus qu’une marketplace de chapitres, Rico Matrix est une plateforme learn-to-earn construite autour d’un accès synchronisé aux chapitres sur BSC, Ethereum, Base, Polygon et Robinhood Chain, ainsi que la publication, les royalties communautaires, les airdrops et le staking.",
+      "subtitle": "Plus qu’une marketplace de chapitres, Rico Matrix est une plateforme learn-to-earn construite autour d’un accès synchronisé aux chapitres sur BSC, Ethereum, Base et Polygon, ainsi que la publication, les royalties communautaires, les airdrops et le staking.",
       "cards": {
         "skills": {
           "kicker": "Centre de compétences",

@@ -7,7 +7,6 @@ const NATIVE_PRICE_IDS: Record<number, string> = {
   56: "binancecoin",
   137: "polygon-ecosystem-token",
   8453: "ethereum",
-  4663: "ethereum",
 };
 
 export async function GET(request: NextRequest) {

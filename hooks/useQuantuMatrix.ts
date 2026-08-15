@@ -2064,7 +2064,10 @@ export const useQuantuMatrix = () => {
       let errorMessage = "Failed to update account";
       if (error?.message?.includes("rejected") || error?.code === 4001) {
         errorMessage = "Transaction was rejected in your wallet";
-      } else if (error?.message?.includes("UnclaimedBalanceOnV2")) {
+      } else if (
+        error?.message?.includes("UnclaimedBalanceOnV2") ||
+        error?.message?.includes("0x1293e7bc")
+      ) {
         errorMessage = "Claim your legacy royalty, V2 royalty, and pending RICO on V2 before migrating.";
       } else if (error?.message?.includes("AlreadyMigrated")) {
         errorMessage = "Account is already updated";

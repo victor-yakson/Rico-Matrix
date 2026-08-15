@@ -26,8 +26,7 @@ function isSupportedChainId(value: unknown): value is number {
     chainId === 1 ||
     chainId === 56 ||
     chainId === 137 ||
-    chainId === 8453 ||
-    chainId === 4663
+    chainId === 8453
   );
 }
 
