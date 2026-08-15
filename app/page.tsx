@@ -62,6 +62,7 @@ export default function Dashboard() {
     refetchGlobalSummary,
     refetchGlobalRicoFarming,
     migrationAndRoyaltyUI,
+    ricoPending,
     activeChain,
     isHubChain,
     dataScopeLabel,
@@ -244,9 +245,8 @@ export default function Dashboard() {
     parseFloat(migrationAndRoyaltyUI.v2Claimable) > 0;
   const v2ClaimableAmount = migrationAndRoyaltyUI?.v2Claimable || "0.00";
   const legacyClaimableAmount = migrationAndRoyaltyUI?.legacyClaimable || "0.00";
-  const pendingRicoAmount = userData?.migrationData?.hasV1
-    ? userData?.ricoPending || "0.00"
-    : "0.00";
+  const pendingRicoAmount =
+    userData?.migrationData?.hasV1 ? ricoPending || "0.00" : "0.00";
   const totalLegacyBlockerAmount =
     parseFloat(legacyClaimableAmount || "0") +
     parseFloat(v2ClaimableAmount || "0") +
