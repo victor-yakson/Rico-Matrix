@@ -50,6 +50,8 @@ export default function Dashboard() {
     buyChapter,
     claimRoyalty,
     claimRoyaltyV2,
+    claimLegacyRoyalty,
+    claimLegacyPendingRico,
     migrateSelf,
     claimRico,
     fetchTrack1Matrix,
@@ -195,8 +197,25 @@ export default function Dashboard() {
     setIsLegacyActionRunning(true);
 
     try {
+      const legacyClaimable = parseFloat(legacyClaimableAmount || "0");
+      const pendingLegacyRico = parseFloat(pendingRicoAmount || "0");
+
+      if (legacyClaimable > 0) {
+        const hash = await claimLegacyRoyalty();
+        if (hash) {
+          setCurrentTxHash(hash);
+        }
+      }
+
       if (canClaimRoyaltyV2) {
         const hash = await claimRoyaltyV2();
+        if (hash) {
+          setCurrentTxHash(hash);
+        }
+      }
+
+      if (pendingLegacyRico > 0) {
+        const hash = await claimLegacyPendingRico();
         if (hash) {
           setCurrentTxHash(hash);
         }
@@ -366,21 +385,21 @@ export default function Dashboard() {
           <div className="mx-auto mb-8 max-w-4xl text-center md:mb-10 lg:mb-12">
             <p className="theme-kicker justify-center mb-3">
               {dashboardState === "legacy"
-                ? "LEGACY ACCOUNT"
+                ? "DASHBOARD ACCESS"
                 : dashboardState === "register"
                   ? "WELCOME TO RICO MATRIX"
                   : t("header.subtitle")}
             </p>
             <h1 className="theme-title mb-3 text-3xl md:text-4xl">
               {dashboardState === "legacy"
-                ? "Complete Your Dashboard Access"
+                ? "Complete Account Access"
                 : dashboardState === "register"
                   ? "Join RICO Matrix"
                   : t("header.title")}
             </h1>
             <p className="theme-copy max-w-2xl mx-auto text-sm md:text-base">
               {dashboardState === "legacy"
-                ? "We found a legacy Rico Matrix account for this wallet. Clear any remaining V2 balance requirements, then continue into your refreshed dashboard."
+                ? "We found an earlier Rico Matrix account for this wallet. Continue below to unlock the latest dashboard access for this account."
                 : dashboardState === "register"
                   ? "Start your journey with RICO Matrix and unlock earning opportunities"
                   : t("header.description")}
@@ -512,39 +531,11 @@ export default function Dashboard() {
                   Continue to Dashboard
                 </h2>
                 <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-300">
-                  The V3 migrator only succeeds after every V2 balance blocker is cleared. This includes legacy royalty, V2 royalty, and pending RICO.
+                  We will verify this wallet, clear any eligible legacy step automatically, and then refresh the latest dashboard state.
                 </p>
-                <div className="mt-5 rounded-2xl border border-yellow-400/20 bg-yellow-500/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-yellow-100/80">
-                    Outstanding V2 balances blocking migration
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-yellow-100">
-                    {totalLegacyBlockerAmount.toFixed(2)}
-                  </p>
-                  <div className="mt-3 grid gap-2 text-left text-sm text-yellow-50/90 sm:grid-cols-3">
-                    <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                      <p className="text-[0.65rem] uppercase tracking-[0.14em] text-yellow-100/65">
-                        Legacy royalty
-                      </p>
-                      <p className="mt-1 font-semibold">{parseFloat(legacyClaimableAmount).toFixed(2)} USDT</p>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                      <p className="text-[0.65rem] uppercase tracking-[0.14em] text-yellow-100/65">
-                        V2 royalty
-                      </p>
-                      <p className="mt-1 font-semibold">{parseFloat(v2ClaimableAmount).toFixed(2)} USDT</p>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                      <p className="text-[0.65rem] uppercase tracking-[0.14em] text-yellow-100/65">
-                        Pending RICO
-                      </p>
-                      <p className="mt-1 font-semibold">{parseFloat(pendingRicoAmount).toFixed(2)} RICO</p>
-                    </div>
-                  </div>
-                </div>
                 {hasOutstandingLegacyBlocker ? (
                   <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-                    Migration is still blocked. Claim every non-zero balance above first, then continue to the dashboard.
+                    This account still has an unresolved legacy requirement, so dashboard access is temporarily unavailable. Clear any remaining legacy claim or contact support before continuing.
                   </div>
                 ) : null}
                 {legacyActionChecked ? (
@@ -556,18 +547,16 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={handleLegacyDashboardContinue}
-                    disabled={isProcessingRoyalty || hasOutstandingLegacyBlocker}
+                    disabled={isProcessingRoyalty}
                     className="theme-button-primary justify-center px-5 py-3 text-sm"
                   >
                     {isProcessingRoyalty
-                      ? canClaimRoyaltyV2
-                        ? "Claiming and checking dashboard..."
-                        : "Checking dashboard..."
+                      ? "Processing legacy account..."
                       : hasOutstandingLegacyBlocker
-                        ? "Claim remaining V2 balances first"
-                      : canClaimRoyaltyV2
-                        ? "Process Royalty & Go to Dashboard"
-                        : "Go to Dashboard"}
+                        ? "Claim pending balances & continue"
+                        : canClaimRoyaltyV2
+                          ? "Process Royalty & Go to Dashboard"
+                          : "Go to Dashboard"}
                   </button>
                 </div>
               </div>

@@ -2061,20 +2061,21 @@ export const useQuantuMatrix = () => {
     } catch (error: any) {
       console.error("Error preparing dashboard access:", error);
 
-      let errorMessage = "Failed to update account";
+      let errorMessage = "We could not complete dashboard access for this wallet.";
       if (error?.message?.includes("rejected") || error?.code === 4001) {
         errorMessage = "Transaction was rejected in your wallet";
       } else if (
         error?.message?.includes("UnclaimedBalanceOnV2") ||
         error?.message?.includes("0x1293e7bc")
       ) {
-        errorMessage = "Claim your legacy royalty, V2 royalty, and pending RICO on V2 before migrating.";
+        errorMessage =
+          "This wallet still has unresolved legacy account requirements. Please clear any remaining legacy claims or contact support before continuing.";
       } else if (error?.message?.includes("AlreadyMigrated")) {
-        errorMessage = "Account is already updated";
+        errorMessage = "This wallet already has dashboard access.";
       } else if (error?.message?.includes("NotInV2")) {
-        errorMessage = "This wallet was not found in the Rico Matrix V2 contract.";
+        errorMessage = "This wallet could not be matched to a legacy dashboard record.";
       } else if (error?.message?.includes("V2CallFailed")) {
-        errorMessage = "The Rico Matrix V2 contract could not return this wallet data.";
+        errorMessage = "We could not verify the legacy dashboard record for this wallet right now.";
       } else if (error?.message?.includes("ZeroAddress")) {
         errorMessage = "Wallet address is missing. Please reconnect your wallet";
       } else if (error?.message?.includes("Reentrancy")) {
@@ -2088,7 +2089,7 @@ export const useQuantuMatrix = () => {
         errorMessage = "Transaction failed on-chain";
       }
 
-      toast.error("Account Update Failed", {
+      toast.error("Dashboard Access Unavailable", {
         id: toastId,
         description: errorMessage,
         duration: 7000,
@@ -2113,13 +2114,13 @@ export const useQuantuMatrix = () => {
       const toastId = "claim-legacy-royalty";
 
       try {
-        const minCheckAmount = amount
+        const availableAmount = amount
           ? Number(amount)
           : toUsdtNumber(legacyClaimable);
-        if (minCheckAmount < MIN_ROYALTY_USDT) {
+        if (availableAmount <= 0) {
           toast.error("Claim Failed", {
             id: toastId,
-            description: `Minimum claim is ${MIN_ROYALTY_USDT} USDT.`,
+            description: "No legacy royalty is available to claim.",
             duration: 5000,
           });
           return;
@@ -2217,6 +2218,116 @@ export const useQuantuMatrix = () => {
       legacyV2Configured,
       legacyV2Contract,
       legacyClaimable,
+      refetchMigrationAndRoyaltyUI,
+      refetchUserData,
+    ]
+  );
+
+  const claimLegacyPendingRico = useCallback(
+    async (amount?: string) => {
+      const toastId = "claim-legacy-rico";
+
+      try {
+        const available = amount ? Number(amount) : toUsdtNumber(ricoPending);
+        if (available <= 0) {
+          toast.error("Legacy RICO Claim Failed", {
+            id: toastId,
+            description: "No pending legacy RICO is available to claim.",
+            duration: 5000,
+          });
+          return;
+        }
+
+        setLoading(true);
+
+        if (!publicClient) {
+          throw new Error(
+            "Wallet client not available. Please connect your wallet."
+          );
+        }
+
+        if (!legacyV2Configured) {
+          throw new Error("Legacy V2 contract is not configured.");
+        }
+
+        const claimAmount = amount ? parseUnits(amount, 18) : BigInt(0);
+
+        toast.info("Claiming Legacy RICO...", {
+          id: toastId,
+          description: amount
+            ? `Claiming ${amount} legacy RICO tokens`
+            : "Claiming all available legacy RICO tokens",
+          duration: 10000,
+        });
+
+        const hash = await writeContractAsync({
+          ...legacyV2Contract,
+          functionName: "claimRico",
+          args: [claimAmount],
+        });
+
+        toast.loading("Legacy RICO Claim Submitted!", {
+          id: toastId,
+          description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status === "success") {
+          toast.success("Legacy RICO Claimed!", {
+            id: toastId,
+            description: "Successfully claimed pending legacy RICO.",
+            duration: 5000,
+          });
+
+          setTimeout(() => {
+            refetchRicoPending();
+            refetchMigrationAndRoyaltyUI();
+            refetchUserData({ showToast: false });
+          }, 2000);
+        } else {
+          throw new Error("Legacy RICO claim transaction failed on-chain");
+        }
+
+        return hash;
+      } catch (error: any) {
+        console.error("Error claiming legacy RICO:", error);
+
+        let errorMessage = "Failed to claim legacy RICO";
+        if (error?.message?.includes("rejected") || error?.code === 4001) {
+          errorMessage = "Transaction was rejected in your wallet";
+        } else if (error?.message?.includes("NoRicoToClaim")) {
+          errorMessage = "No pending legacy RICO is available to claim";
+        } else if (error?.message?.includes("not configured")) {
+          errorMessage = "Legacy V2 contract is not configured";
+        } else if (error?.message?.includes("on-chain")) {
+          errorMessage = "Legacy RICO claim transaction failed on-chain";
+        } else if (error?.message?.includes("Wallet client not available")) {
+          errorMessage =
+            "Wallet not connected. Please connect your wallet first.";
+        }
+
+        toast.error("Legacy RICO Claim Failed", {
+          id: toastId,
+          description: errorMessage,
+          duration: 7000,
+        });
+
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      writeContractAsync,
+      publicClient,
+      legacyV2Configured,
+      legacyV2Contract,
+      ricoPending,
+      refetchRicoPending,
       refetchMigrationAndRoyaltyUI,
       refetchUserData,
     ]
@@ -2572,6 +2683,7 @@ export const useQuantuMatrix = () => {
     buyChapterBatch,
     migrateSelf,
     claimLegacyRoyalty,
+    claimLegacyPendingRico,
     claimRico,
     claimRoyaltyV2,
     claimRoyalty,
