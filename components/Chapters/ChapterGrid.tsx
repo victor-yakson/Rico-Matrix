@@ -41,6 +41,10 @@ const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
 const WALLET_CONFIRM_TIMEOUT_MS = 45000;
 const FALLBACK_REFERRER = "0xd7e5a3c00b7871f57aeff293f1844db466260f4f" as const;
 const REFERRAL_STORAGE_KEY = "quantumatrix_referral_address";
+const READER_NOT_REGISTERED_SELECTOR = "0x78b41a79";
+const OUT_OF_SEQUENCE_SELECTOR = "0xbbd8e55a";
+const INVALID_AMOUNT_SELECTOR = "0x2c5211c6";
+const TOKEN_NOT_SUPPORTED_SELECTOR = "0x3dd1b305";
 
 const toBigIntSafe = (value: unknown): bigint => {
   try {
@@ -100,6 +104,18 @@ const formatTxError = (error: unknown, fallback: string) => {
     fallback;
 
   if (message.includes("execution reverted")) {
+    if (message.includes(READER_NOT_REGISTERED_SELECTOR)) {
+      return "Register your account first before buying later chapters.";
+    }
+    if (message.includes(OUT_OF_SEQUENCE_SELECTOR)) {
+      return "Buy the next unlocked chapter in sequence first.";
+    }
+    if (message.includes(INVALID_AMOUNT_SELECTOR)) {
+      return "The contract rejected the amount for this purchase.";
+    }
+    if (message.includes(TOKEN_NOT_SUPPORTED_SELECTOR)) {
+      return "That payment token is not supported on the selected route.";
+    }
     if (message.includes("ReaderNotRegistered")) {
       return "Register your account first before buying later chapters.";
     }
@@ -423,6 +439,64 @@ export const ChapterGrid = () => {
     }
   };
 
+  const simulateHubWrite = async (
+    functionName:
+      | "joinLibraryHubWithPermit2"
+      | "buyChapterBatchHub"
+      | "buyChapterBatchHubWithPermit2",
+    args:
+      | readonly [`0x${string}`, number, number, bigint]
+      | readonly [`0x${string}`, `0x${string}`, bigint, bigint, bigint, `0x${string}`]
+      | readonly [`0x${string}`, number, number, number, bigint, bigint, bigint, `0x${string}`],
+  ) => {
+    if (!publicClient || !address) {
+      throw new Error("Wallet client not available. Please connect your wallet.");
+    }
+
+    if (functionName === "buyChapterBatchHub") {
+      await publicClient.simulateContract({
+        ...contractConfig,
+        account: address,
+        functionName,
+        args: args as readonly [`0x${string}`, number, number, bigint],
+      });
+      return;
+    }
+
+    if (functionName === "joinLibraryHubWithPermit2") {
+      await publicClient.simulateContract({
+        ...contractConfig,
+        account: address,
+        functionName,
+        args: args as readonly [
+          `0x${string}`,
+          `0x${string}`,
+          bigint,
+          bigint,
+          bigint,
+          `0x${string}`,
+        ],
+      });
+      return;
+    }
+
+    await publicClient.simulateContract({
+      ...contractConfig,
+      account: address,
+      functionName,
+      args: args as readonly [
+        `0x${string}`,
+        number,
+        number,
+        number,
+        bigint,
+        bigint,
+        bigint,
+        `0x${string}`,
+      ],
+    });
+  };
+
   const getPurchaseState = (track: number, chapter: number) => {
     const unlocked = track === 1
       ? userData?.track1Unlocked || 0
@@ -684,6 +758,14 @@ export const ChapterGrid = () => {
           id: toastId,
           description: "Your Permit2 signature is ready. Confirm the registration transaction now.",
         });
+        await simulateHubWrite("joinLibraryHubWithPermit2", [
+          resolvedPaymentToken.address,
+          effectiveReferralAddress as `0x${string}`,
+          permit.permitAmount,
+          permit.permitNonce,
+          permit.deadline,
+          permit.signature,
+        ]);
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -771,6 +853,16 @@ export const ChapterGrid = () => {
           id: toastId,
           description: "Your Permit2 signature is ready. Confirm the hub purchase transaction now.",
         });
+        await simulateHubWrite("buyChapterBatchHubWithPermit2", [
+          resolvedPaymentToken.address,
+          track,
+          startChapter,
+          endChapter,
+          permit.permitAmount,
+          permit.permitNonce,
+          permit.deadline,
+          permit.signature,
+        ]);
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -792,6 +884,12 @@ export const ChapterGrid = () => {
           id: toastId,
           description: "Approve the chapter purchase transaction on the BSC hub.",
         });
+        await simulateHubWrite("buyChapterBatchHub", [
+          resolvedPaymentToken.address,
+          track,
+          startChapter,
+          BigInt(endChapter),
+        ]);
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
