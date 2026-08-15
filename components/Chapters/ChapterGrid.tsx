@@ -39,6 +39,7 @@ type PaymentMode = "approve" | "permit2";
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
 const WALLET_CONFIRM_TIMEOUT_MS = 45000;
+const SIMULATION_TIMEOUT_MS = 12000;
 const FALLBACK_REFERRER = "0xd7e5a3c00b7871f57aeff293f1844db466260f4f" as const;
 const REFERRAL_STORAGE_KEY = "quantumatrix_referral_address";
 const READER_NOT_REGISTERED_SELECTOR = "0x78b41a79";
@@ -88,6 +89,29 @@ const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => 
             ),
           );
         }, WALLET_CONFIRM_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+};
+
+const withSimulationTimeout = async <T,>(request: Promise<T>): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(
+            new Error(
+              "We could not validate this purchase quickly enough. Reopen the wallet browser and try again.",
+            ),
+          );
+        }, SIMULATION_TIMEOUT_MS);
       }),
     ]);
   } finally {
@@ -149,6 +173,10 @@ const formatTxError = (error: unknown, fallback: string) => {
 
   if (message.includes("insufficient")) {
     return "Your wallet does not have enough balance or allowance for this transaction.";
+  }
+
+  if (message.toLowerCase().includes("could not validate this purchase quickly enough")) {
+    return "The wallet browser did not finish validating the purchase. Reopen the wallet browser and try again.";
   }
 
   return message;
@@ -454,17 +482,17 @@ export const ChapterGrid = () => {
     }
 
     if (functionName === "buyChapterBatchHub") {
-      await publicClient.simulateContract({
+      await withSimulationTimeout(publicClient.simulateContract({
         ...contractConfig,
         account: address,
         functionName,
         args: args as readonly [`0x${string}`, number, number, bigint],
-      });
+      }));
       return;
     }
 
     if (functionName === "joinLibraryHubWithPermit2") {
-      await publicClient.simulateContract({
+      await withSimulationTimeout(publicClient.simulateContract({
         ...contractConfig,
         account: address,
         functionName,
@@ -476,11 +504,11 @@ export const ChapterGrid = () => {
           bigint,
           `0x${string}`,
         ],
-      });
+      }));
       return;
     }
 
-    await publicClient.simulateContract({
+    await withSimulationTimeout(publicClient.simulateContract({
       ...contractConfig,
       account: address,
       functionName,
@@ -494,7 +522,7 @@ export const ChapterGrid = () => {
         bigint,
         `0x${string}`,
       ],
-    });
+    }));
   };
 
   const getPurchaseState = (track: number, chapter: number) => {
@@ -754,9 +782,9 @@ export const ChapterGrid = () => {
           description: "Your wallet will ask for a Permit2 signature before the join transaction.",
         });
         const permit = await signPermit2(requestedAmount);
-        toast.loading("Confirm registration in wallet", {
+        toast.loading("Validating registration", {
           id: toastId,
-          description: "Your Permit2 signature is ready. Confirm the registration transaction now.",
+          description: "Checking the join transaction before opening your wallet prompt.",
         });
         await simulateHubWrite("joinLibraryHubWithPermit2", [
           resolvedPaymentToken.address,
@@ -766,6 +794,10 @@ export const ChapterGrid = () => {
           permit.deadline,
           permit.signature,
         ]);
+        toast.loading("Confirm registration in wallet", {
+          id: toastId,
+          description: "Validation passed. Confirm the registration transaction now.",
+        });
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -849,9 +881,9 @@ export const ChapterGrid = () => {
           description: "Your wallet will ask for a Permit2 signature before the hub purchase transaction.",
         });
         const permit = await signPermit2(requestedAmount);
-        toast.loading("Confirm hub purchase in wallet", {
+        toast.loading("Validating hub purchase", {
           id: toastId,
-          description: "Your Permit2 signature is ready. Confirm the hub purchase transaction now.",
+          description: "Checking the hub purchase before opening your wallet prompt.",
         });
         await simulateHubWrite("buyChapterBatchHubWithPermit2", [
           resolvedPaymentToken.address,
@@ -863,6 +895,10 @@ export const ChapterGrid = () => {
           permit.deadline,
           permit.signature,
         ]);
+        toast.loading("Confirm hub purchase in wallet", {
+          id: toastId,
+          description: "Validation passed. Confirm the hub purchase transaction now.",
+        });
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
@@ -880,9 +916,9 @@ export const ChapterGrid = () => {
           }),
         );
       } else {
-        toast.loading("Confirm hub purchase in wallet", {
+        toast.loading("Validating hub purchase", {
           id: toastId,
-          description: "Approve the chapter purchase transaction on the BSC hub.",
+          description: "Checking the hub purchase before opening your wallet prompt.",
         });
         await simulateHubWrite("buyChapterBatchHub", [
           resolvedPaymentToken.address,
@@ -890,6 +926,10 @@ export const ChapterGrid = () => {
           startChapter,
           BigInt(endChapter),
         ]);
+        toast.loading("Confirm hub purchase in wallet", {
+          id: toastId,
+          description: "Validation passed. Approve the chapter purchase transaction on the BSC hub.",
+        });
         hash = await withWalletConfirmTimeout(
           writeContractAsync({
             ...contractConfig,
