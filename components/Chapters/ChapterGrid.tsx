@@ -2,15 +2,42 @@
 
 import { useQuantuMatrix } from "../../hooks/useQuantuMatrix";
 import { ChapterCard } from "./ChapterCard";
-import { CHAPTER_NAMES } from "../../utils/constants";
-import { useEffect, useState } from "react";
-import { formatUnits } from "viem";
+import {
+  CHAPTER_NAMES,
+  RICO_CHAIN_CONFIG,
+  USDT_ABI,
+} from "../../utils/constants";
+import { useEffect, useMemo, useState } from "react";
+import { formatUnits, parseUnits } from "viem";
+import { toast } from "sonner";
+import {
+  useAccount,
+  usePublicClient,
+  useWalletClient,
+  useWriteContract,
+} from "wagmi";
 import { useTranslations } from "next-intl";
-import { useAccount } from "wagmi";
 
 type MatrixChapterState = {
   blocked?: boolean;
 };
+
+type FeeBreakdown = {
+  totalUsd: string;
+  tokenAmount: string;
+  lzFee: string;
+  bridgeFee: string;
+  totalNativeFee: string;
+  hubToken?: string;
+  rail?: number;
+  routeLabel: string;
+};
+
+type PurchaseRoute = "auto" | "hub" | "spoke";
+type PaymentMode = "approve" | "permit2";
+
+const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
+const WALLET_CONFIRM_TIMEOUT_MS = 45000;
 
 const toBigIntSafe = (value: unknown): bigint => {
   try {
@@ -21,30 +48,88 @@ const toBigIntSafe = (value: unknown): bigint => {
   }
 };
 
+const formatNativeFee = (value: bigint) => {
+  try {
+    return formatUnits(value, 18);
+  } catch {
+    return "0";
+  }
+};
+
+const rawAmountFrom18 = (amount: bigint, decimals: number) => {
+  if (decimals === 18) return amount;
+  if (decimals < 18) return amount / BigInt(10 ** (18 - decimals));
+  return amount * BigInt(10 ** (decimals - 18));
+};
+
+const buildPermitNonce = () => {
+  const random = crypto.getRandomValues(new Uint32Array(2));
+  return (BigInt(random[0]) << BigInt(32)) + BigInt(random[1]) + BigInt(Date.now());
+};
+
+const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(
+            new Error(
+              "Wallet confirmation did not open. Please reopen your wallet and try again.",
+            ),
+          );
+        }, WALLET_CONFIRM_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+};
+
 export const ChapterGrid = () => {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
   const {
     userData,
-    buyChapter,
-    buyChapterBatch,
-    approveUsdt,
     loading,
     chapterPrices,
     usdtAllowance,
     usdtBalance,
     paymentTokenSymbol,
     paymentTokenMaxAllowance,
-    broadcastNativeFeeDisplay,
-    broadcastNativeFeeUsd,
-    nativePriceLoading,
     paymentTokens,
     selectedPaymentTokenAddress,
     setSelectedPaymentTokenAddress,
     fetchAllTrack1Chapters,
     fetchAllTrack2Chapters,
-  } = useQuantuMatrix();
+    activeChain,
+    isHubChain,
+    dataScopeLabel,
+    contractConfig,
+    refetchAllData,
+    activePaymentToken,
+  } = useQuantuMatrix() as ReturnType<typeof useQuantuMatrix> & {
+    activePaymentToken?: {
+      symbol: string;
+      address: `0x${string}`;
+      decimals: number;
+    };
+  };
 
-  // Track which chapter is currently being approved
+  const resolvedPaymentToken =
+    activePaymentToken ||
+    paymentTokens?.find(
+      (token) =>
+        token.address.toLowerCase() === selectedPaymentTokenAddress?.toLowerCase(),
+    ) ||
+    paymentTokens?.[0];
+
   const [currentlyApproving, setCurrentlyApproving] = useState<{
     track: number;
     chapter: number;
@@ -56,7 +141,18 @@ export const ChapterGrid = () => {
   const [broadcastAcrossChains, setBroadcastAcrossChains] = useState(false);
   const [track1States, setTrack1States] = useState<Record<number, "active" | "blocked">>({});
   const [track2States, setTrack2States] = useState<Record<number, "active" | "blocked">>({});
+  const [purchaseRoute, setPurchaseRoute] = useState<PurchaseRoute>("auto");
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>("approve");
+  const [feeBreakdown, setFeeBreakdown] = useState<FeeBreakdown | null>(null);
+  const [syncFeeRows, setSyncFeeRows] = useState<Array<{ name: string; eid: number; nativeFee: string }>>([]);
+  const [syncing, setSyncing] = useState(false);
   const t = useTranslations("ChaptersPage.ChapterGrid");
+
+  const resolvedRoute = useMemo<"hub" | "spoke">(() => {
+    if (purchaseRoute === "hub") return "hub";
+    if (purchaseRoute === "spoke") return "spoke";
+    return isHubChain ? "hub" : "spoke";
+  }, [isHubChain, purchaseRoute]);
 
   useEffect(() => {
     const loadChapterStates = async () => {
@@ -105,40 +201,408 @@ export const ChapterGrid = () => {
     userData?.track2Unlocked,
   ]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const quotePurchase = async () => {
+      if (!publicClient || !resolvedPaymentToken) {
+        setFeeBreakdown(null);
+        return;
+      }
+
+      try {
+        if (resolvedRoute === "hub") {
+          const totalUsd = Array.from(
+            { length: Math.max(0, batchEnd - batchStart + 1) },
+            (_, index) => batchStart + index,
+          ).reduce(
+            (total, chapter) => total + toBigIntSafe(getChapterPrice(chapter)),
+            BigInt(0),
+          );
+          const tokenAmount = rawAmountFrom18(totalUsd, resolvedPaymentToken.decimals);
+          if (!cancelled) {
+            setFeeBreakdown({
+              totalUsd: formatUnits(totalUsd, 18),
+              tokenAmount: formatUnits(tokenAmount, resolvedPaymentToken.decimals),
+              lzFee: "0",
+              bridgeFee: "0",
+              totalNativeFee: "0",
+              routeLabel: "Hub settlement on BSC",
+            });
+          }
+          return;
+        }
+
+        if (isHubChain) {
+          if (!cancelled) {
+            setFeeBreakdown(null);
+          }
+          return;
+        }
+
+        const estimate = (await publicClient.readContract({
+          ...contractConfig,
+          functionName: "estimateChapterBuyCost",
+          args: [resolvedPaymentToken.address, batchStart, batchEnd],
+        })) as readonly [bigint, bigint, bigint, bigint, bigint, number, `0x${string}`];
+
+        if (!cancelled) {
+          setFeeBreakdown({
+            totalUsd: formatUnits(estimate[0], 18),
+            tokenAmount: formatUnits(estimate[1], resolvedPaymentToken.decimals),
+            lzFee: formatNativeFee(estimate[2]),
+            bridgeFee: formatNativeFee(estimate[3]),
+            totalNativeFee: formatNativeFee(estimate[4]),
+            rail: Number(estimate[5]),
+            hubToken: estimate[6],
+            routeLabel: `${activeChain.name} spoke settlement`,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to quote purchase fees:", error);
+        if (!cancelled) {
+          setFeeBreakdown(null);
+        }
+      }
+    };
+
+    void quotePurchase();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeChain.name,
+    batchEnd,
+    batchStart,
+    contractConfig,
+    isHubChain,
+    publicClient,
+    resolvedPaymentToken,
+    resolvedRoute,
+  ]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const quoteSyncFees = async () => {
+      if (!publicClient || !isHubChain) {
+        setSyncFeeRows([]);
+        return;
+      }
+
+      try {
+        const targets = Object.values(RICO_CHAIN_CONFIG).filter(
+          (chain) => chain.id !== activeChain.id,
+        );
+        const rows = await Promise.all(
+          targets.map(async (chain) => {
+            const nativeFee = (await publicClient.readContract({
+              ...contractConfig,
+              functionName: "quoteSyncFee",
+              args: [chain.lzEid],
+            })) as bigint;
+            return {
+              name: chain.name,
+              eid: chain.lzEid,
+              nativeFee: formatNativeFee(nativeFee),
+            };
+          }),
+        );
+
+        if (!cancelled) {
+          setSyncFeeRows(rows);
+        }
+      } catch (error) {
+        console.error("Failed to quote sync fees:", error);
+        if (!cancelled) {
+          setSyncFeeRows([]);
+        }
+      }
+    };
+
+    void quoteSyncFees();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeChain.id, contractConfig, isHubChain, publicClient]);
+
+  const handleRouteGuard = () => {
+    if (resolvedRoute === "hub" && !isHubChain) {
+      throw new Error("Switch your wallet to BNB Smart Chain to buy through the hub route.");
+    }
+    if (resolvedRoute === "spoke" && isHubChain) {
+      throw new Error("Switch to Ethereum, Polygon, Base, or another spoke chain to use the spoke route.");
+    }
+  };
+
+  const approveForTarget = async (
+    amount: string,
+    target: "contract" | "permit2",
+    label?: { track: number; chapter: number },
+  ) => {
+    if (!publicClient || !resolvedPaymentToken) {
+      throw new Error("Wallet client not available. Please connect your wallet.");
+    }
+
+    const spender =
+      target === "permit2"
+        ? PERMIT2_ADDRESS
+        : (contractConfig.address as `0x${string}`);
+    const approvalAmount = paymentTokenMaxAllowance || "21000";
+    const amountInUnits = parseUnits(approvalAmount, resolvedPaymentToken.decimals);
+
+    try {
+      if (label) {
+        setCurrentlyApproving(label);
+      }
+      const hash = await withWalletConfirmTimeout(
+        writeContractAsync({
+          address: resolvedPaymentToken.address,
+          abi: USDT_ABI,
+          functionName: "approve",
+          args: [spender, amountInUnits],
+        }),
+      );
+      toast.loading("Approval submitted", {
+        description: `${resolvedPaymentToken.symbol} approval is waiting for confirmation.`,
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+      if (receipt.status !== "success") {
+        throw new Error("Approval failed on-chain.");
+      }
+      toast.success("Approval confirmed", {
+        description:
+          target === "permit2"
+            ? `Permit2 can now pull ${resolvedPaymentToken.symbol} for hub purchases.`
+            : `${resolvedPaymentToken.symbol} is approved for the current contract route.`,
+      });
+      await refetchAllData({ showToast: false });
+      return hash;
+    } finally {
+      if (label) {
+        setCurrentlyApproving(null);
+      }
+    }
+  };
+
+  const signPermit2 = async (requestedAmount: bigint) => {
+    if (!walletClient || !resolvedPaymentToken || !address) {
+      throw new Error("Wallet signing is unavailable. Reconnect your wallet and try again.");
+    }
+
+    const permitAmount = requestedAmount;
+    const permitNonce = buildPermitNonce();
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
+
+    const signature = await walletClient.signTypedData({
+      account: address,
+      domain: {
+        name: "Permit2",
+        chainId: activeChain.id,
+        verifyingContract: PERMIT2_ADDRESS,
+      },
+      primaryType: "PermitTransferFrom",
+      types: {
+        TokenPermissions: [
+          { name: "token", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
+        PermitTransferFrom: [
+          { name: "permitted", type: "TokenPermissions" },
+          { name: "spender", type: "address" },
+          { name: "nonce", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+        ],
+      },
+      message: {
+        permitted: {
+          token: resolvedPaymentToken.address,
+          amount: permitAmount,
+        },
+        spender: contractConfig.address,
+        nonce: permitNonce,
+        deadline,
+      },
+    } as never);
+
+    return {
+      permitAmount,
+      permitNonce,
+      deadline,
+      signature,
+    };
+  };
+
+  const syncAllSpokes = async () => {
+    if (!publicClient || !isHubChain) {
+      throw new Error("Switch to BNB Smart Chain to sync your spoke status.");
+    }
+
+    setSyncing(true);
+    try {
+      for (const target of Object.values(RICO_CHAIN_CONFIG).filter(
+        (chain) => chain.id !== activeChain.id,
+      )) {
+        const nativeFee = (await publicClient.readContract({
+          ...contractConfig,
+          functionName: "quoteSyncFee",
+          args: [target.lzEid],
+        })) as bigint;
+
+        const hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...contractConfig,
+            functionName: "syncUserToSpoke",
+            args: [target.lzEid],
+            value: nativeFee,
+          }),
+        );
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status !== "success") {
+          throw new Error(`Sync to ${target.name} failed on-chain.`);
+        }
+      }
+
+      toast.success("Spoke sync completed", {
+        description: "Your BSC hub status has been pushed to all configured spokes.",
+      });
+      await refetchAllData({ showToast: false });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const executePurchase = async (track: number, startChapter: number, endChapter: number) => {
+    if (!publicClient || !resolvedPaymentToken) {
+      throw new Error("Wallet client not available. Please connect your wallet.");
+    }
+
+    handleRouteGuard();
+
+    const isPermitPurchase = resolvedRoute === "hub" && paymentMode === "permit2";
+
+    let hash: `0x${string}`;
+
+    if (resolvedRoute === "spoke") {
+      const estimate = (await publicClient.readContract({
+        ...contractConfig,
+        functionName: "estimateChapterBuyCost",
+        args: [resolvedPaymentToken.address, startChapter, endChapter],
+      })) as readonly [bigint, bigint, bigint, bigint, bigint, number, `0x${string}`];
+
+      hash = await withWalletConfirmTimeout(
+        writeContractAsync({
+          ...contractConfig,
+          functionName: "buyChapterSpoke",
+          args: [resolvedPaymentToken.address, track, startChapter, endChapter, estimate[2]],
+          value: estimate[4],
+        }),
+      );
+    } else {
+      const totalUsd = Array.from(
+        { length: Math.max(0, endChapter - startChapter + 1) },
+        (_, index) => startChapter + index,
+      ).reduce(
+        (total, chapter) => total + toBigIntSafe(getChapterPrice(chapter)),
+        BigInt(0),
+      );
+      const requestedAmount = rawAmountFrom18(totalUsd, resolvedPaymentToken.decimals);
+
+      if (isPermitPurchase) {
+        const permit = await signPermit2(requestedAmount);
+        hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...contractConfig,
+            functionName: "buyChapterBatchHubWithPermit2",
+            args: [
+              resolvedPaymentToken.address,
+              track,
+              startChapter,
+              endChapter,
+              permit.permitAmount,
+              permit.permitNonce,
+              permit.deadline,
+              permit.signature,
+            ],
+          }),
+        );
+      } else {
+        hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...contractConfig,
+            functionName: "buyChapterBatchHub",
+            args: [resolvedPaymentToken.address, track, startChapter, BigInt(endChapter)],
+          }),
+        );
+      }
+    }
+
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash,
+      confirmations: 1,
+    });
+
+    if (receipt.status !== "success") {
+      throw new Error("Purchase failed on-chain.");
+    }
+
+    if (broadcastAcrossChains && isHubChain) {
+      await syncAllSpokes();
+    } else {
+      await refetchAllData({ showToast: false });
+    }
+
+    return hash;
+  };
+
   const handleBuyChapter = async (track: number, chapter: number) => {
     try {
-      await buyChapter(track, chapter, broadcastAcrossChains);
-    } catch (error) {
+      await executePurchase(track, chapter, chapter);
+      toast.success(`Chapter ${chapter} purchased successfully.`);
+    } catch (error: any) {
       console.error("Purchase failed:", error);
+      toast.error("Purchase failed", {
+        description: error?.message || "The chapter purchase did not complete.",
+      });
     }
   };
 
   const handleApproveUsdt = async (
     amount: string,
     track: number,
-    chapter: number
+    chapter: number,
   ) => {
     try {
-      setCurrentlyApproving({ track, chapter });
-      await approveUsdt(formatUnits(toBigIntSafe(amount), 18));
-    } catch (error) {
+      const target = resolvedRoute === "hub" && paymentMode === "permit2" ? "permit2" : "contract";
+      await approveForTarget(amount, target, { track, chapter });
+    } catch (error: any) {
       console.error("Approval failed:", error);
-    } finally {
-      setCurrentlyApproving(null);
+      toast.error("Approval failed", {
+        description: error?.message || "The approval transaction did not complete.",
+      });
     }
   };
 
   const handleBatchBuy = async () => {
     try {
       setIsBatchBuying(true);
-      await buyChapterBatch(
-        batchTrack,
-        batchStart,
-        batchEnd,
-        broadcastAcrossChains,
-      );
-    } catch (error) {
+      await executePurchase(batchTrack, batchStart, batchEnd);
+      toast.success(`Chapters ${batchStart}-${batchEnd} purchased successfully.`);
+    } catch (error: any) {
       console.error("Batch purchase failed:", error);
+      toast.error("Batch purchase failed", {
+        description: error?.message || "The batch purchase did not complete.",
+      });
     } finally {
       setIsBatchBuying(false);
     }
@@ -152,15 +616,12 @@ export const ChapterGrid = () => {
     return chapterPrices[chapter - 1]?.toString() || "0";
   };
 
-  // Check if user needs to approve USDT for a specific chapter
   const needsApproval = (chapterPrice: string) => {
     if (!chapterPrice || chapterPrice === "0") return false;
 
     try {
       const priceNumber = parseFloat(formatUnits(toBigIntSafe(chapterPrice), 18));
       const allowanceNumber = parseFloat(usdtAllowance || "0");
-
-
       return allowanceNumber < priceNumber;
     } catch (error) {
       console.error("Error checking approval:", error);
@@ -173,7 +634,10 @@ export const ChapterGrid = () => {
     { length: Math.max(0, batchEnd - batchStart + 1) },
     (_, index) => batchStart + index,
   ).reduce((total, chapter) => total + toBigIntSafe(getChapterPrice(chapter)), BigInt(0));
-  const batchNeedsApproval = needsApproval(batchCost.toString());
+  const batchNeedsApproval =
+    resolvedRoute === "hub" && paymentMode === "permit2"
+      ? parseFloat(usdtAllowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
+      : needsApproval(batchCost.toString());
   const batchDisabled =
     isProcessing ||
     isBatchBuying ||
@@ -182,7 +646,6 @@ export const ChapterGrid = () => {
     batchEnd > 12 ||
     batchEnd < batchStart;
 
-  // Check if a specific chapter is being approved
   const isChapterApproving = (track: number, chapter: number) => {
     return (
       currentlyApproving?.track === track &&
@@ -190,9 +653,27 @@ export const ChapterGrid = () => {
     );
   };
 
+  const chapterCount = Math.max(0, batchEnd - batchStart + 1);
+
   return (
     <div className="space-y-8">
-      {/* USDT Balance Info */}
+      <div className="theme-panel-soft rounded-2xl p-4">
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+            Purchase Route
+          </p>
+          <p className="text-base font-semibold text-slate-50">
+            Connected chain: {activeChain.name}
+          </p>
+          <p className="text-sm text-slate-300">
+            {isHubChain
+              ? "You are buying directly on the BSC hub."
+              : `You are buying on the ${activeChain.name} spoke. Your account data is still read from the BSC hub, and successful spoke purchases settle back to the hub automatically.`}
+          </p>
+          <p className="text-xs text-cyan-100/80">Data scope: {dataScopeLabel}</p>
+        </div>
+      </div>
+
       <div className="theme-panel-soft rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -224,7 +705,7 @@ export const ChapterGrid = () => {
           <div>
             <h4 className="text-sm font-semibold text-slate-100">Batch chapter purchase</h4>
             <p className="mt-1 text-xs text-slate-400">
-              Buy continuous chapters in one transaction on the active chain.
+              Buy continuous chapters in one transaction, see the exact route fee, and optionally sync all spokes after a hub purchase.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-6 lg:min-w-[760px]">
@@ -247,6 +728,29 @@ export const ChapterGrid = () => {
               </label>
             )}
             <label className="text-xs text-slate-400">
+              Route
+              <select
+                value={purchaseRoute}
+                onChange={(event) => setPurchaseRoute(event.target.value as PurchaseRoute)}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              >
+                <option value="auto">Auto ({isHubChain ? "hub" : "spoke"})</option>
+                <option value="hub">Hub</option>
+                <option value="spoke">Spoke</option>
+              </select>
+            </label>
+            <label className="text-xs text-slate-400">
+              Payment
+              <select
+                value={paymentMode}
+                onChange={(event) => setPaymentMode(event.target.value as PaymentMode)}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              >
+                <option value="approve">Approve + buy</option>
+                <option value="permit2">Permit2</option>
+              </select>
+            </label>
+            <label className="text-xs text-slate-400">
               Track
               <select
                 value={batchTrack}
@@ -264,7 +768,11 @@ export const ChapterGrid = () => {
                 min={1}
                 max={12}
                 value={batchStart}
-                onChange={(event) => setBatchStart(Number(event.target.value))}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  setBatchStart(next);
+                  if (batchEnd < next) setBatchEnd(next);
+                }}
                 className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               />
             </label>
@@ -272,14 +780,28 @@ export const ChapterGrid = () => {
               To
               <input
                 type="number"
-                min={1}
+                min={batchStart}
                 max={12}
                 value={batchEnd}
                 onChange={(event) => setBatchEnd(Number(event.target.value))}
                 className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               />
             </label>
-            <label className="flex min-h-[58px] cursor-pointer items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 sm:col-span-2">
+            <div className="sm:col-span-6 rounded-xl border border-slate-700 bg-slate-900 px-3 py-3">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Bulk slider</span>
+                <span>{chapterCount} chapter{chapterCount === 1 ? "" : "s"} selected</span>
+              </div>
+              <input
+                type="range"
+                min={batchStart}
+                max={12}
+                value={batchEnd}
+                onChange={(event) => setBatchEnd(Number(event.target.value))}
+                className="mt-3 w-full accent-yellow-400"
+              />
+            </div>
+            <label className="flex min-h-[58px] cursor-pointer items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 sm:col-span-3">
               <input
                 type="checkbox"
                 checked={broadcastAcrossChains}
@@ -290,42 +812,91 @@ export const ChapterGrid = () => {
               />
               <span>
                 <span className="block font-semibold text-slate-100">
-                  Broadcast to all chains
+                  Sync all spokes after hub buy
                 </span>
                 <span className="block text-[0.68rem] text-slate-500">
-                  {nativePriceLoading
-                    ? "Calculating live native sync value..."
-                    : broadcastNativeFeeDisplay
-                      ? `Shows about $${broadcastNativeFeeUsd}; exact value is quoted before sync.`
-                      : "Exact sync value is quoted before confirmation."}
+                  Available only when the final purchase route is the BSC hub.
                 </span>
               </span>
             </label>
             <button
               type="button"
-              onClick={batchNeedsApproval ? () => approveUsdt(formatUnits(batchCost, 18)) : handleBatchBuy}
+              onClick={batchNeedsApproval ? () => approveForTarget(formatUnits(batchCost, 18), resolvedRoute === "hub" && paymentMode === "permit2" ? "permit2" : "contract") : handleBatchBuy}
               disabled={batchDisabled}
-              className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2"
+              className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-3"
             >
               {isBatchBuying
                 ? "Processing..."
                 : batchNeedsApproval
-                  ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"}`
-                  : broadcastAcrossChains
+                  ? resolvedRoute === "hub" && paymentMode === "permit2"
+                    ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"} for Permit2`
+                    : `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"}`
+                  : broadcastAcrossChains && resolvedRoute === "hub"
                     ? `Buy ${batchStart}-${batchEnd} + Sync`
                     : `Buy ${batchStart}-${batchEnd}`}
             </button>
           </div>
         </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-cyan-50">
+            <p className="font-semibold">Fee preview</p>
+            {feeBreakdown ? (
+              <div className="mt-2 space-y-1 text-xs text-cyan-100/85">
+                <p>Route: {feeBreakdown.routeLabel}</p>
+                <p>Total USD value: {Number(feeBreakdown.totalUsd).toFixed(2)}</p>
+                <p>Token pull: {Number(feeBreakdown.tokenAmount).toFixed(6)} {resolvedPaymentToken?.symbol || paymentTokenSymbol}</p>
+                <p>LayerZero fee: {feeBreakdown.lzFee}</p>
+                <p>Bridge fee: {feeBreakdown.bridgeFee}</p>
+                <p>Total native fee: {feeBreakdown.totalNativeFee}</p>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-cyan-100/70">
+                Connect the matching chain for the selected route to fetch an exact quote.
+              </p>
+            )}
+          </div>
+          <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-sm text-yellow-50">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold">Manual sync</p>
+                <p className="mt-1 text-xs text-yellow-100/70">
+                  Use this when your user wants their latest BSC hub status pushed to each spoke manually.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void syncAllSpokes()}
+                disabled={!isHubChain || syncing}
+                className="rounded-xl border border-yellow-400/40 px-3 py-2 text-xs font-semibold text-yellow-100 transition hover:bg-yellow-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {syncing ? "Syncing..." : "Sync All Spokes"}
+              </button>
+            </div>
+            <div className="mt-3 space-y-1 text-xs text-yellow-100/80">
+              {syncFeeRows.length > 0 ? (
+                syncFeeRows.map((row) => (
+                  <p key={row.eid}>
+                    {row.name}: {row.nativeFee} native
+                  </p>
+                ))
+              ) : (
+                <p>Switch to BNB Smart Chain to quote sync gas for each spoke.</p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Track 1 - X3 Matrix */}
       <div>
         <h3 className="text-2xl font-bold text-white mb-6">{t("tracks.x3")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {track1Chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
-            const chapterNeedsApproval = needsApproval(chapterPrice);
+            const chapterNeedsApproval =
+              resolvedRoute === "hub" && paymentMode === "permit2"
+                ? parseFloat(usdtAllowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
+                : needsApproval(chapterPrice);
 
             return (
               <ChapterCard
@@ -349,13 +920,15 @@ export const ChapterGrid = () => {
         </div>
       </div>
 
-      {/* Track 2 - X6 Matrix */}
       <div>
         <h3 className="text-2xl font-bold text-white mb-6">{t("tracks.x6")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {track2Chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
-            const chapterNeedsApproval = needsApproval(chapterPrice);
+            const chapterNeedsApproval =
+              resolvedRoute === "hub" && paymentMode === "permit2"
+                ? parseFloat(usdtAllowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
+                : needsApproval(chapterPrice);
 
             return (
               <ChapterCard
@@ -379,15 +952,16 @@ export const ChapterGrid = () => {
         </div>
       </div>
 
-      {/* Transaction Status */}
-      {(isProcessing || currentlyApproving) && (
+      {(isProcessing || currentlyApproving || syncing) && (
         <div className="fixed bottom-4 right-4 rounded-lg border border-yellow-500/20 bg-[rgba(8,8,8,0.95)] p-4 shadow-lg">
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-400 border-t-transparent"></div>
             <span className="text-sm text-slate-300">
-              {currentlyApproving
-                ? t("transactionStatus.approving")
-                : t("transactionStatus.processing")}
+              {syncing
+                ? "Syncing spoke state..."
+                : currentlyApproving
+                  ? t("transactionStatus.approving")
+                  : t("transactionStatus.processing")}
             </span>
           </div>
         </div>

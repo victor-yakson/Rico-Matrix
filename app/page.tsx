@@ -60,6 +60,9 @@ export default function Dashboard() {
     refetchGlobalSummary,
     refetchGlobalRicoFarming,
     migrationAndRoyaltyUI,
+    activeChain,
+    isHubChain,
+    dataScopeLabel,
   } = useQuantuMatrix();
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
     null,
@@ -395,6 +398,22 @@ export default function Dashboard() {
 
             {dashboardState === "dashboard" && (
               <div className="mx-auto mt-4 max-w-3xl">
+                <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-4 text-left shadow-[0_0_22px_rgba(34,211,238,0.08)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                    Connected Network
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-slate-50">
+                    {activeChain.name}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-300">
+                    {isHubChain
+                      ? "You are on the BSC hub. Account data and transactions are both handled on the hub chain."
+                      : `You are on the ${activeChain.name} spoke. Account data is loaded from the BSC hub, and new purchases/registration run on this connected chain.`}
+                  </p>
+                  <p className="mt-2 text-xs text-cyan-100/80">
+                    Data scope: {dataScopeLabel}
+                  </p>
+                </div>
                 <div className="theme-panel relative overflow-hidden border border-yellow-400/20 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.12),transparent_32%),linear-gradient(180deg,rgba(24,24,32,0.96),rgba(10,10,18,0.98))] px-4 py-4 shadow-[0_0_34px_rgba(234,179,8,0.12)] sm:px-5">
                   <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-yellow-300/70 to-transparent" />
                   <div className="pointer-events-none absolute -right-12 top-6 h-24 w-24 rounded-full bg-yellow-300/10 blur-3xl" />

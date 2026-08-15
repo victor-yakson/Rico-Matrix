@@ -76,7 +76,7 @@ export const RegistrationSection = ({
     paymentTokenAllowance,
     joinCost,
     loading,
-    contractConfig,
+    dashboardContractConfig,
     activeChain,
     paymentTokenSymbol,
     paymentTokenMaxAllowance,
@@ -166,13 +166,14 @@ export const RegistrationSection = ({
   // Wagmi read: only enabled when referral is valid and user is not registered
   const { data: referralExists, isLoading: checkingReferral } = useReadContract(
     {
-      address: contractConfig.address,
-      abi: contractConfig.abi,
-      functionName: activeChain.contractMode === "hub" ? "readers" : "localView",
+      address: dashboardContractConfig.address,
+      abi: dashboardContractConfig.abi,
+      functionName: "readers",
       args:
         effectiveReferralAddress && !userData?.exists
           ? [effectiveReferralAddress as `0x${string}`]
           : undefined,
+      chainId: 56,
       query: { enabled: isReferralValid && !userData?.exists },
     }
   );
@@ -180,9 +181,7 @@ export const RegistrationSection = ({
     ((referralExists as any)?.id ?? (referralExists as any)?.[0] ?? 0).toString()
   );
   const referrerIsRegistered =
-    activeChain.contractMode === "hub"
-      ? referralReaderId > BigInt(0)
-      : Boolean((referralExists as any)?.exists ?? (referralExists as any)?.[4]);
+    referralReaderId > BigInt(0);
 
   // IMPORTANT: Force this into a boolean using Boolean(...)
   const showReferralWarning = Boolean(
