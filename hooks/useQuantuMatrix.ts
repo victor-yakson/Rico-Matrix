@@ -6,6 +6,7 @@ import {
   useWaitForTransactionReceipt,
   usePublicClient,
   useChainId,
+  useWalletClient,
 } from "wagmi";
 import { quantuMatrixContract } from "../utils/contracts";
 import { useState, useCallback, useEffect, useMemo } from "react";
@@ -179,6 +180,10 @@ interface UserData {
   // Migration data
   migrationStatus?: MigrationStatus;
   migrationData?: MigrationData;
+  hubTrack1Unlocked?: number;
+  hubTrack2Unlocked?: number;
+  localTrack1Unlocked?: number;
+  localTrack2Unlocked?: number;
 }
 
 type ChainActivity = {
@@ -223,6 +228,7 @@ export const useQuantuMatrix = () => {
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const hubPublicClient = usePublicClient({ chainId: 56 });
+  const { data: walletClient } = useWalletClient();
   const [loading, setLoading] = useState(false);
   const [nativeUsdPrice, setNativeUsdPrice] = useState<number | null>(null);
   const [nativePriceLoading, setNativePriceLoading] = useState(false);
@@ -1181,6 +1187,10 @@ export const useQuantuMatrix = () => {
         ricoShouldHave: "0",
         ricoSent: "0",
         ricoPending: "0",
+        hubTrack1Unlocked: 0,
+        hubTrack2Unlocked: 0,
+        localTrack1Unlocked: 0,
+        localTrack2Unlocked: 0,
       };
     }
 
@@ -1237,6 +1247,10 @@ export const useQuantuMatrix = () => {
         ricoShouldHave: formatUnitsSafe(shouldHave),
         ricoSent: formatUnitsSafe(sent),
         ricoPending: formatUnitsSafe(pending),
+        hubTrack1Unlocked,
+        hubTrack2Unlocked,
+        localTrack1Unlocked: chainActivity.track1Unlocked,
+        localTrack2Unlocked: chainActivity.track2Unlocked,
       };
     }
 
@@ -1258,6 +1272,10 @@ export const useQuantuMatrix = () => {
       ricoShouldHave: "0",
       ricoSent: "0",
       ricoPending: "0",
+      hubTrack1Unlocked: 0,
+      hubTrack2Unlocked: 0,
+      localTrack1Unlocked: chainActivity.track1Unlocked,
+      localTrack2Unlocked: chainActivity.track2Unlocked,
     };
   };
 
@@ -1681,6 +1699,9 @@ export const useQuantuMatrix = () => {
             "Wallet client not available. Please connect your wallet."
           );
         }
+        if (!address) {
+          throw new Error("Wallet address not available. Please reconnect your wallet.");
+        }
 
         const trackName = track === 1 ? "Track 1 (X3)" : "Track 2 (X6)";
 
@@ -1693,13 +1714,24 @@ export const useQuantuMatrix = () => {
         });
 
         const hash = isHubChain
-          ? await withWalletConfirmTimeout(
-              writeContractAsync({
+          ? await (async () => {
+              if (!walletClient) {
+                throw new Error(
+                  "Wallet client not available. Please reconnect your wallet and try again.",
+                );
+              }
+
+              const { request } = await publicClient.simulateContract({
                 ...activeMatrixContract,
+                account: address,
                 functionName: "buyChapterBatchHub",
                 args: [activePaymentToken.address, track, chapter, BigInt(chapter)],
-              }),
-            )
+              });
+
+              return withWalletConfirmTimeout(
+                walletClient.writeContract(request as ContractFunctionParameters),
+              );
+            })()
           : await (async () => {
               const estimate = (await publicClient.readContract({
                 ...activeMatrixContract,
@@ -1828,6 +1860,7 @@ export const useQuantuMatrix = () => {
       publicClient,
       refetchAllData,
       syncUserToSupportedChains,
+      walletClient,
     ]
   );
 
@@ -1848,6 +1881,9 @@ export const useQuantuMatrix = () => {
             "Wallet client not available. Please connect your wallet."
           );
         }
+        if (!address) {
+          throw new Error("Wallet address not available. Please reconnect your wallet.");
+        }
 
         if (endChapter < startChapter) {
           throw new Error("Invalid chapter range");
@@ -1864,9 +1900,16 @@ export const useQuantuMatrix = () => {
         });
 
         const hash = isHubChain
-          ? await withWalletConfirmTimeout(
-              writeContractAsync({
+          ? await (async () => {
+              if (!walletClient) {
+                throw new Error(
+                  "Wallet client not available. Please reconnect your wallet and try again.",
+                );
+              }
+
+              const { request } = await publicClient.simulateContract({
                 ...activeMatrixContract,
+                account: address,
                 functionName: "buyChapterBatchHub",
                 args: [
                   activePaymentToken.address,
@@ -1874,8 +1917,12 @@ export const useQuantuMatrix = () => {
                   startChapter,
                   BigInt(endChapter),
                 ],
-              }),
-            )
+              });
+
+              return withWalletConfirmTimeout(
+                walletClient.writeContract(request as ContractFunctionParameters),
+              );
+            })()
           : await (async () => {
               const estimate = (await publicClient.readContract({
                 ...activeMatrixContract,
@@ -2003,6 +2050,7 @@ export const useQuantuMatrix = () => {
       publicClient,
       refetchAllData,
       syncUserToSupportedChains,
+      walletClient,
       writeContractAsync,
     ]
   );

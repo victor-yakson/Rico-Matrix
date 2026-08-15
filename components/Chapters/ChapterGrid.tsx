@@ -255,16 +255,47 @@ export const ChapterGrid = () => {
       FALLBACK_REFERRER
     );
   }, [urlReferral]);
+  const resolvedRoute = useMemo<"hub" | "spoke">(() => {
+    if (purchaseRoute === "hub") return "hub";
+    if (purchaseRoute === "spoke") return "spoke";
+    return isHubChain ? "hub" : "spoke";
+  }, [isHubChain, purchaseRoute]);
+  const resolvedUnlockedState = useMemo(() => {
+    const hubTrack1Unlocked = userData?.hubTrack1Unlocked ?? userData?.track1Unlocked ?? 0;
+    const hubTrack2Unlocked = userData?.hubTrack2Unlocked ?? userData?.track2Unlocked ?? 0;
+    const localTrack1Unlocked = userData?.localTrack1Unlocked ?? userData?.track1Unlocked ?? 0;
+    const localTrack2Unlocked = userData?.localTrack2Unlocked ?? userData?.track2Unlocked ?? 0;
+
+    if (resolvedRoute === "hub") {
+      return {
+        track1Unlocked: hubTrack1Unlocked,
+        track2Unlocked: hubTrack2Unlocked,
+      };
+    }
+
+    return {
+      track1Unlocked: localTrack1Unlocked,
+      track2Unlocked: localTrack2Unlocked,
+    };
+  }, [
+    resolvedRoute,
+    userData?.hubTrack1Unlocked,
+    userData?.hubTrack2Unlocked,
+    userData?.localTrack1Unlocked,
+    userData?.localTrack2Unlocked,
+    userData?.track1Unlocked,
+    userData?.track2Unlocked,
+  ]);
   const nextAvailableChapter = useMemo(() => {
     const unlocked = batchTrack === 1
-      ? userData?.track1Unlocked || 0
-      : userData?.track2Unlocked || 0;
+      ? resolvedUnlockedState.track1Unlocked
+      : resolvedUnlockedState.track2Unlocked;
     return Math.min(12, Math.max(1, unlocked + 1));
-  }, [batchTrack, userData?.track1Unlocked, userData?.track2Unlocked]);
+  }, [batchTrack, resolvedUnlockedState]);
   const allChaptersUnlocked = nextAvailableChapter >= 12 && (
     batchTrack === 1
-      ? (userData?.track1Unlocked || 0) >= 12
-      : (userData?.track2Unlocked || 0) >= 12
+      ? resolvedUnlockedState.track1Unlocked >= 12
+      : resolvedUnlockedState.track2Unlocked >= 12
   );
   const maxBatchQuantity = useMemo(
     () => Math.max(0, 12 - nextAvailableChapter + 1),
@@ -272,12 +303,6 @@ export const ChapterGrid = () => {
   );
   const batchStart = nextAvailableChapter;
   const batchEnd = Math.min(12, batchStart + Math.max(0, batchQuantity - 1));
-
-  const resolvedRoute = useMemo<"hub" | "spoke">(() => {
-    if (purchaseRoute === "hub") return "hub";
-    if (purchaseRoute === "spoke") return "spoke";
-    return isHubChain ? "hub" : "spoke";
-  }, [isHubChain, purchaseRoute]);
 
   useEffect(() => {
     const loadChapterStates = async () => {
@@ -528,8 +553,8 @@ export const ChapterGrid = () => {
 
   const getPurchaseState = (track: number, chapter: number) => {
     const unlocked = track === 1
-      ? userData?.track1Unlocked || 0
-      : userData?.track2Unlocked || 0;
+      ? resolvedUnlockedState.track1Unlocked
+      : resolvedUnlockedState.track2Unlocked;
 
     if (!userData?.exists) {
       if (chapter === 1) {
