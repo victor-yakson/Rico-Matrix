@@ -30,6 +30,7 @@ const MIN_ROYALTY_USDT = 0.5;
 const PAYMENT_TOKEN_MAX_ALLOWANCE = "21000";
 const WALLET_CONFIRM_TIMEOUT_MS = 45000;
 const BROADCAST_SYNC_USD_VALUE = 7;
+const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
 
 const withWalletConfirmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -700,6 +701,11 @@ export const useQuantuMatrix = () => {
           },
           {
             ...activePaymentTokenContract,
+            functionName: "allowance",
+            args: [address, PERMIT2_ADDRESS],
+          },
+          {
+            ...activePaymentTokenContract,
             functionName: "balanceOf",
             args: [address],
           },
@@ -714,7 +720,8 @@ export const useQuantuMatrix = () => {
 
   const walletReadsList = (walletReads as any[] | undefined) ?? [];
   const usdtAllowance = walletReadsList[0]?.result;
-  const usdtBalance = walletReadsList[1]?.result;
+  const permit2Allowance = walletReadsList[1]?.result;
+  const usdtBalance = walletReadsList[2]?.result;
 
   const refetchUsdtAllowance = () => refetchWalletReads();
   const refetchUsdtBalance = () => refetchWalletReads();
@@ -2602,6 +2609,9 @@ export const useQuantuMatrix = () => {
   const formattedUsdtAllowance = usdtAllowance
     ? formatUnits(usdtAllowance as bigint, activePaymentToken.decimals)
     : "0";
+  const formattedPermit2Allowance = permit2Allowance
+    ? formatUnits(permit2Allowance as bigint, activePaymentToken.decimals)
+    : "0";
 
   return {
     // Contract interaction methods
@@ -2651,6 +2661,7 @@ export const useQuantuMatrix = () => {
     // Selected payment token data
     paymentTokenBalance: formattedUsdtBalance,
     paymentTokenAllowance: formattedUsdtAllowance,
+    permit2Allowance: formattedPermit2Allowance,
 
     // Legacy aliases used by older components
     usdtBalance: formattedUsdtBalance,

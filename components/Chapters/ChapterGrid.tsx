@@ -17,6 +17,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 
 type MatrixChapterState = {
   blocked?: boolean;
@@ -38,6 +39,8 @@ type PaymentMode = "approve" | "permit2";
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
 const WALLET_CONFIRM_TIMEOUT_MS = 45000;
+const FALLBACK_REFERRER = "0xd7e5a3c00b7871f57aeff293f1844db466260f4f" as const;
+const REFERRAL_STORAGE_KEY = "quantumatrix_referral_address";
 
 const toBigIntSafe = (value: unknown): bigint => {
   try {
@@ -97,6 +100,12 @@ const formatTxError = (error: unknown, fallback: string) => {
     fallback;
 
   if (message.includes("execution reverted")) {
+    if (message.includes("ReaderNotRegistered")) {
+      return "Register your account first before buying later chapters.";
+    }
+    if (message.includes("OutOfSequence")) {
+      return "Buy the next unlocked chapter in sequence first.";
+    }
     if (message.includes("PreviousChapterRequired")) {
       return "You need to buy the next unlocked chapter in sequence.";
     }
@@ -153,13 +162,19 @@ export const ChapterGrid = () => {
     contractConfig,
     refetchAllData,
     activePaymentToken,
+    permit2Allowance,
+    joinLibrary,
   } = useQuantuMatrix() as ReturnType<typeof useQuantuMatrix> & {
     activePaymentToken?: {
       symbol: string;
       address: `0x${string}`;
       decimals: number;
     };
+    permit2Allowance?: string;
+    joinLibrary: (referrer: string) => Promise<`0x${string}`>;
   };
+  const searchParams = useSearchParams();
+  const urlReferral = searchParams.get("ref");
 
   const resolvedPaymentToken =
     activePaymentToken ||
@@ -174,8 +189,7 @@ export const ChapterGrid = () => {
     chapter: number;
   } | null>(null);
   const [batchTrack, setBatchTrack] = useState(1);
-  const [batchStart, setBatchStart] = useState(1);
-  const [batchEnd, setBatchEnd] = useState(3);
+  const [batchQuantity, setBatchQuantity] = useState(1);
   const [isBatchBuying, setIsBatchBuying] = useState(false);
   const [broadcastAcrossChains, setBroadcastAcrossChains] = useState(false);
   const [track1States, setTrack1States] = useState<Record<number, "active" | "blocked">>({});
@@ -186,6 +200,17 @@ export const ChapterGrid = () => {
   const [syncFeeRows, setSyncFeeRows] = useState<Array<{ name: string; eid: number; nativeFee: string }>>([]);
   const [syncing, setSyncing] = useState(false);
   const t = useTranslations("ChaptersPage.ChapterGrid");
+  const effectiveReferralAddress = useMemo(() => {
+    if (typeof window === "undefined") {
+      return urlReferral || FALLBACK_REFERRER;
+    }
+
+    return (
+      window.localStorage.getItem(REFERRAL_STORAGE_KEY) ||
+      urlReferral ||
+      FALLBACK_REFERRER
+    );
+  }, [urlReferral]);
   const nextAvailableChapter = useMemo(() => {
     const unlocked = batchTrack === 1
       ? userData?.track1Unlocked || 0
@@ -197,6 +222,12 @@ export const ChapterGrid = () => {
       ? (userData?.track1Unlocked || 0) >= 12
       : (userData?.track2Unlocked || 0) >= 12
   );
+  const maxBatchQuantity = useMemo(
+    () => Math.max(0, 12 - nextAvailableChapter + 1),
+    [nextAvailableChapter],
+  );
+  const batchStart = nextAvailableChapter;
+  const batchEnd = Math.min(12, batchStart + Math.max(0, batchQuantity - 1));
 
   const resolvedRoute = useMemo<"hub" | "spoke">(() => {
     if (purchaseRoute === "hub") return "hub";
@@ -252,9 +283,8 @@ export const ChapterGrid = () => {
   ]);
 
   useEffect(() => {
-    setBatchStart(nextAvailableChapter);
-    setBatchEnd(nextAvailableChapter);
-  }, [nextAvailableChapter]);
+    setBatchQuantity(1);
+  }, [nextAvailableChapter, batchTrack]);
 
   useEffect(() => {
     let cancelled = false;
@@ -268,7 +298,7 @@ export const ChapterGrid = () => {
       try {
         if (resolvedRoute === "hub") {
           const totalUsd = Array.from(
-            { length: Math.max(0, batchEnd - batchStart + 1) },
+            { length: Math.max(0, batchQuantity) },
             (_, index) => batchStart + index,
           ).reduce(
             (total, chapter) => total + toBigIntSafe(getChapterPrice(chapter)),
@@ -330,6 +360,7 @@ export const ChapterGrid = () => {
     activeChain.name,
     batchEnd,
     batchStart,
+    batchQuantity,
     contractConfig,
     isHubChain,
     publicClient,
@@ -390,6 +421,50 @@ export const ChapterGrid = () => {
     if (resolvedRoute === "spoke" && isHubChain) {
       throw new Error("Switch to Ethereum, Polygon, Base, or another spoke chain to use the spoke route.");
     }
+  };
+
+  const getPurchaseState = (track: number, chapter: number) => {
+    const unlocked = track === 1
+      ? userData?.track1Unlocked || 0
+      : userData?.track2Unlocked || 0;
+
+    if (!userData?.exists) {
+      if (chapter === 1) {
+        return {
+          canAct: true,
+          statusOverride: "Register first to unlock Chapter 1 on both tracks.",
+          actionLabel: "Join Library",
+        };
+      }
+
+      return {
+        canAct: false,
+        statusOverride: "Complete registration before buying later chapters.",
+        actionLabel: "Join first",
+      };
+    }
+
+    if (chapter <= unlocked) {
+      return {
+        canAct: false,
+        statusOverride: undefined,
+        actionLabel: undefined,
+      };
+    }
+
+    if (chapter !== unlocked + 1) {
+      return {
+        canAct: false,
+        statusOverride: "Buy the next unlocked chapter in sequence first.",
+        actionLabel: "Locked in sequence",
+      };
+    }
+
+    return {
+      canAct: true,
+      statusOverride: undefined,
+      actionLabel: undefined,
+    };
   };
 
   const approveForTarget = async (
@@ -590,6 +665,65 @@ export const ChapterGrid = () => {
     const isPermitPurchase = resolvedRoute === "hub" && paymentMode === "permit2";
 
     let hash: `0x${string}`;
+
+    if (!userData?.exists) {
+      if (startChapter !== 1 || endChapter !== 1) {
+        throw new Error("Complete registration first before buying later chapters.");
+      }
+
+      if (isPermitPurchase) {
+        const joinUsd = toBigIntSafe(getChapterPrice(1)) * BigInt(2);
+        const requestedAmount = rawAmountFrom18(joinUsd, resolvedPaymentToken.decimals);
+
+        toast.loading("Sign Permit2 approval", {
+          id: toastId,
+          description: "Your wallet will ask for a Permit2 signature before the join transaction.",
+        });
+        const permit = await signPermit2(requestedAmount);
+        toast.loading("Confirm registration in wallet", {
+          id: toastId,
+          description: "Your Permit2 signature is ready. Confirm the registration transaction now.",
+        });
+        hash = await withWalletConfirmTimeout(
+          writeContractAsync({
+            ...contractConfig,
+            functionName: "joinLibraryHubWithPermit2",
+            args: [
+              resolvedPaymentToken.address,
+              effectiveReferralAddress as `0x${string}`,
+              permit.permitAmount,
+              permit.permitNonce,
+              permit.deadline,
+              permit.signature,
+            ],
+          }),
+        );
+      } else {
+        hash = await joinLibrary(effectiveReferralAddress);
+      }
+
+      toast.loading("Registration submitted", {
+        id: toastId,
+        description: "Waiting for on-chain confirmation for your new account.",
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      if (receipt.status !== "success") {
+        throw new Error("Registration failed on-chain.");
+      }
+
+      await refetchAllData({ showToast: false });
+      toast.success("Registration confirmed", {
+        id: toastId,
+        description: "Your account is active and Chapter 1 is unlocked on both tracks.",
+      });
+      return hash;
+    }
+
     toast.loading("Preparing purchase", {
       id: toastId,
       description:
@@ -756,17 +890,18 @@ export const ChapterGrid = () => {
 
   const isProcessing = loading;
   const batchCost = Array.from(
-    { length: Math.max(0, batchEnd - batchStart + 1) },
+    { length: Math.max(0, batchQuantity) },
     (_, index) => batchStart + index,
   ).reduce((total, chapter) => total + toBigIntSafe(getChapterPrice(chapter)), BigInt(0));
   const batchNeedsApproval =
     resolvedRoute === "hub" && paymentMode === "permit2"
-      ? parseFloat(usdtAllowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
+      ? parseFloat(permit2Allowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
       : needsApproval(batchCost.toString());
   const batchDisabled =
     isProcessing ||
     isBatchBuying ||
     !userData?.exists ||
+    maxBatchQuantity === 0 ||
     batchStart < 1 ||
     batchEnd > 12 ||
     batchEnd < batchStart;
@@ -778,7 +913,7 @@ export const ChapterGrid = () => {
     );
   };
 
-  const chapterCount = Math.max(0, batchEnd - batchStart + 1);
+  const chapterCount = Math.max(0, batchQuantity);
 
   return (
     <div className="space-y-8">
@@ -886,48 +1021,73 @@ export const ChapterGrid = () => {
                 <option value={2}>X6</option>
               </select>
             </label>
-            <label className="text-xs text-slate-400">
+            <div className="text-xs text-slate-400">
               From
-              <input
-                type="number"
-                min={nextAvailableChapter}
-                max={12}
-                value={batchStart}
-                onChange={(event) => {
-                  const next = Math.max(nextAvailableChapter, Number(event.target.value));
-                  setBatchStart(next);
-                  if (batchEnd < next) setBatchEnd(next);
-                }}
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              />
-            </label>
-            <label className="text-xs text-slate-400">
+              <div className="mt-1 flex h-[42px] items-center rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm font-semibold text-slate-100">
+                Chapter {allChaptersUnlocked ? 12 : batchStart}
+              </div>
+            </div>
+            <div className="text-xs text-slate-400">
               To
-              <input
-                type="number"
-                min={batchStart}
-                max={12}
-                value={batchEnd}
-                onChange={(event) =>
-                  setBatchEnd(Math.max(batchStart, Number(event.target.value)))
-                }
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              />
-            </label>
+              <div className="mt-1 flex h-[42px] items-center rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm font-semibold text-slate-100">
+                Chapter {allChaptersUnlocked ? 12 : batchEnd}
+              </div>
+            </div>
             <div className="sm:col-span-6 rounded-xl border border-slate-700 bg-slate-900 px-3 py-3">
               <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Bulk slider</span>
+                <span>Chapter quantity</span>
                 <span>{chapterCount} chapter{chapterCount === 1 ? "" : "s"} selected</span>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setBatchQuantity((current) => Math.max(1, current - 1))}
+                  disabled={isProcessing || isBatchBuying || batchQuantity <= 1}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-lg font-bold text-slate-100 transition hover:border-yellow-400 hover:text-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  -
+                </button>
+                <div className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-center">
+                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-slate-500">
+                    Chapters to buy
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-slate-100">
+                    {chapterCount}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBatchQuantity((current) =>
+                      Math.min(maxBatchQuantity || 1, current + 1),
+                    )
+                  }
+                  disabled={
+                    isProcessing ||
+                    isBatchBuying ||
+                    maxBatchQuantity === 0 ||
+                    batchQuantity >= maxBatchQuantity
+                  }
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-lg font-bold text-slate-100 transition hover:border-yellow-400 hover:text-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  +
+                </button>
               </div>
               <input
                 type="range"
-                min={batchStart}
-                max={12}
-                value={batchEnd}
+                min={1}
+                max={Math.max(1, maxBatchQuantity)}
+                value={Math.min(batchQuantity, Math.max(1, maxBatchQuantity))}
                 onChange={(event) =>
-                  setBatchEnd(Math.max(batchStart, Number(event.target.value)))
+                  setBatchQuantity(
+                    Math.min(
+                      Math.max(1, Number(event.target.value)),
+                      Math.max(1, maxBatchQuantity),
+                    ),
+                  )
                 }
-                className="mt-3 w-full accent-yellow-400"
+                disabled={maxBatchQuantity === 0}
+                className="mt-4 w-full accent-yellow-400 disabled:cursor-not-allowed disabled:opacity-40"
               />
             </div>
             <label className="flex min-h-[58px] cursor-pointer items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 sm:col-span-3">
@@ -1025,9 +1185,11 @@ export const ChapterGrid = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {track1Chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
+            const purchaseState = getPurchaseState(1, chapter);
             const chapterNeedsApproval =
               resolvedRoute === "hub" && paymentMode === "permit2"
-                ? parseFloat(usdtAllowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
+                ? purchaseState.canAct &&
+                  parseFloat(permit2Allowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
                 : needsApproval(chapterPrice);
 
             return (
@@ -1043,9 +1205,11 @@ export const ChapterGrid = () => {
                 chapterState={track1States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 1, chapter)}
-                disabled={isProcessing}
+                disabled={isProcessing || !purchaseState.canAct}
                 needsApproval={chapterNeedsApproval}
                 isApproving={isChapterApproving(1, chapter)}
+                actionLabel={purchaseState.actionLabel}
+                statusOverride={purchaseState.statusOverride}
               />
             );
           })}
@@ -1057,9 +1221,11 @@ export const ChapterGrid = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {track2Chapters.map((chapter) => {
             const chapterPrice = getChapterPrice(chapter);
+            const purchaseState = getPurchaseState(2, chapter);
             const chapterNeedsApproval =
               resolvedRoute === "hub" && paymentMode === "permit2"
-                ? parseFloat(usdtAllowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
+                ? purchaseState.canAct &&
+                  parseFloat(permit2Allowance || "0") < parseFloat(paymentTokenMaxAllowance || "21000")
                 : needsApproval(chapterPrice);
 
             return (
@@ -1075,9 +1241,11 @@ export const ChapterGrid = () => {
                 chapterState={track2States[chapter]}
                 onPurchase={handleBuyChapter}
                 onApprove={(amount) => handleApproveUsdt(amount, 2, chapter)}
-                disabled={isProcessing}
+                disabled={isProcessing || !purchaseState.canAct}
                 needsApproval={chapterNeedsApproval}
                 isApproving={isChapterApproving(2, chapter)}
+                actionLabel={purchaseState.actionLabel}
+                statusOverride={purchaseState.statusOverride}
               />
             );
           })}
