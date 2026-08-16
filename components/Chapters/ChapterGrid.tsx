@@ -159,6 +159,96 @@ const formatTxError = (error: unknown, fallback: string) => {
   return message;
 };
 
+function SegmentedControl<T extends string | number>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </span>
+      <div className="flex rounded-lg border border-slate-700 bg-slate-900 p-0.5">
+        {options.map((option) => (
+          <button
+            key={String(option.value)}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold transition ${
+              value === option.value
+                ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-black"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BatchStat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-700/60 bg-slate-950/50 px-2 py-1.5 text-center">
+      <p
+        className={`truncate text-sm font-semibold ${
+          accent ? "text-yellow-300" : "text-slate-100"
+        }`}
+      >
+        {value}
+      </p>
+      <p className="mt-0.5 text-[0.6rem] uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:cursor-not-allowed disabled:opacity-40 ${
+        checked ? "bg-gradient-to-r from-yellow-400 to-amber-500" : "bg-slate-700"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-slate-950 transition-transform ${
+          checked ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
 export const ChapterGrid = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -845,7 +935,7 @@ export const ChapterGrid = () => {
               resolvedPaymentToken.address,
               track,
               startChapter,
-              BigInt(endChapter),
+              endChapter,
             ],
           }),
         );
@@ -1010,224 +1100,188 @@ export const ChapterGrid = () => {
         )}
       </div>
 
-      <div className="theme-panel-soft rounded-2xl p-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h4 className="text-sm font-semibold text-slate-100">Batch chapter purchase</h4>
-            <p className="mt-1 text-xs text-slate-400">
-              Buy continuous chapters in one transaction, see the exact route fee, and optionally sync all spokes after a hub purchase.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-6 lg:min-w-[760px]">
-            {paymentTokens?.length > 1 && (
-              <label className="text-xs text-slate-400">
-                Token
-                <select
-                  value={selectedPaymentTokenAddress}
-                  onChange={(event) =>
-                    setSelectedPaymentTokenAddress(event.target.value as `0x${string}`)
-                  }
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                >
-                  {paymentTokens.map((token) => (
-                    <option key={token.address} value={token.address}>
-                      {token.symbol}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <label className="text-xs text-slate-400">
-              Route
-              <select
-                value={purchaseRoute}
-                onChange={(event) => setPurchaseRoute(event.target.value as PurchaseRoute)}
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              >
-                <option value="auto">Auto ({isHubChain ? "hub" : "spoke"})</option>
-                <option value="hub">Hub</option>
-                <option value="spoke">Spoke</option>
-              </select>
-            </label>
-            <label className="text-xs text-slate-400">
-              Payment
-              <select
-                value={paymentMode}
-                onChange={(event) => setPaymentMode(event.target.value as PaymentMode)}
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              >
-                <option value="approve">Approve + buy</option>
-                <option value="permit2">Permit2</option>
-              </select>
-            </label>
-            <label className="text-xs text-slate-400">
-              Track
-              <select
-                value={batchTrack}
-                onChange={(event) => setBatchTrack(Number(event.target.value))}
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              >
-                <option value={1}>X3</option>
-                <option value={2}>X6</option>
-              </select>
-            </label>
-            <div className="text-xs text-slate-400">
-              From
-              <div className="mt-1 flex h-[42px] items-center rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm font-semibold text-slate-100">
-                Chapter {allChaptersUnlocked ? 12 : batchStart}
-              </div>
-            </div>
-            <div className="text-xs text-slate-400">
-              To
-              <div className="mt-1 flex h-[42px] items-center rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm font-semibold text-slate-100">
-                Chapter {allChaptersUnlocked ? 12 : batchEnd}
-              </div>
-            </div>
-            <div className="sm:col-span-6 rounded-xl border border-slate-700 bg-slate-900 px-3 py-3">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Chapter quantity</span>
-                <span>{chapterCount} chapter{chapterCount === 1 ? "" : "s"} selected</span>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setBatchQuantity((current) => Math.max(1, current - 1))}
-                  disabled={isProcessing || isBatchBuying || batchQuantity <= 1}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-lg font-bold text-slate-100 transition hover:border-yellow-400 hover:text-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  -
-                </button>
-                <div className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-center">
-                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-slate-500">
-                    Chapters to buy
-                  </p>
-                  <p className="mt-1 text-lg font-semibold text-slate-100">
-                    {chapterCount}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setBatchQuantity((current) =>
-                      Math.min(maxBatchQuantity || 1, current + 1),
-                    )
-                  }
-                  disabled={
-                    isProcessing ||
-                    isBatchBuying ||
-                    maxBatchQuantity === 0 ||
-                    batchQuantity >= maxBatchQuantity
-                  }
-                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-lg font-bold text-slate-100 transition hover:border-yellow-400 hover:text-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  +
-                </button>
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={Math.max(1, maxBatchQuantity)}
-                value={Math.min(batchQuantity, Math.max(1, maxBatchQuantity))}
-                onChange={(event) =>
-                  setBatchQuantity(
-                    Math.min(
-                      Math.max(1, Number(event.target.value)),
-                      Math.max(1, maxBatchQuantity),
-                    ),
-                  )
-                }
-                disabled={maxBatchQuantity === 0}
-                className="mt-4 w-full accent-yellow-400 disabled:cursor-not-allowed disabled:opacity-40"
-              />
-            </div>
-            <label className="flex min-h-[58px] cursor-pointer items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 sm:col-span-3">
-              <input
-                type="checkbox"
-                checked={broadcastAcrossChains}
-                onChange={(event) =>
-                  setBroadcastAcrossChains(event.target.checked)
-                }
-                className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-yellow-400 focus:ring-yellow-400"
-              />
-              <span>
-                <span className="block font-semibold text-slate-100">
-                  Sync all spokes after hub buy
-                </span>
-                <span className="block text-[0.68rem] text-slate-500">
-                  Available only when the final purchase route is the BSC hub.
-                </span>
-              </span>
-            </label>
-            <button
-              type="button"
-              onClick={batchNeedsApproval ? () => approveForTarget(formatUnits(batchCost, 18), resolvedRoute === "hub" && paymentMode === "permit2" ? "permit2" : "contract") : handleBatchBuy}
-              disabled={batchDisabled || allChaptersUnlocked}
-              className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-3"
-            >
-              {isBatchBuying
-                ? "Processing..."
-                : allChaptersUnlocked
-                  ? "All chapters unlocked"
-                : batchNeedsApproval
-                  ? resolvedRoute === "hub" && paymentMode === "permit2"
-                    ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"} for Permit2`
-                    : `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"}`
-                  : broadcastAcrossChains && resolvedRoute === "hub"
-                    ? `Buy ${batchStart}-${batchEnd} + Sync`
-                    : `Buy ${batchStart}-${batchEnd}`}
-            </button>
-          </div>
+      <div className="theme-panel-soft rounded-2xl p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-base font-semibold text-slate-50">Batch buy</h4>
+          <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-300">
+            Ch. {allChaptersUnlocked ? "12/12" : `${batchStart}–${batchEnd}`}
+          </span>
         </div>
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-cyan-50">
-            <p className="font-semibold">Fee preview</p>
-            {feeBreakdown ? (
-              <div className="mt-2 space-y-1 text-xs text-cyan-100/85">
-                <p>Route: {feeBreakdown.routeLabel}</p>
-                <p>Next unlockable chapter: {nextAvailableChapter}</p>
-                <p>Total USD value: {Number(feeBreakdown.totalUsd).toFixed(2)}</p>
-                <p>Token pull: {Number(feeBreakdown.tokenAmount).toFixed(6)} {resolvedPaymentToken?.symbol || paymentTokenSymbol}</p>
-                <p>LayerZero fee: {feeBreakdown.lzFee}</p>
-                <p>Bridge fee: {feeBreakdown.bridgeFee}</p>
-                <p>Total native fee: {feeBreakdown.totalNativeFee}</p>
-              </div>
-            ) : (
-              <p className="mt-2 text-xs text-cyan-100/70">
-                Connect the matching chain for the selected route to fetch an exact quote.
-              </p>
-            )}
-          </div>
-          <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-sm text-yellow-50">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold">Manual sync</p>
-                <p className="mt-1 text-xs text-yellow-100/70">
-                  Use this when your user wants their latest BSC hub status pushed to each spoke manually.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void syncAllSpokes()}
-                disabled={!isHubChain || syncing}
-                className="rounded-xl border border-yellow-400/40 px-3 py-2 text-xs font-semibold text-yellow-100 transition hover:bg-yellow-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <SegmentedControl
+            label="Track"
+            value={batchTrack}
+            onChange={(value) => setBatchTrack(value)}
+            options={[
+              { value: 1, label: "X3" },
+              { value: 2, label: "X6" },
+            ]}
+          />
+          <SegmentedControl
+            label="Route"
+            value={purchaseRoute}
+            onChange={(value) => setPurchaseRoute(value)}
+            options={[
+              { value: "auto", label: "Auto" },
+              { value: "hub", label: "Hub" },
+              { value: "spoke", label: "Spoke" },
+            ]}
+          />
+          <SegmentedControl
+            label="Pay via"
+            value={paymentMode}
+            onChange={(value) => setPaymentMode(value)}
+            options={[
+              { value: "approve", label: "Approve" },
+              { value: "permit2", label: "Permit2" },
+            ]}
+          />
+          {paymentTokens?.length > 1 && (
+            <label className="flex flex-col gap-1">
+              <span className="text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                Token
+              </span>
+              <select
+                value={selectedPaymentTokenAddress}
+                onChange={(event) =>
+                  setSelectedPaymentTokenAddress(event.target.value as `0x${string}`)
+                }
+                className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs font-semibold text-slate-100"
               >
-                {syncing ? "Syncing..." : "Sync All Spokes"}
-              </button>
-            </div>
-            <div className="mt-3 space-y-1 text-xs text-yellow-100/80">
-              {syncFeeRows.length > 0 ? (
-                syncFeeRows.map((row) => (
-                  <p key={row.eid}>
-                    {row.name}: {row.nativeFee} native
-                  </p>
-                ))
-              ) : (
-                <p>Switch to BNB Smart Chain to quote sync gas for each spoke.</p>
-              )}
-            </div>
-          </div>
+                {paymentTokens.map((token) => (
+                  <option key={token.address} value={token.address}>
+                    {token.symbol}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
+
+        <div className="mt-3 rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setBatchQuantity((current) => Math.max(1, current - 1))}
+              disabled={isProcessing || isBatchBuying || batchQuantity <= 1}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-lg font-bold text-slate-100 transition hover:border-yellow-400 hover:text-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              −
+            </button>
+            <div className="flex-1 text-center">
+              <p className="text-2xl font-bold leading-none text-slate-50">
+                {chapterCount}
+              </p>
+              <p className="mt-1 text-[0.65rem] uppercase tracking-wide text-slate-500">
+                chapter{chapterCount === 1 ? "" : "s"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setBatchQuantity((current) =>
+                  Math.min(maxBatchQuantity || 1, current + 1),
+                )
+              }
+              disabled={
+                isProcessing ||
+                isBatchBuying ||
+                maxBatchQuantity === 0 ||
+                batchQuantity >= maxBatchQuantity
+              }
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-lg font-bold text-slate-100 transition hover:border-yellow-400 hover:text-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={Math.max(1, maxBatchQuantity)}
+            value={Math.min(batchQuantity, Math.max(1, maxBatchQuantity))}
+            onChange={(event) =>
+              setBatchQuantity(
+                Math.min(
+                  Math.max(1, Number(event.target.value)),
+                  Math.max(1, maxBatchQuantity),
+                ),
+              )
+            }
+            disabled={maxBatchQuantity === 0}
+            className="mt-3 w-full accent-yellow-400 disabled:cursor-not-allowed disabled:opacity-40"
+          />
+        </div>
+
+        {feeBreakdown ? (
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+            <BatchStat label="USD" value={`$${Number(feeBreakdown.totalUsd).toFixed(2)}`} />
+            <BatchStat
+              label={resolvedPaymentToken?.symbol || paymentTokenSymbol || "Token"}
+              value={Number(feeBreakdown.tokenAmount).toFixed(4)}
+            />
+            <BatchStat label="LZ fee" value={feeBreakdown.lzFee} />
+            <BatchStat label="Bridge" value={feeBreakdown.bridgeFee} />
+            <BatchStat label="Total fee" value={feeBreakdown.totalNativeFee} accent />
+          </div>
+        ) : (
+          <p className="mt-3 text-xs text-slate-500">
+            Connect the matching chain to quote fees.
+          </p>
+        )}
+
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/60 px-3 py-2.5">
+          <span className="text-xs font-medium text-slate-200">
+            Sync all spokes after buy
+          </span>
+          <ToggleSwitch
+            checked={broadcastAcrossChains}
+            onChange={setBroadcastAcrossChains}
+          />
+        </label>
+
+        <button
+          type="button"
+          onClick={batchNeedsApproval ? () => approveForTarget(formatUnits(batchCost, 18), resolvedRoute === "hub" && paymentMode === "permit2" ? "permit2" : "contract") : handleBatchBuy}
+          disabled={batchDisabled || allChaptersUnlocked}
+          className="mt-3 w-full rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isBatchBuying
+            ? "Processing..."
+            : allChaptersUnlocked
+              ? "All chapters unlocked"
+            : batchNeedsApproval
+              ? resolvedRoute === "hub" && paymentMode === "permit2"
+                ? `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"} for Permit2`
+                : `Approve ${paymentTokenMaxAllowance || "21000"} ${paymentTokenSymbol || "USDT"}`
+              : broadcastAcrossChains && resolvedRoute === "hub"
+                ? `Buy ${batchStart}-${batchEnd} + Sync`
+                : `Buy ${batchStart}-${batchEnd}`}
+        </button>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-2.5">
+          <span className="text-xs font-medium text-yellow-100">Manual sync</span>
+          <button
+            type="button"
+            onClick={() => void syncAllSpokes()}
+            disabled={!isHubChain || syncing}
+            className="rounded-lg border border-yellow-400/40 px-3 py-1.5 text-xs font-semibold text-yellow-100 transition hover:bg-yellow-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {syncing ? "Syncing…" : "Sync now"}
+          </button>
+        </div>
+        {syncFeeRows.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {syncFeeRows.map((row) => (
+              <span
+                key={row.eid}
+                className="rounded-full border border-yellow-500/20 bg-yellow-500/5 px-2.5 py-1 text-[0.65rem] text-yellow-100/80"
+              >
+                {row.name}: {row.nativeFee}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>

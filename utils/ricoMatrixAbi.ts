@@ -136,7 +136,7 @@ export const RICO_MATRIX_HUB_ABI = [
       { name: "paymentToken", type: "address" },
       { name: "track", type: "uint8" },
       { name: "startCh", type: "uint8" },
-      { name: "endCh", type: "uint256" },
+      { name: "endCh", type: "uint8" },
     ],
     outputs: [],
   },

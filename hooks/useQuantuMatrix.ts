@@ -1725,7 +1725,7 @@ export const useQuantuMatrix = () => {
                 ...activeMatrixContract,
                 account: address,
                 functionName: "buyChapterBatchHub",
-                args: [activePaymentToken.address, track, chapter, BigInt(chapter)],
+                args: [activePaymentToken.address, track, chapter, chapter],
               });
 
               return withWalletConfirmTimeout(
@@ -1915,7 +1915,7 @@ export const useQuantuMatrix = () => {
                   activePaymentToken.address,
                   track,
                   startChapter,
-                  BigInt(endChapter),
+                  endChapter,
                 ],
               });
 
