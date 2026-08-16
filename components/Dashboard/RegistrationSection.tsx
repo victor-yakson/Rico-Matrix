@@ -4,8 +4,6 @@ import { useQuantuMatrix } from "../../hooks/useQuantuMatrix";
 import { useState, useMemo, useEffect } from "react";
 import { useReadContract, useAccount } from "wagmi";
 import { useTranslations } from "next-intl";
-import { parseUnits } from "viem";
-import { quantuMatrixContract } from "@/utils/contracts";
 
 interface RegistrationSectionProps {
   referralAddress: string | null;
@@ -18,7 +16,53 @@ interface RegistrationSectionProps {
 
 const FALLBACK_REFERRER = "0xd7e5a3c00b7871f57aeff293f1844db466260f4f";
 const REFERRAL_STORAGE_KEY = "quantumatrix_referral_address";
-const USDT_DECIMALS = 18;
+
+type PaymentTokenOption = {
+  symbol: string;
+  address: `0x${string}`;
+  decimals: number;
+};
+
+const TOKEN_STYLES: Record<
+  string,
+  { label: string; className: string; ringClassName: string }
+> = {
+  USDT: {
+    label: "T",
+    className: "from-emerald-300 via-teal-400 to-emerald-600 text-white",
+    ringClassName: "ring-emerald-300/40",
+  },
+  USDC: {
+    label: "$",
+    className: "from-sky-300 via-blue-500 to-blue-700 text-white",
+    ringClassName: "ring-blue-300/40",
+  },
+  USDG: {
+    label: "G",
+    className: "from-lime-200 via-emerald-400 to-cyan-600 text-slate-950",
+    ringClassName: "ring-emerald-300/40",
+  },
+};
+
+const TokenLogo = ({ symbol }: { symbol: string }) => {
+  const style = TOKEN_STYLES[symbol] || {
+    label: symbol.slice(0, 1),
+    className: "from-slate-300 via-slate-500 to-slate-700 text-white",
+    ringClassName: "ring-slate-300/30",
+  };
+
+  return (
+    <span
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-black shadow-lg ring-2 ${style.className} ${style.ringClassName}`}
+      aria-hidden="true"
+    >
+      {style.label}
+    </span>
+  );
+};
+
+const formatAddress = (value?: string) =>
+  value ? `${value.slice(0, 6)}...${value.slice(-4)}` : "";
 
 export const RegistrationSection = ({
   referralAddress,
@@ -28,10 +72,18 @@ export const RegistrationSection = ({
   const {
     joinLibrary,
     approveUsdt,
-    usdtBalance,
-    usdtAllowance,
+    paymentTokenBalance,
+    paymentTokenAllowance,
     joinCost,
     loading,
+    dashboardContractConfig,
+    activeChain,
+    paymentTokenSymbol,
+    paymentTokenMaxAllowance,
+    paymentTokenSupported,
+    paymentTokens,
+    selectedPaymentTokenAddress,
+    setSelectedPaymentTokenAddress,
   } = useQuantuMatrix();
 
   const { address: userAddress } = useAccount();
@@ -52,6 +104,8 @@ export const RegistrationSection = ({
   const [agreedToDisclaimer, setAgreedToDisclaimer] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [tokenMenuOpen, setTokenMenuOpen] = useState(false);
+  const [copiedTokenAddress, setCopiedTokenAddress] = useState(false);
 
   // Check if user is already registered and clear referral if they are
   useEffect(() => {
@@ -83,10 +137,16 @@ export const RegistrationSection = ({
     }
   }, [referralAddress, userData?.exists]);
 
-  // Use persisted referral for validation (only if user is not registered)
+  // Use persisted referral first, then the URL referral, then the default referrer.
+  const hasProvidedReferral = Boolean(persistedReferralAddress || referralAddress);
   const effectiveReferralAddress = userData?.exists
     ? null
-    : persistedReferralAddress || referralAddress;
+    : persistedReferralAddress || referralAddress || FALLBACK_REFERRER;
+  const usingDefaultReferral = Boolean(
+    !userData?.exists &&
+      !hasProvidedReferral &&
+      effectiveReferralAddress === FALLBACK_REFERRER
+  );
 
   // -----------------------------
   // Referral validation (skip if user is already registered)
@@ -106,22 +166,28 @@ export const RegistrationSection = ({
   // Wagmi read: only enabled when referral is valid and user is not registered
   const { data: referralExists, isLoading: checkingReferral } = useReadContract(
     {
-      address: quantuMatrixContract.address,
-      abi: quantuMatrixContract.abi,
-      functionName: "isReaderExists",
+      address: dashboardContractConfig.address,
+      abi: dashboardContractConfig.abi,
+      functionName: "readers",
       args:
         effectiveReferralAddress && !userData?.exists
-          ? [effectiveReferralAddress]
+          ? [effectiveReferralAddress as `0x${string}`]
           : undefined,
+      chainId: 56,
       query: { enabled: isReferralValid && !userData?.exists },
     }
   );
+  const referralReaderId = BigInt(
+    ((referralExists as any)?.id ?? (referralExists as any)?.[0] ?? 0).toString()
+  );
+  const referrerIsRegistered =
+    referralReaderId > BigInt(0);
 
   // IMPORTANT: Force this into a boolean using Boolean(...)
   const showReferralWarning = Boolean(
-    effectiveReferralAddress &&
+      effectiveReferralAddress &&
       isReferralValid &&
-      referralExists === false &&
+      !referrerIsRegistered &&
       !checkingReferral &&
       !userData?.exists &&
       effectiveReferralAddress !== FALLBACK_REFERRER
@@ -137,29 +203,51 @@ export const RegistrationSection = ({
   );
 
   const numericBalance = useMemo(
-    () => parseFloat(usdtBalance || "0"),
-    [usdtBalance]
+    () => parseFloat(paymentTokenBalance || "0"),
+    [paymentTokenBalance]
   );
 
   const numericAllowance = useMemo(
-    () => parseFloat(usdtAllowance || "0"),
-    [usdtAllowance]
+    () => parseFloat(paymentTokenAllowance || "0"),
+    [paymentTokenAllowance]
   );
+  const activePaymentToken = useMemo(
+    () =>
+      paymentTokens?.find(
+        (token: PaymentTokenOption) =>
+          token.address.toLowerCase() ===
+          selectedPaymentTokenAddress?.toLowerCase(),
+      ) || paymentTokens?.[0],
+    [paymentTokens, selectedPaymentTokenAddress],
+  );
+  const selectedTokenSymbol = activePaymentToken?.symbol || paymentTokenSymbol || "USDT";
+
+  const copyTokenAddress = async (value?: string) => {
+    if (!value) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedTokenAddress(true);
+      setTimeout(() => setCopiedTokenAddress(false), 1600);
+    } catch (error) {
+      console.error("Failed to copy token address:", error);
+    }
+  };
 
   const hasSufficientBalance =
     numericBalance >= numericJoinCost && numericJoinCost > 0;
 
+  const numericRequiredAllowance = useMemo(
+    () => parseFloat(paymentTokenMaxAllowance || "21000"),
+    [paymentTokenMaxAllowance],
+  );
+
   const hasSufficientAllowance = useMemo(() => {
-    if (!usdtAllowance || !joinCost) return false;
-    try {
-      const allowanceBN = parseUnits(usdtAllowance, USDT_DECIMALS);
-      const costBN = parseUnits(joinCost, USDT_DECIMALS);
-      return allowanceBN >= costBN;
-    } catch (e) {
-      // fallback numeric compare (less accurate)
-      return numericAllowance >= numericJoinCost && numericJoinCost > 0;
-    }
-  }, [usdtAllowance, joinCost, numericAllowance, numericJoinCost]);
+    return (
+      numericAllowance >= numericRequiredAllowance &&
+      numericRequiredAllowance > 0
+    );
+  }, [numericAllowance, numericRequiredAllowance]);
 
   const isProcessing = Boolean(
     loading || isApproving || isRegistering || checkingReferral
@@ -176,7 +264,8 @@ export const RegistrationSection = ({
           hasSufficientBalance &&
           effectiveReferralAddress &&
           isReferralValid &&
-          !isSelfReferral
+          !isSelfReferral &&
+          paymentTokenSupported !== false
       );
 
   // -----------------------------
@@ -238,9 +327,7 @@ export const RegistrationSection = ({
       setError(null);
       setIsApproving(true);
 
-      // Approve exactly joinCost in token units
-      const approveAmount = parseUnits(joinCost || "0", USDT_DECIMALS);
-      await approveUsdt(approveAmount.toString());
+      await approveUsdt(joinCost || "0");
 
       setStep("register");
     } catch (err: any) {
@@ -261,6 +348,42 @@ export const RegistrationSection = ({
     // Check if referral is provided
     if (!effectiveReferralAddress) {
       setError(t("error.referralRequired"));
+      return;
+    }
+
+    if (checkingReferral) {
+      setError(t("referral.checking"));
+      return;
+    }
+
+    if (!hasSufficientBalance) {
+      setError(
+        t("alerts.insufficientBalance", {
+          joinCost: joinCost || "0",
+          tokenBalance: paymentTokenBalance || "0",
+          token: selectedTokenSymbol,
+        }),
+      );
+      return;
+    }
+
+    if (!hasSufficientAllowance) {
+      setError(`Please approve ${selectedTokenSymbol} before registering.`);
+      return;
+    }
+
+    if (paymentTokenSupported === false) {
+      setError(`${selectedTokenSymbol} is not supported for registration on this chain.`);
+      return;
+    }
+
+    if (isSelfReferral) {
+      setError(t("error.selfReferral"));
+      return;
+    }
+
+    if (showReferralWarning) {
+      setError(t("error.invalidReferral"));
       return;
     }
 
@@ -293,7 +416,7 @@ export const RegistrationSection = ({
       }
 
       // referralExists from contract check (unless fallback)
-      if (referralExists === false && referrer !== FALLBACK_REFERRER) {
+      if (!referrerIsRegistered && referrer !== FALLBACK_REFERRER) {
         throw new Error(t("error.invalidReferral"));
       }
 
@@ -312,7 +435,9 @@ export const RegistrationSection = ({
         setError(t("error.invalidAddress"));
       } else if (msg.toLowerCase().includes("refer yourself")) {
         setError(t("error.selfReferral"));
-      } else if (msg.toLowerCase().includes("referral")) {
+        } else if (msg.toLowerCase().includes("wallet confirmation")) {
+          setError(err?.message || t("error.registrationFailed"));
+        } else if (msg.toLowerCase().includes("referral")) {
         setError(t("error.invalidReferral"));
       } else if (
         msg.toLowerCase().includes("already registered") ||
@@ -340,13 +465,16 @@ export const RegistrationSection = ({
     if (!effectiveReferralAddress) {
       return t("referral.required");
     }
+    if (usingDefaultReferral) {
+      return t("referral.defaultReferrer");
+    }
     if (checkingReferral) {
       return t("referral.checking");
     }
     if (isSelfReferral) {
       return t("referral.selfReferral");
     }
-    if (isReferralValid && referralExists !== false) {
+    if (isReferralValid && referrerIsRegistered) {
       return t("referral.detected");
     }
     return t("referral.invalid");
@@ -374,7 +502,8 @@ export const RegistrationSection = ({
             </span>
             <span className="text-xs text-slate-500">
               {t("header.allowanceLabel", {
-                allowance: Number(usdtAllowance).toFixed(2),
+                allowance: Number(paymentTokenAllowance).toFixed(2),
+                token: selectedTokenSymbol,
               })}
             </span>
             {userData?.exists && (
@@ -468,7 +597,7 @@ export const RegistrationSection = ({
                   <div
                     className={`rounded-xl px-4 py-3 flex items-center justify-between gap-3 ${
                       isReferralValid &&
-                      referralExists !== false &&
+                      referrerIsRegistered &&
                       !isSelfReferral
                         ? "border border-yellow-400/35 bg-yellow-500/10"
                         : "border border-red-500/30 bg-red-500/10"
@@ -493,7 +622,7 @@ export const RegistrationSection = ({
                             />
                           </svg>
                         </div>
-                      ) : isReferralValid && referralExists !== false ? (
+                      ) : isReferralValid && referrerIsRegistered ? (
                         <div className="w-6 h-6 rounded-full bg-yellow-500/14 border border-yellow-400/35 flex items-center justify-center">
                           <svg
                             className="w-3 h-3 text-amber-300"
@@ -534,7 +663,7 @@ export const RegistrationSection = ({
                               ? "text-slate-300"
                               : isSelfReferral
                               ? "text-red-300"
-                              : isReferralValid && referralExists !== false
+                              : isReferralValid && referrerIsRegistered
                               ? "text-amber-300"
                               : "text-red-300"
                           }`}
@@ -553,7 +682,7 @@ export const RegistrationSection = ({
                           ? "border-slate-400/40 bg-slate-500/15 text-slate-300"
                           : isSelfReferral
                           ? "border-red-400/40 bg-red-500/15 text-red-200"
-                          : isReferralValid && referralExists !== false
+                          : isReferralValid && referrerIsRegistered
                           ? "border-yellow-400/35 bg-yellow-500/10 text-amber-200"
                           : "border-red-400/40 bg-red-500/15 text-red-200"
                       }`}
@@ -562,7 +691,7 @@ export const RegistrationSection = ({
                         ? t("referral.checkingBadge")
                         : isSelfReferral
                         ? t("referral.selfReferralBadge")
-                        : isReferralValid && referralExists !== false
+                        : isReferralValid && referrerIsRegistered
                         ? t("referral.validBadge")
                         : t("referral.invalidBadge")}
                     </span>
@@ -721,7 +850,8 @@ export const RegistrationSection = ({
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-200">
                   {t("alerts.insufficientBalance", {
                     joinCost: joinCost || "0",
-                    usdtBalance: usdtBalance || "0",
+                    tokenBalance: paymentTokenBalance || "0",
+                    token: selectedTokenSymbol,
                   })}
                 </div>
               )}
@@ -736,21 +866,21 @@ export const RegistrationSection = ({
                     {t("cost.registrationCost")}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-yellow-300">
-                    {joinCost || "0"} USDT
+                    {joinCost || "0"} {selectedTokenSymbol}
                   </div>
                 </div>
                 <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-3 py-3">
                   <div className="text-[0.7rem] text-slate-400 mb-1">
-                    {t("cost.balance")}
+                    {t("cost.balance", { token: selectedTokenSymbol })}
                   </div>
                   <div className="text-base md:text-lg font-semibold text-slate-100">
-                    {Number(usdtBalance).toFixed(2) || "0"} USDT
+                    {Number(paymentTokenBalance).toFixed(2) || "0"} {selectedTokenSymbol}
                   </div>
                 </div>
               </div>
 
               <div className="mb-4 flex items-center justify-between text-[0.7rem]">
-                <span className="text-slate-400">{t("cost.allowance")}</span>
+                <span className="text-slate-400">{t("cost.allowance", { token: selectedTokenSymbol })}</span>
                 <span
                   className={
                     hasSufficientAllowance
@@ -763,6 +893,131 @@ export const RegistrationSection = ({
                     : t("cost.approvalRequired")}
                 </span>
               </div>
+
+              {paymentTokens?.length > 1 && (
+                <div className="relative mb-4">
+                  <span className="mb-2 block text-[0.7rem] text-slate-400">
+                    Payment token
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTokenMenuOpen((open) => !open)}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-700/80 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 px-3 py-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_26px_rgba(0,0,0,0.32)] transition hover:border-yellow-400/50 focus:outline-none focus:ring-2 focus:ring-yellow-400/40"
+                    aria-expanded={tokenMenuOpen}
+                    aria-haspopup="listbox"
+                  >
+                    <span className="flex min-w-0 items-center gap-3">
+                      <TokenLogo symbol={selectedTokenSymbol} />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-slate-50">
+                          {selectedTokenSymbol}
+                        </span>
+                        <span className="block text-[0.65rem] text-slate-400">
+                          Selected payment token
+                        </span>
+                      </span>
+                    </span>
+                    <svg
+                      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${tokenMenuOpen ? "rotate-180" : ""}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  {activePaymentToken?.address && (
+                    <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/75 px-3 py-2">
+                      <span className="min-w-0 text-[0.68rem] text-slate-400">
+                        {formatAddress(activePaymentToken.address)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyTokenAddress(activePaymentToken.address)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-300 transition hover:border-yellow-400/60 hover:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400/40"
+                        title="Copy token address"
+                        aria-label="Copy token address"
+                      >
+                        {copiedTokenAddress ? (
+                          <svg
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.704 5.29a1 1 0 010 1.42l-7.25 7.25a1 1 0 01-1.42 0l-3.25-3.25a1 1 0 111.42-1.42l2.54 2.54 6.54-6.54a1 1 0 011.42 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path d="M7 3.5A2.5 2.5 0 019.5 1h5A2.5 2.5 0 0117 3.5v7A2.5 2.5 0 0114.5 13h-5A2.5 2.5 0 017 10.5v-7z" />
+                            <path d="M3 7.5A2.5 2.5 0 015.5 5H6v5.5A3.5 3.5 0 009.5 14H13v.5a2.5 2.5 0 01-2.5 2.5h-5A2.5 2.5 0 013 14.5v-7z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                  {tokenMenuOpen && (
+                    <div
+                      className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-yellow-400/25 bg-slate-950/98 shadow-[0_20px_45px_rgba(0,0,0,0.55)] backdrop-blur"
+                      role="listbox"
+                    >
+                      {paymentTokens.map((token: PaymentTokenOption) => {
+                        const isSelected =
+                          token.address.toLowerCase() ===
+                          selectedPaymentTokenAddress?.toLowerCase();
+
+                        return (
+                          <button
+                            key={token.address}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPaymentTokenAddress(token.address);
+                              setStep("info");
+                              setError(null);
+                              setTokenMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center gap-3 px-3 py-3 text-left transition ${
+                              isSelected
+                                ? "bg-yellow-400/10 text-yellow-100"
+                                : "text-slate-200 hover:bg-slate-800"
+                            }`}
+                            role="option"
+                            aria-selected={isSelected}
+                          >
+                            <TokenLogo symbol={token.symbol} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold">
+                                {token.symbol}
+                              </span>
+                              <span className="block text-[0.65rem] text-slate-500">
+                                {formatAddress(token.address)}
+                              </span>
+                            </span>
+                            {isSelected && (
+                              <span className="rounded-full bg-yellow-300 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-950">
+                                Active
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {userData?.exists ? (
                 <div className="text-center py-6">
@@ -806,7 +1061,10 @@ export const RegistrationSection = ({
                     >
                       {isApproving
                         ? t("buttons.approving")
-                        : t("buttons.approveUsdt", { amount: joinCost || "0" })}
+                        : t("buttons.approveUsdt", {
+                            amount: paymentTokenMaxAllowance || "21000",
+                            token: selectedTokenSymbol,
+                          })}
                     </button>
                   )}
 
@@ -834,7 +1092,7 @@ export const RegistrationSection = ({
                       }`}
                     >
                       {isRegistering
-                        ? t("buttons.registering")
+                        ? t("buttons.confirmInWallet")
                         : t("buttons.completeRegistration")}
                     </button>
                   )}
@@ -852,7 +1110,7 @@ export const RegistrationSection = ({
                         : "text-slate-400"
                     }
                   >
-                    {t("progress.step1")}
+                    {t("progress.step1", { token: selectedTokenSymbol })}
                   </span>
                   <span
                     className={

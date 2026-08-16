@@ -1,7 +1,7 @@
 import type { Abi } from "viem";
 import {
   CONTRACT_ADDRESS,
-  CONTRACT_ABI,
+  RICO_MATRIX_V3_ABI,
   USDT_CONTRACT_ADDRESS,
   USDT_ABI,
   SURVEY_CONTRACT_ADDRESS,
@@ -16,7 +16,7 @@ import {
 
 export const quantuMatrixContract = {
   address: CONTRACT_ADDRESS,
-  abi: CONTRACT_ABI as unknown as Abi,
+  abi: RICO_MATRIX_V3_ABI as unknown as Abi,
 } as const;
 
 export const usdtContract = {

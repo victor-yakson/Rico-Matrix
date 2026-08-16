@@ -10,6 +10,15 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+const formatUnitsSafe = (value: unknown, decimals = 18): string => {
+  try {
+    if (value === null || value === undefined || value === "") return "0";
+    return formatUnits(BigInt(String(value)), decimals);
+  } catch {
+    return "0";
+  }
+};
+
 interface ChapterCardProps {
   track: number; // 1 = X3, 2 = X6
   chapter: number; // 1..12
@@ -22,6 +31,8 @@ interface ChapterCardProps {
   disabled: boolean;
   needsApproval: boolean;
   isApproving: boolean;
+  actionLabel?: string;
+  statusOverride?: string;
 }
 
 type WordSpan = { text: string; start: number; end: number };
@@ -148,6 +159,8 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   disabled,
   needsApproval,
   isApproving,
+  actionLabel,
+  statusOverride,
 }) => {
   const t = useTranslations("ChaptersPage.ChapterCard");
   const isMobile = useIsMobile(1024);
@@ -225,6 +238,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const getStatusText = () => {
+    if (statusOverride) return statusOverride;
     if (isUnlocked) {
       return chapterState === "blocked"
         ? t("status.blocked")
@@ -243,7 +257,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const formattedPrice =
-    price && price !== "0" ? formatUnits(BigInt(price), 18) : "0";
+    price && price !== "0" ? formatUnitsSafe(price) : "0";
   const isButtonDisabled = isUnlocked || disabled;
   const isApproveButtonDisabled = isUnlocked || isApproving;
 
@@ -253,6 +267,7 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const getButtonText = () => {
+    if (actionLabel) return actionLabel;
     if (isApproving) return t("button.approving");
     if (disabled) return t("button.processing");
     if (needsApproval) return t("button.approve");

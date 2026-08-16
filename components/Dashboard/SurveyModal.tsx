@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   useAccount,
+  useChainId,
   usePublicClient,
   useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits, maxUint256, parseUnits } from "viem";
 import { surveyContract } from "@/utils/contracts";
-import { TOKEN_CONTRACT_ADDRESS, USDT_ABI } from "@/utils/constants";
+import { USDT_ABI, getRicoTokenAddress } from "@/utils/constants";
 import { useTranslations } from "next-intl";
 
 const toBigInt = (value: unknown) => {
@@ -27,8 +28,10 @@ export const SurveyModal = ({
 }) => {
   const t = useTranslations("Dashboard.survey");
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
+  const ricoTokenAddress = getRicoTokenAddress(chainId);
 
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
@@ -44,7 +47,7 @@ export const SurveyModal = ({
   });
 
   const { data: ricoAllowance, refetch: refetchAllowance } = useReadContract({
-    address: TOKEN_CONTRACT_ADDRESS,
+    address: ricoTokenAddress,
     abi: USDT_ABI,
     functionName: "allowance",
     args: address ? [address, surveyContract.address] : undefined,
@@ -120,6 +123,8 @@ export const SurveyModal = ({
     parsedAmount && minimumRequired > BigInt(0)
       ? parsedAmount < minimumRequired
       : false;
+  const allowanceValue = useMemo(() => toBigInt(ricoAllowance), [ricoAllowance]);
+  const hasUnlimitedApproval = allowanceValue === maxUint256;
 
   useEffect(() => {
     if (!amount && minimumRequired > BigInt(0)) {
@@ -132,6 +137,29 @@ export const SurveyModal = ({
       onClose();
     }
   }, [isConfirmed, onClose]);
+
+  const handleApproveUnlimited = async () => {
+    setError(null);
+    setIsSubmitting(true);
+    setSubmitStage("approving");
+    try {
+      const approveHash = await writeContractAsync({
+        address: ricoTokenAddress,
+        abi: USDT_ABI,
+        functionName: "approve",
+        args: [surveyContract.address, maxUint256],
+      });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+      }
+      await refetchAllowance();
+    } catch (err: any) {
+      setError(err?.shortMessage || err?.message || t("errors.failed"));
+    } finally {
+      setIsSubmitting(false);
+      setSubmitStage(null);
+    }
+  };
 
   const handleVote = async (vote: "yes" | "no") => {
     setError(null);
@@ -149,6 +177,12 @@ export const SurveyModal = ({
       setSubmitStage(null);
       return;
     }
+    if (!hasUnlimitedApproval) {
+      setError("Approve unlimited RICO before casting your vote.");
+      setIsSubmitting(false);
+      setSubmitStage(null);
+      return;
+    }
     if (!writeContractAsync) {
       setIsSubmitting(false);
       setSubmitStage(null);
@@ -156,21 +190,6 @@ export const SurveyModal = ({
     }
 
     try {
-      const allowanceValue = toBigInt(ricoAllowance);
-      if (allowanceValue < parsedAmount) {
-        setSubmitStage("approving");
-        const approveHash = await writeContractAsync({
-          address: TOKEN_CONTRACT_ADDRESS,
-          abi: USDT_ABI,
-          functionName: "approve",
-          args: [surveyContract.address, parsedAmount],
-        });
-        if (publicClient) {
-          await publicClient.waitForTransactionReceipt({ hash: approveHash });
-        }
-        await refetchAllowance();
-      }
-
       setSubmitStage("submitting");
       const hash = await writeContractAsync({
         ...surveyContract,
@@ -263,12 +282,33 @@ export const SurveyModal = ({
           </div>
         )}
 
+        {!hasUnlimitedApproval && (
+          <div className="mb-4 rounded-2xl border border-yellow-500/25 bg-yellow-500/10 px-4 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-yellow-100">Unlimited RICO approval required</p>
+                <p className="mt-1 text-xs text-yellow-100/70">
+                  Approve once to unlock vote casting. The Yes and No buttons stay disabled until this allowance is unlimited.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleApproveUnlimited}
+                disabled={isConfirming || isSubmitting}
+                className="rounded-xl bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 px-5 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {submitStage === "approving" ? t("buttons.approving") : "Approve unlimited RICO"}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3 relative">
           <button
             onClick={() => handleVote("yes")}
-            disabled={!isOpenForVoting || isConfirming || isSubmitting}
+            disabled={!isOpenForVoting || !hasUnlimitedApproval || isConfirming || isSubmitting}
             className={`flex-1 rounded-xl px-5 py-3 text-sm md:text-base font-semibold transition-all ${
-              isOpenForVoting && !isConfirming && !isSubmitting
+              isOpenForVoting && hasUnlimitedApproval && !isConfirming && !isSubmitting
                 ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 text-black shadow-[0_0_18px_rgba(184,128,54,0.62)] hover:brightness-110"
                 : "cursor-not-allowed border border-slate-700 bg-slate-900/70 text-slate-500"
             }`}
@@ -285,9 +325,9 @@ export const SurveyModal = ({
           </button>
           <button
             onClick={() => handleVote("no")}
-            disabled={!isOpenForVoting || isConfirming || isSubmitting}
+            disabled={!isOpenForVoting || !hasUnlimitedApproval || isConfirming || isSubmitting}
             className={`flex-1 rounded-xl px-5 py-3 text-sm md:text-base font-semibold transition-all ${
-              isOpenForVoting && !isConfirming && !isSubmitting
+              isOpenForVoting && hasUnlimitedApproval && !isConfirming && !isSubmitting
                 ? "bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-300 text-black shadow-[0_0_18px_rgba(245,158,11,0.7)] hover:brightness-110"
                 : "cursor-not-allowed border border-slate-700 bg-slate-900/70 text-slate-500"
             }`}

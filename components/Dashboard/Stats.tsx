@@ -3,6 +3,15 @@
 import { formatUnits } from "viem";
 import { useTranslations } from "next-intl";
 
+const formatUnitsSafe = (value: unknown, decimals = 18): string => {
+  try {
+    if (value === null || value === undefined || value === "") return "0";
+    return formatUnits(BigInt(String(value)), decimals);
+  } catch {
+    return "0";
+  }
+};
+
 // Format currency with commas
 const formatCurrency = (amount: string | number): string => {
   const numberValue = typeof amount === "string" ? parseFloat(amount) : amount;
@@ -57,13 +66,13 @@ export const Stats = ({
 
   // Global RICO stats
   const globalRicoShouldHave = globalRicoFarming?.[0]
-    ? formatUnits(BigInt(globalRicoFarming[0]), 18)
+    ? formatUnitsSafe(globalRicoFarming[0])
     : "0";
   const globalRicoSent = globalRicoFarming?.[1]
-    ? formatUnits(BigInt(globalRicoFarming[1]), 18)
+    ? formatUnitsSafe(globalRicoFarming[1])
     : "0";
   const globalRicoPending = globalRicoFarming?.[2]
-    ? formatUnits(BigInt(globalRicoFarming[2]), 18)
+    ? formatUnitsSafe(globalRicoFarming[2])
     : "0";
 
   const stats = [
