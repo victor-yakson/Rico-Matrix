@@ -230,6 +230,7 @@ export const useQuantuMatrix = () => {
   const hubPublicClient = usePublicClient({ chainId: 56 });
   const { data: walletClient } = useWalletClient();
   const [loading, setLoading] = useState(false);
+  const [dataRefreshing, setDataRefreshing] = useState(false);
   const [nativeUsdPrice, setNativeUsdPrice] = useState<number | null>(null);
   const [nativePriceLoading, setNativePriceLoading] = useState(false);
   const rewardTokenAddress = getRicoTokenAddress(chainId);
@@ -1280,47 +1281,52 @@ export const useQuantuMatrix = () => {
   };
 
   // Refetch all user data
-  const refetchUserData = useCallback(async (options?: { showToast?: boolean }) => {
-    const showToast = options?.showToast ?? true;
-    if (showToast) {
-      toast.info("Refreshing user data...", {
-        duration: 2000,
-      });
+  const refetchUserData = useCallback(async (options?: { showToast?: boolean; showSpinner?: boolean }) => {
+    const showToast = options?.showToast ?? false;
+    const showSpinner = options?.showSpinner ?? true;
+    if (showSpinner) {
+      setDataRefreshing(true);
     }
 
-    const refetches: Promise<unknown>[] = [
-      refetchUserExists(),
-      refetchLegacyV2UserExists(),
-      refetchUsdtAllowance(),
-      refetchUsdtBalance(),
-      refetchMigrationStatus(),
-      refetchMigrationAndRoyaltyUI(),
-      refetchLegacyClaimable(),
-      refetchRoyaltyV2(),
-      refetchRoyaltyPercentV2(),
-      refetchRicoPending(),
-    ];
+    try {
+      const refetches: Promise<unknown>[] = [
+        refetchUserExists(),
+        refetchLegacyV2UserExists(),
+        refetchUsdtAllowance(),
+        refetchUsdtBalance(),
+        refetchMigrationStatus(),
+        refetchMigrationAndRoyaltyUI(),
+        refetchLegacyClaimable(),
+        refetchRoyaltyV2(),
+        refetchRoyaltyPercentV2(),
+        refetchRicoPending(),
+      ];
 
-    if (userExists) {
-      refetches.push(
-        refetchReaderTotals(),
-        refetchReaderSummary(),
-        refetchRicoFarming(),
-        refetchRoyalty(),
-        refetchRoyaltyPercent()
-      );
-    }
+      if (userExists) {
+        refetches.push(
+          refetchReaderTotals(),
+          refetchReaderSummary(),
+          refetchRicoFarming(),
+          refetchRoyalty(),
+          refetchRoyaltyPercent()
+        );
+      }
 
-    if (address) {
-      clearMatrixCache(address);
-    }
+      if (address) {
+        clearMatrixCache(address);
+      }
 
-    await Promise.all(refetches);
+      await Promise.all(refetches);
 
-    if (showToast) {
-      toast.success("User data refreshed!", {
-        duration: 2000,
-      });
+      if (showToast) {
+        toast.success("User data refreshed!", {
+          duration: 2000,
+        });
+      }
+    } finally {
+      if (showSpinner) {
+        setDataRefreshing(false);
+      }
     }
   }, [
     refetchUserExists,
@@ -1344,28 +1350,33 @@ export const useQuantuMatrix = () => {
   ]);
 
   // Refetch all global data
-  const refetchAllData = useCallback(async (options?: { showToast?: boolean }) => {
-    const showToast = options?.showToast ?? true;
-    if (showToast) {
-      toast.info("Refreshing all data...", {
-        duration: 2000,
-      });
+  const refetchAllData = useCallback(async (options?: { showToast?: boolean; showSpinner?: boolean }) => {
+    const showToast = options?.showToast ?? false;
+    const showSpinner = options?.showSpinner ?? true;
+    if (showSpinner) {
+      setDataRefreshing(true);
     }
 
-    await Promise.all([
-      refetchUserData({ showToast: false }),
-      refetchGlobalStats(),
-      refetchGlobalSummary(),
-      refetchGlobalRicoFarming(),
-      refetchTopEarners(),
-      refetchTopReferrers(),
-      refetchChapterPrices(),
-    ]);
+    try {
+      await Promise.all([
+        refetchUserData({ showToast: false, showSpinner: false }),
+        refetchGlobalStats(),
+        refetchGlobalSummary(),
+        refetchGlobalRicoFarming(),
+        refetchTopEarners(),
+        refetchTopReferrers(),
+        refetchChapterPrices(),
+      ]);
 
-    if (showToast) {
-      toast.success("All data refreshed!", {
-        duration: 2000,
-      });
+      if (showToast) {
+        toast.success("All data refreshed!", {
+          duration: 2000,
+        });
+      }
+    } finally {
+      if (showSpinner) {
+        setDataRefreshing(false);
+      }
     }
   }, [
     refetchUserData,
@@ -2733,6 +2744,7 @@ export const useQuantuMatrix = () => {
 
     // State
     loading,
+    dataRefreshing,
     isConnected,
 
     // Actions

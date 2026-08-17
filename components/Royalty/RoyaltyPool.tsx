@@ -12,6 +12,7 @@ export const RoyaltyPool = () => {
     claimRoyaltyV2,
     loading,
     refetchUserData,
+    dataRefreshing,
   } = useQuantuMatrix();
 
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
@@ -91,6 +92,12 @@ export const RoyaltyPool = () => {
 
   return (
     <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-br from-slate-950 to-slate-900/90 p-6 md:p-7 shadow-[0_0_32px_rgba(0,0,0,0.85)] backdrop-blur-sm">
+      {dataRefreshing && (
+        <div className="fixed left-1/2 top-24 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-yellow-400/30 bg-slate-950/90 px-4 py-2 text-xs font-semibold text-yellow-100 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-300 border-t-transparent" />
+          <span>Refreshing data</span>
+        </div>
+      )}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
