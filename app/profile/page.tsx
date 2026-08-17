@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 
 export default function ProfilePage() {
   const { isConnected, address } = useAccount();
-  const { userData, refetchUserData } = useQuantuMatrix();
+  const { userData, refetchUserData, dataRefreshing } = useQuantuMatrix();
   const [mounted, setMounted] = useState(false);
   const t = useTranslations('ProfilePage');
 
@@ -53,6 +53,12 @@ export default function ProfilePage() {
   return (
     <>
       <Header />
+      {dataRefreshing && (
+        <div className="fixed left-1/2 top-24 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-yellow-400/30 bg-slate-950/90 px-4 py-2 text-xs font-semibold text-yellow-100 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-300 border-t-transparent" />
+          <span>Refreshing data</span>
+        </div>
+      )}
       <div className="theme-shell theme-page-shell pb-20 md:pb-8">
         <div className="theme-container px-4">
           {/* Header */}

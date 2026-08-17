@@ -33,7 +33,7 @@ export default async function RootLayout({
           <NextIntlClientProvider locale={locale} messages={messages}>
             <Web3Provider>
               <Toaster
-                position="bottom-right"
+                position="top-center"
                 expand={true}
                 richColors
                 closeButton
