@@ -15,6 +15,9 @@ export const RoyaltyPool = () => {
     loading,
     refetchUserData,
     dataRefreshing,
+    royaltyPayoutTokens,
+    selectedRoyaltyPayoutTokenAddress,
+    setSelectedRoyaltyPayoutTokenAddress,
   } = useQuantuMatrix();
 
   const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | null>(
@@ -358,6 +361,32 @@ export const RoyaltyPool = () => {
                     ? "Claim the royalty currently available on the V3 hub."
                     : "Switch to BSC to claim this V3 royalty from the hub."}
                 </p>
+                {royaltyPayoutTokens && royaltyPayoutTokens.length > 1 && (
+                  <label className="mt-3 flex flex-col gap-1 max-w-[180px]">
+                    <span className="text-[0.65rem] font-medium uppercase tracking-wide text-yellow-300/60">
+                      Payout Token
+                    </span>
+                    <select
+                      value={selectedRoyaltyPayoutTokenAddress}
+                      onChange={(event) =>
+                        setSelectedRoyaltyPayoutTokenAddress(
+                          event.target.value as `0x${string}`
+                        )
+                      }
+                      disabled={isProcessing}
+                      className="rounded-lg border border-yellow-700/50 bg-slate-900 px-2.5 py-2 text-xs font-semibold text-yellow-100"
+                    >
+                      {royaltyPayoutTokens.map((token) => (
+                        <option key={token.address} value={token.address}>
+                          {token.symbol}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-[0.65rem] text-yellow-300/50">
+                      Falls back to USDT if this token's vault balance is too low.
+                    </span>
+                  </label>
+                )}
               </div>
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-yellow-300 mb-1">

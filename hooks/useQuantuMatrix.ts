@@ -259,6 +259,24 @@ export const useQuantuMatrix = () => {
       ) || defaultPaymentToken,
     [activeChain.paymentTokens, defaultPaymentToken, selectedPaymentTokenAddress],
   );
+  const royaltyPayoutTokens = RICO_CHAIN_CONFIG[56].paymentTokens;
+  const [selectedRoyaltyPayoutTokenAddress, setSelectedRoyaltyPayoutTokenAddress] =
+    useState<`0x${string}` | null>(null);
+  const defaultRoyaltyPayoutToken = useMemo(
+    () =>
+      royaltyPayoutTokens.find((token) => token.symbol === "USDT") ||
+      royaltyPayoutTokens[0],
+    [royaltyPayoutTokens],
+  );
+  const activeRoyaltyPayoutToken = useMemo(
+    () =>
+      royaltyPayoutTokens.find(
+        (token) =>
+          token.address.toLowerCase() ===
+          selectedRoyaltyPayoutTokenAddress?.toLowerCase(),
+      ) || defaultRoyaltyPayoutToken,
+    [royaltyPayoutTokens, defaultRoyaltyPayoutToken, selectedRoyaltyPayoutTokenAddress],
+  );
   const broadcastNativeFeeDisplay = useMemo(() => {
     if (!nativeUsdPrice) return "";
     return toDecimalString(BROADCAST_SYNC_USD_VALUE / nativeUsdPrice);
@@ -2636,12 +2654,77 @@ export const useQuantuMatrix = () => {
           "V3 royalty claims must be submitted from BNB Smart Chain. Please switch your wallet to BSC first."
         );
       }
+      if (!address) {
+        throw new Error(
+          "Wallet address not available. Please reconnect your wallet."
+        );
+      }
 
-      const bscPaymentToken = RICO_CHAIN_CONFIG[56].paymentToken;
+      const bscPayoutTokens = RICO_CHAIN_CONFIG[56].paymentTokens;
+      const preferredToken =
+        bscPayoutTokens.find(
+          (token) =>
+            token.address.toLowerCase() ===
+            selectedRoyaltyPayoutTokenAddress?.toLowerCase(),
+        ) || defaultRoyaltyPayoutToken;
+
+      // Try the user's preferred token first, then fall back to the default
+      // (USDT), then any other supported token. For each candidate we check
+      // the vault's actual on-chain balance — not just viewClaimableInToken's
+      // computed amount, which can be nonzero even when the vault doesn't
+      // hold enough of that specific token, causing the payout transfer to
+      // revert with "Transfer failed".
+      const candidateTokens = [
+        preferredToken,
+        ...(preferredToken.address !== defaultRoyaltyPayoutToken.address
+          ? [defaultRoyaltyPayoutToken]
+          : []),
+        ...bscPayoutTokens.filter(
+          (token) =>
+            token.address !== preferredToken.address &&
+            token.address !== defaultRoyaltyPayoutToken.address,
+        ),
+      ];
+
+      let selectedPayoutToken: `0x${string}` | null = null;
+      let selectedPayoutSymbol: string | null = null;
+      let usedFallback = false;
+
+      for (const token of candidateTokens) {
+        const [, rawAmount] = (await hubPublicClient.readContract({
+          ...royaltyVaultContract,
+          functionName: "viewClaimableInToken",
+          args: [address, token.address],
+        })) as readonly [bigint, bigint];
+
+        if (rawAmount <= BigInt(0)) continue;
+
+        const vaultBalance = (await hubPublicClient.readContract({
+          address: token.address,
+          abi: USDT_ABI,
+          functionName: "balanceOf",
+          args: [BSC_ROYALTY_VAULT_ADDRESS],
+        })) as bigint;
+
+        if (vaultBalance >= rawAmount) {
+          selectedPayoutToken = token.address;
+          selectedPayoutSymbol = token.symbol;
+          usedFallback = token.address !== preferredToken.address;
+          break;
+        }
+      }
+
+      if (!selectedPayoutToken || !selectedPayoutSymbol) {
+        throw new Error(
+          "No payout token in the royalty vault currently has enough balance to fulfill this claim. Please try again after the vault is funded in a supported token."
+        );
+      }
 
       toast.info("Claiming V3 Royalty...", {
         id: toastId,
-        description: "Confirm the royalty claim in your wallet.",
+        description: usedFallback
+          ? `${preferredToken.symbol} balance in the vault is too low. Falling back to ${selectedPayoutSymbol}. Confirm the royalty claim in your wallet.`
+          : `Confirm the royalty claim in your wallet. Payout token: ${selectedPayoutSymbol}.`,
         duration: 10000,
       });
 
@@ -2649,7 +2732,7 @@ export const useQuantuMatrix = () => {
         ...royaltyVaultContract,
         chainId: 56,
         functionName: "claimRoyalty",
-        args: [bscPaymentToken],
+        args: [selectedPayoutToken],
       });
 
       toast.loading("V3 Royalty Claim Submitted!", {
@@ -2688,6 +2771,9 @@ export const useQuantuMatrix = () => {
         errorMessage = "Transaction was rejected in your wallet";
       } else if (error?.message?.includes("NoRoyalty")) {
         errorMessage = "No royalty available to claim";
+      } else if (error?.message?.includes("No payout token in the royalty vault")) {
+        errorMessage =
+          "Your royalty is recorded, but the vault does not currently hold a supported payout token balance for this claim.";
       } else if (error?.message?.includes("TokenNotSupported")) {
         errorMessage = "The selected payout token is not supported by the hub.";
       } else if (error?.message?.includes("BNB Smart Chain")) {
@@ -2711,6 +2797,7 @@ export const useQuantuMatrix = () => {
       setLoading(false);
     }
   }, [
+    address,
     royaltyVaultContract,
     hubPublicClient,
     isHubChain,
@@ -2718,6 +2805,8 @@ export const useQuantuMatrix = () => {
     refetchUserData,
     royaltyAvailable,
     writeContractAsync,
+    selectedRoyaltyPayoutTokenAddress,
+    defaultRoyaltyPayoutToken,
   ]);
 
   const resolvedMigrationStatus = processMigrationStatus(migrationStatusData);
@@ -2790,6 +2879,12 @@ export const useQuantuMatrix = () => {
     setSelectedPaymentTokenAddress,
     activeChain,
     rewardTokenAddress,
+
+    // Royalty payout token selection (V3 claims, always on the BSC hub)
+    royaltyPayoutTokens,
+    selectedRoyaltyPayoutTokenAddress: activeRoyaltyPayoutToken.address,
+    setSelectedRoyaltyPayoutTokenAddress,
+    defaultRoyaltyPayoutToken,
 
     // Selected payment token data
     paymentTokenBalance: formattedUsdtBalance,
