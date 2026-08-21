@@ -2651,7 +2651,7 @@ export const useQuantuMatrix = () => {
       }
       if (!isHubChain) {
         throw new Error(
-          "V3 royalty claims must be submitted from BNB Smart Chain. Please switch your wallet to BSC first."
+          "Royalty claims must be submitted from BNB Smart Chain. Please switch your wallet to BSC first."
         );
       }
       if (!address) {
@@ -2668,12 +2668,13 @@ export const useQuantuMatrix = () => {
             selectedRoyaltyPayoutTokenAddress?.toLowerCase(),
         ) || defaultRoyaltyPayoutToken;
 
-      // The vault's pending USD amount (18 decimals) doesn't depend on the
-      // payout token — claimRoyalty() denormalizes this same value to
-      // whatever token's decimals and does a plain ERC20 transfer from the
-      // vault's own balance. There is no per-token "claimable" view on-chain,
-      // so we replicate that denormalization here to predict whether a given
-      // token's vault balance can actually cover the payout.
+      // claimRoyalty(token) caps the payout to both the USD pot AND the
+      // vault's actual on-hand balance of that specific token — it never
+      // reverts for a merely-low balance, it just pays out less. To honor
+      // "switch to USDT if the chosen token can't cover it" without silently
+      // shortchanging the user, compare each candidate's full, uncapped
+      // pending amount against what viewClaimableInToken says that specific
+      // token can actually deliver right now.
       const pendingUsd18 = (await hubPublicClient.readContract({
         ...royaltyVaultContract,
         functionName: "viewPendingRoyalty",
@@ -2684,17 +2685,8 @@ export const useQuantuMatrix = () => {
         throw new Error("NoRoyalty: no royalty available to claim");
       }
 
-      const denormalize = (decimals: number) => {
-        if (decimals === 18) return pendingUsd18;
-        if (decimals < 18) return pendingUsd18 / BigInt(10) ** BigInt(18 - decimals);
-        return pendingUsd18 * BigInt(10) ** BigInt(decimals - 18);
-      };
-
       // Try the user's preferred token first, then fall back to the default
-      // (USDT), then any other supported token — checking the vault's actual
-      // on-chain balance of each, since claimRoyalty() will revert with
-      // "Transfer failed" if the vault doesn't hold enough of the chosen
-      // token to cover the denormalized payout.
+      // (USDT), then any other supported token.
       const candidateTokens = [
         preferredToken,
         ...(preferredToken.address !== defaultRoyaltyPayoutToken.address
@@ -2712,17 +2704,13 @@ export const useQuantuMatrix = () => {
       let usedFallback = false;
 
       for (const token of candidateTokens) {
-        const requiredRaw = denormalize(token.decimals);
-        if (requiredRaw <= BigInt(0)) continue;
+        const [availableUSD, rawAmount] = (await hubPublicClient.readContract({
+          ...royaltyVaultContract,
+          functionName: "viewClaimableInToken",
+          args: [address, token.address],
+        })) as readonly [bigint, bigint];
 
-        const vaultBalance = (await hubPublicClient.readContract({
-          address: token.address,
-          abi: USDT_ABI,
-          functionName: "balanceOf",
-          args: [BSC_ROYALTY_VAULT_ADDRESS],
-        })) as bigint;
-
-        if (vaultBalance >= requiredRaw) {
+        if (rawAmount > BigInt(0) && availableUSD >= pendingUsd18) {
           selectedPayoutToken = token.address;
           selectedPayoutSymbol = token.symbol;
           usedFallback = token.address !== preferredToken.address;
@@ -2736,7 +2724,7 @@ export const useQuantuMatrix = () => {
         );
       }
 
-      toast.info("Claiming V3 Royalty...", {
+      toast.info("Claiming Royalty...", {
         id: toastId,
         description: usedFallback
           ? `${preferredToken.symbol} balance in the vault is too low. Falling back to ${selectedPayoutSymbol}. Confirm the royalty claim in your wallet.`
@@ -2751,7 +2739,7 @@ export const useQuantuMatrix = () => {
         args: [selectedPayoutToken],
       });
 
-      toast.loading("V3 Royalty Claim Submitted!", {
+      toast.loading("Royalty Claim Submitted!", {
         id: toastId,
         description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
       });
@@ -2762,9 +2750,9 @@ export const useQuantuMatrix = () => {
       });
 
       if (receipt.status === "success") {
-        toast.success("V3 Royalty Claimed!", {
+        toast.success("Royalty Claimed!", {
           id: toastId,
-          description: "Successfully claimed V3 royalty.",
+          description: "Successfully claimed royalty.",
           duration: 5000,
         });
 
@@ -2775,7 +2763,7 @@ export const useQuantuMatrix = () => {
           refetchAllData({ showToast: false });
         }, 2000);
       } else {
-        throw new Error("V3 royalty claim transaction failed on-chain");
+        throw new Error("Royalty claim transaction failed on-chain");
       }
 
       return hash;
@@ -2804,12 +2792,15 @@ export const useQuantuMatrix = () => {
       } else if (rawDetail.includes("No payout token in the royalty vault")) {
         errorMessage =
           "Your royalty is recorded, but the vault does not currently hold a supported payout token balance for this claim.";
-      } else if (rawDetail.includes("Transfer failed")) {
+      } else if (
+        rawDetail.includes("Transfer failed") ||
+        rawDetail.includes("TransferFailed")
+      ) {
         errorMessage =
           "The vault doesn't currently hold enough of the selected token to pay out this claim. Please try a different payout token or try again later.";
       } else if (rawDetail.includes("BNB Smart Chain")) {
         errorMessage =
-          "Please switch your wallet to BNB Smart Chain to claim V3 royalty.";
+          "Please switch your wallet to BNB Smart Chain to claim your royalty.";
       } else if (rawDetail.includes("on-chain")) {
         errorMessage = "Claim transaction failed on-chain";
       } else if (rawDetail.includes("Wallet client not available")) {

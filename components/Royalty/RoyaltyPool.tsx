@@ -349,7 +349,7 @@ export const RoyaltyPool = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-yellow-200">
-                      V3 Royalty
+                      Current Royalty
                     </h4>
                     <p className="text-sm text-yellow-300/80">
                       Current Rico Matrix royalty
@@ -358,8 +358,8 @@ export const RoyaltyPool = () => {
                 </div>
                 <p className="text-xs text-yellow-300/70">
                   {isHubChain
-                    ? "Claim the royalty currently available on the V3 hub."
-                    : "Switch to BSC to claim this V3 royalty from the hub."}
+                    ? "Claim the royalty currently available."
+                    : "Switch to BSC to claim this royalty."}
                 </p>
                 {royaltyPayoutTokens && royaltyPayoutTokens.length > 1 && (
                   <label className="mt-3 flex flex-col gap-1 max-w-[180px]">
@@ -408,7 +408,7 @@ export const RoyaltyPool = () => {
                     <span className="relative z-10">Processing...</span>
                   ) : (
                     <span className="relative z-10">
-                      {isHubChain ? "Claim V3 Royalty" : "Switch to BSC to Claim"}
+                      {isHubChain ? "Claim Royalty" : "Switch to BSC to Claim"}
                     </span>
                   )}
                 </button>
