@@ -2636,12 +2636,39 @@ export const useQuantuMatrix = () => {
           "V3 royalty claims must be submitted from BNB Smart Chain. Please switch your wallet to BSC first."
         );
       }
+      if (!address) {
+        throw new Error(
+          "Wallet address not available. Please reconnect your wallet."
+        );
+      }
 
-      const bscPaymentToken = RICO_CHAIN_CONFIG[56].paymentToken;
+      const bscPayoutTokens = RICO_CHAIN_CONFIG[56].paymentTokens;
+      let selectedPayoutToken: `0x${string}` | null = null;
+      let selectedPayoutSymbol: string | null = null;
+
+      for (const token of bscPayoutTokens) {
+        const [, rawAmount] = (await hubPublicClient.readContract({
+          ...royaltyVaultContract,
+          functionName: "viewClaimableInToken",
+          args: [address, token.address],
+        })) as readonly [bigint, bigint];
+
+        if (rawAmount > BigInt(0)) {
+          selectedPayoutToken = token.address;
+          selectedPayoutSymbol = token.symbol;
+          break;
+        }
+      }
+
+      if (!selectedPayoutToken || !selectedPayoutSymbol) {
+        throw new Error(
+          "No payout token in the royalty vault currently has enough balance to fulfill this claim. Please try again after the vault is funded in a supported token."
+        );
+      }
 
       toast.info("Claiming V3 Royalty...", {
         id: toastId,
-        description: "Confirm the royalty claim in your wallet.",
+        description: `Confirm the royalty claim in your wallet. Payout token: ${selectedPayoutSymbol}.`,
         duration: 10000,
       });
 
@@ -2649,7 +2676,7 @@ export const useQuantuMatrix = () => {
         ...royaltyVaultContract,
         chainId: 56,
         functionName: "claimRoyalty",
-        args: [bscPaymentToken],
+        args: [selectedPayoutToken],
       });
 
       toast.loading("V3 Royalty Claim Submitted!", {
@@ -2688,6 +2715,9 @@ export const useQuantuMatrix = () => {
         errorMessage = "Transaction was rejected in your wallet";
       } else if (error?.message?.includes("NoRoyalty")) {
         errorMessage = "No royalty available to claim";
+      } else if (error?.message?.includes("No payout token in the royalty vault")) {
+        errorMessage =
+          "Your royalty is recorded, but the vault does not currently hold a supported payout token balance for this claim.";
       } else if (error?.message?.includes("TokenNotSupported")) {
         errorMessage = "The selected payout token is not supported by the hub.";
       } else if (error?.message?.includes("BNB Smart Chain")) {
@@ -2711,6 +2741,7 @@ export const useQuantuMatrix = () => {
       setLoading(false);
     }
   }, [
+    address,
     royaltyVaultContract,
     hubPublicClient,
     isHubChain,
