@@ -263,6 +263,38 @@ export const RICO_MATRIX_HUB_ABI = [
   },
 ] as const;
 
+// Matches RoyaltyVault.sol exactly — royalty claims go to this contract,
+// never to the Hub (RICO_MATRIX_HUB_ABI above has no claim function at all).
+export const ROYALTY_VAULT_ABI = [
+  {
+    type: "function",
+    name: "claimRoyalty",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "paymentToken", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "viewPendingRoyalty",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "viewClaimableInToken",
+    stateMutability: "view",
+    inputs: [
+      { name: "user", type: "address" },
+      { name: "paymentToken", type: "address" },
+    ],
+    outputs: [
+      { name: "availableUSD", type: "uint256" },
+      { name: "rawAmount", type: "uint256" },
+    ],
+  },
+] as const;
+
 export const RICO_MATRIX_SPOKE_ABI = [
   {
     type: "event",
