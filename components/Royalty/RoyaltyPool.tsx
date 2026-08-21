@@ -9,7 +9,9 @@ export const RoyaltyPool = () => {
   const {
     userData,
     migrationAndRoyaltyUI,
+    claimRoyalty,
     claimRoyaltyV2,
+    isHubChain,
     loading,
     refetchUserData,
     dataRefreshing,
@@ -36,12 +38,35 @@ export const RoyaltyPool = () => {
     }
   }, [isConfirmed, refetchUserData]);
 
-  // Handle current royalty claim
+  const parseAmount = (value?: string) => {
+    const parsed = Number.parseFloat(value || "0");
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  // Handle V3 royalty claim
+  const handleClaimRoyaltyV3 = async () => {
+    if (!userData?.exists) return;
+
+    const v3Claimable = userData?.royaltyAvailable || "0";
+    if (parseAmount(v3Claimable) === 0) return;
+
+    try {
+      const hash = await claimRoyalty();
+      if (hash) {
+        setCurrentTxHash(hash);
+      }
+    } catch (error) {
+      console.error("V3 claim failed:", error);
+      setCurrentTxHash(null);
+    }
+  };
+
+  // Handle V2 royalty claim
   const handleClaimRoyaltyV2 = async () => {
     if (!userData?.exists) return;
     
     const v2Claimable = migrationAndRoyaltyUI?.v2Claimable || "0";
-    if (parseFloat(v2Claimable) === 0) return;
+    if (parseAmount(v2Claimable) === 0) return;
     
     try {
       const hash = await claimRoyaltyV2();
@@ -58,16 +83,21 @@ export const RoyaltyPool = () => {
 
   // Get royalty data from migrationAndRoyaltyUI
   const legacyClaimableAmount = "0";
+  const v3ClaimableAmount = userData?.royaltyAvailable || "0";
   const v2ClaimableAmount = migrationAndRoyaltyUI?.v2Claimable || "0";
-  const totalClaimableAmount = v2ClaimableAmount;
+  const v3ClaimableValue = parseAmount(v3ClaimableAmount);
+  const v2ClaimableValue = parseAmount(v2ClaimableAmount);
+  const totalClaimableAmount = (v3ClaimableValue + v2ClaimableValue).toString();
   const v1RoyaltyPercent = 0;
   const migrationStatus = migrationAndRoyaltyUI?.status || 0;
 
   // Check what type of royalty is available
   const hasLegacyRoyalty = false;
-  const hasV2Royalty = parseFloat(v2ClaimableAmount) >= 0.5;
-  const canClaimV2 = hasV2Royalty;
-  const canClaim = hasV2Royalty;
+  const hasV3Royalty = v3ClaimableValue > 0;
+  const hasV2Royalty = v2ClaimableValue > 0;
+  const canClaimV3 = v3ClaimableValue >= 0.5 && isHubChain;
+  const canClaimV2 = v2ClaimableValue >= 0.5;
+  const canClaim = hasV3Royalty || hasV2Royalty;
 
   // Calculate current royalty percent
   const v2RoyaltyPercent = userData?.exists ? userData.royaltyPercent : 0;
@@ -303,8 +333,8 @@ export const RoyaltyPool = () => {
 
       {/* Claim Buttons */}
       <div className="space-y-4">
-        {/* Current Royalty Claim */}
-        {canClaimV2 && (
+        {/* V3 Royalty Claim */}
+        {hasV3Royalty && (
           <div className="rounded-2xl border border-yellow-500/35 bg-gradient-to-r from-yellow-900/18 to-black p-5">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex-1">
@@ -316,27 +346,29 @@ export const RoyaltyPool = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-yellow-200">
-                      {t("claims.current.title")}
+                      V3 Royalty
                     </h4>
                     <p className="text-sm text-yellow-300/80">
-                      {t("claims.current.subtitle")}
+                      Current Rico Matrix royalty
                     </p>
                   </div>
                 </div>
                 <p className="text-xs text-yellow-300/70">
-                  {t("claims.current.description")}
+                  {isHubChain
+                    ? "Claim the royalty currently available on the V3 hub."
+                    : "Switch to BSC to claim this V3 royalty from the hub."}
                 </p>
               </div>
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-yellow-300 mb-1">
-                  ${parseFloat(v2ClaimableAmount).toFixed(2)}
+                  ${v3ClaimableValue.toFixed(2)}
                 </div>
                 <button
-                  onClick={handleClaimRoyaltyV2}
-                  disabled={!canClaimV2 || isProcessing}
+                  onClick={handleClaimRoyaltyV3}
+                  disabled={!canClaimV3 || isProcessing}
                   className={`mt-3 flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-bold transition-all relative overflow-hidden group
                     ${
-                      canClaimV2 && !isProcessing
+                      canClaimV3 && !isProcessing
                         ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-[0_0_22px_rgba(245,158,11,0.45)] hover:brightness-110 hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] active:scale-[0.98]"
                         : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
                     }
@@ -347,7 +379,60 @@ export const RoyaltyPool = () => {
                     <span className="relative z-10">Processing...</span>
                   ) : (
                     <span className="relative z-10">
-                      {t("claims.current.button")}
+                      {isHubChain ? "Claim V3 Royalty" : "Switch to BSC to Claim"}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* V2 Royalty Claim */}
+        {hasV2Royalty && (
+          <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/20 to-slate-950 p-5">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-amber-100">
+                      V2 Royalty
+                    </h4>
+                    <p className="text-sm text-amber-200/80">
+                      Older Rico Matrix royalty balance
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-amber-200/70">
+                  Claimable balance from the V2 royalty contract.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-amber-200 mb-1">
+                  ${v2ClaimableValue.toFixed(2)}
+                </div>
+                <button
+                  onClick={handleClaimRoyaltyV2}
+                  disabled={!canClaimV2 || isProcessing}
+                  className={`mt-3 flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-bold transition-all relative overflow-hidden group
+                    ${
+                      canClaimV2 && !isProcessing
+                        ? "bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-black shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:brightness-110 active:scale-[0.98]"
+                        : "cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500"
+                    }
+                  `}
+                >
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                  {isProcessing ? (
+                    <span className="relative z-10">Processing...</span>
+                  ) : (
+                    <span className="relative z-10">
+                      Claim V2 Royalty
                     </span>
                   )}
                 </button>

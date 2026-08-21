@@ -19,12 +19,14 @@ import {
   RICO_MIGRATOR_ABI,
   RICO_CHAIN_CONFIG,
   USDT_ABI,
+  BSC_ROYALTY_VAULT_ADDRESS,
   getRicoChainConfig,
   getRicoTokenAddress,
 } from "@/utils/constants";
 import {
   RICO_MATRIX_HUB_ABI,
   RICO_MATRIX_SPOKE_ABI,
+  ROYALTY_VAULT_ABI,
 } from "@/utils/ricoMatrixAbi";
 
 const MIN_ROYALTY_USDT = 0.5;
@@ -323,6 +325,13 @@ export const useQuantuMatrix = () => {
     }),
     [],
   );
+  const royaltyVaultContract = useMemo(
+    () => ({
+      address: BSC_ROYALTY_VAULT_ADDRESS,
+      abi: ROYALTY_VAULT_ABI,
+    }),
+    [],
+  );
   const syncTargetChains = useMemo(
     () =>
       (isHubChain ? Object.values(RICO_CHAIN_CONFIG) : [])
@@ -566,7 +575,12 @@ export const useQuantuMatrix = () => {
   const royaltyV2 = v2ClaimableTuple?.[1] ?? "0";
   const migrationRicoPending = v2ClaimableTuple?.[2] ?? "0";
   const ricoPending = migrationRicoPending;
-  const royaltyAvailable = royaltyV2 || "0";
+  // V3 royalty pending in RoyaltyVault (from getReaderFullSummary), not the
+  // V2 legacy amount — claimRoyalty below checks this to gate the V3 claim.
+  const royaltyAvailable =
+    (readerSummary as any)?.royaltyAvailableUSD ??
+    (readerSummary as any)?.[9] ??
+    "0";
 
   const refetchReaderTotals = () => refetchUserReads();
   const refetchReaderSummary = () => refetchUserReads();
@@ -2594,7 +2608,8 @@ export const useQuantuMatrix = () => {
     refetchUserData,
   ]);
 
-  // Legacy claim royalty function (keep for compatibility)
+  // Claim V3 royalty from the RoyaltyVault contract (not the Hub — Hub has
+  // no claim function; see RoyaltyVault.sol).
   const claimRoyalty = useCallback(async () => {
     const toastId = "claim-royalty";
 
@@ -2609,14 +2624,62 @@ export const useQuantuMatrix = () => {
         return;
       }
 
-      toast.error("Claim Unavailable", {
+      setLoading(true);
+
+      if (!hubPublicClient) {
+        throw new Error(
+          "BSC client not available. Please reconnect your wallet."
+        );
+      }
+      if (!isHubChain) {
+        throw new Error(
+          "V3 royalty claims must be submitted from BNB Smart Chain. Please switch your wallet to BSC first."
+        );
+      }
+
+      const bscPaymentToken = RICO_CHAIN_CONFIG[56].paymentToken;
+
+      toast.info("Claiming V3 Royalty...", {
         id: toastId,
-        description:
-          "The new hub ABI no longer exposes claimRoyaltyV3. V3 royalty claims must use the royalty vault flow.",
-        duration: 7000,
+        description: "Confirm the royalty claim in your wallet.",
+        duration: 10000,
       });
 
-      return undefined;
+      const hash = await writeContractAsync({
+        ...royaltyVaultContract,
+        chainId: 56,
+        functionName: "claimRoyalty",
+        args: [bscPaymentToken],
+      });
+
+      toast.loading("V3 Royalty Claim Submitted!", {
+        id: toastId,
+        description: `Transaction: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
+      });
+
+      const receipt = await hubPublicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      if (receipt.status === "success") {
+        toast.success("V3 Royalty Claimed!", {
+          id: toastId,
+          description: "Successfully claimed V3 royalty.",
+          duration: 5000,
+        });
+
+        void notifyTelegramContractAlert("royalty-claim", hash, 56);
+
+        setTimeout(() => {
+          refetchUserData({ showToast: false });
+          refetchAllData({ showToast: false });
+        }, 2000);
+      } else {
+        throw new Error("V3 royalty claim transaction failed on-chain");
+      }
+
+      return hash;
     } catch (error: any) {
       console.error("Error claiming royalty:", error);
 
@@ -2625,6 +2688,11 @@ export const useQuantuMatrix = () => {
         errorMessage = "Transaction was rejected in your wallet";
       } else if (error?.message?.includes("NoRoyalty")) {
         errorMessage = "No royalty available to claim";
+      } else if (error?.message?.includes("TokenNotSupported")) {
+        errorMessage = "The selected payout token is not supported by the hub.";
+      } else if (error?.message?.includes("BNB Smart Chain")) {
+        errorMessage =
+          "Please switch your wallet to BNB Smart Chain to claim V3 royalty.";
       } else if (error?.message?.includes("on-chain")) {
         errorMessage = "Claim transaction failed on-chain";
       } else if (error?.message?.includes("Wallet client not available")) {
@@ -2643,7 +2711,13 @@ export const useQuantuMatrix = () => {
       setLoading(false);
     }
   }, [
+    royaltyVaultContract,
+    hubPublicClient,
+    isHubChain,
+    refetchAllData,
+    refetchUserData,
     royaltyAvailable,
+    writeContractAsync,
   ]);
 
   const resolvedMigrationStatus = processMigrationStatus(migrationStatusData);
