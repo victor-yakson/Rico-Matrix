@@ -263,8 +263,12 @@ export const RICO_MATRIX_HUB_ABI = [
   },
 ] as const;
 
-// Matches RoyaltyVault.sol exactly — royalty claims go to this contract,
-// never to the Hub (RICO_MATRIX_HUB_ABI above has no claim function at all).
+// Matches the verified RoyaltyVault.sol source on BscScan exactly — royalty
+// claims go to this contract, never to the Hub (RICO_MATRIX_HUB_ABI above has
+// no claim function at all). There is no viewClaimableInToken on-chain: the
+// pending USD amount (viewPendingRoyalty) doesn't depend on the payout token,
+// since claimRoyalty just denormalizes it to that token's decimals and does a
+// plain ERC20 transfer from the vault's own balance.
 export const ROYALTY_VAULT_ABI = [
   {
     type: "function",
@@ -279,19 +283,6 @@ export const ROYALTY_VAULT_ABI = [
     stateMutability: "view",
     inputs: [{ name: "user", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "viewClaimableInToken",
-    stateMutability: "view",
-    inputs: [
-      { name: "user", type: "address" },
-      { name: "paymentToken", type: "address" },
-    ],
-    outputs: [
-      { name: "availableUSD", type: "uint256" },
-      { name: "rawAmount", type: "uint256" },
-    ],
   },
 ] as const;
 

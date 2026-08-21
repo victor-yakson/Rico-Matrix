@@ -2668,12 +2668,33 @@ export const useQuantuMatrix = () => {
             selectedRoyaltyPayoutTokenAddress?.toLowerCase(),
         ) || defaultRoyaltyPayoutToken;
 
+      // The vault's pending USD amount (18 decimals) doesn't depend on the
+      // payout token — claimRoyalty() denormalizes this same value to
+      // whatever token's decimals and does a plain ERC20 transfer from the
+      // vault's own balance. There is no per-token "claimable" view on-chain,
+      // so we replicate that denormalization here to predict whether a given
+      // token's vault balance can actually cover the payout.
+      const pendingUsd18 = (await hubPublicClient.readContract({
+        ...royaltyVaultContract,
+        functionName: "viewPendingRoyalty",
+        args: [address],
+      })) as bigint;
+
+      if (pendingUsd18 <= BigInt(0)) {
+        throw new Error("NoRoyalty: no royalty available to claim");
+      }
+
+      const denormalize = (decimals: number) => {
+        if (decimals === 18) return pendingUsd18;
+        if (decimals < 18) return pendingUsd18 / BigInt(10) ** BigInt(18 - decimals);
+        return pendingUsd18 * BigInt(10) ** BigInt(decimals - 18);
+      };
+
       // Try the user's preferred token first, then fall back to the default
-      // (USDT), then any other supported token. For each candidate we check
-      // the vault's actual on-chain balance — not just viewClaimableInToken's
-      // computed amount, which can be nonzero even when the vault doesn't
-      // hold enough of that specific token, causing the payout transfer to
-      // revert with "Transfer failed".
+      // (USDT), then any other supported token — checking the vault's actual
+      // on-chain balance of each, since claimRoyalty() will revert with
+      // "Transfer failed" if the vault doesn't hold enough of the chosen
+      // token to cover the denormalized payout.
       const candidateTokens = [
         preferredToken,
         ...(preferredToken.address !== defaultRoyaltyPayoutToken.address
@@ -2691,13 +2712,8 @@ export const useQuantuMatrix = () => {
       let usedFallback = false;
 
       for (const token of candidateTokens) {
-        const [, rawAmount] = (await hubPublicClient.readContract({
-          ...royaltyVaultContract,
-          functionName: "viewClaimableInToken",
-          args: [address, token.address],
-        })) as readonly [bigint, bigint];
-
-        if (rawAmount <= BigInt(0)) continue;
+        const requiredRaw = denormalize(token.decimals);
+        if (requiredRaw <= BigInt(0)) continue;
 
         const vaultBalance = (await hubPublicClient.readContract({
           address: token.address,
@@ -2706,7 +2722,7 @@ export const useQuantuMatrix = () => {
           args: [BSC_ROYALTY_VAULT_ADDRESS],
         })) as bigint;
 
-        if (vaultBalance >= rawAmount) {
+        if (vaultBalance >= requiredRaw) {
           selectedPayoutToken = token.address;
           selectedPayoutSymbol = token.symbol;
           usedFallback = token.address !== preferredToken.address;
@@ -2766,30 +2782,47 @@ export const useQuantuMatrix = () => {
     } catch (error: any) {
       console.error("Error claiming royalty:", error);
 
+      // viem wraps the on-chain revert reason in different places depending
+      // on the wallet/provider (shortMessage, cause.reason, cause.shortMessage,
+      // or a raw revert string embedded in message/details). Surface whatever
+      // we can find instead of a generic string, so a revert we don't have an
+      // explicit branch for (e.g. "Transfer failed" from the vault's payout
+      // transfer) is still visible instead of being swallowed.
+      const rawDetail: string =
+        error?.shortMessage ||
+        error?.cause?.shortMessage ||
+        error?.cause?.reason ||
+        error?.details ||
+        error?.message ||
+        "";
+
       let errorMessage = "Failed to claim royalty";
-      if (error?.message?.includes("rejected") || error?.code === 4001) {
+      if (rawDetail.includes("rejected") || error?.code === 4001) {
         errorMessage = "Transaction was rejected in your wallet";
-      } else if (error?.message?.includes("NoRoyalty")) {
+      } else if (rawDetail.includes("NoRoyalty")) {
         errorMessage = "No royalty available to claim";
-      } else if (error?.message?.includes("No payout token in the royalty vault")) {
+      } else if (rawDetail.includes("No payout token in the royalty vault")) {
         errorMessage =
           "Your royalty is recorded, but the vault does not currently hold a supported payout token balance for this claim.";
-      } else if (error?.message?.includes("TokenNotSupported")) {
-        errorMessage = "The selected payout token is not supported by the hub.";
-      } else if (error?.message?.includes("BNB Smart Chain")) {
+      } else if (rawDetail.includes("Transfer failed")) {
+        errorMessage =
+          "The vault doesn't currently hold enough of the selected token to pay out this claim. Please try a different payout token or try again later.";
+      } else if (rawDetail.includes("BNB Smart Chain")) {
         errorMessage =
           "Please switch your wallet to BNB Smart Chain to claim V3 royalty.";
-      } else if (error?.message?.includes("on-chain")) {
+      } else if (rawDetail.includes("on-chain")) {
         errorMessage = "Claim transaction failed on-chain";
-      } else if (error?.message?.includes("Wallet client not available")) {
+      } else if (rawDetail.includes("Wallet client not available")) {
         errorMessage =
           "Wallet not connected. Please connect your wallet first.";
+      } else if (rawDetail) {
+        errorMessage = `Failed to claim royalty: ${rawDetail.slice(0, 180)}`;
       }
 
       toast.error("Claim Failed", {
         id: toastId,
         description: errorMessage,
-        duration: 7000,
+        duration: 9000,
       });
 
       throw error;
