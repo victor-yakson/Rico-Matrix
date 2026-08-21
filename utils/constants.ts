@@ -33,7 +33,7 @@ export const BSC_PAYOUT_BRIDGE_LIB_ADDRESS =
   "0xe4253e3bb340715fc97731003db2cadecb0894d4";
 export const BSC_ROYALTY_VAULT_ADDRESS =
   (process.env.NEXT_PUBLIC_BSC_ROYALTY_VAULT_ADDRESS as `0x${string}`) ||
-  "0xf43e2219f1036c99d728001c6dd622725c44e5e5";
+  "0x96f19edf8cfabfc80cc937f8add504a4dcfa6b60";
 
 export const CONTRACT_ADDRESS =
   (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`) ||
