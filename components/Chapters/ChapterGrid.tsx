@@ -18,6 +18,7 @@ import {
 } from "wagmi";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { RewardCelebrationModal } from "../Giveaway/RewardCelebrationModal";
 
 type MatrixChapterState = {
   blocked?: boolean;
@@ -310,6 +311,7 @@ export const ChapterGrid = () => {
   const [feeBreakdown, setFeeBreakdown] = useState<FeeBreakdown | null>(null);
   const [syncFeeRows, setSyncFeeRows] = useState<Array<{ name: string; eid: number; nativeFee: string }>>([]);
   const [syncing, setSyncing] = useState(false);
+  const [showRewardCelebration, setShowRewardCelebration] = useState(false);
   const t = useTranslations("ChaptersPage.ChapterGrid");
   const effectiveReferralAddress = useMemo(() => {
     if (typeof window === "undefined") {
@@ -856,6 +858,7 @@ export const ChapterGrid = () => {
         id: toastId,
         description: "Your account is active and Chapter 1 is unlocked on both tracks.",
       });
+      setShowRewardCelebration(true);
       return hash;
     }
 
@@ -1370,6 +1373,11 @@ export const ChapterGrid = () => {
           </div>
         </div>
       )}
+
+      <RewardCelebrationModal
+        open={showRewardCelebration}
+        onClose={() => setShowRewardCelebration(false)}
+      />
     </div>
   );
 };

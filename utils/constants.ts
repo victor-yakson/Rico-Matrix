@@ -34,6 +34,11 @@ export const BSC_PAYOUT_BRIDGE_LIB_ADDRESS =
 export const BSC_ROYALTY_VAULT_ADDRESS =
   (process.env.NEXT_PUBLIC_BSC_ROYALTY_VAULT_ADDRESS as `0x${string}`) ||
   "0x96f19edf8cfabfc80cc937f8add504a4dcfa6b60";
+// RicoGiveawayEngine — promotional $RICO cashback / referral bonus / Game of
+// Thrones milestone contract. BSC-only, reads Hub earnings via authorizedHub.
+export const RICO_GIVEAWAY_ENGINE_ADDRESS =
+  (process.env.NEXT_PUBLIC_RICO_GIVEAWAY_ENGINE_ADDRESS as `0x${string}`) ||
+  "0x8A00eeB5704b2D7575ce3EaB6f3d11d5A5EFF0B4";
 
 export const CONTRACT_ADDRESS =
   (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`) ||

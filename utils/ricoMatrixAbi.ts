@@ -311,6 +311,158 @@ export const ROYALTY_VAULT_ABI = [
   },
 ] as const;
 
+// Matches RicoGiveawayEngine.sol. recordDirectJoin/recordChapterPurchase are
+// onlyOwner/onlyAuthorized(hub) and deliberately omitted — no user wallet can
+// ever call them, so the frontend never should either. The only writes a
+// user's own wallet can make are the self-import and the claim.
+export const RICO_GIVEAWAY_ENGINE_ABI = [
+  {
+    type: "function",
+    name: "importMyHistoricalEarnings",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "claimRicoReward",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [{ name: "claimable", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "isActive",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "isUserImported",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "getPendingRico",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "ricoDecimals",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "firstMilestoneUSD",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "milestoneStepUSD",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "getUserFullEarningsBreakdown",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [
+      { name: "histTrack1USD", type: "uint256" },
+      { name: "histTrack2USD", type: "uint256" },
+      { name: "histTotalUSD", type: "uint256" },
+      { name: "activeReferralUSD", type: "uint256" },
+      { name: "activePersonalUSD", type: "uint256" },
+      { name: "totalCombinedVolumeUSD", type: "uint256" },
+      { name: "completedMilestones", type: "uint256" },
+      { name: "nextMilestoneTargetUSD", type: "uint256" },
+      { name: "totalClaimableRico", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getGlobalStats",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "campaignActive", type: "bool" },
+      { name: "activatedAt", type: "uint256" },
+      { name: "totalFunded", type: "uint256" },
+      { name: "totalDistributed", type: "uint256" },
+      { name: "totalClaimed", type: "uint256" },
+      { name: "activeVolumeUSD", type: "uint256" },
+      { name: "totalDropsCount", type: "uint256" },
+      { name: "contractBalance", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getThroneRecordsPaginated",
+    stateMutability: "view",
+    inputs: [
+      { name: "offset", type: "uint256" },
+      { name: "limit", type: "uint256" },
+    ],
+    outputs: [
+      {
+        name: "records",
+        type: "tuple[]",
+        components: [
+          { name: "winner", type: "address" },
+          { name: "milestoneUSD", type: "uint256" },
+          { name: "rewardRico", type: "uint256" },
+          { name: "timestamp", type: "uint256" },
+          { name: "isHistoricalImport", type: "bool" },
+        ],
+      },
+      { name: "total", type: "uint256" },
+    ],
+  },
+  {
+    type: "event",
+    name: "HistoricalUserImported",
+    inputs: [
+      { indexed: true, name: "user", type: "address" },
+      { indexed: false, name: "track1EarnedUSD", type: "uint256" },
+      { indexed: false, name: "track2EarnedUSD", type: "uint256" },
+      { indexed: false, name: "totalPastVolumeUSD", type: "uint256" },
+      { indexed: false, name: "milestonesCompleted", type: "uint256" },
+      { indexed: false, name: "nextMilestoneTargetUSD", type: "uint256" },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ThroneMilestoneAchieved",
+    inputs: [
+      { indexed: true, name: "winner", type: "address" },
+      { indexed: false, name: "milestoneUSD", type: "uint256" },
+      { indexed: false, name: "rewardRico", type: "uint256" },
+      { indexed: false, name: "throneCount", type: "uint256" },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "RicoClaimed",
+    inputs: [
+      { indexed: true, name: "user", type: "address" },
+      { indexed: false, name: "amount", type: "uint256" },
+    ],
+    anonymous: false,
+  },
+] as const;
+
 export const RICO_MATRIX_SPOKE_ABI = [
   {
     type: "event",
