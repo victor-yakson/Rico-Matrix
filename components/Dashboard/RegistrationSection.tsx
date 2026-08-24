@@ -4,7 +4,6 @@ import { useQuantuMatrix } from "../../hooks/useQuantuMatrix";
 import { useState, useMemo, useEffect } from "react";
 import { useReadContract, useAccount } from "wagmi";
 import { useTranslations } from "next-intl";
-import { RewardCelebrationModal } from "../Giveaway/RewardCelebrationModal";
 
 interface RegistrationSectionProps {
   referralAddress: string | null;
@@ -107,7 +106,6 @@ export const RegistrationSection = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [tokenMenuOpen, setTokenMenuOpen] = useState(false);
   const [copiedTokenAddress, setCopiedTokenAddress] = useState(false);
-  const [showRewardCelebration, setShowRewardCelebration] = useState(false);
 
   // Check if user is already registered and clear referral if they are
   useEffect(() => {
@@ -429,7 +427,6 @@ export const RegistrationSection = ({
 
       onRegistrationComplete();
       setStep("info");
-      setShowRewardCelebration(true);
     } catch (err: any) {
       console.error("Registration failed:", err);
 
@@ -1388,11 +1385,6 @@ export const RegistrationSection = ({
           </div>
         </div>
       )}
-
-      <RewardCelebrationModal
-        open={showRewardCelebration}
-        onClose={() => setShowRewardCelebration(false)}
-      />
     </>
   );
 };
