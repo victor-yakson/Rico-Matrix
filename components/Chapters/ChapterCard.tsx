@@ -703,8 +703,17 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   return (
     <>
       {/* CARD */}
-      <div className="group relative overflow-hidden rounded-2xl border border-yellow-500/10 bg-gradient-to-b from-black via-slate-950 to-slate-900 p-5 shadow-[0_0_45px_rgba(0,0,0,0.7)] transition-all duration-300 hover:-translate-y-1 hover:border-yellow-400/40 hover:shadow-[0_0_70px_rgba(250,204,21,0.28)]">
+      <div className="group relative overflow-hidden rounded-2xl border border-yellow-500/10 bg-gradient-to-b from-black via-slate-950 to-slate-900 p-5 shadow-[0_0_45px_rgba(0,0,0,0.7)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-yellow-400/40 hover:shadow-[0_0_70px_rgba(250,204,21,0.28)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300 opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
         <div className="pointer-events-none absolute inset-x-0 -top-24 h-32 bg-[radial-gradient(circle_at_top,_rgba(250,204,21,0.28),_transparent)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+        {isUnlocked && (
+          <div className="pointer-events-none absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/15 text-emerald-300">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        )}
 
         <div className="relative flex items-start justify-between mb-4">
           <span
@@ -732,24 +741,26 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
           {title}
         </h3>
 
-        <div className="relative space-y-3 rounded-xl bg-slate-900/55 p-3 ring-1 ring-slate-700/60 mt-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">{t("price.label")}</span>
-            <span className="font-semibold text-yellow-300">
-              {formattedPrice}{" "}
-              <span className="text-xs text-slate-400">
+        <div className="relative mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-slate-900/55 p-3 ring-1 ring-slate-700/60">
+            <p className="text-[0.65rem] uppercase tracking-[0.14em] text-slate-500">
+              {t("price.label")}
+            </p>
+            <p className="mt-1 text-lg font-bold text-amber-200 tabular-nums">
+              {formattedPrice}
+              <span className="ml-1 text-xs font-medium text-slate-400">
                 {t("price.currency")}
               </span>
-            </span>
+            </p>
           </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">{t("status.label")}</span>
-            <span className={`font-medium ${getStatusColor()}`}>
+          <div className="rounded-xl bg-slate-900/55 p-3 ring-1 ring-slate-700/60">
+            <p className="text-[0.65rem] uppercase tracking-[0.14em] text-slate-500">
+              {t("status.label")}
+            </p>
+            <p className={`mt-1 text-sm font-semibold ${getStatusColor()}`}>
               {getStatusText()}
-            </span>
+            </p>
           </div>
-
         </div>
 
         {isUnlocked ? (

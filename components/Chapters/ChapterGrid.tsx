@@ -18,6 +18,7 @@ import {
 } from "wagmi";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { RewardCelebrationModal } from "../Giveaway/RewardCelebrationModal";
 
 type MatrixChapterState = {
@@ -1288,9 +1289,12 @@ export const ChapterGrid = () => {
       </div>
 
       <div>
-        <h3 className="text-2xl font-bold text-white mb-6">{t("tracks.x3")}</h3>
+        <div className="mb-6 flex items-center gap-3">
+          <span className="theme-chip theme-chip--gold">📚 X3</span>
+          <h3 className="text-2xl font-bold text-white">{t("tracks.x3")}</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {track1Chapters.map((chapter) => {
+          {track1Chapters.map((chapter, index) => {
             const chapterPrice = getChapterPrice(chapter);
             const purchaseState = getPurchaseState(1, chapter);
             const chapterNeedsApproval =
@@ -1300,33 +1304,42 @@ export const ChapterGrid = () => {
                 : needsApproval(chapterPrice);
 
             return (
-              <ChapterCard
+              <motion.div
                 key={`track1-${chapter}`}
-                track={1}
-                chapter={chapter}
-                title={CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]}
-                price={chapterPrice}
-                isUnlocked={
-                  userData?.exists && userData.track1Unlocked >= chapter
-                }
-                chapterState={track1States[chapter]}
-                onPurchase={handleBuyChapter}
-                onApprove={(amount) => handleApproveUsdt(amount, 1, chapter)}
-                disabled={isProcessing || !purchaseState.canAct}
-                needsApproval={chapterNeedsApproval}
-                isApproving={isChapterApproving(1, chapter)}
-                actionLabel={purchaseState.actionLabel}
-                statusOverride={purchaseState.statusOverride}
-              />
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.04 }}
+              >
+                <ChapterCard
+                  track={1}
+                  chapter={chapter}
+                  title={CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]}
+                  price={chapterPrice}
+                  isUnlocked={
+                    userData?.exists && userData.track1Unlocked >= chapter
+                  }
+                  chapterState={track1States[chapter]}
+                  onPurchase={handleBuyChapter}
+                  onApprove={(amount) => handleApproveUsdt(amount, 1, chapter)}
+                  disabled={isProcessing || !purchaseState.canAct}
+                  needsApproval={chapterNeedsApproval}
+                  isApproving={isChapterApproving(1, chapter)}
+                  actionLabel={purchaseState.actionLabel}
+                  statusOverride={purchaseState.statusOverride}
+                />
+              </motion.div>
             );
           })}
         </div>
       </div>
 
       <div>
-        <h3 className="text-2xl font-bold text-white mb-6">{t("tracks.x6")}</h3>
+        <div className="mb-6 flex items-center gap-3">
+          <span className="theme-chip theme-chip--gold">🧠 X6</span>
+          <h3 className="text-2xl font-bold text-white">{t("tracks.x6")}</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {track2Chapters.map((chapter) => {
+          {track2Chapters.map((chapter, index) => {
             const chapterPrice = getChapterPrice(chapter);
             const purchaseState = getPurchaseState(2, chapter);
             const chapterNeedsApproval =
@@ -1336,24 +1349,30 @@ export const ChapterGrid = () => {
                 : needsApproval(chapterPrice);
 
             return (
-              <ChapterCard
+              <motion.div
                 key={`track2-${chapter}`}
-                track={2}
-                chapter={chapter}
-                title={CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]}
-                price={chapterPrice}
-                isUnlocked={
-                  userData?.exists && userData.track2Unlocked >= chapter
-                }
-                chapterState={track2States[chapter]}
-                onPurchase={handleBuyChapter}
-                onApprove={(amount) => handleApproveUsdt(amount, 2, chapter)}
-                disabled={isProcessing || !purchaseState.canAct}
-                needsApproval={chapterNeedsApproval}
-                isApproving={isChapterApproving(2, chapter)}
-                actionLabel={purchaseState.actionLabel}
-                statusOverride={purchaseState.statusOverride}
-              />
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.04 }}
+              >
+                <ChapterCard
+                  track={2}
+                  chapter={chapter}
+                  title={CHAPTER_NAMES[chapter as keyof typeof CHAPTER_NAMES]}
+                  price={chapterPrice}
+                  isUnlocked={
+                    userData?.exists && userData.track2Unlocked >= chapter
+                  }
+                  chapterState={track2States[chapter]}
+                  onPurchase={handleBuyChapter}
+                  onApprove={(amount) => handleApproveUsdt(amount, 2, chapter)}
+                  disabled={isProcessing || !purchaseState.canAct}
+                  needsApproval={chapterNeedsApproval}
+                  isApproving={isChapterApproving(2, chapter)}
+                  actionLabel={purchaseState.actionLabel}
+                  statusOverride={purchaseState.statusOverride}
+                />
+              </motion.div>
             );
           })}
         </div>
