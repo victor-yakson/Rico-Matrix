@@ -1,6 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { motion } from 'framer-motion';
+import { ProgressBar } from '../Common/ProgressBar';
 
 interface ProfileStatsProps {
   userData: any;
@@ -66,33 +68,28 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
       
       {/* Progress Overview */}
       <div className="space-y-4">
-        <div className="flex justify-between text-sm text-slate-400">
-          <span>{t('progress.title')}</span>
-          <span>{totalChapters}/24 ({Math.round(progressPercentage)}%)</span>
-        </div>
-        <div className="w-full bg-slate-700 rounded-full h-3 shadow-inner">
-          <div 
-            className="bg-gradient-to-r from-yellow-400 to-amber-500 h-3 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(250,204,21,0.5)]"
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
-        </div>
+        <ProgressBar
+          label={t('progress.title')}
+          valueLabel={`${totalChapters}/24 (${Math.round(progressPercentage)}%)`}
+          percent={progressPercentage}
+        />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-4 pt-2">
-          <div className="text-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+          <div className="text-center theme-card-compact p-3">
             <div className="text-xl font-bold text-slate-50">{totalChapters}</div>
             <div className="text-xs text-slate-400">
               {t('progress.chapters')}
             </div>
           </div>
-          <div className="text-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+          <div className="text-center theme-card-compact p-3">
             <div className="text-xl font-bold text-slate-50">{totalCycles}</div>
             <div className="text-xs text-slate-400">
               {t('progress.cycles')}
             </div>
           </div>
-          <div className="text-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-            <div className="text-xl font-bold text-slate-50">${formatCurrency(totalEarnings)}</div>
+          <div className="text-center theme-card-compact p-3">
+            <div className="text-xl font-bold text-amber-200">${formatCurrency(totalEarnings)}</div>
             <div className="text-xs text-slate-400">
               {t('progress.earned')}
             </div>
@@ -107,9 +104,13 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {trackStats.map((track, index) => (
-            <div 
+            <motion.div
               key={index}
-              className={`border ${track.borderColor} bg-slate-800/30 rounded-xl p-4 hover:border-slate-600/50 transition-all duration-300`}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.06 }}
+              whileHover={{ y: -2 }}
+              className="theme-card-compact p-4 transition-colors hover:border-yellow-400/30"
             >
               <div className="flex items-center justify-between mb-3">
                 <h4 className={`font-semibold ${track.textColor}`}>{track.track}</h4>
@@ -129,7 +130,7 @@ export const ProfileStats = ({ userData }: ProfileStatsProps) => {
                   <span className="font-medium text-slate-200">{track.chapters}/12</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

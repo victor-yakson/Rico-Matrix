@@ -2,6 +2,8 @@
 
 import { formatUnits } from "viem";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
+import { ProgressBar } from "../Common/ProgressBar";
 
 const formatUnitsSafe = (value: unknown, decimals = 18): string => {
   try {
@@ -187,23 +189,24 @@ export const Stats = ({
         <h2 className="text-2xl font-bold text-slate-50">{t("title")}</h2>
         {userData?.exists &&
           (parseFloat(ricoTotal) > 0 || parseFloat(ricoPending) > 0) && (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-900/20 border border-yellow-700/40">
-              <span className="text-sm text-yellow-400">{t("ricoActive")}</span>
+            <div className="theme-chip theme-chip--gold">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              {t("ricoActive")}
             </div>
           )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredStats.map((stat, index) => (
-          <div
+          <motion.div
             key={index}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.05 }}
+            whileHover={{ y: -2 }}
             className={`
-              relative rounded-xl p-4 hover:scale-[1.02] transition-all duration-300
-              ${
-                stat.isGlobal
-                  ? "border border-yellow-500/30 bg-yellow-950/10"
-                  : "border border-slate-700/50 bg-slate-800/30"
-              }
-              hover:border-slate-600/50 hover:shadow-lg hover:shadow-slate-900/30
+              relative theme-card-compact p-4 transition-colors
+              ${stat.isGlobal ? "border-yellow-500/25" : ""}
+              hover:border-yellow-400/30
               ${
                 parseFloat(stat.value.replace(/[^0-9.]/g, "")) > 0
                   ? "opacity-100"
@@ -222,7 +225,7 @@ export const Stats = ({
             <div className="flex items-center justify-between mb-3">
               <div
                 className={`
-                w-10 h-10 rounded-lg flex items-center justify-center text-lg
+                w-10 h-10 rounded-xl flex items-center justify-center text-lg
                 bg-gradient-to-r ${stat.gradient} shadow-md
               `}
               >
@@ -269,66 +272,39 @@ export const Stats = ({
               userData?.exists &&
               parseFloat(ricoTotal) > 0 &&
               parseFloat(ricoReceived) > 0 && (
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>{t("progress")}</span>
-                    <span>
-                      {Math.round(
-                        (parseFloat(ricoReceived) / parseFloat(ricoTotal)) * 100
-                      )}
-                      %
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-1.5">
-                    <div
-                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-1.5 rounded-full"
-                      style={{
-                        width: `${Math.min(
-                          (parseFloat(ricoReceived) / parseFloat(ricoTotal)) *
-                            100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+                <ProgressBar
+                  className="mt-3"
+                  label={t("progress")}
+                  valueLabel={`${Math.round(
+                    (parseFloat(ricoReceived) / parseFloat(ricoTotal)) * 100
+                  )}%`}
+                  percent={
+                    (parseFloat(ricoReceived) / parseFloat(ricoTotal)) * 100
+                  }
+                />
               )}
 
             {/* Progress bar for Global RICO */}
             {stat.name === metrics[6].name &&
               parseFloat(globalRicoShouldHave) > 0 && (
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>{t("distributed")}</span>
-                    <span>
-                      {Math.round(
-                        (parseFloat(globalRicoSent) /
-                          parseFloat(globalRicoShouldHave)) *
-                          100
-                      )}
-                      %
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-1.5">
-                    <div
-                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-1.5 rounded-full"
-                      style={{
-                        width: `${Math.min(
-                          (parseFloat(globalRicoSent) /
-                            parseFloat(globalRicoShouldHave)) *
-                            100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+                <ProgressBar
+                  className="mt-3"
+                  label={t("distributed")}
+                  valueLabel={`${Math.round(
+                    (parseFloat(globalRicoSent) /
+                      parseFloat(globalRicoShouldHave)) *
+                      100
+                  )}%`}
+                  percent={
+                    (parseFloat(globalRicoSent) /
+                      parseFloat(globalRicoShouldHave)) *
+                    100
+                  }
+                />
               )}
-          </div>
+          </motion.div>
         ))}
       </div>
-
-
     </div>
   );
 };

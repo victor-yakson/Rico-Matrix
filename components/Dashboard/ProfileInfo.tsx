@@ -3,6 +3,7 @@
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
 import { useTranslations } from 'next-intl';
+import { ProgressBar } from '../Common/ProgressBar';
 
 interface ProfileInfoProps {
   userData: any;
@@ -61,11 +62,8 @@ const ProfileInfo = ({
     <div className="p-1">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-slate-50">{t('title')}</h3>
-        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-          userData?.exists 
-            ? 'bg-yellow-900/20 text-amber-300 border border-yellow-700/35' 
-            : 'bg-slate-800/60 text-slate-400 border border-slate-700/40'
-        }`}>
+        <div className={`theme-chip ${userData?.exists ? 'theme-chip--gold' : ''}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${userData?.exists ? 'bg-emerald-400' : 'bg-slate-500'}`} />
           {userData?.exists ? t('status.active') : t('status.inactive')}
         </div>
       </div>
@@ -73,7 +71,7 @@ const ProfileInfo = ({
       {/* Wallet Address */}
       <div className="mb-6">
         <p className="text-sm text-slate-400 mb-1">{t('wallet.title')}</p>
-        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-700/50">
+        <div className="flex items-center justify-between theme-card-compact p-3">
           <span className="text-slate-200 font-medium">{formatAddress(address || '')}</span>
           <button
             onClick={() => address && navigator.clipboard.writeText(address)}
@@ -89,13 +87,13 @@ const ProfileInfo = ({
       {userData?.exists && (
         <>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="rounded-xl bg-slate-900/50 p-4 border border-slate-700/40">
+            <div className="theme-card-compact p-4">
               <p className="text-xs text-slate-400 mb-1">{t('readerId')}</p>
               <p className="text-lg font-bold text-slate-100">
                 #{userData.readerId || '--'}
               </p>
             </div>
-            <div className="rounded-xl bg-slate-900/50 p-4 border border-slate-700/40">
+            <div className="theme-card-compact p-4">
               <p className="text-xs text-slate-400 mb-1">{t('referrer')}</p>
               <p className="text-sm font-medium text-slate-200">
                 {userData.referrer ? formatAddress(userData.referrer) : t('none')}
@@ -105,7 +103,7 @@ const ProfileInfo = ({
 
           {/* Partners Count */}
           <div className="mb-6">
-            <div className="rounded-xl bg-gradient-to-r from-yellow-900/20 to-slate-900/50 p-4 border border-yellow-500/30">
+            <div className="theme-stat-panel p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-yellow-300 mb-1">{t('partners.title')}</p>
@@ -124,7 +122,7 @@ const ProfileInfo = ({
           {/* RICO Farming Section - Only show if user has RICO data */}
           {hasRICOData && (
             <div className="mb-6">
-              <div className="rounded-xl bg-gradient-to-r from-yellow-900/20 to-slate-900/50 p-4 border border-yellow-500/30 mb-4">
+              <div className="theme-stat-panel p-4 mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-semibold text-yellow-400 flex items-center gap-2">
                     <span className="text-lg">🪙</span> {t('rico.title')}
@@ -170,18 +168,12 @@ const ProfileInfo = ({
                 </div>
                 
                 {/* Distribution Progress Bar */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>{t('rico.progress')}</span>
-                    <span>{ricoDistributionPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full bg-slate-800 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${ricoDistributionPercentage}%` }}
-                    />
-                  </div>
-                </div>
+                <ProgressBar
+                  className="mt-4"
+                  label={t('rico.progress')}
+                  valueLabel={`${ricoDistributionPercentage.toFixed(1)}%`}
+                  percent={ricoDistributionPercentage}
+                />
                 
                 {/* Farming Info */}
                 <div className="mt-3 text-xs text-slate-500">
@@ -208,7 +200,7 @@ const ProfileInfo = ({
 
           {/* Royalty Section */}
           <div className="mb-6">
-            <div className="rounded-xl bg-gradient-to-r from-yellow-900/20 to-slate-900/50 p-4 border border-yellow-400/35">
+            <div className="theme-stat-panel p-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-yellow-300 flex items-center gap-2">
                   <span className="text-lg">👑</span> {t('royalty.title')}
@@ -242,13 +234,13 @@ const ProfileInfo = ({
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="rounded-xl bg-slate-900/50 p-3 border border-slate-700/40">
+            <div className="theme-card-compact p-3">
               <p className="text-xs text-slate-400 mb-1">{t('tracks.track1')}</p>
               <p className="text-lg font-bold text-yellow-300">
                 {userData.track1Unlocked || 0}/12
               </p>
             </div>
-            <div className="rounded-xl bg-slate-900/50 p-3 border border-slate-700/40">
+            <div className="theme-card-compact p-3">
               <p className="text-xs text-slate-400 mb-1">{t('tracks.track2')}</p>
               <p className="text-lg font-bold text-yellow-300">
                 {userData.track2Unlocked || 0}/12
@@ -257,7 +249,7 @@ const ProfileInfo = ({
           </div>
 
           {/* Total Earnings */}
-          <div className="rounded-xl bg-gradient-to-r from-yellow-900/30 to-slate-900/50 p-4 border border-yellow-500/30">
+          <div className="theme-stat-panel p-4">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-semibold text-yellow-400">{t('earnings.title')}</h4>
               <div className="text-xl">💰</div>
