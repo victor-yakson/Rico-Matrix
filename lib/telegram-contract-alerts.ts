@@ -13,11 +13,13 @@ import {
 import {
   CONTRACT_ABI,
   LEGACY_V2_CONTRACT_ADDRESS,
+  BSC_ROYALTY_VAULT_ADDRESS,
   RICO_CHAIN_CONFIG,
 } from "@/utils/constants";
 import {
   RICO_MATRIX_HUB_ABI,
   RICO_MATRIX_SPOKE_ABI,
+  ROYALTY_VAULT_ABI,
 } from "@/utils/ricoMatrixAbi";
 
 export type MatrixAlertAction =
@@ -30,7 +32,7 @@ type SupportedFunctionName =
   | "joinLibrarySpoke"
   | "buyChapterBatchHub"
   | "buyChapterSpoke"
-  | "claimRoyaltyV3"
+  | "claimRoyalty"
   | "claimRoyaltyV2"
   | "claimLegacyRoyalty";
 
@@ -53,6 +55,7 @@ const TELEGRAM_CONTRACT_ABI = [
   ...RICO_MATRIX_HUB_ABI,
   ...RICO_MATRIX_SPOKE_ABI,
   ...CONTRACT_ABI,
+  ...ROYALTY_VAULT_ABI,
 ] as unknown as Abi;
 
 type TelegramAlertChainId = 1 | 56 | 137 | 8453;
@@ -233,7 +236,7 @@ function isSupportedFunctionName(
     functionName === "joinLibrarySpoke" ||
     functionName === "buyChapterBatchHub" ||
     functionName === "buyChapterSpoke" ||
-    functionName === "claimRoyaltyV3" ||
+    functionName === "claimRoyalty" ||
     functionName === "claimRoyaltyV2" ||
     functionName === "claimLegacyRoyalty"
   );
@@ -243,7 +246,10 @@ function isExpectedContractTarget(to: Hex, chain: AlertChainConfig) {
   const target = to.toLowerCase();
   return (
     target === chain.matrix.toLowerCase() ||
-    target === LEGACY_V2_CONTRACT_ADDRESS.toLowerCase()
+    target === LEGACY_V2_CONTRACT_ADDRESS.toLowerCase() ||
+    // The current royalty claim (claimRoyalty) goes to the RoyaltyVault on
+    // BSC, never the Hub matrix contract — see RoyaltyVault.sol.
+    (chain.id === 56 && target === BSC_ROYALTY_VAULT_ADDRESS.toLowerCase())
   );
 }
 
@@ -467,14 +473,29 @@ async function buildRoyaltyClaimAlert(
     amount: bigint;
   }>("LegacyRoyaltyClaimed", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
 
-  const currentClaim = decodeMatchingEvent<{
+  // "RoyaltyClaimed" is emitted by two different contracts with different
+  // field names: the legacy V2 contract (reader, amount) and the current
+  // RoyaltyVault (user, token, amountUSD) — try both shapes.
+  const legacyStyleClaim = decodeMatchingEvent<{
     reader: Hex;
     amount: bigint;
   }>("RoyaltyClaimed", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
+  const vaultClaim = decodeMatchingEvent<{
+    user: Hex;
+    token: Hex;
+    amountUSD: bigint;
+  }>("RoyaltyClaimed", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
 
-  const reader = legacyClaim?.reader || currentClaim?.reader || tx.from;
+  const reader =
+    legacyClaim?.reader ||
+    legacyStyleClaim?.reader ||
+    vaultClaim?.user ||
+    tx.from;
   const amount =
-    legacyClaim?.amount || currentClaim?.amount || BigInt(0);
+    legacyClaim?.amount ||
+    legacyStyleClaim?.amount ||
+    vaultClaim?.amountUSD ||
+    BigInt(0);
   const summary = await readReaderSummary(publicClient, chain, reader);
 
   const claimLabel =
