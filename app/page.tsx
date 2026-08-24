@@ -19,6 +19,7 @@ import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
 import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
 import { motion } from "framer-motion";
+import { RewardCelebrationModal } from "../components/Giveaway/RewardCelebrationModal";
 
 const formatUnitsSafe = (value: unknown, decimals = 18): string => {
   try {
@@ -77,6 +78,7 @@ export default function Dashboard() {
     Array<{ track: "X3" | "X6"; chapter: number }>
   >([]);
   const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
+  const [showRewardCelebration, setShowRewardCelebration] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [isLegacyActionRunning, setIsLegacyActionRunning] = useState(false);
   const [legacyActionChecked, setLegacyActionChecked] = useState(false);
@@ -175,6 +177,11 @@ export default function Dashboard() {
   const handleRegistrationComplete = () => {
     refetchUserData();
     refetchAllData();
+    // Owned by the Dashboard component (not RegistrationSection) since
+    // dashboardState flips to "dashboard" as soon as the refetches above
+    // resolve, unmounting RegistrationSection — a modal living there would
+    // never survive long enough to be seen.
+    setShowRewardCelebration(true);
   };
 
   // Handle V2 royalty claim
@@ -381,6 +388,10 @@ export default function Dashboard() {
   return (
     <>
       <Header />
+      <RewardCelebrationModal
+        open={showRewardCelebration}
+        onClose={() => setShowRewardCelebration(false)}
+      />
       {dataRefreshing && (
         <div className="fixed left-1/2 top-24 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-yellow-400/30 bg-slate-950/90 px-4 py-2 text-xs font-semibold text-yellow-100 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-300 border-t-transparent" />
@@ -434,95 +445,55 @@ export default function Dashboard() {
 
             {dashboardState === "dashboard" && (
               <div className="mx-auto mt-4 max-w-3xl">
-                <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-4 text-left shadow-[0_0_22px_rgba(34,211,238,0.08)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-                    Connected Network
-                  </p>
-                  <p className="mt-2 text-lg font-semibold text-slate-50">
-                    {activeChain.name}
-                  </p>
-                  <p className="mt-2 text-sm text-slate-300">
-                    {isHubChain
-                      ? "You are on the BSC hub. Account data and transactions are both handled on the hub chain."
-                      : `You are on the ${activeChain.name} spoke. Account data is loaded from the BSC hub, and new purchases/registration run on this connected chain.`}
-                  </p>
-                  <p className="mt-2 text-xs text-cyan-100/80">
-                    Data scope: {dataScopeLabel}
-                  </p>
-                </div>
-                <div className="theme-panel relative overflow-hidden border border-yellow-400/20 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.12),transparent_32%),linear-gradient(180deg,rgba(24,24,32,0.96),rgba(10,10,18,0.98))] px-4 py-4 shadow-[0_0_34px_rgba(234,179,8,0.12)] sm:px-5">
-                  <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-yellow-300/70 to-transparent" />
-                  <div className="pointer-events-none absolute -right-12 top-6 h-24 w-24 rounded-full bg-yellow-300/10 blur-3xl" />
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="theme-card-compact flex flex-col gap-3 px-4 py-3 text-left sm:flex-row sm:items-center sm:justify-between">
+                  <div
+                    className="flex items-center gap-2 text-xs text-slate-300"
+                    title={
+                      isHubChain
+                        ? "You are on the BSC hub. Account data and transactions are both handled on the hub chain."
+                        : `You are on the ${activeChain.name} spoke. Account data is loaded from the BSC hub, and new purchases/registration run on this connected chain.`
+                    }
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span className="font-semibold text-slate-100">{activeChain.name}</span>
+                    <span className="text-slate-500">· {dataScopeLabel}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                     <a
                       href={activeFeature?.href}
                       target={activeFeature?.href?.startsWith("http") ? "_blank" : undefined}
                       rel={activeFeature?.href?.startsWith("http") ? "noreferrer" : undefined}
-                      className="group min-w-0 flex-1 rounded-[1.6rem] text-center transition-transform duration-300 hover:-translate-y-0.5 hover:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b12] sm:-mx-2 sm:px-2 sm:py-1 sm:text-left"
+                      className="group flex min-w-0 items-center gap-2 text-xs"
                     >
-                      <p className="theme-kicker mb-2 justify-center text-[10px] sm:justify-start">
-                        {t("header.featureCarousel.kicker")}
-                      </p>
-                      <div
+                      <span className="shrink-0 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-100">
+                        {activeFeature?.status}
+                      </span>
+                      <span
                         key={featureCarouselIndex}
-                        className="dashboard-feature-carousel min-h-[116px] sm:min-h-[92px]"
+                        className="dashboard-feature-carousel truncate font-medium text-slate-200 transition-colors group-hover:text-cyan-100"
                       >
-                        <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/90 shadow-[0_0_18px_rgba(34,211,238,0.12)]">
-                          <span>
-                            {activeFeature?.status}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-center gap-3 sm:justify-start">
-                          <div
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl transition-transform duration-300 group-hover:scale-105 ${activeFeature?.tone}`}
-                          >
-                            <span aria-hidden="true">
-                              {activeFeature?.icon}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                              <h2 className="text-xl font-semibold text-slate-50 transition-colors duration-300 group-hover:text-cyan-100 sm:text-2xl">
-                                {activeFeature?.title}
-                              </h2>
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">
-                                {activeFeature?.domainLabel}
-                              </span>
-                            </div>
-                            <div className="mt-2 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-cyan-200/90">
-                              <span>{t("header.featureCarousel.learnMore")}</span>
-                              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        {activeFeature?.title}
+                      </span>
+                      <span className="shrink-0 text-cyan-300 transition-transform group-hover:translate-x-0.5">
+                        →
+                      </span>
                     </a>
 
-                    <div className="flex flex-col items-center gap-3 sm:items-end">
-                      <a
-                        href={activeFeature?.href}
-                        target={activeFeature?.href?.startsWith("http") ? "_blank" : undefined}
-                        rel={activeFeature?.href?.startsWith("http") ? "noreferrer" : undefined}
-                        className="inline-flex min-h-[46px] items-center justify-center rounded-2xl border border-cyan-300/35 bg-[linear-gradient(135deg,rgba(14,165,233,0.22),rgba(6,182,212,0.34),rgba(30,41,59,0.92))] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_28px_rgba(34,211,238,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/70 hover:shadow-[0_0_32px_rgba(34,211,238,0.28)] md:text-sm"
-                      >
-                        <span>{t("header.featureCarousel.learnMore")}</span>
-                      </a>
-
-                      <div className="flex items-center justify-center gap-2 sm:justify-end">
-                        {upcomingFeatures.map((feature, index) => (
-                          <button
-                            key={feature.title}
-                            type="button"
-                            aria-label={feature.title}
-                            onClick={() => setFeatureCarouselIndex(index)}
-                            className={`h-2.5 rounded-full transition-all ${
-                              index === featureCarouselIndex
-                                ? "w-8 bg-yellow-400"
-                                : "w-2.5 bg-white/20 hover:bg-white/35"
-                            }`}
-                          />
-                        ))}
-                      </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {upcomingFeatures.map((feature, index) => (
+                        <button
+                          key={feature.title}
+                          type="button"
+                          aria-label={feature.title}
+                          onClick={() => setFeatureCarouselIndex(index)}
+                          className={`h-1.5 rounded-full transition-all ${
+                            index === featureCarouselIndex
+                              ? "w-4 bg-cyan-300"
+                              : "w-1.5 bg-white/20 hover:bg-white/35"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
