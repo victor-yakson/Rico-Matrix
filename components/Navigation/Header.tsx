@@ -61,6 +61,12 @@ export const Header = () => {
       current: pathname === "/royalty",
       icon: "◌",
     },
+    {
+      name: t("navigation.rewards"),
+      href: "/rewards",
+      current: pathname === "/rewards",
+      icon: "🎁",
+    },
     // {
     //   name: t("navigation.profile"),
     //   href: "/profile",

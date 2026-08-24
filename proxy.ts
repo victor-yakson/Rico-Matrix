@@ -97,6 +97,7 @@ const PROTECTED_PREFIXES = [
   "/library",
   "/chapters",
   "/royalty",
+  "/rewards",
   "/profile",
   "/rico",
   "/skills",
