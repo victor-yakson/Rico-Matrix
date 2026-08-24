@@ -238,12 +238,17 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({
   };
 
   const getStatusText = () => {
-    if (statusOverride) return statusOverride;
+    // isUnlocked reflects actual on-chain ownership and must win — statusOverride
+    // is purchase-eligibility copy (e.g. "buy in sequence") computed from a
+    // route-specific unlock count that can lag behind ownership on a spoke
+    // chain the reader hasn't synced to yet, and must never override an
+    // already-owned chapter's status.
     if (isUnlocked) {
       return chapterState === "blocked"
         ? t("status.blocked")
         : t("status.active");
     }
+    if (statusOverride) return statusOverride;
     if (chapter > 1) return t("status.lockedPrevious");
     return t("status.available");
   };
