@@ -299,6 +299,16 @@ export const ROYALTY_VAULT_ABI = [
       { name: "rawAmount", type: "uint256" },
     ],
   },
+  {
+    type: "event",
+    name: "RoyaltyClaimed",
+    inputs: [
+      { indexed: true, name: "user", type: "address" },
+      { indexed: true, name: "token", type: "address" },
+      { indexed: false, name: "amountUSD", type: "uint256" },
+    ],
+    anonymous: false,
+  },
 ] as const;
 
 export const RICO_MATRIX_SPOKE_ABI = [
