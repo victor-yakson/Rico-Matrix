@@ -16,6 +16,9 @@ import {
   useWriteContract,
 } from 'wagmi';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { StatTile } from '@/components/Common/StatTile';
+import { ProgressBar } from '@/components/Common/ProgressBar';
 
 type StakeRecord = {
   index: number;
@@ -54,6 +57,12 @@ const formatTokenAmount = (value?: bigint | null, fractionDigits = 2) => {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: Math.max(fractionDigits, 4),
   });
+};
+
+const toDisplayNumber = (value?: bigint | null) => {
+  if (typeof value !== 'bigint') return 0;
+  const parsed = Number(formatUnits(value, 18));
+  return Number.isFinite(parsed) ? parsed : 0;
 };
 
 const formatPercent = (value?: bigint | null) => {
@@ -686,7 +695,12 @@ export default function RICOStatsPage() {
       <Header />
       <div className="theme-shell theme-page-shell">
         <div className="theme-container px-4 sm:px-6 lg:px-8">
-          <section className="theme-panel p-6 md:p-8 lg:p-10">
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="theme-panel p-6 md:p-8 lg:p-10"
+          >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
                 <p className="theme-kicker">{copy.hero.kicker}</p>
@@ -722,29 +736,37 @@ export default function RICOStatsPage() {
                 </button>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="theme-stat-panel p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.summary.walletRico}</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-200">{formatTokenAmount(ricoBalanceValue)}</p>
-              <p className="mt-1 text-xs text-slate-500">{copy.summary.allowance} {formatTokenAmount(ricoAllowanceValue)}</p>
-            </div>
-            <div className="theme-stat-panel p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.summary.yourStaked}</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-200">{formatTokenAmount(totalStakedByUserValue)}</p>
-              <p className="mt-1 text-xs text-slate-500">{copy.summary.karma} {formatTokenAmount(userKarmaValue)}</p>
-            </div>
-            <div className="theme-stat-panel p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.summary.rewardPool}</p>
-              <p className="mt-2 text-2xl font-semibold text-yellow-200">{formatTokenAmount(rewardPoolBalanceValue)}</p>
-              <p className="mt-1 text-xs text-slate-500">{copy.summary.accShare} {formatTokenAmount(accRewardPerShareValue, 4)}</p>
-            </div>
-            <div className="theme-stat-panel p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.totalStaked}</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-200">{formatTokenAmount(totalStakedValue)}</p>
-              <p className="mt-1 text-xs text-slate-500">{copy.labels.penaltyDistributed} {formatTokenAmount(totalPenaltyDistributedValue)}</p>
-            </div>
+            <StatTile
+              label={copy.summary.walletRico}
+              value={toDisplayNumber(ricoBalanceValue)}
+              accent="gold"
+              icon={<span>👛</span>}
+              sublabel={`${copy.summary.allowance} ${formatTokenAmount(ricoAllowanceValue)}`}
+            />
+            <StatTile
+              label={copy.summary.yourStaked}
+              value={toDisplayNumber(totalStakedByUserValue)}
+              accent="emerald"
+              icon={<span>🔒</span>}
+              sublabel={`${copy.summary.karma} ${formatTokenAmount(userKarmaValue)}`}
+            />
+            <StatTile
+              label={copy.summary.rewardPool}
+              value={toDisplayNumber(rewardPoolBalanceValue)}
+              accent="sky"
+              icon={<span>🏆</span>}
+              sublabel={`${copy.summary.accShare} ${formatTokenAmount(accRewardPerShareValue, 4)}`}
+            />
+            <StatTile
+              label={copy.labels.totalStaked}
+              value={toDisplayNumber(totalStakedValue)}
+              accent="gold"
+              icon={<span>📊</span>}
+              sublabel={`${copy.labels.penaltyDistributed} ${formatTokenAmount(totalPenaltyDistributedValue)}`}
+            />
           </div>
 
           <div className="mt-6">
@@ -821,27 +843,36 @@ export default function RICOStatsPage() {
                 {globalPortfolioCards.length > 0 ? (
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     {globalPortfolioCards.map((card) => (
-                      <div key={card.key} className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{card.label}</p>
-                        <p className="mt-2 text-2xl font-semibold text-slate-50">{card.value}</p>
-                      </div>
+                      <StatTile
+                        key={card.key}
+                        label={card.label}
+                        value={Number.isFinite(card.numericValue) ? card.numericValue : 0}
+                        suffix=" RICO"
+                        accent="slate"
+                      />
                     ))}
                   </div>
                 ) : null}
                 {userData?.exists ? (
                   <div className="mt-4 grid gap-4 md:grid-cols-3">
-                    <div className="rounded-2xl border border-yellow-500/10 bg-slate-900/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Your Earned</p>
-                      <p className="mt-2 text-xl font-semibold text-amber-200">{parseFloat(userData.ricoShouldHave || '0').toFixed(2)} RICO</p>
-                    </div>
-                    <div className="rounded-2xl border border-amber-500/20 bg-slate-900/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Your Sent</p>
-                      <p className="mt-2 text-xl font-semibold text-amber-200">{parseFloat(userData.ricoSent || '0').toFixed(2)} RICO</p>
-                    </div>
-                    <div className="rounded-2xl border border-yellow-500/20 bg-slate-900/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Your Distribution</p>
-                      <p className="mt-2 text-xl font-semibold text-yellow-200">{personalDistributionPercentage.toFixed(1)}%</p>
-                    </div>
+                    <StatTile
+                      label="Your Earned"
+                      value={parseFloat(userData.ricoShouldHave || '0')}
+                      suffix=" RICO"
+                      accent="gold"
+                    />
+                    <StatTile
+                      label="Your Sent"
+                      value={parseFloat(userData.ricoSent || '0')}
+                      suffix=" RICO"
+                      accent="gold"
+                    />
+                    <StatTile
+                      label="Your Distribution"
+                      value={personalDistributionPercentage}
+                      suffix="%"
+                      accent="gold"
+                    />
                   </div>
                 ) : null}
               </SectionCard>
@@ -1082,11 +1113,17 @@ export default function RICOStatsPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {stakes.map((stake) => {
+                    {stakes.map((stake, stakeIndex) => {
                       const progress = getProgress(stake.startTime, stake.duration);
                       const restakeValue = restakeDurations[stake.index] || '365';
                       return (
-                        <article key={stake.index} className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,17,17,0.96),rgba(8,8,8,0.92))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.32)]">
+                        <motion.article
+                          key={stake.index}
+                          initial={{ opacity: 0, y: 14 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: Math.min(stakeIndex, 8) * 0.05 }}
+                          className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,17,17,0.96),rgba(8,8,8,0.92))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.32)] transition-colors hover:border-yellow-400/25"
+                        >
                           <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
                               <p className="text-xs uppercase tracking-[0.16em] text-amber-300/80">Stake #{stake.index}</p>
@@ -1120,13 +1157,11 @@ export default function RICOStatsPage() {
                           </div>
 
                           <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
-                            <div className="flex items-center justify-between text-xs text-slate-400">
-                              <span>{copy.labels.progress}</span>
-                              <span>{progress.toFixed(1)}%</span>
-                            </div>
-                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-800">
-                              <div className="h-full bg-gradient-to-r from-yellow-300 to-amber-300" style={{ width: `${progress}%` }} />
-                            </div>
+                            <ProgressBar
+                              label={copy.labels.progress}
+                              valueLabel={`${progress.toFixed(1)}%`}
+                              percent={progress}
+                            />
                           </div>
 
                           <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
@@ -1165,7 +1200,7 @@ export default function RICOStatsPage() {
                               {activeAction === `unstake-${stake.index}` ? copy.actions.unstaking : copy.actions.unstake}
                             </button>
                           </div>
-                        </article>
+                        </motion.article>
                       );
                     })}
                   </div>
@@ -1179,18 +1214,24 @@ export default function RICOStatsPage() {
                 description={copy.sections.totalsDescription}
               >
                 <div className="grid gap-3">
-                  <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.totalStaked}</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-50">{formatTokenAmount(totalStakedValue)}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.totalBurned}</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-50">{formatTokenAmount(totalBurnedValue)}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.penaltyDistributed}</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-50">{formatTokenAmount(totalPenaltyDistributedValue)}</p>
-                  </div>
+                  <StatTile
+                    label={copy.labels.totalStaked}
+                    value={toDisplayNumber(totalStakedValue)}
+                    accent="gold"
+                    className="!p-4"
+                  />
+                  <StatTile
+                    label={copy.labels.totalBurned}
+                    value={toDisplayNumber(totalBurnedValue)}
+                    accent="rose"
+                    className="!p-4"
+                  />
+                  <StatTile
+                    label={copy.labels.penaltyDistributed}
+                    value={toDisplayNumber(totalPenaltyDistributedValue)}
+                    accent="slate"
+                    className="!p-4"
+                  />
                 </div>
               </SectionCard>
 

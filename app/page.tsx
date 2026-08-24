@@ -18,6 +18,7 @@ import RicoMatrixLandingPage from "@/components/Landingpage/Landingpage";
 import { GlobalPanel } from "@/components/Dashboard/GlobalPanel";
 import SiteFooter from "@/components/Layout/SiteFooter";
 import { isRicoQuantEngineLive } from "@/lib/launchSchedule";
+import { motion } from "framer-motion";
 
 const formatUnitsSafe = (value: unknown, decimals = 18): string => {
   try {
@@ -625,7 +626,12 @@ export default function Dashboard() {
               {/* Main Content Grid */}
               <div className="mb-8 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)] lg:gap-8 xl:gap-10">
                 {/* Left Column - Profile */}
-                <div className="space-y-6 order-2 lg:order-1 h-full">
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6 order-2 lg:order-1 h-full"
+                >
                   <div className="theme-panel h-full p-5">
                     <ProfileInfo
                       userData={userData}
@@ -641,10 +647,15 @@ export default function Dashboard() {
                       }}
                     />
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Right Column - Stats & Content */}
-                <div className="space-y-6 lg:space-y-8 order-1 lg:order-2 h-full">
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.08 }}
+                  className="space-y-6 lg:space-y-8 order-1 lg:order-2 h-full"
+                >
                   {/* Stats Overview + Royalty Buttons */}
                   <div className="theme-panel p-5 md:p-6">
                     <Stats
@@ -697,11 +708,11 @@ export default function Dashboard() {
 
                   {/* RICO Farming Section */}
 
-                  <div className="rounded-2xl border border-yellow-500/20 bg-slate-950/80 p-5 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+                  <div className="theme-panel p-5 md:p-6">
                     <ProfileStats userData={userData} />
                   </div>
                   <ReferralSection />
-                </div>
+                </motion.div>
               </div>
 
               {/* Leaderboards Section */}
