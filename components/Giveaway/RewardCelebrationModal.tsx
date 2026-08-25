@@ -1,13 +1,46 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 interface RewardCelebrationModalProps {
   open: boolean;
   onClose: () => void;
+  /** "new" for a just-completed registration, "returning" for an existing
+   * account being made aware of the giveaway on wallet connect. */
+  variant?: "new" | "returning";
 }
+
+const COPY = {
+  new: {
+    kicker: "Welcome to Rico Matrix",
+    title: "You're In! 👑",
+    body: (
+      <>
+        Your account is live — and you may already qualify for the{" "}
+        <span className="font-semibold text-yellow-300">$RICO Giveaway</span>{" "}
+        and a shot at the{" "}
+        <span className="font-semibold text-amber-300">Game of Thrones</span>{" "}
+        crown. Check your eligibility now.
+      </>
+    ),
+  },
+  returning: {
+    kicker: "New On Rico Matrix",
+    title: "Rewards Are Waiting 🎁",
+    body: (
+      <>
+        The{" "}
+        <span className="font-semibold text-yellow-300">$RICO Giveaway</span>{" "}
+        and{" "}
+        <span className="font-semibold text-amber-300">Game of Thrones</span>{" "}
+        crown system just launched — your account may already qualify.
+      </>
+    ),
+  },
+} as const;
 
 const CONFETTI_COLORS = [
   "#facc15", // yellow-400
@@ -20,24 +53,44 @@ const CONFETTI_COLORS = [
 
 const CONFETTI_COUNT = 44;
 
+type ConfettiPiece = {
+  id: number;
+  left: number;
+  size: number;
+  color: string;
+  delay: number;
+  duration: number;
+  rotate: number;
+  drift: number;
+};
+
+const generateConfetti = (): ConfettiPiece[] =>
+  Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    size: 6 + Math.random() * 8,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    delay: Math.random() * 0.6,
+    duration: 2.2 + Math.random() * 1.6,
+    rotate: Math.random() * 360,
+    drift: (Math.random() - 0.5) * 160,
+  }));
+
 export const RewardCelebrationModal = ({
   open,
   onClose,
+  variant = "new",
 }: RewardCelebrationModalProps) => {
-  const confetti = useMemo(
-    () =>
-      Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        size: 6 + Math.random() * 8,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        delay: Math.random() * 0.6,
-        duration: 2.2 + Math.random() * 1.6,
-        rotate: Math.random() * 360,
-        drift: (Math.random() - 0.5) * 160,
-      })),
-    [],
-  );
+  const copy = COPY[variant];
+  // Generated client-side only, after mount: Math.random() during render
+  // would embed different values in the server HTML vs. the client's first
+  // render, which React flags as a hydration mismatch if the modal is ever
+  // open on that very first render.
+  const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
+
+  useEffect(() => {
+    if (open) setConfetti(generateConfetti());
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -98,27 +151,28 @@ export const RewardCelebrationModal = ({
             </button>
 
             <motion.div
-              className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-500 text-4xl shadow-[0_0_40px_rgba(245,158,11,0.55)]"
+              className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-500 p-3 shadow-[0_0_40px_rgba(245,158,11,0.55)]"
               initial={{ scale: 0, rotate: -30 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 220, damping: 14, delay: 0.15 }}
             >
-              🎉
+              <Image
+                src="/logo.png"
+                alt="Rico Matrix"
+                width={56}
+                height={56}
+                className="h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]"
+                priority
+              />
             </motion.div>
 
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-yellow-300/80">
-              Welcome to Rico Matrix
+              {copy.kicker}
             </p>
             <h2 className="mb-3 text-2xl md:text-3xl font-bold text-slate-50">
-              You&apos;re In! 👑
+              {copy.title}
             </h2>
-            <p className="mb-6 text-sm text-slate-300">
-              Your account is live — and you may already qualify for the{" "}
-              <span className="font-semibold text-yellow-300">$RICO Giveaway</span>{" "}
-              and a shot at the{" "}
-              <span className="font-semibold text-amber-300">Game of Thrones</span>{" "}
-              crown. Check your eligibility now.
-            </p>
+            <p className="mb-6 text-sm text-slate-300">{copy.body}</p>
 
             <div className="flex flex-col gap-3">
               <Link
