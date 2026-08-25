@@ -769,114 +769,8 @@ export default function RICOStatsPage() {
             />
           </div>
 
-          <div className="mt-6">
-            <SectionCard
-              id="token-tools"
-              title={copy.nav.tokenTools}
-              description={copy.sections.stakeDescription}
-            >
-              <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.tokenAddress}</p>
-                    <p className="mt-2 text-lg font-semibold text-amber-200">{shortAddress(walletTokenAddress)}</p>
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyTokenAddress()}
-                      className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-yellow-200 transition hover:text-yellow-100"
-                    >
-                      {copy.actions.copyTokenAddress}
-                    </button>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.tokenSymbol}</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-50">RICO</p>
-                    <p className="mt-2 text-xs text-slate-500">{copy.labels.walletSupport}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.tokenDecimals}</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-50">18</p>
-                    <p className="mt-2 text-xs text-slate-500">{copy.labels.manualImport}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-yellow-100/80">{copy.labels.walletSupport}</p>
-                  <h3 className="mt-2 text-xl font-semibold text-yellow-50">{copy.actions.addToken}</h3>
-                  <p className="mt-2 text-sm text-yellow-100/80">
-                    Use the automatic wallet prompt or copy the contract address and import the token manually in MetaMask, Trust Wallet, or Coinbase Wallet.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => void handleAddTokenToWallet()}
-                      disabled={isAddingToken || !walletTokenAddress}
-                      className="theme-button-primary px-4 py-2.5 text-sm disabled:opacity-50"
-                    >
-                      {isAddingToken ? copy.actions.addingToken : copy.actions.addToken}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyTokenAddress()}
-                      disabled={!walletTokenAddress}
-                      className="theme-button-secondary px-4 py-2.5 text-sm disabled:opacity-50"
-                    >
-                      {copy.actions.copyTokenAddress}
-                    </button>
-                  </div>
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/50 px-4 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{copy.labels.manualImport}</p>
-                    <p className="mt-1 break-all text-sm font-medium text-slate-100">{walletTokenAddress ?? '--'}</p>
-                  </div>
-                </div>
-              </div>
-            </SectionCard>
-          </div>
-
           <div className="mt-6 grid gap-6 xl:grid-cols-12">
             <div className="space-y-6 xl:col-span-8">
-              <SectionCard
-                id="portfolio"
-                title={copy.sections.portfolioTitle}
-                description={copy.sections.portfolioDescription}
-              >
-                {globalPortfolioCards.length > 0 ? (
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    {globalPortfolioCards.map((card) => (
-                      <StatTile
-                        key={card.key}
-                        label={card.label}
-                        value={Number.isFinite(card.numericValue) ? card.numericValue : 0}
-                        suffix=" RICO"
-                        accent="slate"
-                      />
-                    ))}
-                  </div>
-                ) : null}
-                {userData?.exists ? (
-                  <div className="mt-4 grid gap-4 md:grid-cols-3">
-                    <StatTile
-                      label="Your Earned"
-                      value={parseFloat(userData.ricoShouldHave || '0')}
-                      suffix=" RICO"
-                      accent="gold"
-                    />
-                    <StatTile
-                      label="Your Sent"
-                      value={parseFloat(userData.ricoSent || '0')}
-                      suffix=" RICO"
-                      accent="gold"
-                    />
-                    <StatTile
-                      label="Your Distribution"
-                      value={personalDistributionPercentage}
-                      suffix="%"
-                      accent="gold"
-                    />
-                  </div>
-                ) : null}
-              </SectionCard>
-
               <SectionCard
                 id="staking"
                 title={copy.sections.stakeTitle}
@@ -1206,6 +1100,48 @@ export default function RICOStatsPage() {
                   </div>
                 )}
               </SectionCard>
+
+              <SectionCard
+                id="portfolio"
+                title={copy.sections.portfolioTitle}
+                description={copy.sections.portfolioDescription}
+              >
+                {globalPortfolioCards.length > 0 ? (
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {globalPortfolioCards.map((card) => (
+                      <StatTile
+                        key={card.key}
+                        label={card.label}
+                        value={Number.isFinite(card.numericValue) ? card.numericValue : 0}
+                        suffix=" RICO"
+                        accent="slate"
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                {userData?.exists ? (
+                  <div className="mt-4 grid gap-4 md:grid-cols-3">
+                    <StatTile
+                      label="Your Earned"
+                      value={parseFloat(userData.ricoShouldHave || '0')}
+                      suffix=" RICO"
+                      accent="gold"
+                    />
+                    <StatTile
+                      label="Your Sent"
+                      value={parseFloat(userData.ricoSent || '0')}
+                      suffix=" RICO"
+                      accent="gold"
+                    />
+                    <StatTile
+                      label="Your Distribution"
+                      value={personalDistributionPercentage}
+                      suffix="%"
+                      accent="gold"
+                    />
+                  </div>
+                ) : null}
+              </SectionCard>
             </div>
 
             <div className="space-y-6 xl:col-span-4">
@@ -1349,6 +1285,70 @@ export default function RICOStatsPage() {
                 </SectionCard>
               ) : null}
             </div>
+          </div>
+
+          <div className="mt-6">
+            <SectionCard
+              id="token-tools"
+              title={copy.nav.tokenTools}
+              description={copy.sections.stakeDescription}
+            >
+              <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.tokenAddress}</p>
+                    <p className="mt-2 text-lg font-semibold text-amber-200">{shortAddress(walletTokenAddress)}</p>
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyTokenAddress()}
+                      className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-yellow-200 transition hover:text-yellow-100"
+                    >
+                      {copy.actions.copyTokenAddress}
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.tokenSymbol}</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-50">RICO</p>
+                    <p className="mt-2 text-xs text-slate-500">{copy.labels.walletSupport}</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{copy.labels.tokenDecimals}</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-50">18</p>
+                    <p className="mt-2 text-xs text-slate-500">{copy.labels.manualImport}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-yellow-100/80">{copy.labels.walletSupport}</p>
+                  <h3 className="mt-2 text-xl font-semibold text-yellow-50">{copy.actions.addToken}</h3>
+                  <p className="mt-2 text-sm text-yellow-100/80">
+                    Use the automatic wallet prompt or copy the contract address and import the token manually in MetaMask, Trust Wallet, or Coinbase Wallet.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void handleAddTokenToWallet()}
+                      disabled={isAddingToken || !walletTokenAddress}
+                      className="theme-button-primary px-4 py-2.5 text-sm disabled:opacity-50"
+                    >
+                      {isAddingToken ? copy.actions.addingToken : copy.actions.addToken}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyTokenAddress()}
+                      disabled={!walletTokenAddress}
+                      className="theme-button-secondary px-4 py-2.5 text-sm disabled:opacity-50"
+                    >
+                      {copy.actions.copyTokenAddress}
+                    </button>
+                  </div>
+                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/50 px-4 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{copy.labels.manualImport}</p>
+                    <p className="mt-1 break-all text-sm font-medium text-slate-100">{walletTokenAddress ?? '--'}</p>
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
           </div>
         </div>
       </div>

@@ -79,6 +79,7 @@ export default function Dashboard() {
   >([]);
   const [featureCarouselIndex, setFeatureCarouselIndex] = useState(0);
   const [showRewardCelebration, setShowRewardCelebration] = useState(false);
+  const [celebrationVariant, setCelebrationVariant] = useState<"new" | "returning">("new");
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [isLegacyActionRunning, setIsLegacyActionRunning] = useState(false);
   const [legacyActionChecked, setLegacyActionChecked] = useState(false);
@@ -181,8 +182,29 @@ export default function Dashboard() {
     // dashboardState flips to "dashboard" as soon as the refetches above
     // resolve, unmounting RegistrationSection — a modal living there would
     // never survive long enough to be seen.
+    if (address && typeof window !== "undefined") {
+      window.localStorage.setItem(`rico_giveaway_promo_seen_${address}`, "1");
+    }
+    setCelebrationVariant("new");
     setShowRewardCelebration(true);
   };
+
+  // Existing (already-registered) accounts never went through the flow
+  // above, so give them a one-time nudge toward the new giveaway/rewards
+  // page the first time they connect — gated per wallet so it doesn't
+  // repeat on every visit.
+  useEffect(() => {
+    if (dashboardState !== "dashboard" || !address || typeof window === "undefined") {
+      return;
+    }
+
+    const seenKey = `rico_giveaway_promo_seen_${address}`;
+    if (window.localStorage.getItem(seenKey)) return;
+
+    window.localStorage.setItem(seenKey, "1");
+    setCelebrationVariant("returning");
+    setShowRewardCelebration(true);
+  }, [dashboardState, address]);
 
   // Handle V2 royalty claim
   const handleClaimRoyaltyV2 = async () => {
@@ -391,6 +413,7 @@ export default function Dashboard() {
       <RewardCelebrationModal
         open={showRewardCelebration}
         onClose={() => setShowRewardCelebration(false)}
+        variant={celebrationVariant}
       />
       {dataRefreshing && (
         <div className="fixed left-1/2 top-24 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-yellow-400/30 bg-slate-950/90 px-4 py-2 text-xs font-semibold text-yellow-100 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
