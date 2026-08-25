@@ -367,6 +367,7 @@ async function buildRegistrationAlert(
   const joined = decodeMatchingEvent<{
     user: Hex;
     referrer: Hex;
+    totalUSD: bigint;
   }>("JoinedHub", receipt.logs as Array<{ data: Hex; topics: readonly Hex[] }>);
   const spokeOrder = decodeMatchingEvent<{
     user: Hex;
@@ -381,8 +382,14 @@ async function buildRegistrationAlert(
     spokeOrder?.referrer ||
     referrerArg ||
     "0x0000000000000000000000000000000000000000";
+  // JoinedHub/OrderSubmitted both carry the real totalUSD paid for this
+  // specific registration — reading chapter 1's current price as a fallback
+  // is only a last resort if neither event decoded, and would understate a
+  // hub join anyway (that's priced at 2x chapter 1, one unlock per track).
   const amountPaid =
-    spokeOrder?.totalUSD || (await readChapterPrice(publicClient, chain, 1));
+    joined?.totalUSD ||
+    spokeOrder?.totalUSD ||
+    (await readChapterPrice(publicClient, chain, 1));
 
   const message = [
     "🥳 <b>NEW MEMBER JOINED THE MATRIX!</b>",
@@ -560,7 +567,7 @@ async function postTelegramMessage(message: string) {
       },
       body: JSON.stringify({
         chat_id: channel,
-        text: `💎 <b>RICO Matrix Smart Contract Alerts</b>\n\n${message}`,
+        text: `💎 <b>RICO Matrix Smart Contract Alerts</b>\n\n${message}\n\n🌐 <a href="https://ricomatrix.com">ricomatrix.com</a>`,
         parse_mode: "HTML",
         disable_web_page_preview: true,
       }),
