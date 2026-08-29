@@ -292,6 +292,14 @@
         {
           "question": "Is this financial or investment advice?",
           "answer": "No. RICO MATRIX is a decentralized smart contract library system with coded rewards. Participation is entirely at your own risk. Always do your own research and never spend funds you cannot afford to lose."
+        },
+        {
+          "question": "What is the $RICO token?",
+          "answer": "$RICO is RICO MATRIX's native reward token. It is farmed automatically whenever you buy chapters, upgrade your access, or earn referral and unilevel commissions — you never need to buy it separately to take part in the rewards system."
+        },
+        {
+          "question": "How does the tiered access model work?",
+          "answer": "Each track (X3 and X6) has 12 chapters. Every chapter costs roughly double the one before it and unlocks new earning potential. Chapter 3 unlocks publishing and listing rights inside the Rico Library, and Chapter 5 unlocks premium AI and marketing skill training. Unlocking a chapter is permanent — you own that content and its resale rights for good."
         }
       ]
     },

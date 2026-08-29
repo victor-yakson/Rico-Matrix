@@ -292,6 +292,14 @@
         {
           "question": "S’agit-il de conseils financiers ou d’investissement ?",
           "answer": "Non. RICO MATRIX est un système de bibliothèque décentralisé par smart contract avec des récompenses codées. La participation se fait entièrement à vos propres risques. Faites toujours vos propres recherches et n’engagez jamais des fonds que vous ne pouvez pas vous permettre de perdre."
+        },
+        {
+          "question": "Qu'est-ce que le token $RICO ?",
+          "answer": "$RICO est le token de récompense natif de RICO MATRIX. Il est généré automatiquement lorsque vous achetez des chapitres, mettez à niveau votre accès, ou gagnez des commissions de parrainage et unilevel — vous n'avez jamais besoin de l'acheter séparément pour participer au système de récompenses."
+        },
+        {
+          "question": "Comment fonctionne le modèle d'accès par paliers ?",
+          "answer": "Chaque piste (X3 et X6) comporte 12 chapitres. Chaque chapitre coûte environ le double du précédent et débloque un nouveau potentiel de gains. Le Chapitre 3 débloque les droits de publication et de mise en vente dans la Rico Library, et le Chapitre 5 débloque une formation premium en IA et marketing. Le déblocage d'un chapitre est permanent — vous possédez ce contenu et ses droits de revente pour toujours."
         }
       ]
     },
