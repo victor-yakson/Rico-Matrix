@@ -1,0 +1,55 @@
+# RicoMatrix
+
+> RicoMatrix is a Learn-to-Earn Web3 platform where users buy on-chain access to book chapters, unlock publishing and skills-training rights as they progress, and earn through a royalty pool, a 12-level referral program, $RICO token rewards, and RICO staking. It runs as a decentralized smart contract system deployed on BNB Smart Chain (primary/hub), with synced access across Ethereum, Base, and Polygon. Tagline: "Learn. Publish. Earn. On-Chain."
+
+## What RicoMatrix Is
+
+- A chapter-based "Learn-to-Earn" library: each chapter is a real book/course unit you unlock permanently on-chain, with resale rights, not a subscription.
+- Fully decentralized: registrations, matrix placements, unilevel payouts, royalties, and $RICO rewards are encoded in smart contracts. Once deployed, no admin can change the logic or pause a user's earnings.
+- Multi-chain: chapter purchases and account access work on BNB Smart Chain (the hub), Ethereum, Base, and Polygon, and stay in sync across all of them.
+- Not financial or investment advice. Participation is at the user's own risk.
+
+## The Learn-to-Earn System (X3 and X6 Tracks)
+
+- Two parallel earning tracks, each with 12 chapters: **X3** and **X6**.
+- **X3**: a direct book-sales engine. Each of a user's three placements pays them immediately when filled (one line, three seats per chapter level).
+- **X6**: grows through spillovers from a user's team and the wider community (two lines, 2 then 4 seats per chapter level).
+- Every chapter level costs roughly double the previous level, and pays out roughly double in return.
+- Chapter prices (both tracks): Chapter 1 = $5, Chapter 2 = $10, Chapter 3 = $20, Chapter 4 = $40, Chapter 5 = $80, Chapter 6 = $160, Chapter 7 = $320, Chapter 8 = $640, Chapter 9 = $1,280 (recommended entry point for new leaders — positions them in the core flow of matrix and royalty activity), Chapter 10 = $2,560, Chapter 11 = $5,120, Chapter 12 = $10,240.
+- Unlocking a chapter is permanent: the buyer owns that chapter's content and its resale rights for good — chapters never expire and auto-recycle (re-fill) when a placement is completed.
+- Chapter 3+ unlocks the ability to publish and list original books inside the Rico Library.
+- Chapter 5+ unlocks premium AI and marketing skills training.
+
+## Royalty and Referral System
+
+- 70% of every chapter purchase price is distributed instantly through a 12-level unilevel referral program to the buyer's upline.
+- 30% of every chapter purchase price (plus a platform fee) funds a global royalty pool, shared with the active reading community over time based on royalty-share position.
+- Referrals are not required to earn — the X6 spillover system can fill a user's slots from upline and global platform activity — but bringing active readers accelerates results.
+
+## $RICO Token
+
+- $RICO is RicoMatrix's native reward token.
+- It is farmed automatically through platform activity — buying chapters, upgrading access, and earning referral/unilevel commissions — not bought separately to participate in rewards.
+- $RICO can be staked for fixed terms: 30 days (5% APY), 180 days (35% APY), or 365 days (110% APY). Larger stake sizes (15,000 and 70,000 RICO) unlock additional bonus rewards.
+- A separate, time-limited $RICO Giveaway ("Game of Thrones") campaign layers in promotional cashback and referral bonuses plus milestone crown rewards for qualifying accounts, on top of the base reward system.
+
+## Rico Quant Bot
+
+- Rico Quant Bot is a connected but separately branded RicoMatrix product for automated crypto trading/signals, hosted at app.ricomatrix.com.
+- It is promoted from within the main RicoMatrix platform but operates as its own standalone experience.
+
+## Supported Networks
+
+- BNB Smart Chain (hub — canonical account and royalty data lives here)
+- Ethereum
+- Base
+- Polygon
+
+## Links
+
+- [Website](https://ricomatrix.com): Marketing site and main entry point.
+- [App](https://app.ricomatrix.com): Rico Quant Bot, the connected trading product.
+- [Telegram](https://t.me/ricomatrixdapp)
+- [X (Twitter)](https://x.com/rmdapp)
+- [YouTube](https://www.youtube.com/@ricomatrix)
+- [TikTok](https://tiktok.com/@ricomatrix)

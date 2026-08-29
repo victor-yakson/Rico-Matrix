@@ -18,7 +18,15 @@ type MapTotals = {
 };
 
 const MemoizedMobileWalletConnector = memo(MobileWalletConnector);
-const faqKeys = ["questions.0", "questions.1", "questions.2", "questions.3", "questions.4"] as const;
+const faqKeys = [
+  "questions.0",
+  "questions.1",
+  "questions.2",
+  "questions.3",
+  "questions.4",
+  "questions.5",
+  "questions.6",
+] as const;
 
 const revealMotion = {
   hidden: { opacity: 0, y: 32 },
@@ -965,6 +973,26 @@ export default function RicoMatrixLandingPage() {
               ))}
             </div>
           </div>
+          {/* FAQPage structured data — mirrors the Q&A pairs rendered above
+              exactly, so it never drifts from what's actually on the page. */}
+          <script
+            type="application/ld+json"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: faqKeys.map((key) => ({
+                  "@type": "Question",
+                  name: t(`faq.${key}.question`),
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: t(`faq.${key}.answer`),
+                  },
+                })),
+              }).replace(/</g, "\\u003c"),
+            }}
+          />
         </motion.section>
 
         <motion.section id="cta" className={styles.section} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={revealMotion}>
